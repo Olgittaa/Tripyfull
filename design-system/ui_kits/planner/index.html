@@ -1,6 +1,6 @@
-<!-- @dsCard group="Planner" viewport="1280x820" name="Travel Planner (desktop app)" subtitle="Список, дашборд, маршрут, брони, бюджет — кликабельно" -->
+<!-- @dsCard group="Planner" viewport="1280x820" name="Travel Planner (desktop app)" subtitle="List, dashboard, itinerary, bookings, budget — clickable" -->
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -79,33 +79,33 @@
 
           {/* Activity drawer */}
           <Drawer open={!!actDrawer} onClose={() => setActDrawer(null)}
-            eyebrow={trip ? ('День · ' + (D.days.find(d=>d.id===dayId)||{}).city) : ''}
-            title={actDrawer && actDrawer.id ? 'Активность' : 'Новая активность'}
+            eyebrow={trip ? ('Day · ' + (D.days.find(d=>d.id===dayId)||{}).city) : ''}
+            title={actDrawer && actDrawer.id ? 'Activity' : 'New activity'}
             footer={<React.Fragment>
-              <Button variant="primary" fullWidth onClick={() => setActDrawer(null)}>Сохранить</Button>
-              {actDrawer && actDrawer.id && <Button variant="ghost" onClick={() => setActDrawer(null)}>Удалить</Button>}
+              <Button variant="primary" fullWidth onClick={() => setActDrawer(null)}>Save</Button>
+              {actDrawer && actDrawer.id && <Button variant="ghost" onClick={() => setActDrawer(null)}>Delete</Button>}
             </React.Fragment>}>
             {actDrawer && <ActivityForm activity={actDrawer.id ? actDrawer : null} />}
           </Drawer>
 
           {/* Booking drawer */}
           <Drawer open={!!bookDrawer} onClose={() => setBookDrawer(null)} width={500}
-            eyebrow="Бронь и платежи"
-            title={bookDrawer && bookDrawer.id ? 'Бронь' : 'Новая бронь'}
+            eyebrow="Booking and payments"
+            title={bookDrawer && bookDrawer.id ? 'Booking' : 'New booking'}
             footer={<React.Fragment>
-              <Button variant="primary" fullWidth onClick={() => setBookDrawer(null)}>Сохранить</Button>
-              {bookDrawer && bookDrawer.id && <Button variant="ghost" onClick={() => setBookDrawer(null)}>Удалить</Button>}
+              <Button variant="primary" fullWidth onClick={() => setBookDrawer(null)}>Save</Button>
+              {bookDrawer && bookDrawer.id && <Button variant="ghost" onClick={() => setBookDrawer(null)}>Delete</Button>}
             </React.Fragment>}>
             {bookDrawer && <BookingForm booking={bookDrawer.id ? bookDrawer : null} cur={trip ? trip.currency : '€'} />}
           </Drawer>
 
           {/* New trip dialog */}
           <Dialog open={newTrip} onClose={() => setNewTrip(false)}
-            eyebrow={trip ? 'Редактировать' : 'Новая поездка'}
-            title={trip ? trip.name : 'Куда отправляемся?'}
+            eyebrow={trip ? 'Edit' : 'New trip'}
+            title={trip ? trip.name : 'Where are we headed?'}
             footer={<React.Fragment>
-              <Button variant="ghost" onClick={() => setNewTrip(false)}>Отмена</Button>
-              <Button variant="primary" onClick={() => setNewTrip(false)}>Сохранить</Button>
+              <Button variant="ghost" onClick={() => setNewTrip(false)}>Cancel</Button>
+              <Button variant="primary" onClick={() => setNewTrip(false)}>Save</Button>
             </React.Fragment>}>
             <NewTripForm />
           </Dialog>

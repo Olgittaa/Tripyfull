@@ -1,32 +1,32 @@
 # Tripyfull
 
-Персональный планировщик путешествий: **поездки → дни → активности**, плюс брони
-с платежами, бюджет и переиспользуемая библиотека мест. Пользователь вводит минимум,
-бесплатные API дополняют остальное; все вызовы сторонних сервисов идут только с бэкенда —
-ключи на фронт не попадают.
+A personal trip planner: **trips → days → activities**, plus bookings with payments,
+budgeting, and a reusable library of places. The user enters the bare minimum, and free
+APIs fill in the rest; all third-party calls go through the backend only — keys never
+reach the frontend.
 
-## Структура (monorepo)
+## Structure (monorepo)
 
 ```
 Tripyfull/
 ├── backend/         Spring Boot + PostgreSQL REST API (Java 25, Maven)
 ├── frontend/        Vue 3 + Pinia + PrimeVue + Vue Router + Leaflet (Vite)
-├── design-system/   Токены, стили и UI-kit Tripyfull
-└── docker-compose.yml   Локальная PostgreSQL
+├── design-system/   Tripyfull tokens, styles, and UI kit
+└── docker-compose.yml   Local PostgreSQL
 ```
 
-## Требования
+## Requirements
 
-- **Java 25** и Maven (обёртка `./mvnw` в комплекте)
-- **Node.js ≥ 20** и npm
-- **Docker** (для локальной PostgreSQL)
+- **Java 25** and Maven (the `./mvnw` wrapper is included)
+- **Node.js ≥ 20** and npm
+- **Docker** (for local PostgreSQL)
 
-## Запуск
+## Running
 
-### 1. База данных
+### 1. Database
 
 ```bash
-docker compose up -d        # из корня; PostgreSQL 16 на :5432 (db=tripdb, user/pass=postgres)
+docker compose up -d        # from the root; PostgreSQL 16 on :5432 (db=tripdb, user/pass=postgres)
 ```
 
 ### 2. Backend
@@ -34,37 +34,37 @@ docker compose up -d        # из корня; PostgreSQL 16 на :5432 (db=trip
 ```bash
 cd backend
 cp src/main/resources/application-local.properties.example \
-   src/main/resources/application-local.properties   # заполни секреты
+   src/main/resources/application-local.properties   # fill in your secrets
 ./mvnw spring-boot:run                                 # http://localhost:8080
 ```
 
-Профиль `local` активен по умолчанию. Секреты (пароль БД, `jwt.secret`, API-ключи)
-живут в `application-local.properties` — этот файл в `.gitignore` и в git не попадает.
+The `local` profile is active by default. Secrets (DB password, `jwt.secret`, API keys)
+live in `application-local.properties` — this file is in `.gitignore` and never lands in git.
 
 ### 3. Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev                 # http://localhost:5173, проксирует на API :8080
+npm run dev                 # http://localhost:5173, proxies to the API on :8080
 ```
 
-`VITE_API_URL` задаётся в `frontend/.env.development` (по умолчанию `http://localhost:8080`).
+`VITE_API_URL` is set in `frontend/.env.development` (defaults to `http://localhost:8080`).
 
-## Конфигурация
+## Configuration
 
-| Переменная | Где | Назначение |
+| Variable | Where | Purpose |
 |---|---|---|
-| `spring.datasource.*` | `application-local.properties` | подключение к PostgreSQL |
-| `jwt.secret` | `application-local.properties` | подпись JWT (≥ 32 символов) |
-| `AERODATABOX_API_KEY` | env / local props | поиск рейсов (RapidAPI) |
-| `GEOAPIFY_API_KEY` | env / local props | геокодинг мест (Nominatim как fallback) |
-| `VITE_API_URL` | `frontend/.env.development` | адрес API для фронта |
+| `spring.datasource.*` | `application-local.properties` | PostgreSQL connection |
+| `jwt.secret` | `application-local.properties` | JWT signing (≥ 32 characters) |
+| `AERODATABOX_API_KEY` | env / local props | flight lookup (RapidAPI) |
+| `GEOAPIFY_API_KEY` | env / local props | geocoding for places (Nominatim as fallback) |
+| `VITE_API_URL` | `frontend/.env.development` | API address for the frontend |
 
-## Доменная модель
+## Domain model
 
-**Trip** (даты, статус, валюта) → **Day** (дата, город) → **Activity** (тип, время, стоимость).
-**Booking** (рейс/паром/прокат/жильё) + **Payment[]** + **Attachment[]**.
-**Place** — переиспользуемое место (POI) с координатами, фото и видимостью PUBLIC/PRIVATE.
+**Trip** (dates, status, currency) → **Day** (date, city) → **Activity** (type, time, cost).
+**Booking** (flight/ferry/rental/lodging) + **Payment[]** + **Attachment[]**.
+**Place** — a reusable place (POI) with coordinates, photos, and PUBLIC/PRIVATE visibility.
 
-Подробнее — в [`frontend/CONCEPT.md`](frontend/CONCEPT.md).
+For more detail, see [`frontend/CONCEPT.md`](frontend/CONCEPT.md).

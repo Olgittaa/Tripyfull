@@ -3188,12 +3188,12 @@ window.TripyfullMarketing = {
 try { (() => {
 /* Tripyfull Planner — Budget page data (extends PlannerData).
    window.PlannerBudget. Designed to demonstrate the budget story:
-   one category over plan (Еда), one day over plan (День 3). */
+   one category over plan (Food), one day over plan (Day 3). */
 
 window.PlannerBudget = {
   /* optional hard limit for the trip (toggleable in UI) */
   limit: 4500,
-  /* смета (plan) per category = bookings full price + cost estimates */
+  /* estimate (plan) per category = bookings full price + cost estimates */
   categoryPlan: {
     transport: 1528,
     stay: 1400,
@@ -3212,82 +3212,82 @@ window.PlannerBudget = {
     d7: 70,
     d8: 60
   },
-  /* actual in-trip spend (Expense) — складывается само */
+  /* actual in-trip spend (Expense) — adds up on its own */
   expenses: [{
     id: 'e1',
     dayId: 'd1',
     cat: 'food',
-    title: 'Ужин · Ichiran',
+    title: 'Dinner · Ichiran',
     amount: 32,
     date: '2026-06-16'
   }, {
     id: 'e2',
     dayId: 'd1',
     cat: 'transport',
-    title: "N'EX до города",
+    title: "N'EX to the city",
     amount: 18,
     date: '2026-06-16'
   }, {
     id: 'e3',
     dayId: 'd1',
     cat: 'other',
-    title: 'SIM-карта',
+    title: 'SIM card',
     amount: 24,
     date: '2026-06-16'
   }, {
     id: 'e4',
     dayId: 'd2',
     cat: 'food',
-    title: 'Завтрак · Sarutahiko',
+    title: 'Breakfast · Sarutahiko',
     amount: 14,
     date: '2026-06-17'
   }, {
     id: 'e5',
     dayId: 'd2',
     cat: 'food',
-    title: 'Обед · удон',
+    title: 'Lunch · udon',
     amount: 26,
     date: '2026-06-17'
   }, {
     id: 'e6',
     dayId: 'd2',
     cat: 'activity',
-    title: 'Донат у храма',
+    title: 'Temple donation',
     amount: 6,
     date: '2026-06-17'
   }, {
     id: 'e7',
     dayId: 'd3',
     cat: 'food',
-    title: 'Обед · Ramen Sen',
+    title: 'Lunch · Ramen Sen',
     amount: 24,
     date: '2026-06-18'
   }, {
     id: 'e8',
     dayId: 'd3',
     cat: 'food',
-    title: 'Стрит-фуд · Нисики',
+    title: 'Street food · Nishiki',
     amount: 45,
     date: '2026-06-18'
   }, {
     id: 'e9',
     dayId: 'd3',
     cat: 'food',
-    title: 'Ужин · кайсэки',
+    title: 'Dinner · kaiseki',
     amount: 62,
     date: '2026-06-18'
   }, {
     id: 'e10',
     dayId: 'd3',
     cat: 'activity',
-    title: 'Входной билет',
+    title: 'Entry ticket',
     amount: 14,
     date: '2026-06-18'
   }, {
     id: 'e11',
     dayId: 'd3',
     cat: 'transport',
-    title: 'Такси',
+    title: 'Taxi',
     amount: 16,
     date: '2026-06-18'
   }],
@@ -3298,7 +3298,7 @@ window.PlannerBudget = {
 // ui_kits/planner/budget.jsx
 try { (() => {
 /* Tripyfull Planner — Budget v2 screen. window.PlannerBudgetScreen.Budget2
-   Answers: уложусь ли я в деньги · что горит по платежам · куда уходят деньги.
+   Answers: will I stay within budget · what's due · where the money goes.
    Layout top→bottom: summary → due payments → categories → by-day detail. */
 
 const BG_DS = window.TripyfullDesignSystem_bc2c08;
@@ -3396,9 +3396,9 @@ function Budget2({
   }, []);
   const [paidIds, setPaidIds] = React.useState(initialPaid);
   const [expenses, setExpenses] = React.useState(BB.expenses);
-  const [catMode, setCatMode] = React.useState('Оба');
+  const [catMode, setCatMode] = React.useState('Both');
   const [activeMetric, setActiveMetric] = React.useState(null);
-  const [filterCat, setFilterCat] = React.useState('Все');
+  const [filterCat, setFilterCat] = React.useState('All');
   const [limitOn, setLimitOn] = React.useState(true);
   const [expDrawer, setExpDrawer] = React.useState(null);
   const [expandedDay, setExpandedDay] = React.useState('d3');
@@ -3457,7 +3457,7 @@ function Budget2({
     }));
     setToast({
       tone: 'success',
-      title: 'Платёж отмечен',
+      title: 'Payment marked',
       message: title
     });
   };
@@ -3479,7 +3479,7 @@ function Budget2({
     setFTitle('');
     setToast({
       tone: 'brand',
-      title: 'Трата записана',
+      title: 'Expense recorded',
       message: e.title + ' · ' + BD.fmt(amt, cur)
     });
   };
@@ -3597,8 +3597,8 @@ function Budget2({
       name: "alert",
       size: 18
     }),
-    title: 'Перерасход: ' + overCats.map(c => BD.CATEGORY[c.cat].label).join(', ')
-  }, "\u0424\u0430\u043A\u0442 \u043F\u0440\u0435\u0432\u044B\u0441\u0438\u043B \u043F\u043B\u0430\u043D \u043F\u043E ", overCats.length === 1 ? 'категории' : 'категориям', ". \u0417\u0430\u0433\u043B\u044F\u043D\u0438 \u0432 \u0440\u0430\u0437\u0431\u0438\u0432\u043A\u0443 \u043D\u0438\u0436\u0435.")), /*#__PURE__*/React.createElement("div", {
+    title: 'Overspend: ' + overCats.map(c => BD.CATEGORY[c.cat].label).join(', ')
+  }, "Actual exceeded plan for ", overCats.length === 1 ? 'category' : 'categories', ". See the breakdown below.")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(4, 1fr)',
@@ -3615,20 +3615,20 @@ function Budget2({
     value: paid,
     cur: cur,
     color: "var(--success-500)",
-    sub: pct(paid, planned) + '% от сметы'
+    sub: pct(paid, planned) + '% of estimate'
   }), /*#__PURE__*/React.createElement(Metric, {
     label: "\u041E\u0441\u0442\u0430\u043B\u043E\u0441\u044C \u043E\u043F\u043B\u0430\u0442\u0438\u0442\u044C",
     value: remaining,
     cur: cur,
     color: "var(--coral-600)",
-    sub: unpaidPayments.length + ' платеж. впереди',
+    sub: unpaidPayments.length + ' payments ahead',
     active: activeMetric === 'remaining',
     onClick: () => setActiveMetric(activeMetric === 'remaining' ? null : 'remaining')
   }), /*#__PURE__*/React.createElement(Metric, {
     label: "\u041F\u043E\u0442\u0440\u0430\u0447\u0435\u043D\u043E \u0432 \u043F\u043E\u0435\u0437\u0434\u043A\u0435",
     value: spentInTrip,
     cur: cur,
-    sub: expenses.length + ' трат записано'
+    sub: expenses.length + ' expenses recorded'
   })), /*#__PURE__*/React.createElement(Card, {
     elevation: "sm",
     style: {
@@ -3655,11 +3655,11 @@ function Budget2({
   }, "\u041B\u0438\u043C\u0438\u0442 \u043F\u043E\u0435\u0437\u0434\u043A\u0438"), limitOn && /*#__PURE__*/React.createElement(Badge, {
     tone: overLimit ? 'danger' : 'accent',
     variant: "soft"
-  }, overLimit ? 'превышен' : BD.fmt(BB.limit, cur))), /*#__PURE__*/React.createElement(Switch, {
+  }, overLimit ? 'exceeded' : BD.fmt(BB.limit, cur))), /*#__PURE__*/React.createElement(Switch, {
     size: "sm",
     checked: limitOn,
     onChange: setLimitOn,
-    label: limitOn ? 'Жёсткий лимит' : 'Без лимита'
+    label: limitOn ? 'Hard limit' : 'No limit'
   })), limitOn && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ProgressBar, {
     value: planned,
     max: BB.limit,
@@ -3677,7 +3677,7 @@ function Budget2({
     style: {
       color: overLimit ? 'var(--danger-500)' : 'var(--success-500)'
     }
-  }, overLimit ? 'перерасход ' + BD.fmt(planned - BB.limit, cur) : 'запас ' + BD.fmt(BB.limit - planned, cur))))), /*#__PURE__*/React.createElement("div", {
+  }, overLimit ? 'overspend ' + BD.fmt(planned - BB.limit, cur) : 'buffer ' + BD.fmt(BB.limit - planned, cur))))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -3795,7 +3795,7 @@ function Budget2({
     size: "sm",
     value: catMode,
     onChange: setCatMode,
-    options: ['Факт', 'План', 'Оба']
+    options: ['Actual', 'Plan', 'Both']
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -3836,7 +3836,7 @@ function Budget2({
       font: '500 12px/1 var(--font-mono)',
       color: c.over ? 'var(--danger-500)' : 'var(--text-muted)'
     }
-  }, catMode === 'Факт' ? BD.fmt(c.fact, cur) : catMode === 'План' ? BD.fmt(c.plan, cur) : BD.fmt(c.fact, cur) + ' / ' + BD.fmt(c.plan, cur))), /*#__PURE__*/React.createElement(ProgressBar, {
+  }, catMode === 'Actual' ? BD.fmt(c.fact, cur) : catMode === 'Plan' ? BD.fmt(c.plan, cur) : BD.fmt(c.fact, cur) + ' / ' + BD.fmt(c.plan, cur))), /*#__PURE__*/React.createElement(ProgressBar, {
     value: c.fact,
     max: c.plan,
     color: c.over ? 'var(--danger-500)' : BD.CATEGORY[c.cat].color,
@@ -3870,7 +3870,7 @@ function Budget2({
     size: "sm",
     value: filterCat,
     onChange: setFilterCat,
-    options: ['Все', 'Еда', 'Транспорт', 'Активности']
+    options: ['All', 'Food', 'Transport', 'Activities']
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -3914,9 +3914,9 @@ function Budget2({
     const open = expandedDay === day.id;
     const acts = day.activities.map(id => BD.activities[id]);
     const catFilter = {
-      'Еда': 'food',
-      'Транспорт': 'transport',
-      'Активности': 'activity'
+      'Food': 'food',
+      'Transport': 'transport',
+      'Activities': 'activity'
     }[filterCat];
     const shownExp = catFilter ? dayExp.filter(e => e.cat === catFilter) : dayExp;
     return /*#__PURE__*/React.createElement("div", {
@@ -4134,14 +4134,14 @@ function Budget2({
     value: fAmount,
     onChange: e => setFAmount(e.target.value),
     placeholder: "0",
-    helper: 'В валюте поездки (' + cur + ')'
+    helper: 'In trip currency (' + cur + ')'
   }), /*#__PURE__*/React.createElement(Select, {
     label: "\u0414\u0435\u043D\u044C",
     value: fDay,
     onChange: e => setFDay(e.target.value),
     options: BD.days.map(d => ({
       value: d.id,
-      label: 'День ' + d.n + ' · ' + d.city + ' (' + BD.dateShort(d.date) + ')'
+      label: 'Day ' + d.n + ' · ' + d.city + ' (' + BD.dateShort(d.date) + ')'
     }))
   }), /*#__PURE__*/React.createElement(Input, {
     label: "\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435",
@@ -4182,31 +4182,31 @@ try { (() => {
 
 const CATEGORY = {
   food: {
-    label: 'Еда',
+    label: 'Food',
     icon: 'food',
     color: 'var(--gold-400)',
     soft: 'var(--gold-50)'
   },
   transport: {
-    label: 'Транспорт',
+    label: 'Transport',
     icon: 'plane',
     color: 'var(--accent)',
     soft: 'var(--teal-50)'
   },
   stay: {
-    label: 'Проживание',
+    label: 'Stay',
     icon: 'bed',
     color: 'var(--coral-500)',
     soft: 'var(--coral-50)'
   },
   activity: {
-    label: 'Активности',
+    label: 'Activities',
     icon: 'compass',
     color: 'var(--teal-400)',
     soft: 'var(--teal-50)'
   },
   other: {
-    label: 'Прочее',
+    label: 'Other',
     icon: 'tag',
     color: 'var(--ink-500)',
     soft: 'var(--surface-sunken)'
@@ -4214,40 +4214,40 @@ const CATEGORY = {
 };
 const PAYMENT_STATUS = {
   paid: {
-    label: 'Оплачено',
+    label: 'Paid',
     tone: 'success'
   },
   partial: {
-    label: 'Частично',
+    label: 'Partial',
     tone: 'warning'
   },
   unpaid: {
-    label: 'Не оплачено',
+    label: 'Unpaid',
     tone: 'danger'
   }
 };
 const TRIP_STATUS = {
   draft: {
-    label: 'Черновик',
+    label: 'Draft',
     tone: 'neutral'
   },
   planned: {
-    label: 'Запланир.',
+    label: 'Planned',
     tone: 'accent'
   },
   active: {
-    label: 'В пути',
+    label: 'On the road',
     tone: 'brand'
   },
   completed: {
-    label: 'Завершено',
+    label: 'Completed',
     tone: 'success'
   }
 };
 const trips = [{
   id: 'jp',
-  name: 'Токио и Киото',
-  destination: 'Япония',
+  name: 'Tokyo & Kyoto',
+  destination: 'Japan',
   start: '2026-06-16',
   end: '2026-06-23',
   status: 'planned',
@@ -4257,8 +4257,8 @@ const trips = [{
   paid: 2640
 }, {
   id: 'pt',
-  name: 'Побережье Португалии',
-  destination: 'Лиссабон · Порту',
+  name: 'Portugal Coast',
+  destination: 'Lisbon · Porto',
   start: '2026-09-04',
   end: '2026-09-11',
   status: 'draft',
@@ -4268,8 +4268,8 @@ const trips = [{
   paid: 320
 }, {
   id: 'pa',
-  name: 'Треккинг в Патагонии',
-  destination: 'Чили · Аргентина',
+  name: 'Patagonia Trek',
+  destination: 'Chile · Argentina',
   start: '2025-11-02',
   end: '2025-11-14',
   status: 'completed',
@@ -4284,161 +4284,161 @@ const days = [{
   id: 'd1',
   n: 1,
   date: '2026-06-16',
-  city: 'Токио',
+  city: 'Tokyo',
   activities: ['a1', 'a2', 'a3']
 }, {
   id: 'd2',
   n: 2,
   date: '2026-06-17',
-  city: 'Токио',
+  city: 'Tokyo',
   activities: ['a4', 'a5']
 }, {
   id: 'd3',
   n: 3,
   date: '2026-06-18',
-  city: 'Киото',
+  city: 'Kyoto',
   activities: ['a6', 'a7', 'a8', 'a9']
 }, {
   id: 'd4',
   n: 4,
   date: '2026-06-19',
-  city: 'Киото',
+  city: 'Kyoto',
   activities: []
 }, {
   id: 'd5',
   n: 5,
   date: '2026-06-20',
-  city: 'Осака',
+  city: 'Osaka',
   activities: ['a10']
 }, {
   id: 'd6',
   n: 6,
   date: '2026-06-21',
-  city: 'Осака',
+  city: 'Osaka',
   activities: []
 }, {
   id: 'd7',
   n: 7,
   date: '2026-06-22',
-  city: 'Нара',
+  city: 'Nara',
   activities: ['a11']
 }, {
   id: 'd8',
   n: 8,
   date: '2026-06-23',
-  city: 'Токио',
+  city: 'Tokyo',
   activities: []
 }];
 const activities = {
   a1: {
     id: 'a1',
-    title: 'Прилёт · Нарита',
+    title: 'Arrival · Narita',
     cat: 'transport',
     start: '07:20',
     end: '08:00',
-    address: 'Аэропорт Нарита, T1',
+    address: 'Narita Airport, T1',
     cost: 0,
-    note: 'Поезд N\'EX до города'
+    note: 'N\'EX train to the city'
   },
   a2: {
     id: 'a2',
-    title: 'Заселение в отель',
+    title: 'Hotel check-in',
     cat: 'stay',
     start: '11:00',
     end: '11:30',
     address: 'Shibuya Stream Hotel',
     cost: 0,
-    note: 'Ранний чек-ин подтверждён'
+    note: 'Early check-in confirmed'
   },
   a3: {
     id: 'a3',
-    title: 'Ужин — Сибуя',
+    title: 'Dinner — Shibuya',
     cat: 'food',
     start: '19:30',
     end: '21:00',
     address: 'Ichiran Shibuya',
     cost: 28,
-    note: 'Тонкоцу рамен'
+    note: 'Tonkotsu ramen'
   },
   a4: {
     id: 'a4',
-    title: 'Завтрак — Sarutahiko',
+    title: 'Breakfast — Sarutahiko',
     cat: 'food',
     start: '08:30',
     end: '09:15',
-    address: 'Эбису',
+    address: 'Ebisu',
     cost: 14,
-    note: 'Кофе и тамаго'
+    note: 'Coffee and tamago'
   },
   a5: {
     id: 'a5',
-    title: 'Сэнсо-дзи и Асакуса',
+    title: 'Sensō-ji and Asakusa',
     cat: 'activity',
     start: '10:30',
     end: '13:00',
-    address: 'Асакуса',
+    address: 'Asakusa',
     cost: 0,
-    note: 'Храм + улица Накамисэ'
+    note: 'Temple + Nakamise street'
   },
   a6: {
     id: 'a6',
-    title: 'Синкансэн в Киото',
+    title: 'Shinkansen to Kyoto',
     cat: 'transport',
     start: '07:00',
     end: '09:20',
     address: 'Tokyo → Kyoto',
     cost: 96,
-    note: 'Вагон 7, места 11A/B'
+    note: 'Car 7, seats 11A/B'
   },
   a7: {
     id: 'a7',
-    title: 'Бамбуковая роща Арасияма',
+    title: 'Arashiyama Bamboo Grove',
     cat: 'activity',
     start: '10:00',
     end: '11:30',
-    address: 'Киото',
+    address: 'Kyoto',
     cost: 0,
-    note: 'Рассвет до толпы'
+    note: 'Sunrise before the crowds'
   },
   a8: {
     id: 'a8',
-    title: 'Обед — Ramen Sen',
+    title: 'Lunch — Ramen Sen',
     cat: 'food',
     start: '13:00',
     end: '14:00',
-    address: 'Киото',
+    address: 'Kyoto',
     cost: 22,
-    note: 'Бронь на 2'
+    note: 'Reservation for 2'
   },
   a9: {
     id: 'a9',
-    title: 'Рёкан Ёсикава',
+    title: 'Ryokan Yoshikawa',
     cat: 'stay',
     start: '20:00',
     end: '20:30',
-    address: 'Киото, комната 4',
+    address: 'Kyoto, room 4',
     cost: 0,
-    note: 'Заезд'
+    note: 'Check-in'
   },
   a10: {
     id: 'a10',
-    title: 'Стрит-фуд Дотонбори',
+    title: 'Dotonbori street food',
     cat: 'food',
     start: '18:00',
     end: '20:30',
-    address: 'Осака',
+    address: 'Osaka',
     cost: 35,
-    note: 'Такояки + окономияки'
+    note: 'Takoyaki + okonomiyaki'
   },
   a11: {
     id: 'a11',
-    title: 'Парк оленей Нара',
+    title: 'Nara Deer Park',
     cat: 'activity',
     start: '11:00',
     end: '14:00',
-    address: 'Нара',
+    address: 'Nara',
     cost: 8,
-    note: 'Покормить оленей'
+    note: 'Feed the deer'
   }
 };
 const bookings = [{
@@ -4485,8 +4485,8 @@ const bookings = [{
 }, {
   id: 'b3',
   cat: 'stay',
-  title: 'Рёкан Ёсикава',
-  provider: 'напрямую',
+  title: 'Ryokan Yoshikawa',
+  provider: 'direct',
   conf: 'RY-04',
   price: 540,
   status: 'unpaid',
@@ -4521,7 +4521,7 @@ const bookings = [{
 }, {
   id: 'b5',
   cat: 'activity',
-  title: 'Тур на рассвете · Арасияма',
+  title: 'Sunrise tour · Arashiyama',
   provider: 'GetYourGuide',
   conf: 'GYG-2231',
   price: 76,
@@ -4573,10 +4573,10 @@ window.PlannerData = {
   bookings,
   budgetByCategory,
   fmt(n, cur = '€') {
-    return cur + n.toLocaleString('ru-RU');
+    return cur + n.toLocaleString('en-US');
   },
   dateShort(iso) {
-    const M = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const d = new Date(iso);
     return d.getDate() + ' ' + M[d.getMonth()];
   },
@@ -4626,13 +4626,13 @@ function Bookings({
 }) {
   const groups = [{
     cat: 'transport',
-    label: 'Транспорт'
+    label: 'Transport'
   }, {
     cat: 'stay',
-    label: 'Проживание'
+    label: 'Stay'
   }, {
     cat: 'activity',
-    label: 'Активности'
+    label: 'Activities'
   }];
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4715,7 +4715,7 @@ function BookingCard({
 }) {
   const ps = MD.PAYMENT_STATUS[b.status];
   const nextPay = b.payments.filter(p => !p.paid).sort((a, c) => a.date.localeCompare(c.date))[0];
-  const meta = b.cat === 'transport' ? b.from + ' → ' + b.to + ' · ' + b.date.replace(' ', ', ') : b.checkIn ? 'Заезд ' + MD.dateShort(b.checkIn) + ' · ' + b.nights + ' ноч.' : b.date ? b.date.replace(' ', ', ') : '';
+  const meta = b.cat === 'transport' ? b.from + ' → ' + b.to + ' · ' + b.date.replace(' ', ', ') : b.checkIn ? 'Check-in ' + MD.dateShort(b.checkIn) + ' · ' + b.nights + ' nights' : b.date ? b.date.replace(' ', ', ') : '';
   return /*#__PURE__*/React.createElement(Card, {
     padding: "sm",
     interactive: true,
@@ -4865,7 +4865,7 @@ function BookingForm({
   }, "\u0413\u0440\u0430\u0444\u0438\u043A \u043F\u043B\u0430\u0442\u0435\u0436\u0435\u0439"), /*#__PURE__*/React.createElement(Badge, {
     tone: matches ? 'success' : 'warning',
     variant: "soft"
-  }, matches ? '✓ сходится' : 'не сходится')), /*#__PURE__*/React.createElement("div", {
+  }, matches ? '✓ matches' : 'does not match')), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -4902,7 +4902,7 @@ function BookingForm({
   }, MD.dateShort(p.date))), /*#__PURE__*/React.createElement(Badge, {
     tone: p.paid ? 'success' : 'neutral',
     variant: "soft"
-  }, p.paid ? 'оплачено' : 'ожидается'))), /*#__PURE__*/React.createElement("button", {
+  }, p.paid ? 'paid' : 'pending'))), /*#__PURE__*/React.createElement("button", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -5226,16 +5226,16 @@ function NewTripForm() {
     label: "\u0411\u0430\u0437\u043E\u0432\u0430\u044F \u0432\u0430\u043B\u044E\u0442\u0430",
     options: [{
       value: 'eur',
-      label: '€ Евро'
+      label: '€ Euro'
     }, {
       value: 'usd',
-      label: '$ Доллар США'
+      label: '$ US Dollar'
     }, {
       value: 'gbp',
-      label: '£ Фунт'
+      label: '£ Pound'
     }, {
       value: 'jpy',
-      label: '¥ Иена'
+      label: '¥ Yen'
     }],
     defaultValue: "eur"
   }), /*#__PURE__*/React.createElement("div", {
@@ -5261,13 +5261,13 @@ function Placeholder({
   const map = {
     places: {
       icon: 'places',
-      title: 'Места и карта',
-      body: 'Справочник переиспользуемых мест и карта маршрута. Опциональный экран — пока не заполнен.'
+      title: 'Places and map',
+      body: 'A directory of reusable places and a route map. An optional screen — not filled in yet.'
     },
     settings: {
       icon: 'budget',
-      title: 'Настройки',
-      body: 'Валюта по умолчанию, профиль, импорт из Notion CSV и печать маршрута.'
+      title: 'Settings',
+      body: 'Default currency, profile, import from Notion CSV, and itinerary printing.'
     }
   };
   const m = map[view] || map.places;
@@ -5282,7 +5282,7 @@ function Placeholder({
     title: m.title
   }), /*#__PURE__*/React.createElement(EmptyState, {
     icon: m.icon,
-    title: m.title + ' · скоро',
+    title: m.title + ' · soon',
     body: m.body
   }));
 }
@@ -5501,23 +5501,23 @@ function Sidebar({
 }) {
   const items = trip ? [{
     id: 'overview',
-    label: 'Обзор',
+    label: 'Overview',
     icon: 'overview'
   }, {
     id: 'itinerary',
-    label: 'Маршрут',
+    label: 'Itinerary',
     icon: 'route'
   }, {
     id: 'bookings',
-    label: 'Брони',
+    label: 'Bookings',
     icon: 'bookings'
   }, {
     id: 'budget',
-    label: 'Бюджет',
+    label: 'Budget',
     icon: 'budget'
   }, {
     id: 'places',
-    label: 'Места',
+    label: 'Places',
     icon: 'places',
     opt: true
   }] : [];
@@ -6189,23 +6189,23 @@ function Sidebar({
 }) {
   const items = trip ? [{
     id: 'overview',
-    label: 'Обзор',
+    label: 'Overview',
     icon: 'overview'
   }, {
     id: 'itinerary',
-    label: 'Маршрут',
+    label: 'Itinerary',
     icon: 'route'
   }, {
     id: 'bookings',
-    label: 'Брони',
+    label: 'Bookings',
     icon: 'bookings'
   }, {
     id: 'budget',
-    label: 'Бюджет',
+    label: 'Budget',
     icon: 'budget'
   }, {
     id: 'places',
-    label: 'Места',
+    label: 'Places',
     icon: 'places',
     opt: true
   }] : [];
@@ -6859,7 +6859,7 @@ function TripsList({
         font: '500 12px/1 var(--font-mono)',
         color: left > 0 ? 'var(--coral-600)' : 'var(--success-500)'
       }
-    }, left > 0 ? 'осталось ' + DD.fmt(left, t.currency) : 'всё оплачено')), /*#__PURE__*/React.createElement(ProgressBar, {
+    }, left > 0 ? 'remaining ' + DD.fmt(left, t.currency) : 'all paid')), /*#__PURE__*/React.createElement(ProgressBar, {
       value: t.paid,
       max: t.planned,
       color: left > 0 ? 'var(--brand)' : 'var(--success-500)',
@@ -7090,7 +7090,7 @@ function Dashboard({
         font: 'var(--type-small)',
         color: 'var(--text-muted)'
       }
-    }, d.activities.length === 0 ? 'пусто' : d.activities.length + ' ' + (d.activities.length === 1 ? 'пункт' : 'пункта')), cost > 0 && /*#__PURE__*/React.createElement(Money, {
+    }, d.activities.length === 0 ? 'empty' : d.activities.length + ' ' + (d.activities.length === 1 ? 'item' : 'items')), cost > 0 && /*#__PURE__*/React.createElement(Money, {
       value: cost,
       cur: trip.currency,
       size: 13,

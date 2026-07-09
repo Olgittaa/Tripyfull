@@ -11,14 +11,14 @@ const { Icon, CatIcon, PageHead, EmptyState, Money, ProgressBar } = PMT;
    ========================================================= */
 function Bookings({ trip, onAdd, onOpen }) {
   const groups = [
-    { cat: 'transport', label: 'Транспорт' },
-    { cat: 'stay', label: 'Проживание' },
-    { cat: 'activity', label: 'Активности' },
+    { cat: 'transport', label: 'Transport' },
+    { cat: 'stay', label: 'Stay' },
+    { cat: 'activity', label: 'Activities' },
   ];
   return (
     <div style={{ padding: 40, maxWidth: 920, margin: '0 auto' }}>
-      <PageHead eyebrow={trip.name} title="Брони" subtitle="Предоплаченные брони и графики платежей."
-        actions={<Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onAdd}>Бронь</Button>} />
+      <PageHead eyebrow={trip.name} title="Bookings" subtitle="Prepaid bookings and payment schedules."
+        actions={<Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onAdd}>Booking</Button>} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
         {groups.map((g) => {
           const items = MD.bookings.filter(b => b.cat === g.cat);
@@ -46,7 +46,7 @@ function BookingCard({ b, cur, onClick }) {
   const nextPay = b.payments.filter(p => !p.paid).sort((a, c) => a.date.localeCompare(c.date))[0];
   const meta = b.cat === 'transport'
     ? (b.from + ' → ' + b.to + ' · ' + b.date.replace(' ', ', '))
-    : (b.checkIn ? ('Заезд ' + MD.dateShort(b.checkIn) + ' · ' + b.nights + ' ноч.') : (b.date ? b.date.replace(' ', ', ') : ''));
+    : (b.checkIn ? ('Check-in ' + MD.dateShort(b.checkIn) + ' · ' + b.nights + ' nights') : (b.date ? b.date.replace(' ', ', ') : ''));
   return (
     <Card padding="sm" interactive elevation="sm" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
@@ -57,11 +57,11 @@ function BookingCard({ b, cur, onClick }) {
             <Badge tone={ps.tone} variant="soft" dot>{ps.label}</Badge>
           </div>
           <div style={{ font: '400 13px/1.3 var(--font-sans)', color: 'var(--text-muted)', marginTop: 3 }}>{b.provider} · {meta}</div>
-          {nextPay && <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--coral-600)', marginTop: 6 }}>Ближайший платёж {MD.fmt(nextPay.amount, cur)} · {MD.dateShort(nextPay.date)}</div>}
+          {nextPay && <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--coral-600)', marginTop: 6 }}>Next payment {MD.fmt(nextPay.amount, cur)} · {MD.dateShort(nextPay.date)}</div>}
         </div>
         <div style={{ textAlign: 'right' }}>
           <Money value={b.price} cur={cur} size={17} />
-          <div style={{ font: '400 11px/1 var(--font-sans)', color: 'var(--text-subtle)', marginTop: 4 }}>полная цена</div>
+          <div style={{ font: '400 11px/1 var(--font-sans)', color: 'var(--text-subtle)', marginTop: 4 }}>full price</div>
         </div>
       </div>
     </Card>
@@ -78,21 +78,21 @@ function BookingForm({ booking, cur }) {
   const matches = paySum === b.price;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Input label="Название" defaultValue={b.title} placeholder="Что бронируем?" />
+      <Input label="Name" defaultValue={b.title} placeholder="What are we booking?" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Select label="Категория" options={catOpts} defaultValue={b.cat || 'transport'} />
-        <Input label="Поставщик" defaultValue={b.provider} placeholder="Авиакомпания, отель…" />
+        <Select label="Category" options={catOpts} defaultValue={b.cat || 'transport'} />
+        <Input label="Provider" defaultValue={b.provider} placeholder="Airline, hotel…" />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Input label="Номер подтверждения" defaultValue={b.conf} placeholder="ABC-123" />
-        <Input label="Полная цена" type="number" defaultValue={b.price} placeholder="0" />
+        <Input label="Confirmation number" defaultValue={b.conf} placeholder="ABC-123" />
+        <Input label="Full price" type="number" defaultValue={b.price} placeholder="0" />
       </div>
 
       {/* payment schedule */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <label style={{ font: '600 15px/1 var(--font-display)', color: 'var(--text-strong)' }}>График платежей</label>
-          <Badge tone={matches ? 'success' : 'warning'} variant="soft">{matches ? '✓ сходится' : 'не сходится'}</Badge>
+          <label style={{ font: '600 15px/1 var(--font-display)', color: 'var(--text-strong)' }}>Payment schedule</label>
+          <Badge tone={matches ? 'success' : 'warning'} variant="soft">{matches ? '✓ matches' : 'does not match'}</Badge>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {(b.payments || []).map((p) => (
@@ -102,20 +102,20 @@ function BookingForm({ booking, cur }) {
                 <div style={{ font: '600 14px/1.2 var(--font-sans)', color: 'var(--text-strong)' }}>{MD.fmt(p.amount, cur)}</div>
                 <div style={{ font: '500 11px/1 var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>{MD.dateShort(p.date)}</div>
               </div>
-              <Badge tone={p.paid ? 'success' : 'neutral'} variant="soft">{p.paid ? 'оплачено' : 'ожидается'}</Badge>
+              <Badge tone={p.paid ? 'success' : 'neutral'} variant="soft">{p.paid ? 'paid' : 'pending'}</Badge>
             </div>
           ))}
           <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', border: '1.5px dashed var(--border-default)', background: 'transparent', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', cursor: 'pointer', font: '600 14px/1 var(--font-sans)' }}>
-            <Icon name="plus" size={16} /> Добавить платёж
+            <Icon name="plus" size={16} /> Add payment
           </button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, font: 'var(--type-small)', color: 'var(--text-muted)' }}>
-          <span>Сумма платежей</span>
+          <span>Payments total</span>
           <span style={{ font: '600 13px/1 var(--font-mono)', color: matches ? 'var(--success-500)' : 'var(--coral-600)' }}>{MD.fmt(paySum, cur)} / {MD.fmt(b.price || 0, cur)}</span>
         </div>
       </div>
 
-      <Input label="Заметки" defaultValue={b.note} placeholder="Условия, отмена, детали" />
+      <Input label="Notes" defaultValue={b.note} placeholder="Terms, cancellation, details" />
     </div>
   );
 }
@@ -132,31 +132,31 @@ function Budget({ trip }) {
 
   return (
     <div style={{ padding: 40, maxWidth: 960, margin: '0 auto' }}>
-      <PageHead eyebrow={trip.name} title="Бюджет" subtitle="Деньги целиком — план против факта." />
+      <PageHead eyebrow={trip.name} title="Budget" subtitle="The money, in full — plan vs actual." />
 
       {/* summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
         <Card elevation="sm">
-          <div style={{ font: '400 13px/1 var(--font-sans)', color: 'var(--text-muted)', marginBottom: 8 }}>Запланировано</div>
+          <div style={{ font: '400 13px/1 var(--font-sans)', color: 'var(--text-muted)', marginBottom: 8 }}>Planned</div>
           <Money value={planned} cur={cur} size={30} strong />
-          <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--text-subtle)', marginTop: 8 }}>брони + оценки активностей</div>
+          <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--text-subtle)', marginTop: 8 }}>bookings + activity estimates</div>
         </Card>
         <Card elevation="sm">
-          <div style={{ font: '400 13px/1 var(--font-sans)', color: 'var(--text-muted)', marginBottom: 8 }}>Потрачено</div>
+          <div style={{ font: '400 13px/1 var(--font-sans)', color: 'var(--text-muted)', marginBottom: 8 }}>Spent</div>
           <Money value={actual} cur={cur} size={30} strong color="var(--success-500)" />
           <div style={{ marginTop: 12 }}><ProgressBar value={actual} max={planned} color="var(--success-500)" /></div>
         </Card>
         <Card elevation="sm">
-          <div style={{ font: '400 13px/1 var(--font-sans)', color: 'var(--text-muted)', marginBottom: 8 }}>Осталось оплатить</div>
+          <div style={{ font: '400 13px/1 var(--font-sans)', color: 'var(--text-muted)', marginBottom: 8 }}>Left to pay</div>
           <Money value={left} cur={cur} size={30} strong color="var(--coral-600)" />
-          <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--text-subtle)', marginTop: 8 }}>по графикам броней</div>
+          <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--text-subtle)', marginTop: 8 }}>by booking schedules</div>
         </Card>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         {/* by category */}
         <Card elevation="sm">
-          <h3 style={{ font: 'var(--type-h3)', margin: '0 0 16px' }}>По категориям</h3>
+          <h3 style={{ font: 'var(--type-h3)', margin: '0 0 16px' }}>By category</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {cats.map((c) => (
               <div key={c.cat}>
@@ -173,10 +173,10 @@ function Budget({ trip }) {
 
         {/* by day */}
         <Card elevation="sm">
-          <h3 style={{ font: 'var(--type-h3)', margin: '0 0 16px' }}>По дням</h3>
+          <h3 style={{ font: 'var(--type-h3)', margin: '0 0 16px' }}>By day</h3>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', font: '500 11px/1 var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-subtle)', paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>
-              <span style={{ flex: 1 }}>День</span><span style={{ width: 64, textAlign: 'right' }}>План</span><span style={{ width: 64, textAlign: 'right' }}>Факт</span><span style={{ width: 64, textAlign: 'right' }}>Δ</span>
+              <span style={{ flex: 1 }}>Day</span><span style={{ width: 64, textAlign: 'right' }}>Plan</span><span style={{ width: 64, textAlign: 'right' }}>Actual</span><span style={{ width: 64, textAlign: 'right' }}>Δ</span>
             </div>
             {MD.days.filter(d => d.activities.length).map((d) => {
               const plan = MD.dayCost(d.id);
@@ -184,7 +184,7 @@ function Budget({ trip }) {
               const diff = fact - plan;
               return (
                 <div key={d.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 0', borderBottom: '1px dashed var(--border-subtle)', font: 'var(--type-small)' }}>
-                  <span style={{ flex: 1, color: 'var(--text-strong)', fontWeight: 500 }}>Д{d.n} · {d.city}</span>
+                  <span style={{ flex: 1, color: 'var(--text-strong)', fontWeight: 500 }}>D{d.n} · {d.city}</span>
                   <span style={{ width: 64, textAlign: 'right', font: '500 12px/1 var(--font-mono)', color: 'var(--text-muted)' }}>{MD.fmt(plan, cur)}</span>
                   <span style={{ width: 64, textAlign: 'right', font: '500 12px/1 var(--font-mono)', color: 'var(--text-strong)' }}>{MD.fmt(fact, cur)}</span>
                   <span style={{ width: 64, textAlign: 'right', font: '500 12px/1 var(--font-mono)', color: diff > 0 ? 'var(--coral-600)' : 'var(--success-500)' }}>{diff > 0 ? '+' : ''}{MD.fmt(diff, cur)}</span>
@@ -192,7 +192,7 @@ function Budget({ trip }) {
               );
             })}
           </div>
-          <Button size="sm" variant="ghost" iconLeft={<Icon name="plus" size={15} />} style={{ marginTop: 12 }}>Добавить трату</Button>
+          <Button size="sm" variant="ghost" iconLeft={<Icon name="plus" size={15} />} style={{ marginTop: 12 }}>Add expense</Button>
         </Card>
       </div>
     </div>
@@ -205,15 +205,15 @@ function Budget({ trip }) {
 function NewTripForm() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 4 }}>
-      <Input label="Название" placeholder="Напр. Лето в Японии" />
-      <Input label="Направление" placeholder="Город или страна" iconLeft={<Icon name="places" size={15} />} />
+      <Input label="Name" placeholder="e.g. Summer in Japan" />
+      <Input label="Destination" placeholder="City or country" iconLeft={<Icon name="places" size={15} />} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Input label="Дата начала" placeholder="ГГГГ-ММ-ДД" iconLeft={<Icon name="calendar" size={15} />} />
-        <Input label="Дата конца" placeholder="ГГГГ-ММ-ДД" iconLeft={<Icon name="calendar" size={15} />} />
+        <Input label="Start date" placeholder="YYYY-MM-DD" iconLeft={<Icon name="calendar" size={15} />} />
+        <Input label="End date" placeholder="YYYY-MM-DD" iconLeft={<Icon name="calendar" size={15} />} />
       </div>
-      <Select label="Базовая валюта" options={[{value:'eur',label:'€ Евро'},{value:'usd',label:'$ Доллар США'},{value:'gbp',label:'£ Фунт'},{value:'jpy',label:'¥ Иена'}]} defaultValue="eur" />
+      <Select label="Base currency" options={[{value:'eur',label:'€ Euro'},{value:'usd',label:'$ US Dollar'},{value:'gbp',label:'£ Pound'},{value:'jpy',label:'¥ Yen'}]} defaultValue="eur" />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px', background: 'var(--info-100)', borderRadius: 'var(--radius-md)', color: 'var(--info-500)', font: 'var(--type-small)' }}>
-        <Icon name="alert" size={16} /> Дни создадутся автоматически из выбранных дат.
+        <Icon name="alert" size={16} /> Days are created automatically from the selected dates.
       </div>
     </div>
   );
@@ -221,14 +221,14 @@ function NewTripForm() {
 
 function Placeholder({ trip, view }) {
   const map = {
-    places: { icon: 'places', title: 'Места и карта', body: 'Справочник переиспользуемых мест и карта маршрута. Опциональный экран — пока не заполнен.' },
-    settings: { icon: 'budget', title: 'Настройки', body: 'Валюта по умолчанию, профиль, импорт из Notion CSV и печать маршрута.' },
+    places: { icon: 'places', title: 'Places and map', body: 'A directory of reusable places and a route map. An optional screen — not filled in yet.' },
+    settings: { icon: 'budget', title: 'Settings', body: 'Default currency, profile, import from Notion CSV, and itinerary printing.' },
   };
   const m = map[view] || map.places;
   return (
     <div style={{ padding: 40, maxWidth: 720, margin: '0 auto' }}>
       <PageHead eyebrow={trip ? trip.name : 'Tripyfull'} title={m.title} />
-      <EmptyState icon={m.icon} title={m.title + ' · скоро'} body={m.body} />
+      <EmptyState icon={m.icon} title={m.title + ' · soon'} body={m.body} />
     </div>
   );
 }

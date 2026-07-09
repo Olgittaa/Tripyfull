@@ -41,11 +41,11 @@ const CatIcon = ({ cat, size = 16 }) => <Icon name={D.CATEGORY[cat] ? D.CATEGORY
 /* ---------- sidebar ---------- */
 function Sidebar({ trip, view, onNav, onHome }) {
   const items = trip ? [
-    { id: 'overview', label: 'Обзор',    icon: 'overview' },
-    { id: 'itinerary',label: 'Маршрут',  icon: 'route' },
-    { id: 'bookings', label: 'Брони',    icon: 'bookings' },
-    { id: 'budget',   label: 'Бюджет',   icon: 'budget' },
-    { id: 'places',   label: 'Места',    icon: 'places', opt: true },
+    { id: 'overview', label: 'Overview',    icon: 'overview' },
+    { id: 'itinerary',label: 'Itinerary',  icon: 'route' },
+    { id: 'bookings', label: 'Bookings',    icon: 'bookings' },
+    { id: 'budget',   label: 'Budget',   icon: 'budget' },
+    { id: 'places',   label: 'Places',    icon: 'places', opt: true },
   ] : [];
 
   return (
@@ -59,14 +59,14 @@ function Sidebar({ trip, view, onNav, onHome }) {
         <button onClick={onHome} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
           border: 'none', background: trip ? 'transparent' : 'var(--brand-soft)', borderRadius: 'var(--radius-md)', cursor: 'pointer',
           color: trip ? 'var(--text-muted)' : 'var(--brand-pressed)', font: (trip ? '500' : '600') + ' 15px/1 var(--font-sans)' }}>
-          <Icon name="trips" size={20} /> Все поездки
+          <Icon name="trips" size={20} /> All trips
         </button>
       </div>
 
       {trip && (
         <React.Fragment>
           <div style={{ padding: '14px 20px 8px', marginTop: 6, borderTop: '1px solid var(--border-subtle)' }}>
-            <div style={{ font: '500 11px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-subtle)', marginBottom: 4 }}>Поездка</div>
+            <div style={{ font: '500 11px/1 var(--font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-subtle)', marginBottom: 4 }}>Trip</div>
             <div style={{ font: '700 17px/1.15 var(--font-display)', color: 'var(--text-strong)', letterSpacing: '-0.01em' }}>{trip.name}</div>
             <div style={{ font: '400 12px/1.3 var(--font-sans)', color: 'var(--text-muted)', marginTop: 3 }}>{trip.destination} · {D.dateRange(trip.start, trip.end)}</div>
           </div>
@@ -79,7 +79,7 @@ function Sidebar({ trip, view, onNav, onHome }) {
                   background: on ? 'var(--brand)' : 'transparent', color: on ? '#fff' : 'var(--text-body)',
                   boxShadow: on ? 'var(--shadow-brand)' : 'none', font: (on ? '600' : '500') + ' 15px/1 var(--font-sans)' }}>
                   <Icon name={it.icon} size={19} sw={on ? 2.3 : 2} /> {it.label}
-                  {it.opt && <span style={{ marginLeft: 'auto', font: '500 10px/1 var(--font-mono)', color: on ? 'rgba(255,255,255,0.7)' : 'var(--text-subtle)' }}>опц.</span>}
+                  {it.opt && <span style={{ marginLeft: 'auto', font: '500 10px/1 var(--font-mono)', color: on ? 'rgba(255,255,255,0.7)' : 'var(--text-subtle)' }}>opt.</span>}
                 </button>
               );
             })}
@@ -91,7 +91,7 @@ function Sidebar({ trip, view, onNav, onHome }) {
         <Avatar name="Mara Ortiz" size="sm" />
         <div style={{ minWidth: 0, lineHeight: 1.25 }}>
           <div style={{ font: '600 13px/1.25 var(--font-sans)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>Mara Ortiz</div>
-          <div style={{ font: '400 11px/1.2 var(--font-sans)', color: 'var(--text-muted)' }}>Настройки</div>
+          <div style={{ font: '400 11px/1.2 var(--font-sans)', color: 'var(--text-muted)' }}>Settings</div>
         </div>
       </div>
     </aside>
@@ -126,7 +126,7 @@ function Drawer({ open, title, eyebrow, onClose, footer, children, width = 460 }
             {eyebrow && <div className="tf-eyebrow" style={{ marginBottom: 6 }}>{eyebrow}</div>}
             <h2 style={{ font: '700 22px/1.1 var(--font-display)', letterSpacing: '-0.02em', color: 'var(--text-strong)', margin: 0 }}>{title}</h2>
           </div>
-          <IconButton icon={<Icon name="close" size={18} />} label="Закрыть" variant="ghost" onClick={onClose} />
+          <IconButton icon={<Icon name="close" size={18} />} label="Close" variant="ghost" onClick={onClose} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: 22 }}>{children}</div>
         {footer && <div style={{ padding: '16px 22px', borderTop: '1px solid var(--border-subtle)', background: 'var(--surface-card)', display: 'flex', gap: 12 }}>{footer}</div>}
@@ -149,7 +149,7 @@ function Dialog({ open, title, eyebrow, onClose, footer, children, width = 520 }
             {eyebrow && <div className="tf-eyebrow" style={{ marginBottom: 6 }}>{eyebrow}</div>}
             <h2 style={{ font: '700 24px/1.1 var(--font-display)', letterSpacing: '-0.02em', color: 'var(--text-strong)', margin: 0 }}>{title}</h2>
           </div>
-          <IconButton icon={<Icon name="close" size={18} />} label="Закрыть" variant="ghost" onClick={onClose} />
+          <IconButton icon={<Icon name="close" size={18} />} label="Close" variant="ghost" onClick={onClose} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 8px' }}>{children}</div>
         {footer && <div style={{ padding: '16px 24px 22px', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>{footer}</div>}

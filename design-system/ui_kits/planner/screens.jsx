@@ -23,8 +23,8 @@ function TripsList({ onOpen, onNew, loading }) {
   }
   return (
     <div style={{ padding: 40, maxWidth: 1040, margin: '0 auto' }}>
-      <PageHead eyebrow="Tripyfull" title="Мои поездки" subtitle="Всё, что ты запланировал — в полном порядке."
-        actions={<Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onNew}>Новая поездка</Button>} />
+      <PageHead eyebrow="Tripyfull" title="My trips" subtitle="Everything you've planned — in perfect order."
+        actions={<Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onNew}>New trip</Button>} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
         {DD.trips.map((t) => {
           const st = DD.TRIP_STATUS[t.status];
@@ -44,8 +44,8 @@ function TripsList({ onOpen, onNew, loading }) {
                   <Icon name="calendar" size={14} /> {DD.dateRange(t.start, t.end)}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                  <span style={{ font: 'var(--type-small)', color: 'var(--text-muted)' }}>Оплачено {DD.fmt(t.paid, t.currency)}</span>
-                  <span style={{ font: '500 12px/1 var(--font-mono)', color: left > 0 ? 'var(--coral-600)' : 'var(--success-500)' }}>{left > 0 ? 'осталось ' + DD.fmt(left, t.currency) : 'всё оплачено'}</span>
+                  <span style={{ font: 'var(--type-small)', color: 'var(--text-muted)' }}>Paid {DD.fmt(t.paid, t.currency)}</span>
+                  <span style={{ font: '500 12px/1 var(--font-mono)', color: left > 0 ? 'var(--coral-600)' : 'var(--success-500)' }}>{left > 0 ? 'remaining ' + DD.fmt(left, t.currency) : 'all paid'}</span>
                 </div>
                 <ProgressBar value={t.paid} max={t.planned} color={left > 0 ? 'var(--brand)' : 'var(--success-500)'} h={7} />
               </div>
@@ -70,27 +70,27 @@ function Dashboard({ trip, onEdit, onOpenDay, onGo }) {
     <div style={{ padding: 40, maxWidth: 1040, margin: '0 auto' }}>
       <PageHead eyebrow={DD.TRIP_STATUS[trip.status].label} title={trip.name}
         subtitle={trip.destination + ' · ' + DD.dateRange(trip.start, trip.end)}
-        actions={<Button variant="secondary" iconLeft={<Icon name="edit" size={16} />} onClick={onEdit}>Редактировать</Button>} />
+        actions={<Button variant="secondary" iconLeft={<Icon name="edit" size={16} />} onClick={onEdit}>Edit</Button>} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20, marginBottom: 20 }}>
         {/* budget summary */}
         <Card elevation="sm">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-            <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Бюджет</h3>
-            <Button size="sm" variant="ghost" iconRight={<Icon name="chevron" size={15} />} onClick={() => onGo('budget')}>Подробнее</Button>
+            <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Budget</h3>
+            <Button size="sm" variant="ghost" iconRight={<Icon name="chevron" size={15} />} onClick={() => onGo('budget')}>Details</Button>
           </div>
           <div style={{ display: 'flex', gap: 26, marginBottom: 18 }}>
-            <SumStat label="Запланировано" value={planned} cur={trip.currency} />
-            <SumStat label="Оплачено" value={paid} cur={trip.currency} color="var(--success-500)" />
-            <SumStat label="Осталось" value={left} cur={trip.currency} color="var(--coral-600)" />
+            <SumStat label="Planned" value={planned} cur={trip.currency} />
+            <SumStat label="Paid" value={paid} cur={trip.currency} color="var(--success-500)" />
+            <SumStat label="Left" value={left} cur={trip.currency} color="var(--coral-600)" />
           </div>
           <ProgressBar value={paid} max={planned} />
-          <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--text-muted)', marginTop: 8 }}>{Math.round(paid/planned*100)}% оплачено</div>
+          <div style={{ font: '500 12px/1 var(--font-mono)', color: 'var(--text-muted)', marginTop: 8 }}>{Math.round(paid/planned*100)}% paid</div>
         </Card>
 
         {/* upcoming payments */}
         <Card elevation="sm">
-          <h3 style={{ font: 'var(--type-h3)', margin: '0 0 14px' }}>Ближайшие платежи</h3>
+          <h3 style={{ font: 'var(--type-h3)', margin: '0 0 14px' }}>Upcoming payments</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {upcoming.map((p) => (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
@@ -108,8 +108,8 @@ function Dashboard({ trip, onEdit, onOpenDay, onGo }) {
 
       {/* day feed */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Дни поездки</h3>
-        <Button size="sm" variant="ghost" iconRight={<Icon name="chevron" size={15} />} onClick={() => onGo('itinerary')}>Открыть маршрут</Button>
+        <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Trip days</h3>
+        <Button size="sm" variant="ghost" iconRight={<Icon name="chevron" size={15} />} onClick={() => onGo('itinerary')}>Open itinerary</Button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
         {DD.days.map((d) => {
@@ -117,12 +117,12 @@ function Dashboard({ trip, onEdit, onOpenDay, onGo }) {
           return (
             <Card key={d.id} padding="sm" interactive elevation="sm" onClick={() => onOpenDay(d.id)} style={{ cursor: 'pointer' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ font: '700 15px/1 var(--font-display)', color: 'var(--text-strong)' }}>День {d.n}</span>
+                <span style={{ font: '700 15px/1 var(--font-display)', color: 'var(--text-strong)' }}>Day {d.n}</span>
                 <span style={{ font: '500 11px/1 var(--font-mono)', color: 'var(--text-subtle)' }}>{DD.dateShort(d.date)}</span>
               </div>
               <div style={{ font: '500 13px/1.2 var(--font-sans)', color: 'var(--accent)', margin: '8px 0 10px' }}>{d.city}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ font: 'var(--type-small)', color: 'var(--text-muted)' }}>{d.activities.length === 0 ? 'пусто' : d.activities.length + ' ' + (d.activities.length === 1 ? 'пункт' : 'пункта')}</span>
+                <span style={{ font: 'var(--type-small)', color: 'var(--text-muted)' }}>{d.activities.length === 0 ? 'empty' : d.activities.length + ' ' + (d.activities.length === 1 ? 'item' : 'items')}</span>
                 {cost > 0 && <Money value={cost} cur={trip.currency} size={13} color="var(--text-muted)" />}
               </div>
             </Card>
@@ -133,8 +133,8 @@ function Dashboard({ trip, onEdit, onOpenDay, onGo }) {
       {/* bookings preview */}
       <Card elevation="sm">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Брони · {DD.bookings.length}</h3>
-          <Button size="sm" variant="ghost" iconRight={<Icon name="chevron" size={15} />} onClick={() => onGo('bookings')}>Все брони</Button>
+          <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Bookings · {DD.bookings.length}</h3>
+          <Button size="sm" variant="ghost" iconRight={<Icon name="chevron" size={15} />} onClick={() => onGo('bookings')}>All bookings</Button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {DD.bookings.slice(0, 3).map((b) => (
@@ -178,16 +178,16 @@ function DayItinerary({ trip, dayId, setDayId, onAdd, onEditActivity }) {
       {/* day header with prev/next */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <IconButton icon={<Icon name="left" size={18} />} label="Предыдущий день" variant="outline" onClick={() => idx > 0 && setDayId(DD.days[idx-1].id)} disabled={idx === 0} />
+          <IconButton icon={<Icon name="left" size={18} />} label="Previous day" variant="outline" onClick={() => idx > 0 && setDayId(DD.days[idx-1].id)} disabled={idx === 0} />
           <div>
-            <div className="tf-eyebrow" style={{ marginBottom: 4 }}>День {day.n} · {DD.dateShort(day.date)}</div>
+            <div className="tf-eyebrow" style={{ marginBottom: 4 }}>Day {day.n} · {DD.dateShort(day.date)}</div>
             <h1 style={{ font: '700 30px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--text-strong)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
               {day.city} <Icon name="edit" size={16} />
             </h1>
           </div>
-          <IconButton icon={<Icon name="right" size={18} />} label="Следующий день" variant="outline" onClick={() => idx < DD.days.length-1 && setDayId(DD.days[idx+1].id)} disabled={idx === DD.days.length-1} />
+          <IconButton icon={<Icon name="right" size={18} />} label="Next day" variant="outline" onClick={() => idx < DD.days.length-1 && setDayId(DD.days[idx+1].id)} disabled={idx === DD.days.length-1} />
         </div>
-        <Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onAdd}>Активность</Button>
+        <Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onAdd}>Activity</Button>
       </div>
 
       {/* day picker strip */}
@@ -198,7 +198,7 @@ function DayItinerary({ trip, dayId, setDayId, onAdd, onEditActivity }) {
             <button key={d.id} onClick={() => setDayId(d.id)} style={{ flex: 'none', border: 'none', cursor: 'pointer',
               background: on ? 'var(--brand)' : 'var(--surface-card)', color: on ? '#fff' : 'var(--text-muted)',
               boxShadow: on ? 'var(--shadow-brand)' : 'var(--shadow-xs)', borderRadius: 'var(--radius-md)', padding: '9px 13px', textAlign: 'center', minWidth: 58 }}>
-              <div style={{ font: '600 13px/1 var(--font-sans)' }}>Д{d.n}</div>
+              <div style={{ font: '600 13px/1 var(--font-sans)' }}>D{d.n}</div>
               <div style={{ font: '500 10px/1.4 var(--font-mono)', opacity: 0.8, marginTop: 3 }}>{DD.dateShort(d.date)}</div>
             </button>
           );
@@ -206,8 +206,8 @@ function DayItinerary({ trip, dayId, setDayId, onAdd, onEditActivity }) {
       </div>
 
       {acts.length === 0 ? (
-        <EmptyState icon="route" title="В этом дне пока пусто" body="Добавь первую активность — мы поставим её на нужное время."
-          action={<Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onAdd}>Добавить активность</Button>} />
+        <EmptyState icon="route" title="This day is empty so far" body="Add your first activity — we'll place it at the right time."
+          action={<Button variant="primary" iconLeft={<Icon name="plus" size={18} />} onClick={onAdd}>Add activity</Button>} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {acts.map((a, i) => (
@@ -250,7 +250,7 @@ function DayItinerary({ trip, dayId, setDayId, onAdd, onEditActivity }) {
             ))}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ font: '500 13px/1 var(--font-sans)', color: 'var(--text-muted)' }}>Итог дня</span>
+            <span style={{ font: '500 13px/1 var(--font-sans)', color: 'var(--text-muted)' }}>Day total</span>
             <Money value={total} cur={trip.currency} size={20} strong />
           </div>
         </Card>
@@ -265,19 +265,19 @@ function ActivityForm({ activity }) {
   const catOpts = Object.keys(DD.CATEGORY).map(k => ({ value: k, label: DD.CATEGORY[k].label }));
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Input label="Название" defaultValue={a.title} placeholder="Что планируем?" />
-      <Select label="Тип" options={catOpts} defaultValue={a.cat || 'activity'} />
+      <Input label="Name" defaultValue={a.title} placeholder="What are we planning?" />
+      <Select label="Type" options={catOpts} defaultValue={a.cat || 'activity'} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Input label="Начало" defaultValue={a.start} placeholder="10:00" iconLeft={<Icon name="clock" size={15} />} />
-        <Input label="Конец" defaultValue={a.end} placeholder="11:30" iconLeft={<Icon name="clock" size={15} />} />
+        <Input label="Start" defaultValue={a.start} placeholder="10:00" iconLeft={<Icon name="clock" size={15} />} />
+        <Input label="End" defaultValue={a.end} placeholder="11:30" iconLeft={<Icon name="clock" size={15} />} />
       </div>
-      <Input label="Адрес" defaultValue={a.address} placeholder="Место или адрес" iconLeft={<Icon name="places" size={15} />} />
-      <Input label="Стоимость" type="number" defaultValue={a.cost} placeholder="0" helper="В валюте поездки" />
-      <Input label="Заметки" defaultValue={a.note} placeholder="Любые детали" />
+      <Input label="Address" defaultValue={a.address} placeholder="Place or address" iconLeft={<Icon name="places" size={15} />} />
+      <Input label="Cost" type="number" defaultValue={a.cost} placeholder="0" helper="In trip currency" />
+      <Input label="Notes" defaultValue={a.note} placeholder="Any details" />
       <div>
-        <label style={{ font: '500 14px/1.3 var(--font-sans)', color: 'var(--text-strong)', display: 'block', marginBottom: 6 }}>Ссылки</label>
+        <label style={{ font: '500 14px/1.3 var(--font-sans)', color: 'var(--text-strong)', display: 'block', marginBottom: 6 }}>Links</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 14px', border: '1.5px dashed var(--border-default)', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', font: 'var(--type-small)', cursor: 'pointer' }}>
-          <Icon name="link" size={15} /> Добавить ссылку
+          <Icon name="link" size={15} /> Add link
         </div>
       </div>
     </div>

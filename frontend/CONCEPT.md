@@ -1,69 +1,68 @@
-# Tripyfull — концепция
+# Tripyfull — Concept
 
-Персональный планировщик путешествий: **поездки → дни → активности**, плюс брони
-с платежами, бюджет и переиспользуемая библиотека мест.
+A personal trip planner: **trips → days → activities**, plus bookings with payments,
+budgeting, and a reusable library of places.
 
-Главный принцип по данным: **пользователь вводит минимум (ключ), бесплатные API
-дополняют остальное.** Все вызовы сторонних сервисов — только с бэкенда, ключи на
-фронт не попадают.
+Core data principle: **the user enters the minimum (the key bit), free APIs fill in the
+rest.** All third-party calls happen on the backend only; keys never reach the frontend.
 
-## Стек и структура (monorepo)
-- **Backend** (`backend/`) — Spring Boot + PostgreSQL, JWT-аутентификация, JPA (`ddl-auto=update`).
+## Stack and structure (monorepo)
+- **Backend** (`backend/`) — Spring Boot + PostgreSQL, JWT authentication, JPA (`ddl-auto=update`).
 - **Frontend** (`frontend/`) — Vue 3 + Pinia + PrimeVue + Vue Router + Leaflet.
-- **Design system** (`design-system/`) — токены, стили и UI-kit Tripyfull.
-- Секреты (БД, jwt, API-ключи) — в `application-local.properties` (вне git).
-- Визуальный язык — из макет-системы Tripyfull (Claude Design).
+- **Design system** (`design-system/`) — Tripyfull tokens, styles, and UI kit.
+- Secrets (DB, jwt, API keys) live in `application-local.properties` (outside git).
+- Visual language comes from the Tripyfull mockup system (Claude Design).
 
-## Доменная модель
-- **Trip** (title, destination, даты, статус, валюта)
-  → **Day** (дата, город, overnight)
-  → **Activity** (имя, тип, время*, стоимость+валюта, заметки, `placeId?`).
-- **Booking** (рейс/паром/прокат/жильё/активность) + **Payment[]** (график платежей)
-  + **Attachment[]** (файлы).
-- **Place** — переиспользуемое место (POI): тип, страна/город, адрес, координаты,
-  фото[], ссылки[], `osmId`, **visibility** (PUBLIC/PRIVATE), **source**
-  (MANUAL/GEOCODED/IMPORTED), владелец. **PlaceFolder** — папки (одна папка на место;
-  можно класть и чужие публичные места).
-- Активность ссылается на Place → наследует адрес/координаты → пин на карте дня.
+## Domain model
+- **Trip** (title, destination, dates, status, currency)
+  → **Day** (date, city, overnight)
+  → **Activity** (name, type, time*, cost+currency, notes, `placeId?`).
+- **Booking** (flight/ferry/rental/lodging/activity) + **Payment[]** (payment schedule)
+  + **Attachment[]** (files).
+- **Place** — a reusable place (POI): type, country/city, address, coordinates,
+  photos[], links[], `osmId`, **visibility** (PUBLIC/PRIVATE), **source**
+  (MANUAL/GEOCODED/IMPORTED), owner. **PlaceFolder** — folders (one folder per place;
+  you can also file other people's public places).
+- An activity references a Place → inherits its address/coordinates → a pin on the day's map.
 
-## Бесплатный стек API (на бэкенде)
-- **Frankfurter** (+ open.er-api фолбэк) — конвертация валют.
-- **Nominatim/OSM + Geoapify** — прямой и обратный геокодинг; язык результатов
-  принудительно английский (`Accept-Language: en` / `lang=en`) → латиница.
-- **AeroDataBox** (RapidAPI) — рейс по номеру+дате (времена, терминалы, аэропорты),
-  фолбэк на AviationStack/AirLabs.
-- **Google Maps import** — разворот share-ссылки по редиректу, чтение Open Graph
-  (имя/фото/описание) и координат; распознавание и отклонение «списков».
+## Free API stack (on the backend)
+- **Frankfurter** (+ open.er-api fallback) — currency conversion.
+- **Nominatim/OSM + Geoapify** — forward and reverse geocoding; result language is
+  forced to English (`Accept-Language: en` / `lang=en`) → Latin script.
+- **AeroDataBox** (RapidAPI) — flight by number+date (times, terminals, airports),
+  with AviationStack/AirLabs as fallback.
+- **Google Maps import** — expands a share link via its redirect, reads Open Graph
+  (name/photo/description) and coordinates; detects and rejects "lists".
 
-## Фичи
-1. **Умный перенос дат поездки** — сдвиг `start/end` и всех дней на дельту, удаление
-   дней вне диапазона, подтверждение-превью.
-2. **Брони** — поля по типам (IATA/терминалы/seat, vessel/cabin, carClass,
-   roomType/guests, bookingUrl), автозаполнение рейсов (AeroDataBox), вложения,
-   производные поля (nights, pricePerNight, duration — считаются на сервере).
-3. **Библиотека мест** — CRUD, видимость (свои + чужие публичные), фильтры
-   (страна/тип/приватность/источник/город/поиск/сортировка), **папки**, импорт из
-   Google Maps, фото+ссылки, переключатель **грид/список**, автокомплит-поиск,
-   инференс типа из категории.
-4. **Маршрут дня** — двухколоночный экран: слева карточка Visiting/Overnight +
-   таймлайн активностей (пилюли «N на карте»), справа sticky-карта «Маршрут дня» с
-   нумерованными пинами и пунктирным маршрутом; в пустом дне — «Добавить из мест ·
-   {город}».
-5. **Форма активности** — collapsed-выбор источника **Search / Import / Manually**;
-   тип/адрес/координаты только в ручном режиме, у связанного места — «Edit place →»
-   (открывает редактор места); время/стоимость+валюта/заметки — общие; опция
-   «сохранить активность как место».
+## Features
+1. **Smart trip-date shift** — move `start/end` and all days by a delta, drop days
+   outside the range, with a confirmation preview.
+2. **Bookings** — fields per type (IATA/terminals/seat, vessel/cabin, carClass,
+   roomType/guests, bookingUrl), flight autofill (AeroDataBox), attachments,
+   derived fields (nights, pricePerNight, duration — computed on the server).
+3. **Places library** — CRUD, visibility (own + others' public), filters
+   (country/type/privacy/source/city/search/sort), **folders**, import from
+   Google Maps, photos+links, **grid/list** toggle, autocomplete search,
+   type inference from category.
+4. **Day itinerary** — two-column screen: on the left, a Visiting/Overnight card +
+   an activity timeline ("N on the map" pills); on the right, a sticky "Day route" map
+   with numbered pins and a dashed route; on an empty day — "Add from places ·
+   {city}".
+5. **Activity form** — collapsed source picker **Search / Import / Manually**;
+   type/address/coordinates only in manual mode, a linked place shows "Edit place →"
+   (opens the place editor); time/cost+currency/notes are shared; option to
+   "save the activity as a place".
 
-## Дизайн-система
-Тёплая «бумажная» палитра (`--paper`, коралловый бренд, тил-акцент, золото), шрифты
-Bricolage Grotesque / Hanken Grotesk / JetBrains Mono, щедрые радиусы, pill-бейджи и
-кнопки, карточки с мягкой тенью и hover-подъёмом, eyebrow-лейблы. Всё через
-CSS-токены в `src/index.css` + переопределения PrimeVue.
+## Design system
+A warm "paper" palette (`--paper`, coral brand, teal accent, gold), fonts
+Bricolage Grotesque / Hanken Grotesk / JetBrains Mono, generous radii, pill badges and
+buttons, cards with a soft shadow and hover lift, eyebrow labels. All via
+CSS tokens in `src/index.css` + PrimeVue overrides.
 
-## Инженерные заметки
-- `ddl-auto=update` не меняет существующие CHECK-констрейнты и не добавляет NOT NULL
-  на непустые таблицы — поэтому новые enum-значения делаем через `columnDefinition`,
-  новые колонки — nullable, а устаревший `places_source_check` снимает авто-раннер
-  `SchemaFixup` при старте.
-- Единицы валюты в «итоге дня»/бюджете пока суммируются без конвертации (потенциальный
-  апгрейд — конвертация через уже подключённый Frankfurter).
+## Engineering notes
+- `ddl-auto=update` won't alter existing CHECK constraints and won't add NOT NULL to
+  non-empty tables — so new enum values go through `columnDefinition`, new columns are
+  nullable, and the stale `places_source_check` is dropped by the `SchemaFixup`
+  auto-runner at startup.
+- Currency amounts in the "day total"/budget are currently summed without conversion
+  (a potential upgrade — conversion via the already-integrated Frankfurter).

@@ -20,15 +20,15 @@ python3 -m http.server 8765
 - **`index.html`** — wires state (current trip, view, day, open drawers/dialog) and the loading→loaded skeleton demo.
 
 ## Screens (per spec)
-1. **Список поездок (Home)** — trip cards: cover, status badge, dates, budget mini-indicator. `+ Новая поездка` → Dialog. Loading shows skeletons.
-2. **Новая / редактировать поездка → Dialog** — name, destination, dates, base currency, hint "дни создадутся автоматически".
-3. **Обзор поездки (Dashboard)** — budget summary widget, upcoming payments, day feed, bookings preview; each links into its section.
-4. **День / Маршрут** — day header with ← → switcher + editable city, day-picker strip, activity timeline (time · type badge · address · cost), per-category day total, `+ Активность`, empty state.
-5. **Активность → Side Drawer** — name, type, start/end, address, cost, notes, links; save / delete.
-6. **Брони** — grouped by Транспорт / Проживание / Активности; card shows provider, price, payment status, next payment.
-7. **Бронь + платежи → Side Drawer** — booking fields + payment schedule with "сумма платежей = полной цене" indicator; mark paid, add payment.
-8. **Бюджет** — план/факт summary, by-category bars, by-day table with Δ.
-9–10. **Места / Настройки** — optional, shown as labelled "скоро" placeholders.
+1. **Trips list (Home)** — trip cards: cover, status badge, dates, budget mini-indicator. `+ New trip` → Dialog. Loading shows skeletons.
+2. **New / edit trip → Dialog** — name, destination, dates, base currency, hint "days are created automatically".
+3. **Trip overview (Dashboard)** — budget summary widget, upcoming payments, day feed, bookings preview; each links into its section.
+4. **Day / Itinerary** — day header with ← → switcher + editable city, day-picker strip, activity timeline (time · type badge · address · cost), per-category day total, `+ Activity`, empty state.
+5. **Activity → Side Drawer** — name, type, start/end, address, cost, notes, links; save / delete.
+6. **Bookings** — grouped by Transport / Stay / Activities; card shows provider, price, payment status, next payment.
+7. **Booking + payments → Side Drawer** — booking fields + payment schedule with "payments total = full price" indicator; mark paid, add payment.
+8. **Budget** — plan/actual summary, by-category bars, by-day table with Δ.
+9–10. **Places / Settings** — optional, shown as labelled "soon" placeholders.
 
 ## Notes
 - This local copy was imported from the Claude Design project `bc2c089c`. The CDN `<script>` tags had their `integrity` (SRI) attributes removed so the page renders reliably outside the design sandbox.
