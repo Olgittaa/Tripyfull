@@ -11,7 +11,8 @@
 Tripyfull/
 ├── backend/         Spring Boot + PostgreSQL REST API (Java 25, Maven)
 ├── frontend/        Vue 3 + Pinia + PrimeVue + Vue Router + Leaflet (Vite)
-└── design-system/   Токены, стили и UI-kit Tripyfull
+├── design-system/   Токены, стили и UI-kit Tripyfull
+└── docker-compose.yml   Локальная PostgreSQL
 ```
 
 ## Требования
@@ -25,8 +26,7 @@ Tripyfull/
 ### 1. База данных
 
 ```bash
-cd backend
-docker compose up -d        # PostgreSQL 16 на :5432 (db=tripdb, user/pass=postgres)
+docker compose up -d        # из корня; PostgreSQL 16 на :5432 (db=tripdb, user/pass=postgres)
 ```
 
 ### 2. Backend
