@@ -1,0 +1,14 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tripyfull mark">
+
+  <path d="M60 8C37.9 8 20 25.4 20 47c0 27.5 33.2 58.6 37.3 62.3a4 4 0 0 0 5.4 0C66.8 105.6 100 74.5 100 47 100 25.4 82.1 8 60 8Z" fill="#e35a38"></path>
+  <path d="M60 8C37.9 8 20 25.4 20 47c0 27.5 33.2 58.6 37.3 62.3a4 4 0 0 0 5.4 0C66.8 105.6 100 74.5 100 47 100 25.4 82.1 8 60 8Z" fill="url(#tfg)" fill-opacity="0.35"></path>
+
+  <circle cx="60" cy="46" r="20" stroke="#fbf5ec" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="78 40" transform="rotate(-40 60 46)"></circle>
+  <circle cx="60" cy="46" r="7" fill="#f4ad3c"></circle>
+  <defs>
+    <linearGradient id="tfg" x1="20" y1="8" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4ad3c"></stop>
+      <stop offset="1" stop-color="#c5482b"></stop>
+    </linearGradient>
+  </defs>
+</svg>

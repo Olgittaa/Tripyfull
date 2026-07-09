@@ -1,0 +1,28 @@
+# ─── OS / editor ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+
+# JetBrains / IntelliJ
+.idea/
+*.iml
+
+# VS Code (keep shared settings if you add any under a whitelist)
+.vscode/*
+!.vscode/extensions.json
+
+# ─── Backend (Spring Boot / Maven) ────────────────────────────
+backend/target/
+
+# Local secrets — never commit. Copy the .example and fill in your own.
+backend/src/main/resources/application-local.properties
+backend/uploads/
+
+# ─── Frontend (Vite) ──────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/*.local
+
+# ─── Logs ─────────────────────────────────────────────────────
+*.log
