@@ -1,32 +1,48 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import TripList from './components/TripList.vue';
-import TripDetail from './components/TripDetail.vue';
-import DayItinerary from './components/DayItinerary.vue';
-import BookingsView from './components/BookingsView.vue';
-import BudgetView from './components/BudgetView.vue';
-import PlaceLibrary from './components/PlaceLibrary.vue';
-import StyleGuide from './components/styleguide/StyleGuide.vue';
-import BaseComponents from './components/styleguide/BaseComponents.vue';
-import AccountSettings from './components/AccountSettings.vue';
-import Auth from './components/Auth.vue';
 
+// Route components are lazy-loaded: each becomes its own chunk, fetched on first
+// navigation. Keeps the initial bundle small (see ARCHITECTURE.md).
 const routes = [
   { path: '/', redirect: '/trips' },
-  { path: '/trips', component: TripList, meta: { requiresAuth: true } },
-  { path: '/trips/:id', component: TripDetail, meta: { requiresAuth: true } },
-  { path: '/trips/:tripId/days/:dayId', component: DayItinerary, meta: { requiresAuth: true } },
-  { path: '/trips/:tripId/bookings', component: BookingsView, meta: { requiresAuth: true } },
-  { path: '/trips/:tripId/budget', component: BudgetView, meta: { requiresAuth: true } },
-  { path: '/places', component: PlaceLibrary, meta: { requiresAuth: true } },
-  { path: '/settings', component: AccountSettings, meta: { requiresAuth: true } },
-  { path: '/styleguide', component: StyleGuide },
-  { path: '/components', component: BaseComponents },
-  { path: '/auth', component: Auth },
+  { path: '/trips', component: () => import('@/views/TripList.vue'), meta: { requiresAuth: true } },
+  {
+    path: '/trips/:id',
+    component: () => import('@/views/TripDetail.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/trips/:tripId/days/:dayId',
+    component: () => import('@/views/DayItinerary.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/trips/:tripId/bookings',
+    component: () => import('@/views/BookingsView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/trips/:tripId/budget',
+    component: () => import('@/views/BudgetView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/places',
+    component: () => import('@/views/PlaceLibrary.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/settings',
+    component: () => import('@/views/AccountSettings.vue'),
+    meta: { requiresAuth: true },
+  },
+  { path: '/styleguide', component: () => import('@/styleguide/StyleGuide.vue') },
+  { path: '/components', component: () => import('@/styleguide/BaseComponents.vue') },
+  { path: '/auth', component: () => import('@/views/Auth.vue') },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 });
 
 router.beforeEach((to) => {

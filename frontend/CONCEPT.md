@@ -7,6 +7,7 @@ Core data principle: **the user enters the minimum (the key bit), free APIs fill
 rest.** All third-party calls happen on the backend only; keys never reach the frontend.
 
 ## Stack and structure (monorepo)
+
 - **Backend** (`backend/`) — Spring Boot + PostgreSQL, JWT authentication, JPA (`ddl-auto=update`).
 - **Frontend** (`frontend/`) — Vue 3 + Pinia + PrimeVue + Vue Router + Leaflet.
 - **Design system** (`design-system/`) — Tripyfull tokens, styles, and UI kit.
@@ -14,11 +15,12 @@ rest.** All third-party calls happen on the backend only; keys never reach the f
 - Visual language comes from the Tripyfull mockup system (Claude Design).
 
 ## Domain model
+
 - **Trip** (title, destination, dates, status, currency)
   → **Day** (date, city, overnight)
   → **Activity** (name, type, time*, cost+currency, notes, `placeId?`).
 - **Booking** (flight/ferry/rental/lodging/activity) + **Payment[]** (payment schedule)
-  + **Attachment[]** (files).
+  - **Attachment[]** (files).
 - **Place** — a reusable place (POI): type, country/city, address, coordinates,
   photos[], links[], `osmId`, **visibility** (PUBLIC/PRIVATE), **source**
   (MANUAL/GEOCODED/IMPORTED), owner. **PlaceFolder** — folders (one folder per place;
@@ -26,6 +28,7 @@ rest.** All third-party calls happen on the backend only; keys never reach the f
 - An activity references a Place → inherits its address/coordinates → a pin on the day's map.
 
 ## Free API stack (on the backend)
+
 - **Frankfurter** (+ open.er-api fallback) — currency conversion.
 - **Nominatim/OSM + Geoapify** — forward and reverse geocoding; result language is
   forced to English (`Accept-Language: en` / `lang=en`) → Latin script.
@@ -35,6 +38,7 @@ rest.** All third-party calls happen on the backend only; keys never reach the f
   (name/photo/description) and coordinates; detects and rejects "lists".
 
 ## Features
+
 1. **Smart trip-date shift** — move `start/end` and all days by a delta, drop days
    outside the range, with a confirmation preview.
 2. **Bookings** — fields per type (IATA/terminals/seat, vessel/cabin, carClass,
@@ -54,12 +58,14 @@ rest.** All third-party calls happen on the backend only; keys never reach the f
    "save the activity as a place".
 
 ## Design system
+
 A warm "paper" palette (`--paper`, coral brand, teal accent, gold), fonts
 Bricolage Grotesque / Hanken Grotesk / JetBrains Mono, generous radii, pill badges and
 buttons, cards with a soft shadow and hover lift, eyebrow labels. All via
 CSS tokens in `src/index.css` + PrimeVue overrides.
 
 ## Engineering notes
+
 - `ddl-auto=update` won't alter existing CHECK constraints and won't add NOT NULL to
   non-empty tables — so new enum values go through `columnDefinition`, new columns are
   nullable, and the stale `places_source_check` is dropped by the `SchemaFixup`

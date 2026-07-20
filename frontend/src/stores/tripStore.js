@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import api from '../api.js';
+import api from '@/services/api.js';
 
 export const useTripStore = defineStore('trips', () => {
   const trips = ref([]);
@@ -9,7 +9,7 @@ export const useTripStore = defineStore('trips', () => {
   const error = ref(null);
 
   const tripsByStatus = (status) =>
-    status === 'ALL' ? trips.value : trips.value.filter(t => t.status === status);
+    status === 'ALL' ? trips.value : trips.value.filter((t) => t.status === status);
 
   async function fetchAll() {
     loading.value = true;
@@ -48,7 +48,7 @@ export const useTripStore = defineStore('trips', () => {
 
   async function update(id, data) {
     const res = await api.patch(`/api/trips/${id}`, data);
-    const idx = trips.value.findIndex(t => t.id === id);
+    const idx = trips.value.findIndex((t) => t.id === id);
     if (idx !== -1) trips.value[idx] = res.data;
     if (currentTrip.value?.id === id) currentTrip.value = res.data;
     return res.data;
@@ -56,7 +56,7 @@ export const useTripStore = defineStore('trips', () => {
 
   async function reschedule(id, data) {
     const res = await api.post(`/api/trips/${id}/reschedule`, data);
-    const idx = trips.value.findIndex(t => t.id === id);
+    const idx = trips.value.findIndex((t) => t.id === id);
     if (idx !== -1) trips.value[idx] = res.data;
     if (currentTrip.value?.id === id) currentTrip.value = res.data;
     return res.data;
@@ -64,9 +64,21 @@ export const useTripStore = defineStore('trips', () => {
 
   async function remove(id) {
     await api.delete(`/api/trips/${id}`);
-    trips.value = trips.value.filter(t => t.id !== id);
+    trips.value = trips.value.filter((t) => t.id !== id);
     if (currentTrip.value?.id === id) currentTrip.value = null;
   }
 
-  return { trips, currentTrip, loading, error, tripsByStatus, fetchAll, fetchById, create, update, reschedule, remove };
+  return {
+    trips,
+    currentTrip,
+    loading,
+    error,
+    tripsByStatus,
+    fetchAll,
+    fetchById,
+    create,
+    update,
+    reschedule,
+    remove,
+  };
 });
