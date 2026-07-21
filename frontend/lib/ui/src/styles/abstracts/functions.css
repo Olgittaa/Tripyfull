@@ -1,0 +1,6 @@
+/* ============================================================
+   ABSTRACTS · Functions
+   ============================================================ */
+
+/* Plain CSS has no functions. Reusable computed values live as
+   custom properties in variables.css (e.g. --gutter, --type-*). */

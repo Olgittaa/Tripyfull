@@ -1,0 +1,45 @@
+/* ============================================================
+   BASE · Reset & element defaults
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  height: 100%;
+  overflow: hidden;
+}
+
+#app {
+  height: 100%;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--gold-100);
+  color: var(--ink-900);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-brand);
+  border-radius: var(--radius-xs);
+}

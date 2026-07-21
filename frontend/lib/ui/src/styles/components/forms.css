@@ -1,0 +1,66 @@
+/* ============================================================
+   COMPONENTS · Forms & inputs
+   ============================================================ */
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.form-row + .form-row {
+  margin-top: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+}
+
+input[type='date'],
+input[type='time'],
+input[type='number'] {
+  padding: 8px 14px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--text-body);
+  background: var(--field-bg);
+  outline: none;
+  transition:
+    border-color var(--dur-base),
+    box-shadow var(--dur-base);
+  height: 40px;
+}
+
+input:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--ring-brand);
+}
+
+/* PrimeVue overrides */
+.p-inputtext {
+  border-color: var(--field-border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-body) !important;
+  font-family: var(--font-sans) !important;
+}
+
+.p-inputtext:focus {
+  border-color: var(--border-focus) !important;
+  box-shadow: var(--ring-brand) !important;
+}
+
+.p-select {
+  border-color: var(--field-border) !important;
+  border-radius: var(--radius-md) !important;
+}

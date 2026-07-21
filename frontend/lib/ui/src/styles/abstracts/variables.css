@@ -1,0 +1,260 @@
+/* ============================================================
+   ABSTRACTS · Design tokens (Figma Mode 1 export)
+   ============================================================ */
+
+:root {
+  /* ---- Color primitives (Figma) ---- */
+  --primary: #0e5c55;
+  --accent: #e35a38;
+
+  --success-900: #073531;
+  --success-700: #0c4e47;
+  --success-500: #0e5c55;
+  --success-300: #4f9d92;
+  --success-100: #c3ddd8;
+
+  --warning-900: #5e3a06;
+  --warning-700: #855309;
+  --warning-500: #c67a12;
+  --warning-300: #f4ad3c;
+  --warning-100: #fae1b4;
+
+  --danger-900: #6f2617;
+  --danger-700: #9e3722;
+  --danger-500: #e35a38;
+  --danger-300: #f0906f;
+  --danger-100: #fbdccf;
+
+  /* Ink ramp (0 = lightest paper, 900 = near-black) */
+  --black: #000000;
+  --ink-900: #211b17;
+  --ink-800: #322a24;
+  --ink-700: #4a4039;
+  --ink-600: #6b5f56;
+  --ink-500: #8c8077;
+  --ink-400: #ada399;
+  --ink-300: #cdc6bd;
+  --ink-200: #e4ddd2;
+  --ink-100: #efe9de;
+  --ink-50: #fbf5ec;
+  --ink-0: #fffdf8;
+  --white: #ffffff;
+
+  /* ============================================================
+     SEMANTIC TOKENS — Figma "Mode 1"
+     ============================================================ */
+  /* Background */
+  --bg: var(--ink-50);
+  --surface: var(--ink-100);
+  --card: var(--ink-0);
+  --selected: var(--success-100);
+
+  /* Text */
+  --text-primary: var(--ink-800);
+  --text-secondary: var(--ink-600);
+  --text-disabled: var(--ink-300);
+  --text-link: var(--success-300);
+
+  /* Border */
+  --border-default: var(--ink-200);
+  --border-strong: var(--ink-500);
+  --border-selected: var(--success-500);
+  --border-focus: var(--success-100);
+  --border-danger: var(--danger-100);
+
+  /* Button — primary */
+  --btn-primary-bg: var(--success-500);
+  --btn-primary-border: var(--success-500);
+  --btn-primary-fg: var(--ink-0);
+  --btn-primary-hover-bg: var(--success-700);
+  --btn-primary-active-bg: var(--success-900);
+  /* Button — secondary */
+  --btn-secondary-bg: var(--ink-50);
+  --btn-secondary-border: var(--ink-200);
+  --btn-secondary-fg: var(--ink-700);
+  --btn-secondary-hover-bg: var(--ink-100);
+  --btn-secondary-hover-border: var(--ink-300);
+  --btn-secondary-active-bg: var(--ink-200);
+  --btn-secondary-active-border: var(--ink-400);
+  /* Button — danger */
+  --btn-danger-bg: var(--danger-500);
+  --btn-danger-border: var(--danger-500);
+  --btn-danger-fg: var(--ink-0);
+  --btn-danger-hover-bg: var(--danger-700);
+  --btn-danger-active-bg: var(--danger-900);
+  /* Button — ghost */
+  --btn-ghost-fg: var(--success-500);
+  --btn-ghost-hover-bg: var(--success-100);
+  --btn-ghost-active-bg: var(--success-300);
+  --btn-ghost-active-fg: var(--success-700);
+  /* Button — disabled */
+  --btn-disabled-bg: var(--ink-100);
+  --btn-disabled-fg: var(--text-disabled);
+
+  /* Badge */
+  --badge-neutral-bg: var(--ink-50);
+  --badge-neutral-fg: var(--ink-700);
+  --badge-contrast-bg: var(--ink-700);
+  --badge-contrast-fg: var(--ink-100);
+  --badge-success-bg: var(--success-100);
+  --badge-success-fg: var(--success-500);
+  --badge-warning-bg: var(--warning-100);
+  --badge-warning-fg: var(--warning-500);
+  --badge-danger-bg: var(--danger-100);
+  --badge-danger-fg: var(--danger-700);
+
+  /* Elevation */
+  --elevation-default: var(--success-100);
+  --elevation-strong: var(--success-300);
+
+  /* Elevation shadows — layered success tints (Figma) */
+  --elevation-1: 0 1px 2px var(--elevation-strong), 0 1px 3px 1px var(--elevation-default);
+  --elevation-2: 0 1px 2px var(--elevation-strong), 0 2px 6px 2px var(--elevation-default);
+  --elevation-3: 0 4px 8px 3px var(--elevation-default), 0 1px 3px var(--elevation-strong);
+  --elevation-4: 0 6px 10px 4px var(--elevation-default), 0 2px 3px var(--elevation-strong);
+
+  /* Inputs */
+  --input-text-bg: var(--white);
+  --input-select-bg: var(--ink-0);
+  --input-text-disabled-bg: var(--ink-100);
+  --input-text-fg: var(--text-primary);
+  --input-text-placeholder: var(--ink-400);
+  --input-text-border: var(--border-default);
+  --input-text-focus-border: var(--primary);
+  --input-select-focus-bg: var(--success-100);
+  --input-select-hover-option: var(--ink-100);
+  --input-text-hover-border: var(--ink-900);
+  --input-text-icon: var(--text-secondary);
+  --input-text-hint: var(--text-secondary);
+  --input-text-danger-hint: var(--danger-500);
+  --input-text-danger-border: var(--danger-700);
+
+  /* Progress */
+  --progress-full-bar: var(--success-500);
+  --progress-full-text: var(--ink-500);
+  --progress-over-bar: var(--danger-500);
+  --progress-over-text: var(--danger-700);
+  --progress-incomplete-bar: var(--warning-500);
+  --progress-incomplete-text: var(--warning-700);
+  --progress-bar: var(--ink-100);
+
+  /* Decorative washes */
+  --wash-warm: linear-gradient(160deg, #fdeee5 0%, #fbf5ec 60%, #f3ece0 100%);
+  --wash-dusk: linear-gradient(135deg, #e35a38 0%, #c5482b 45%, #732818 100%);
+  --wash-ocean: linear-gradient(150deg, #1d7a6f 0%, #0e5c55 60%, #073531 100%);
+
+  /* -- Typography -- */
+  --font-display: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Type scale (Figma) */
+  --text-2xs: 0.6875rem; /* 11 */
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.875rem; /* 14 */
+  --text-base: 1rem; /* 16 */
+  --text-md: 1.125rem; /* 18 */
+  --text-lg: 1.375rem; /* 22 — not in Figma export, retained */
+  --text-xl: 1.75rem; /* 28 */
+  --text-2xl: 2.25rem; /* 36 */
+  --text-3xl: 3rem; /* 48 */
+  --text-4xl: 4rem; /* 64 */
+  --text-5xl: 5.25rem; /* 84 */
+
+  /* Weights (Figma) */
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.05;
+  --lh-snug: 1.18;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.65;
+
+  --ls-tighter: -0.03em;
+  --ls-tight: -0.015em;
+  --ls-normal: 0;
+  --ls-caps: 0.14em;
+
+  /* Type roles — font shorthand: weight size/line-height family */
+  --type-hero: var(--fw-bold) var(--text-5xl)/var(--lh-tight) var(--font-display);
+  --type-display: var(--fw-bold) var(--text-4xl)/var(--lh-tight) var(--font-display);
+  --type-h1: var(--fw-bold) var(--text-3xl)/var(--lh-snug) var(--font-display);
+  --type-h2: var(--fw-bold) var(--text-2xl)/var(--lh-snug) var(--font-display);
+  --type-h3: var(--fw-semibold) var(--text-xl)/var(--lh-snug) var(--font-display);
+  --type-lead: var(--fw-regular) var(--text-md)/var(--lh-relaxed) var(--font-sans);
+  --type-code: var(--fw-light) var(--text-sm)/var(--lh-normal) var(--font-mono);
+  --type-body: var(--fw-regular) var(--text-base)/var(--lh-normal) var(--font-sans);
+  --type-body-bold: var(--fw-semibold) var(--text-base)/var(--lh-normal) var(--font-sans);
+  --type-small: var(--fw-regular) var(--text-sm)/var(--lh-normal) var(--font-sans);
+  --type-small-light: var(--fw-light) var(--text-sm)/var(--lh-normal) var(--font-sans);
+
+  /* -- Spacing (4px grid) -- */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3rem;
+  --space-9: 4rem;
+  --space-10: 6rem;
+
+  /* -- Radii -- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+  --radius-2xl: 40px;
+  --radius-pill: 999px;
+
+  /* -- Shadows (warm ink cast) -- */
+  --shadow-xs: 0 1px 2px rgba(33, 27, 23, 0.06);
+  --shadow-sm: 0 2px 6px rgba(33, 27, 23, 0.07);
+  --shadow-md: 0 8px 20px rgba(33, 27, 23, 0.09);
+  --shadow-lg: 0 18px 40px rgba(33, 27, 23, 0.12);
+  --shadow-xl: 0 30px 70px rgba(33, 27, 23, 0.16);
+  --shadow-brand: 0 12px 28px rgba(227, 90, 56, 0.28);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  --ring-brand: 0 0 0 3px rgba(227, 90, 56, 0.32);
+  --ring-accent: 0 0 0 3px rgba(14, 92, 85, 0.28);
+
+  /* -- Layout -- */
+  --container-sm: 640px;
+  --container-md: 860px;
+  --container-lg: 1120px;
+  --container-xl: 1320px;
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --sidebar-width: 248px;
+
+  /* -- Motion -- */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.5, 0, 0.2, 1);
+  --ease-soft: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 360ms;
+
+  /* -- PrimeVue overrides -- */
+  --p-primary-color: var(--primary);
+  --p-primary-contrast-color: var(--btn-primary-fg);
+  --p-primary-hover-color: var(--btn-primary-hover-bg);
+  --p-surface-ground: var(--bg);
+  --p-surface-section: var(--bg);
+  --p-content-border-color: var(--border-default);
+  --p-focus-ring-color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}

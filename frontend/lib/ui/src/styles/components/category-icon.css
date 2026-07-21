@@ -1,0 +1,32 @@
+/* ============================================================
+   COMPONENTS · Category icon
+   ============================================================ */
+
+.cat-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.cat-icon--sm {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+.cat-icon--md {
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+}
+.cat-icon--lg {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+}
+.cat-icon--xl {
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+}

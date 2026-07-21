@@ -1,0 +1,106 @@
+/* ============================================================
+   COMPONENTS · Buttons
+   ============================================================ */
+
+.p-button {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: var(--brand-on) !important;
+  font-weight: var(--fw-semibold) !important;
+  font-family: var(--font-sans) !important;
+  border-radius: var(--radius-pill) !important;
+  transition: all var(--dur-base) var(--ease-out) !important;
+  box-shadow: var(--shadow-brand);
+}
+
+.p-button:hover {
+  background: var(--brand-hover) !important;
+  border-color: var(--brand-hover) !important;
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.p-button:active {
+  transform: scale(0.97) !important;
+}
+
+.p-button.p-button-outlined {
+  background: transparent !important;
+  color: var(--text-strong) !important;
+  border-color: var(--border-default) !important;
+  box-shadow: none !important;
+}
+
+.p-button.p-button-outlined:hover {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  filter: none;
+}
+
+.p-button.p-button-text {
+  background: transparent !important;
+  color: var(--text-body) !important;
+  box-shadow: none !important;
+}
+
+.p-button.p-button-text:hover {
+  background: var(--surface-sunken) !important;
+  color: var(--text-strong) !important;
+  filter: none;
+}
+
+.p-button.p-button-secondary {
+  background: var(--surface-card) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-strong) !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+
+.p-button.p-button-secondary:hover {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  filter: none;
+}
+
+.del-btn {
+  background: none;
+  border: none;
+  color: var(--ink-400);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: var(--radius-pill);
+  transition: all var(--dur-fast) var(--ease-out);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.del-btn:hover {
+  background: var(--danger-100);
+  color: var(--danger-500);
+}
+
+/* Segmented control */
+.segmented-control {
+  display: inline-flex;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+.segmented-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font: var(--fw-medium) 13px/1 var(--font-sans);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.segmented-btn--on {
+  background: var(--surface-card);
+  color: var(--text-strong);
+  box-shadow: var(--shadow-xs);
+}

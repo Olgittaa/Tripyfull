@@ -1,0 +1,66 @@
+/* ============================================================
+   PAGES · Bookings
+   ============================================================ */
+
+.booking-group-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.booking-group-header h3 {
+  font: var(--type-h3);
+  margin: 0;
+}
+
+.booking-group-count {
+  font: var(--fw-medium) 12px/1 var(--font-mono);
+  color: var(--text-subtle);
+}
+
+.booking-card-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.booking-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.booking-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.booking-card-title span {
+  font: var(--fw-semibold) 16px/1.2 var(--font-sans);
+  color: var(--text-strong);
+}
+
+.booking-card-meta {
+  font: var(--fw-regular) 13px/1.3 var(--font-sans);
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.booking-card-next-pay {
+  font: var(--fw-medium) 12px/1 var(--font-mono);
+  color: var(--coral-600);
+  margin-top: 6px;
+}
+
+.booking-card-price {
+  text-align: right;
+  flex: none;
+}
+
+.booking-card-price-label {
+  font: var(--fw-regular) 11px/1 var(--font-sans);
+  color: var(--text-subtle);
+  margin-top: 4px;
+}

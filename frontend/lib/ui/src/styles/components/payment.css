@@ -1,0 +1,35 @@
+/* ============================================================
+   COMPONENTS · Payment list
+   ============================================================ */
+
+.payment-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.payment-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  border: 1.5px dashed var(--border-default);
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  font: var(--fw-semibold) 14px/1 var(--font-sans);
+  width: 100%;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+
+.payment-add-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-soft);
+}

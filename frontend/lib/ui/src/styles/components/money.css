@@ -1,0 +1,27 @@
+/* ============================================================
+   COMPONENTS · Money
+   ============================================================ */
+
+.money {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+.money--sm {
+  font-size: 13px;
+}
+.money--md {
+  font-size: 17px;
+}
+.money--lg {
+  font-size: 26px;
+}
+.money--xl {
+  font-size: 30px;
+}
+
+.money-cur {
+  font: var(--fw-medium) 14px/1 var(--font-mono);
+  color: var(--text-muted);
+}

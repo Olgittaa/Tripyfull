@@ -1,0 +1,48 @@
+/* ============================================================
+   LAYOUT · Page content & page head
+   ============================================================ */
+
+.page-content {
+  padding: 40px;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.page-content--narrow {
+  padding: 40px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.page-content--wide {
+  padding: 40px;
+  max-width: var(--container-lg);
+  margin: 0 auto;
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.page-head h1 {
+  font: var(--fw-bold) 32px/1.04 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--text-strong);
+  margin: 0;
+}
+
+.page-head p {
+  font: var(--type-body);
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+
+.page-head-actions {
+  display: flex;
+  gap: 10px;
+}

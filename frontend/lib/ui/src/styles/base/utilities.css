@@ -1,0 +1,58 @@
+/* ============================================================
+   BASE · Utilities
+   ============================================================ */
+
+.text-muted {
+  color: var(--text-muted);
+}
+.text-subtle {
+  color: var(--text-subtle);
+}
+.text-brand {
+  color: var(--brand);
+}
+.text-accent {
+  color: var(--accent);
+}
+.text-sm {
+  font-size: var(--text-sm);
+}
+.text-xs {
+  font-size: var(--text-xs);
+}
+.w-full {
+  width: 100%;
+}
+.flex {
+  display: flex;
+}
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gap-sm {
+  gap: var(--space-2);
+}
+.gap-md {
+  gap: var(--space-4);
+}
+
+/* ---- Elevation ---- */
+.elevation-1 {
+  box-shadow: var(--elevation-1);
+}
+.elevation-2 {
+  box-shadow: var(--elevation-2);
+}
+.elevation-3 {
+  box-shadow: var(--elevation-3);
+}
+.elevation-4 {
+  box-shadow: var(--elevation-4);
+}

@@ -1,0 +1,110 @@
+/* ============================================================
+   BASE · Typography
+   ============================================================ */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  letter-spacing: var(--ls-tight);
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 4vw, var(--text-3xl));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-tighter);
+}
+
+h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+}
+
+h3 {
+  font-size: var(--text-md);
+  font-weight: var(--fw-semibold);
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+/* Eyebrow / stamp */
+.tf-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--brand);
+  font-weight: var(--fw-medium);
+}
+
+.section-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+  color: var(--text-subtle);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+}
+
+/* ---- Type roles ---- */
+.type-hero {
+  font: var(--type-hero);
+}
+.type-display {
+  font: var(--type-display);
+}
+.type-h1 {
+  font: var(--type-h1);
+}
+.type-h2 {
+  font: var(--type-h2);
+}
+.type-h3 {
+  font: var(--type-h3);
+}
+.type-lead {
+  font: var(--type-lead);
+}
+.type-code {
+  font: var(--type-code);
+}
+.type-body {
+  font: var(--type-body);
+}
+.type-body-bold {
+  font: var(--type-body-bold);
+}
+.type-small {
+  font: var(--type-small-light);
+}
+.type-small-reg {
+  font: var(--type-small);
+}

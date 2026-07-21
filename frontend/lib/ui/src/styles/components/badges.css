@@ -1,0 +1,8 @@
+/* ============================================================
+   COMPONENTS · Badges & tags
+   ============================================================ */
+
+.p-tag {
+  font-weight: var(--fw-semibold) !important;
+  border-radius: var(--radius-pill) !important;
+}

@@ -1,0 +1,123 @@
+/* ============================================================
+   BASE · Animations & transitions
+   ============================================================ */
+
+.page-enter-active {
+  transition: all 0.28s var(--ease-out);
+}
+.page-leave-active {
+  transition: all 0.18s var(--ease-out);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.list-enter-active {
+  transition: all 0.32s var(--ease-out);
+}
+.list-leave-active {
+  transition: all 0.22s var(--ease-out);
+  position: absolute;
+  width: 100%;
+}
+.list-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.list-move {
+  transition: transform 0.32s var(--ease-out);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--dur-base);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.gallery-enter-active {
+  transition: all 0.36s var(--ease-out);
+}
+.gallery-leave-active {
+  transition: all 0.24s var(--ease-out);
+  position: absolute;
+}
+.gallery-enter-from {
+  opacity: 0;
+  transform: scale(0.94) translateY(8px);
+}
+.gallery-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
+}
+.gallery-move {
+  transition: transform 0.36s var(--ease-out);
+}
+
+.auth-card-enter-active {
+  animation: slideUp 0.4s var(--ease-out);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+@keyframes tfpop {
+  from {
+    transform: scale(0.96) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--ink-100) 25%, var(--ink-200) 50%, var(--ink-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-lg);
+}

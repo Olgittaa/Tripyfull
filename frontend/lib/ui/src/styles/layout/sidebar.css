@@ -1,0 +1,156 @@
+/* ============================================================
+   LAYOUT · App shell & sidebar
+   ============================================================ */
+
+.app-shell {
+  display: flex;
+  height: 100vh;
+}
+
+.app-sidebar {
+  width: var(--sidebar-width);
+  flex: none;
+  background: var(--surface-card);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sidebar-logo {
+  padding: 20px 20px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-logo img {
+  height: 28px;
+}
+
+.sidebar-logo-text {
+  font: var(--fw-bold) var(--text-lg)/1 var(--font-display);
+  color: var(--text-strong);
+  letter-spacing: var(--ls-tight);
+}
+
+.sidebar-logo-text span {
+  color: var(--brand);
+}
+
+.sidebar-section {
+  padding: 6px 12px;
+}
+
+.sidebar-nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: var(--fw-medium) 15px/1 var(--font-sans);
+  color: var(--text-muted);
+  transition: all var(--dur-fast) var(--ease-out);
+  text-decoration: none;
+}
+
+.sidebar-nav-btn:hover {
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+.sidebar-nav-btn.active {
+  background: var(--brand-soft);
+  color: var(--brand-pressed);
+  font-weight: var(--fw-semibold);
+  /* Filled icon variant for the active item (inherits into TfIcon). */
+  --tf-icon-fill: 1;
+}
+
+.sidebar-nav-btn.active-filled {
+  background: var(--brand);
+  color: #fff;
+  font-weight: var(--fw-semibold);
+  box-shadow: var(--shadow-brand);
+  --tf-icon-fill: 1;
+}
+
+.sidebar-trip-info {
+  padding: 14px 20px 8px;
+  margin-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar-trip-label {
+  font: var(--fw-medium) 11px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  margin-bottom: 4px;
+}
+
+.sidebar-trip-name {
+  font: var(--fw-bold) 17px/1.15 var(--font-display);
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+
+.sidebar-trip-meta {
+  font: var(--fw-regular) 12px/1.3 var(--font-sans);
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.sidebar-trip-nav {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-user {
+  margin-top: auto;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar-user-name {
+  font: var(--fw-semibold) 13px/1.25 var(--font-sans);
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.sidebar-user-sub {
+  font: var(--fw-regular) 11px/1.2 var(--font-sans);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.sidebar-user-sub:hover {
+  color: var(--brand);
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.app-main::-webkit-scrollbar {
+  width: 10px;
+}
+.app-main::-webkit-scrollbar-thumb {
+  background: var(--ink-200);
+  border-radius: 8px;
+  border: 3px solid var(--surface-page);
+}
