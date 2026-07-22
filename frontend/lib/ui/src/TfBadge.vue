@@ -35,17 +35,17 @@ const classes = computed(() =>
   background: currentColor;
 }
 
-.tf-badge--brand {
-  background: var(--brand-soft);
-  color: var(--brand);
+.tf-badge--accent {
+  background: var(--danger-100);
+  color: var(--accent);
 }
 .tf-badge--accent {
-  background: var(--accent-soft);
+  background: var(--danger-100);
   color: var(--accent);
 }
 .tf-badge--gold {
-  background: var(--gold-50);
-  color: var(--gold-500);
+  background: var(--warning-100);
+  color: var(--warning-500);
 }
 .tf-badge--success {
   background: var(--success-100);
@@ -64,16 +64,16 @@ const classes = computed(() =>
   color: var(--ink-700);
 }
 
-.tf-badge--solid.tf-badge--brand {
-  background: var(--brand);
-  color: var(--brand-on);
+.tf-badge--solid.tf-badge--accent {
+  background: var(--accent);
+  color: var(--ink-0);
 }
 .tf-badge--solid.tf-badge--accent {
   background: var(--accent);
-  color: var(--accent-on);
+  color: var(--ink-0);
 }
 .tf-badge--solid.tf-badge--gold {
-  background: var(--gold-300);
+  background: var(--warning-300);
   color: var(--ink-900);
 }
 .tf-badge--solid.tf-badge--success {

@@ -32,13 +32,13 @@
 .page-head h1 {
   font: var(--fw-bold) 32px/1.04 var(--font-display);
   letter-spacing: -0.03em;
-  color: var(--text-strong);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .page-head p {
   font: var(--type-body);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 8px 0 0;
 }
 

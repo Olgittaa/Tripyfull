@@ -24,7 +24,7 @@ defineEmits(['update:modelValue']);
 <style scoped>
 .tf-segmented {
   display: inline-flex;
-  background: var(--surface-sunken);
+  background: var(--surface);
   border-radius: var(--radius-pill);
   padding: 4px;
   gap: 2px;
@@ -35,16 +35,16 @@ defineEmits(['update:modelValue']);
   background: none;
   border-radius: var(--radius-pill);
   font: var(--fw-medium) var(--text-sm)/1 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--dur-base) var(--ease-out);
 }
 .tf-seg-btn:hover {
-  color: var(--text-body);
+  color: var(--text-primary);
 }
 .tf-seg-btn--active {
   background: var(--white);
-  color: var(--text-strong);
+  color: var(--text-primary);
   font-weight: var(--fw-semibold);
   box-shadow: var(--shadow-sm);
 }

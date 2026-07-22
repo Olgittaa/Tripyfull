@@ -8,7 +8,7 @@
           left: 12px;
           top: 50%;
           transform: translateY(-50%);
-          color: var(--text-subtle);
+          color: var(--text-secondary);
           font-size: 13px;
           pointer-events: none;
         "
@@ -31,7 +31,7 @@
           right: 10px;
           top: 50%;
           transform: translateY(-50%);
-          color: var(--text-subtle);
+          color: var(--text-secondary);
           font-size: 13px;
         "
       ></i>
@@ -48,7 +48,7 @@
     <div v-if="open && (results.length || noResults || searching)" class="tf-place-dropdown">
       <div
         v-if="searching && !results.length"
-        style="padding: 14px; text-align: center; font: var(--type-small); color: var(--text-muted)"
+        style="padding: 14px; text-align: center; font: var(--type-small); color: var(--text-secondary)"
       >
         Searching...
       </div>
@@ -71,7 +71,7 @@
           padding: 14px;
           text-align: center;
           font: var(--type-small);
-          color: var(--text-subtle);
+          color: var(--text-secondary);
         "
       >
         Not found — try a different spelling or language
@@ -217,7 +217,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   border: 1.5px solid var(--border-default);
   border-radius: var(--radius-md);
   background: var(--surface-input, #fff);
-  color: var(--text-strong);
+  color: var(--text-primary);
   font: var(--fw-regular) 14px/1 var(--font-sans);
   box-sizing: border-box;
   padding: 0 36px 0 34px;
@@ -225,11 +225,11 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   transition: border-color var(--dur-fast);
 }
 .tf-place-input:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 .tf-place-input::placeholder {
-  color: var(--text-subtle);
+  color: var(--text-secondary);
 }
 
 .tf-place-clear-btn {
@@ -241,8 +241,8 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   height: 20px;
   border-radius: 50%;
   border: none;
-  background: var(--surface-sunken);
-  color: var(--text-subtle);
+  background: var(--surface);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -255,8 +255,8 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   left: 0;
   right: 0;
   z-index: 200;
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--card);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   max-height: 300px;
@@ -272,10 +272,10 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   transition: background var(--dur-fast);
 }
 .tf-place-option:hover {
-  background: var(--surface-sunken);
+  background: var(--surface);
 }
 .tf-place-option:not(:last-child) {
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .tf-place-type-icon {
@@ -287,7 +287,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
 
 .tf-place-name {
   font: var(--fw-semibold) 14px/1.3 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -295,7 +295,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
 
 .tf-place-sub {
   font: var(--fw-regular) 12px/1.3 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -305,8 +305,8 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
 .tf-place-badge {
   flex: none;
   font: var(--fw-medium) 11px/1 var(--font-mono);
-  color: var(--text-subtle);
-  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  background: var(--surface);
   padding: 3px 7px;
   border-radius: 20px;
   white-space: nowrap;

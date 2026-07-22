@@ -7,8 +7,8 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--card);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
 }
 
@@ -21,7 +21,7 @@
   border: 1.5px dashed var(--border-default);
   background: transparent;
   border-radius: var(--radius-md);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   font: var(--fw-semibold) 14px/1 var(--font-sans);
   width: 100%;
@@ -29,7 +29,7 @@
 }
 
 .payment-add-btn:hover {
-  border-color: var(--brand);
-  color: var(--brand);
-  background: var(--brand-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--danger-100);
 }

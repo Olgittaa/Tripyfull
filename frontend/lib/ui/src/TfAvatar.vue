@@ -10,8 +10,8 @@ import { computed } from 'vue';
 const props = defineProps({
   name: { type: String, required: true },
   size: { type: String, default: 'md' },
-  bg: { type: String, default: 'var(--coral-200)' },
-  fg: { type: String, default: 'var(--coral-700)' },
+  bg: { type: String, default: 'var(--danger-300)' },
+  fg: { type: String, default: 'var(--danger-700)' },
 });
 
 const initials = computed(() =>

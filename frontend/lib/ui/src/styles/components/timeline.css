@@ -17,13 +17,13 @@
 
 .timeline-time {
   font: var(--fw-medium) 12px/1 var(--font-mono);
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .timeline-line {
   width: 2px;
   flex: 1;
-  background: var(--border-subtle);
+  background: var(--border-default);
   margin-top: 8px;
   border-radius: 2px;
 }

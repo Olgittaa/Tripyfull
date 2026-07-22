@@ -16,8 +16,8 @@ html {
 body {
   margin: 0;
   font: var(--type-body);
-  color: var(--text-body);
-  background: var(--surface-page);
+  color: var(--text-primary);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   height: 100%;
@@ -34,7 +34,7 @@ img {
 }
 
 ::selection {
-  background: var(--gold-100);
+  background: var(--warning-100);
   color: var(--ink-900);
 }
 

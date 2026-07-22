@@ -40,37 +40,37 @@ const classes = computed(() =>
 }
 
 .tf-icon-btn--solid {
-  background: var(--brand);
-  color: var(--brand-on);
+  background: var(--accent);
+  color: var(--ink-0);
   box-shadow: var(--shadow-brand);
 }
 .tf-icon-btn--solid:hover {
   filter: brightness(1.08);
 }
 .tf-icon-btn--soft {
-  background: var(--brand-soft);
-  color: var(--brand);
+  background: var(--danger-100);
+  color: var(--accent);
 }
 .tf-icon-btn--soft:hover {
-  background: var(--coral-100);
+  background: var(--danger-100);
 }
 .tf-icon-btn--outline {
   background: transparent;
-  color: var(--text-body);
+  color: var(--text-primary);
   border: 1.5px solid var(--border-default);
 }
 .tf-icon-btn--outline:hover {
-  border-color: var(--brand);
-  color: var(--brand);
-  background: var(--brand-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--danger-100);
 }
 .tf-icon-btn--ghost {
   background: transparent;
-  color: var(--text-body);
+  color: var(--text-primary);
 }
 .tf-icon-btn--ghost:hover {
-  background: var(--surface-sunken);
-  color: var(--text-strong);
+  background: var(--surface);
+  color: var(--text-primary);
 }
 
 .tf-icon-btn--sm {

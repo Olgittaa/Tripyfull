@@ -32,11 +32,11 @@
 }
 
 .trip-card {
-  background: var(--surface-card);
+  background: var(--card);
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   cursor: pointer;
   transition: all var(--dur-base) var(--ease-out);
   display: flex;
@@ -134,7 +134,7 @@
   align-items: center;
   gap: 6px;
   font: var(--fw-medium) 12px/1 var(--font-mono);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-bottom: 12px;
 }
 
@@ -147,7 +147,7 @@
 
 .trip-card-budget-paid {
   font: var(--type-small);
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .trip-card-budget-remaining {

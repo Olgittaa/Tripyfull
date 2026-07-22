@@ -3,7 +3,7 @@
     <div v-if="icon" class="tf-toast-icon"><i :class="icon"></i></div>
     <div class="tf-toast-content">
       <b>{{ title }}</b>
-      <span v-if="message" class="text-sm" style="color: var(--text-muted)">{{ message }}</span>
+      <span v-if="message" class="text-sm" style="color: var(--text-secondary)">{{ message }}</span>
     </div>
     <slot name="action" />
   </div>
@@ -19,8 +19,8 @@ defineProps({
 
 <style scoped>
 .tf-toast {
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--card);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: 14px 18px;
   box-shadow: var(--shadow-md);
@@ -39,6 +39,6 @@ defineProps({
 }
 .tf-toast-content b {
   font: var(--fw-semibold) var(--text-sm)/1.3 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
 }
 </style>

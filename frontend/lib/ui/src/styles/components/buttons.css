@@ -3,9 +3,9 @@
    ============================================================ */
 
 .p-button {
-  background: var(--brand) !important;
-  border-color: var(--brand) !important;
-  color: var(--brand-on) !important;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: var(--ink-0) !important;
   font-weight: var(--fw-semibold) !important;
   font-family: var(--font-sans) !important;
   border-radius: var(--radius-pill) !important;
@@ -14,8 +14,8 @@
 }
 
 .p-button:hover {
-  background: var(--brand-hover) !important;
-  border-color: var(--brand-hover) !important;
+  background: var(--danger-700) !important;
+  border-color: var(--danger-700) !important;
   filter: brightness(1.05);
   transform: translateY(-1px);
 }
@@ -26,40 +26,245 @@
 
 .p-button.p-button-outlined {
   background: transparent !important;
-  color: var(--text-strong) !important;
+  color: var(--text-primary) !important;
   border-color: var(--border-default) !important;
   box-shadow: none !important;
 }
 
 .p-button.p-button-outlined:hover {
-  background: var(--surface-sunken) !important;
+  background: var(--surface) !important;
   border-color: var(--border-strong) !important;
   filter: none;
 }
 
 .p-button.p-button-text {
   background: transparent !important;
-  color: var(--text-body) !important;
+  color: var(--text-primary) !important;
   box-shadow: none !important;
 }
 
 .p-button.p-button-text:hover {
-  background: var(--surface-sunken) !important;
-  color: var(--text-strong) !important;
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
   filter: none;
 }
 
 .p-button.p-button-secondary {
-  background: var(--surface-card) !important;
+  background: var(--card) !important;
   border-color: var(--border-default) !important;
-  color: var(--text-strong) !important;
+  color: var(--text-primary) !important;
   box-shadow: var(--shadow-xs) !important;
 }
 
 .p-button.p-button-secondary:hover {
-  background: var(--surface-sunken) !important;
+  background: var(--surface) !important;
   border-color: var(--border-strong) !important;
   filter: none;
+}
+
+/* ============================================================
+   Tripyfull button — .btn
+   Variants: primary · secondary · ghost · danger (+ --icon shape)
+   States:   default · hover · active · focus · disabled · loading
+   Each pseudo-state is paired with a static `.is-*` class so the
+   style guide can render every state without interaction.
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font: var(--fw-semibold) var(--text-sm)/1 var(--font-sans);
+  padding: 11px 20px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.btn:focus-visible {
+  outline: none;
+}
+.btn:active:not(:disabled):not(.is-disabled),
+.btn.is-active {
+  transform: scale(0.97);
+}
+
+.btn__icon {
+  display: inline-flex;
+  font-size: 1.15em;
+  line-height: 0;
+}
+
+/* Loading spinner (replaces the icon) */
+.btn__spinner {
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 32%, transparent);
+  border-top-color: currentColor;
+  animation: spin 0.7s linear infinite;
+  flex: none;
+}
+.btn.is-loading {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* ---- Primary ---- */
+.btn--primary {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-border);
+  color: var(--btn-primary-fg);
+}
+.btn--primary:hover:not(:disabled):not(.is-disabled),
+.btn--primary.is-hover {
+  background: var(--btn-primary-hover-bg);
+  border-color: var(--btn-primary-hover-bg);
+}
+.btn--primary:active:not(:disabled):not(.is-disabled),
+.btn--primary.is-active {
+  background: var(--btn-primary-active-bg);
+  border-color: var(--btn-primary-active-bg);
+}
+.btn--primary:focus-visible,
+.btn--primary.is-focus {
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* ---- Secondary ---- */
+.btn--secondary {
+  background: var(--btn-secondary-bg);
+  border-color: var(--btn-secondary-border);
+  color: var(--btn-secondary-fg);
+}
+.btn--secondary:hover:not(:disabled):not(.is-disabled),
+.btn--secondary.is-hover {
+  background: var(--btn-secondary-hover-bg);
+  border-color: var(--btn-secondary-hover-border);
+}
+.btn--secondary:active:not(:disabled):not(.is-disabled),
+.btn--secondary.is-active {
+  background: var(--btn-secondary-active-bg);
+  border-color: var(--btn-secondary-active-border);
+}
+.btn--secondary:focus-visible,
+.btn--secondary.is-focus {
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* ---- Ghost ---- */
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--btn-ghost-fg);
+}
+.btn--ghost:hover:not(:disabled):not(.is-disabled),
+.btn--ghost.is-hover {
+  background: var(--btn-ghost-hover-bg);
+}
+.btn--ghost:active:not(:disabled):not(.is-disabled),
+.btn--ghost.is-active {
+  background: var(--btn-ghost-active-bg);
+  color: var(--btn-ghost-active-fg);
+}
+.btn--ghost:focus-visible,
+.btn--ghost.is-focus {
+  border-color: var(--btn-ghost-fg);
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* ---- Danger ---- */
+.btn--danger {
+  background: var(--btn-danger-bg);
+  border-color: var(--btn-danger-border);
+  color: var(--btn-danger-fg);
+}
+.btn--danger:hover:not(:disabled):not(.is-disabled),
+.btn--danger.is-hover {
+  background: var(--btn-danger-hover-bg);
+  border-color: var(--btn-danger-hover-bg);
+}
+.btn--danger:active:not(:disabled):not(.is-disabled),
+.btn--danger.is-active {
+  background: var(--btn-danger-active-bg);
+  border-color: var(--btn-danger-active-bg);
+}
+.btn--danger:focus-visible,
+.btn--danger.is-focus {
+  box-shadow: 0 0 0 4px var(--border-danger);
+}
+
+/* ---- Soft (tinted) ---- */
+.btn--soft {
+  background: var(--success-100);
+  border-color: var(--success-100);
+  color: var(--success-700);
+}
+.btn--soft:hover:not(:disabled):not(.is-disabled),
+.btn--soft.is-hover {
+  background: var(--success-300);
+  border-color: var(--success-300);
+  color: var(--ink-0);
+}
+.btn--soft:active:not(:disabled):not(.is-disabled),
+.btn--soft.is-active {
+  background: var(--success-500);
+  border-color: var(--success-500);
+  color: var(--ink-0);
+}
+.btn--soft:focus-visible,
+.btn--soft.is-focus {
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* ---- Disabled (all variants) ---- */
+.btn:disabled,
+.btn.is-disabled {
+  background: var(--btn-disabled-bg);
+  border-color: var(--btn-disabled-bg);
+  color: var(--btn-disabled-fg);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.btn--ghost:disabled,
+.btn--ghost.is-disabled {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* ---- Sizes ---- */
+.btn--sm {
+  padding: 8px 15px;
+  font-size: var(--text-xs);
+}
+.btn--lg {
+  padding: 14px 26px;
+  font-size: var(--text-base);
+}
+
+/* ---- Icon-only (circular) ---- */
+.btn--icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+}
+.btn--icon.btn--sm {
+  width: 36px;
+  height: 36px;
+}
+.btn--icon.btn--lg {
+  width: 52px;
+  height: 52px;
 }
 
 .del-btn {
@@ -84,7 +289,7 @@
 /* Segmented control */
 .segmented-control {
   display: inline-flex;
-  background: var(--surface-sunken);
+  background: var(--surface);
   border-radius: var(--radius-md);
   padding: 3px;
   gap: 2px;
@@ -95,12 +300,12 @@
   background: transparent;
   border-radius: var(--radius-sm);
   font: var(--fw-medium) 13px/1 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--dur-fast) var(--ease-out);
 }
 .segmented-btn--on {
-  background: var(--surface-card);
-  color: var(--text-strong);
+  background: var(--card);
+  color: var(--text-primary);
   box-shadow: var(--shadow-xs);
 }

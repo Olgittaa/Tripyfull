@@ -12,8 +12,8 @@ defineProps({
 
 <style scoped>
 .tf-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--card);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 22px;

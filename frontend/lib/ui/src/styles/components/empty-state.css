@@ -7,15 +7,15 @@
   padding: 56px 24px;
   border: 1.5px dashed var(--border-default);
   border-radius: var(--radius-lg);
-  background: var(--surface-card);
+  background: var(--card);
 }
 
 .empty-state-icon {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-pill);
-  background: var(--brand-soft);
-  color: var(--brand);
+  background: var(--danger-100);
+  color: var(--accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -25,13 +25,13 @@
 
 .empty-state h3 {
   font: var(--fw-bold) 20px/1.2 var(--font-display);
-  color: var(--text-strong);
+  color: var(--text-primary);
   margin: 0 0 6px;
 }
 
 .empty-state p {
   font: var(--type-body);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 0 auto 20px;
   max-width: 360px;
 }

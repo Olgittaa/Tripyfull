@@ -24,14 +24,14 @@ defineEmits(['update:modelValue']);
 <style scoped>
 .tf-tabs {
   display: flex;
-  border-bottom: 2px solid var(--border-subtle);
+  border-bottom: 2px solid var(--border-default);
 }
 .tf-tab {
   padding: 12px 18px;
   border: none;
   background: none;
   font: var(--fw-medium) var(--text-sm)/1 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   position: relative;
   transition: color var(--dur-base);
@@ -40,10 +40,10 @@ defineEmits(['update:modelValue']);
   gap: 8px;
 }
 .tf-tab:hover {
-  color: var(--text-strong);
+  color: var(--text-primary);
 }
 .tf-tab--active {
-  color: var(--brand);
+  color: var(--accent);
   font-weight: var(--fw-semibold);
 }
 .tf-tab--active::after {
@@ -53,13 +53,13 @@ defineEmits(['update:modelValue']);
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--brand);
+  background: var(--accent);
   border-radius: 2px 2px 0 0;
 }
 .tf-tab-badge {
   font: var(--fw-semibold) var(--text-2xs)/1 var(--font-mono);
-  background: var(--brand-soft);
-  color: var(--brand);
+  background: var(--danger-100);
+  color: var(--accent);
   padding: 2px 7px;
   border-radius: var(--radius-pill);
 }

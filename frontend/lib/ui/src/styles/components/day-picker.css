@@ -22,13 +22,13 @@
 }
 
 .day-picker-btn--off {
-  background: var(--surface-card);
-  color: var(--text-muted);
+  background: var(--card);
+  color: var(--text-secondary);
   box-shadow: var(--shadow-xs);
 }
 
 .day-picker-btn--on {
-  background: var(--brand);
+  background: var(--accent);
   color: #fff;
   box-shadow: var(--shadow-brand);
 }

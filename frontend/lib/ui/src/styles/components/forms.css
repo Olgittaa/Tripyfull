@@ -22,19 +22,19 @@
 .field label {
   font-size: var(--text-sm);
   font-weight: var(--fw-semibold);
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 input[type='date'],
 input[type='time'],
 input[type='number'] {
   padding: 8px 14px;
-  border: 1px solid var(--field-border);
+  border: 1px solid var(--input-text-border);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   font-family: var(--font-sans);
-  color: var(--text-body);
-  background: var(--field-bg);
+  color: var(--text-primary);
+  background: var(--input-text-bg);
   outline: none;
   transition:
     border-color var(--dur-base),
@@ -49,9 +49,9 @@ input:focus {
 
 /* PrimeVue overrides */
 .p-inputtext {
-  border-color: var(--field-border) !important;
+  border-color: var(--input-text-border) !important;
   border-radius: var(--radius-md) !important;
-  color: var(--text-body) !important;
+  color: var(--text-primary) !important;
   font-family: var(--font-sans) !important;
 }
 
@@ -61,6 +61,488 @@ input:focus {
 }
 
 .p-select {
-  border-color: var(--field-border) !important;
+  border-color: var(--input-text-border) !important;
   border-radius: var(--radius-md) !important;
+}
+
+/* ============================================================
+   Form controls — .input / .textarea (+ .field / .label / .hint)
+   States: default · hover · focus · filled · error · disabled
+   (+ prepend/append affixes). Each pseudo-state is paired with a
+   static `.is-*` class so the style guide can render every state.
+   ============================================================ */
+
+.label {
+  font: var(--fw-semibold) var(--text-sm)/1.3 var(--font-sans);
+  color: var(--text-primary);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  font: var(--fw-regular) var(--text-sm)/1.4 var(--font-sans);
+  color: var(--input-text-fg);
+  background: var(--input-text-bg);
+  border: 1.5px solid var(--input-text-border);
+  border-radius: var(--radius-md);
+  padding: 11px 14px;
+  outline: none;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--input-text-placeholder);
+}
+
+.textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* Hover — border darkens */
+.input:hover:not(:disabled):not(.is-disabled),
+.textarea:hover:not(:disabled):not(.is-disabled),
+.input.is-hover,
+.textarea.is-hover {
+  border-color: var(--input-text-hover-border);
+}
+
+/* Focus — teal border + soft teal ring */
+.input:focus,
+.textarea:focus,
+.input.is-focus,
+.textarea.is-focus {
+  border-color: var(--input-text-focus-border);
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
+
+/* Error — danger border + danger hint */
+.input--error,
+.textarea--error,
+.input.is-error,
+.textarea.is-error {
+  border-color: var(--input-text-danger-border);
+}
+.input--error:focus,
+.textarea--error:focus,
+.input.is-error.is-focus,
+.textarea.is-error.is-focus {
+  box-shadow: 0 0 0 3px var(--danger-100);
+}
+
+/* Disabled */
+.input:disabled,
+.textarea:disabled,
+.input.is-disabled,
+.textarea.is-disabled {
+  background: var(--input-text-disabled-bg);
+  border-color: var(--border-default);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* Hint / helper text */
+.hint {
+  font: var(--fw-regular) var(--text-xs)/1.4 var(--font-sans);
+  color: var(--input-text-hint);
+}
+.hint--error {
+  color: var(--input-text-danger-hint);
+}
+
+/* Prepend / append affixes */
+.input-wrap {
+  position: relative;
+  display: block;
+}
+.input-wrap .input {
+  width: 100%;
+}
+.input-wrap--prefix .input {
+  padding-left: 44px;
+}
+.input-wrap--suffix .input {
+  padding-right: 44px;
+}
+.input-affix {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  color: var(--input-text-icon);
+  font-size: var(--text-base);
+  pointer-events: none;
+}
+.input-affix--prefix {
+  left: 15px;
+}
+.input-affix--suffix {
+  right: 15px;
+}
+
+/* ============================================================
+   Select — custom trigger + dropdown menu
+   States: closed · hover · focus · selected · error · open · disabled
+   ============================================================ */
+
+.select {
+  position: relative;
+}
+.select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: var(--fw-regular) var(--text-sm)/1.4 var(--font-sans);
+  color: var(--input-text-fg);
+  background: var(--input-text-bg);
+  border: 1.5px solid var(--input-text-border);
+  border-radius: var(--radius-md);
+  padding: 11px 14px;
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+.select-trigger:hover:not(:disabled):not(.is-disabled),
+.select-trigger.is-hover {
+  border-color: var(--input-text-hover-border);
+}
+.select-trigger:focus,
+.select-trigger.is-focus,
+.select.is-open .select-trigger {
+  border-color: var(--input-text-focus-border);
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
+.select-trigger.is-error {
+  border-color: var(--input-text-danger-border);
+}
+.select-trigger:disabled,
+.select-trigger.is-disabled {
+  background: var(--input-text-disabled-bg);
+  border-color: var(--border-default);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+.select-prefix {
+  display: inline-flex;
+  align-items: center;
+  color: var(--input-text-icon);
+  font-size: var(--text-base);
+}
+.select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-value.is-placeholder {
+  color: var(--input-text-placeholder);
+}
+.select-chevron {
+  color: var(--input-text-icon);
+  font-size: var(--text-sm);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.select.is-open .select-chevron {
+  transform: rotate(180deg);
+}
+
+.select-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  right: 0;
+  z-index: 20;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  background: var(--input-text-bg);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-3);
+}
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font: var(--fw-regular) var(--text-sm)/1.2 var(--font-sans);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.select-option:hover {
+  background: var(--surface);
+}
+.select-option.is-selected {
+  background: var(--input-select-focus-bg);
+  color: var(--success-700);
+  font-weight: var(--fw-semibold);
+}
+.select-check {
+  color: var(--success-500);
+  font-size: var(--text-xs);
+}
+
+/* ============================================================
+   Number input — split · stacked · plain (+ prefix for currency)
+   ============================================================ */
+
+.num-control {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 12px;
+  border: 1.5px solid var(--input-text-border);
+  border-radius: var(--radius-md);
+  background: var(--input-text-bg);
+  color: var(--input-text-fg);
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+.num-control--split {
+  gap: var(--space-3);
+}
+.num-control:focus-within {
+  border-color: var(--input-text-focus-border);
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
+.num-control.is-disabled {
+  background: var(--input-text-disabled-bg);
+  border-color: var(--border-default);
+  color: var(--text-disabled);
+}
+.num-control.is-disabled .num-prefix {
+  color: var(--text-disabled);
+}
+.num-prefix {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font: var(--fw-regular) var(--text-sm)/1 var(--font-sans);
+}
+.num-field {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: var(--fw-regular) var(--text-sm)/1.4 var(--font-sans);
+  text-align: center;
+  padding: 0;
+}
+.num-field:disabled {
+  cursor: not-allowed;
+}
+.num-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  transition:
+    background var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
+}
+.num-btn:hover:not(:disabled) {
+  background: var(--surface);
+}
+.num-btn:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+.num-stack {
+  display: flex;
+  flex-direction: column;
+}
+.num-stack .num-btn {
+  height: 13px;
+  font-size: var(--text-2xs);
+}
+
+/* ============================================================
+   Range slider
+   ============================================================ */
+
+.slider {
+  width: 100%;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.slider:focus,
+.slider:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.slider:disabled {
+  accent-color: var(--border-default);
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Checkbox · Radio · Switch
+   ============================================================ */
+
+.checkbox,
+.radio,
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: var(--fw-regular) var(--text-sm)/1.2 var(--font-sans);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.checkbox:has(:disabled),
+.radio:has(:disabled),
+.switch:has(:disabled) {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* ---- Checkbox & radio box ---- */
+.checkbox-input,
+.radio-input {
+  appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--input-text-border);
+  background: var(--input-text-bg);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.checkbox-input {
+  border-radius: var(--radius-xs);
+}
+.radio-input {
+  border-radius: 50%;
+}
+.checkbox-input:focus-visible,
+.radio-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
+.checkbox-input:disabled,
+.radio-input:disabled {
+  cursor: not-allowed;
+  background: var(--input-text-disabled-bg);
+  border-color: var(--border-default);
+}
+
+/* Checkbox marks */
+.checkbox-input::after {
+  content: '';
+  opacity: 0;
+}
+.checkbox-input:checked,
+.checkbox-input:indeterminate {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.checkbox-input:checked::after {
+  opacity: 1;
+  width: 5px;
+  height: 9px;
+  border: solid var(--ink-0);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.checkbox-input:indeterminate::after {
+  opacity: 1;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ink-0);
+}
+.checkbox-input:disabled:checked,
+.checkbox-input:disabled:indeterminate {
+  background: var(--ink-300);
+  border-color: var(--ink-300);
+}
+
+/* Radio dot */
+.radio-input::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0;
+}
+.radio-input:checked {
+  border-color: var(--primary);
+}
+.radio-input:checked::after {
+  opacity: 1;
+}
+.radio-input:disabled:checked {
+  border-color: var(--ink-300);
+}
+.radio-input:disabled:checked::after {
+  background: var(--ink-300);
+}
+
+/* ---- Switch ---- */
+.switch {
+  position: relative;
+}
+.switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.switch-track {
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  background: var(--ink-300);
+  border-radius: var(--radius-pill);
+  position: relative;
+  transition: background var(--dur-base) var(--ease-out);
+}
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--ink-0);
+  border-radius: 50%;
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.switch-input:checked + .switch-track {
+  background: var(--primary);
+}
+.switch-input:checked + .switch-track::after {
+  transform: translateX(20px);
+}
+.switch-input:focus-visible + .switch-track {
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
+.switch-input:disabled + .switch-track {
+  opacity: 0.5;
 }

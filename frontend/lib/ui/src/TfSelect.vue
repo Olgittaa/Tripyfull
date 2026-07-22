@@ -1,56 +1,64 @@
 <template>
-  <div class="tf-field">
-    <label v-if="label">{{ label }}</label>
-    <select
-      class="tf-select"
-      :value="modelValue"
-      :disabled="disabled"
-      @change="$emit('update:modelValue', $event.target.value)"
-    >
-      <option v-if="placeholder" value="" disabled>{{ placeholder }}</option>
-      <option v-for="opt in options" :key="opt" :value="opt">{{ opt }}</option>
-    </select>
+  <div class="field" ref="root">
+    <label v-if="label" class="label">{{ label }}</label>
+    <div class="select" :class="{ 'is-open': open }">
+      <button
+        type="button"
+        class="select-trigger"
+        :class="{ 'is-error': error }"
+        :disabled="disabled"
+        @click="open = !open"
+      >
+        <span v-if="$slots.prefix" class="select-prefix"><slot name="prefix" /></span>
+        <span class="select-value" :class="{ 'is-placeholder': !modelValue }">
+          {{ modelValue || placeholder }}
+        </span>
+        <i class="pi pi-chevron-down select-chevron" />
+      </button>
+      <ul v-if="open" class="select-menu" role="listbox">
+        <li
+          v-for="opt in options"
+          :key="opt"
+          class="select-option"
+          :class="{ 'is-selected': opt === modelValue }"
+          role="option"
+          :aria-selected="opt === modelValue"
+          @click="choose(opt)"
+        >
+          <span>{{ opt }}</span>
+          <i v-if="opt === modelValue" class="pi pi-check select-check" />
+        </li>
+      </ul>
+    </div>
+    <span v-if="error" class="hint hint--error">{{ error }}</span>
+    <span v-else-if="helper" class="hint">{{ helper }}</span>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+
 defineProps({
   label: String,
   placeholder: String,
   options: { type: Array, default: () => [] },
   modelValue: String,
+  helper: String,
+  error: String,
   disabled: Boolean,
 });
-defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue']);
+
+const root = ref(null);
+const open = ref(false);
+
+function choose(opt) {
+  emit('update:modelValue', opt);
+  open.value = false;
+}
+function onDocClick(e) {
+  if (root.value && !root.value.contains(e.target)) open.value = false;
+}
+onMounted(() => document.addEventListener('click', onDocClick));
+onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
 </script>
-
-<style scoped>
-.tf-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.tf-field label {
-  font: var(--fw-semibold) var(--text-sm)/1 var(--font-sans);
-  color: var(--text-muted);
-}
-
-.tf-select {
-  font: var(--fw-regular) var(--text-sm)/1.4 var(--font-sans);
-  padding: 10px 14px;
-  padding-right: 36px;
-  border: 1.5px solid var(--field-border);
-  border-radius: var(--radius-md);
-  background: var(--field-bg);
-  color: var(--text-body);
-  outline: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238c8077' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-}
-.tf-select:focus {
-  border-color: var(--border-focus);
-  box-shadow: var(--ring-brand);
-}
-</style>

@@ -22,11 +22,11 @@
 
 .sum-stat-label {
   font: var(--fw-regular) 12px/1 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-bottom: 6px;
 }
 
 .sum-stat-value {
   font: var(--fw-bold) 26px/1 var(--font-display);
-  color: var(--text-strong);
+  color: var(--text-primary);
 }

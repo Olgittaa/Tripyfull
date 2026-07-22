@@ -10,8 +10,8 @@
 .app-sidebar {
   width: var(--sidebar-width);
   flex: none;
-  background: var(--surface-card);
-  border-right: 1px solid var(--border-subtle);
+  background: var(--card);
+  border-right: 1px solid var(--border-default);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -32,12 +32,12 @@
 
 .sidebar-logo-text {
   font: var(--fw-bold) var(--text-lg)/1 var(--font-display);
-  color: var(--text-strong);
+  color: var(--text-primary);
   letter-spacing: var(--ls-tight);
 }
 
 .sidebar-logo-text span {
-  color: var(--brand);
+  color: var(--accent);
 }
 
 .sidebar-section {
@@ -55,27 +55,27 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   font: var(--fw-medium) 15px/1 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   transition: all var(--dur-fast) var(--ease-out);
   text-decoration: none;
 }
 
 .sidebar-nav-btn:hover {
-  background: var(--surface-sunken);
-  color: var(--text-strong);
+  background: var(--surface);
+  color: var(--text-primary);
   text-decoration: none;
 }
 
 .sidebar-nav-btn.active {
-  background: var(--brand-soft);
-  color: var(--brand-pressed);
+  background: var(--danger-100);
+  color: var(--danger-900);
   font-weight: var(--fw-semibold);
   /* Filled icon variant for the active item (inherits into TfIcon). */
   --tf-icon-fill: 1;
 }
 
 .sidebar-nav-btn.active-filled {
-  background: var(--brand);
+  background: var(--accent);
   color: #fff;
   font-weight: var(--fw-semibold);
   box-shadow: var(--shadow-brand);
@@ -85,26 +85,26 @@
 .sidebar-trip-info {
   padding: 14px 20px 8px;
   margin-top: 6px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-default);
 }
 
 .sidebar-trip-label {
   font: var(--fw-medium) 11px/1 var(--font-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-subtle);
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .sidebar-trip-name {
   font: var(--fw-bold) 17px/1.15 var(--font-display);
-  color: var(--text-strong);
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .sidebar-trip-meta {
   font: var(--fw-regular) 12px/1.3 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-top: 3px;
 }
 
@@ -121,23 +121,23 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-default);
 }
 
 .sidebar-user-name {
   font: var(--fw-semibold) 13px/1.25 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
 .sidebar-user-sub {
   font: var(--fw-regular) 11px/1.2 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .sidebar-user-sub:hover {
-  color: var(--brand);
+  color: var(--accent);
 }
 
 .app-main {
@@ -152,5 +152,5 @@
 .app-main::-webkit-scrollbar-thumb {
   background: var(--ink-200);
   border-radius: 8px;
-  border: 3px solid var(--surface-page);
+  border: 3px solid var(--bg);
 }

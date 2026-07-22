@@ -4,11 +4,11 @@
 
 .card,
 .form-card {
-  background: var(--surface-card);
+  background: var(--card);
   border-radius: var(--radius-lg);
   padding: var(--space-5) var(--space-5);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
 }
 
 .form-card {
@@ -16,11 +16,11 @@
 }
 
 .item-card {
-  background: var(--surface-card);
+  background: var(--card);
   border-radius: var(--radius-lg);
   padding: var(--space-4) var(--space-5);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   margin-bottom: var(--space-3);
   display: flex;
   justify-content: space-between;
@@ -38,11 +38,11 @@
   font-weight: var(--fw-semibold);
   font-size: var(--text-base);
   margin-bottom: 4px;
-  color: var(--text-strong);
+  color: var(--text-primary);
 }
 .item-card .sub {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -58,17 +58,17 @@
   font-family: var(--font-mono);
   font-weight: var(--fw-medium);
   font-size: var(--text-xs);
-  color: var(--brand);
-  background: var(--brand-soft);
+  color: var(--accent);
+  background: var(--danger-100);
   padding: 3px 12px;
   border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 
 .info-card {
-  background: var(--surface-card);
+  background: var(--card);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
@@ -78,7 +78,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px var(--space-5);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .info-row:last-child {
@@ -87,7 +87,7 @@
 
 .info-label {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -95,6 +95,6 @@
 
 .info-value {
   font-weight: var(--fw-semibold);
-  color: var(--text-strong);
+  color: var(--text-primary);
   font-size: var(--text-sm);
 }

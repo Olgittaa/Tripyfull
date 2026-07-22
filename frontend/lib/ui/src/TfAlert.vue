@@ -24,7 +24,7 @@ defineProps({
 }
 .tf-alert-body {
   font: var(--fw-regular) var(--text-sm)/1.5 var(--font-sans);
-  color: var(--text-body);
+  color: var(--text-primary);
 }
 
 .tf-alert--success {

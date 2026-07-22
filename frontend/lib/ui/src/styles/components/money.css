@@ -5,7 +5,7 @@
 .money {
   font-family: var(--font-display);
   font-weight: var(--fw-bold);
-  color: var(--text-strong);
+  color: var(--text-primary);
 }
 
 .money--sm {
@@ -23,5 +23,5 @@
 
 .money-cur {
   font: var(--fw-medium) 14px/1 var(--font-mono);
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }

@@ -17,7 +17,7 @@
           right: 12px;
           top: 50%;
           transform: translateY(-50%);
-          color: var(--text-subtle);
+          color: var(--text-secondary);
           font-size: 14px;
         "
       ></i>
@@ -25,7 +25,7 @@
     <div v-if="open && (results.length || searching || noResults)" class="tf-city-dropdown">
       <div
         v-if="searching && !results.length"
-        style="padding: 14px; text-align: center; font: var(--type-small); color: var(--text-muted)"
+        style="padding: 14px; text-align: center; font: var(--type-small); color: var(--text-secondary)"
       >
         Searching...
       </div>
@@ -38,7 +38,7 @@
         <div class="tf-city-option-name">
           <i
             class="pi pi-map-marker"
-            style="font-size: 12px; color: var(--brand); margin-right: 6px"
+            style="font-size: 12px; color: var(--accent); margin-right: 6px"
           ></i>
           {{ item.name }}
         </div>
@@ -52,7 +52,7 @@
           padding: 14px;
           text-align: center;
           font: var(--type-small);
-          color: var(--text-subtle);
+          color: var(--text-secondary);
         "
       >
         No cities found. You can type a custom name.
@@ -154,8 +154,8 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   left: 0;
   right: 0;
   z-index: 100;
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--card);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   max-height: 280px;
@@ -170,19 +170,19 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
 }
 
 .tf-city-option:hover {
-  background: var(--surface-sunken);
+  background: var(--surface);
 }
 
 .tf-city-option-name {
   font: var(--fw-medium) 14px/1.2 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
 }
 
 .tf-city-option-meta {
   font: var(--fw-regular) 12px/1.2 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-top: 1px;
   margin-left: 18px;
 }

@@ -5,13 +5,13 @@
 .tf-progress {
   height: 8px;
   border-radius: var(--radius-pill);
-  background: var(--surface-sunken);
+  background: var(--surface);
   overflow: hidden;
 }
 
 .tf-progress-fill {
   height: 100%;
-  background: var(--brand);
+  background: var(--accent);
   border-radius: var(--radius-pill);
   transition: width var(--dur-slow) var(--ease-out);
 }
