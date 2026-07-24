@@ -32,6 +32,12 @@
 @import './components/money.css';
 @import './components/category-icon.css';
 @import './components/day-picker.css';
+@import './components/datepicker.css';
+@import './components/feedback.css';
+@import './components/overlay.css';
+@import './components/menu.css';
+@import './components/data-display.css';
+@import './components/input-extras.css';
 @import './components/payment.css';
 
 /* Pages */

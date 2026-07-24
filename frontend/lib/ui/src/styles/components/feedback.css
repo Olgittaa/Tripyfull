@@ -1,0 +1,146 @@
+/* ============================================================
+   COMPONENTS · Feedback — alert (inline) + toast (notification)
+   Tones: success · warning · danger · neutral
+   ============================================================ */
+
+/* ---- Alert (inline banner) ---- */
+.alert {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border-left: 3px solid;
+}
+.alert-icon {
+  flex: none;
+  font-size: var(--text-base);
+}
+.alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.alert-title {
+  font: var(--type-body-bold);
+}
+.alert-text {
+  font: var(--type-small);
+  color: var(--text-primary);
+}
+.alert--success {
+  background: var(--success-100);
+  border-color: var(--success-500);
+}
+.alert--success .alert-icon,
+.alert--success .alert-title {
+  color: var(--success-500);
+}
+.alert--warning {
+  background: var(--warning-100);
+  border-color: var(--warning-500);
+}
+.alert--warning .alert-icon,
+.alert--warning .alert-title {
+  color: var(--warning-500);
+}
+.alert--danger {
+  background: var(--danger-100);
+  border-color: var(--danger-500);
+}
+.alert--danger .alert-icon,
+.alert--danger .alert-title {
+  color: var(--danger-500);
+}
+.alert--neutral {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+.alert--neutral .alert-icon,
+.alert--neutral .alert-title {
+  color: var(--text-secondary);
+}
+
+/* ---- Toast (notification) ---- */
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 380px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-3);
+}
+.toast-icon {
+  flex: none;
+  font-size: var(--text-base);
+}
+.toast--success .toast-icon {
+  color: var(--success-500);
+}
+.toast--warning .toast-icon {
+  color: var(--warning-500);
+}
+.toast--danger .toast-icon {
+  color: var(--danger-500);
+}
+.toast--neutral .toast-icon {
+  color: var(--text-secondary);
+}
+.toast-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.toast-title {
+  font: var(--type-body-bold);
+  color: var(--text-primary);
+}
+.toast-message {
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+.toast-close {
+  flex: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  font-size: var(--text-sm);
+  opacity: 0.65;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.toast-close:hover {
+  opacity: 1;
+}
+
+/* ---- Toast host (stack) ---- */
+.toast-host {
+  position: fixed;
+  top: var(--space-5);
+  right: var(--space-5);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.toast-enter-active,
+.toast-leave-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
+}
+.toast-leave-active {
+  position: absolute;
+  right: 0;
+}

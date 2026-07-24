@@ -1,0 +1,146 @@
+/* ============================================================
+   COMPONENTS · Data display — table · stat · avatar-group ·
+   skeleton · spinner · accordion
+   ============================================================ */
+
+/* ---- Table ---- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--type-small);
+  color: var(--text-primary);
+}
+.table th {
+  text-align: left;
+  padding: 10px 14px;
+  font: var(--type-code);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-default);
+}
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-default);
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.table tbody tr:hover {
+  background: var(--surface);
+}
+
+/* ---- Stat / metric card ---- */
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4) var(--space-5);
+  background: var(--card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  min-width: 160px;
+}
+.stat-label {
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+.stat-value {
+  font: var(--type-h2);
+  color: var(--text-primary);
+}
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--type-small);
+}
+.stat-delta.is-up {
+  color: var(--success-500);
+}
+.stat-delta.is-down {
+  color: var(--danger-500);
+}
+
+/* ---- Avatar group ---- */
+.avatar-group {
+  display: inline-flex;
+}
+.avatar-g {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: var(--fw-semibold) var(--text-xs)/1 var(--font-sans);
+  border: 2px solid var(--card);
+  margin-left: -10px;
+}
+.avatar-g:first-child {
+  margin-left: 0;
+}
+.avatar-g--more {
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+/* ---- Skeleton ---- */
+.skeleton--text {
+  height: 0.8em;
+  border-radius: var(--radius-xs);
+}
+.skeleton--rect {
+  border-radius: var(--radius-md);
+}
+.skeleton--circle {
+  border-radius: 50%;
+}
+
+/* ---- Spinner ---- */
+.spinner {
+  display: inline-block;
+  border: 2px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ---- Accordion ---- */
+.accordion {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.accordion-item + .accordion-item {
+  border-top: 1px solid var(--border-default);
+}
+.accordion-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: var(--type-body-bold);
+  color: var(--text-primary);
+}
+.accordion-head:hover {
+  background: var(--surface);
+}
+.accordion-caret {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.accordion-item.is-open .accordion-caret {
+  transform: rotate(180deg);
+}
+.accordion-body {
+  padding: 0 16px 16px;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}

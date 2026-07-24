@@ -1,44 +1,38 @@
 <template>
-  <div class="tf-toast">
-    <div v-if="icon" class="tf-toast-icon"><i :class="icon"></i></div>
-    <div class="tf-toast-content">
-      <b>{{ title }}</b>
-      <span v-if="message" class="text-sm" style="color: var(--text-secondary)">{{ message }}</span>
+  <div class="toast" :class="`toast--${tone}`" role="status">
+    <i class="toast-icon pi" :class="icon" />
+    <div class="toast-content">
+      <div class="toast-title">{{ title }}</div>
+      <div v-if="message" class="toast-message">{{ message }}</div>
     </div>
-    <slot name="action" />
+    <button
+      v-if="closable"
+      type="button"
+      class="toast-close"
+      aria-label="Dismiss"
+      @click="$emit('close')"
+    >
+      <i class="pi pi-times" />
+    </button>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
+  tone: { type: String, default: 'neutral' }, // success | warning | danger | neutral
   title: { type: String, required: true },
   message: String,
-  icon: String,
+  closable: { type: Boolean, default: true },
 });
-</script>
+defineEmits(['close']);
 
-<style scoped>
-.tf-toast {
-  background: var(--card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 14px 18px;
-  box-shadow: var(--shadow-md);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.tf-toast-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.tf-toast-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.tf-toast-content b {
-  font: var(--fw-semibold) var(--text-sm)/1.3 var(--font-sans);
-  color: var(--text-primary);
-}
-</style>
+const ICONS = {
+  success: 'pi-check-circle',
+  warning: 'pi-exclamation-triangle',
+  danger: 'pi-times-circle',
+  neutral: 'pi-info-circle',
+};
+const icon = computed(() => ICONS[props.tone] || ICONS.neutral);
+</script>

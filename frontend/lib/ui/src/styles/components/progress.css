@@ -1,17 +1,57 @@
 /* ============================================================
    COMPONENTS · Progress bar
+   States: incomplete (<100) · full (100) · over (>100)
    ============================================================ */
 
-.tf-progress {
-  height: 8px;
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.progress-label {
+  font: var(--type-small);
+  color: var(--text-primary);
+}
+.progress-value {
+  font: var(--type-small-light);
+}
+.progress-track {
+  height: 6px;
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: var(--progress-bar);
   overflow: hidden;
 }
-
-.tf-progress-fill {
+.progress-fill {
   height: 100%;
-  background: var(--accent);
   border-radius: var(--radius-pill);
   transition: width var(--dur-slow) var(--ease-out);
+}
+
+.progress--incomplete .progress-label,
+.progress--incomplete .progress-value {
+  color: var(--progress-incomplete-text);
+}
+.progress--incomplete .progress-fill {
+  background: var(--progress-incomplete-bar);
+}
+.progress--full .progress-label {
+  color: var(--text-secondary);
+}
+.progress--full .progress-value {
+  color: var(--progress-full-text);
+}
+.progress--full .progress-fill {
+  background: var(--progress-full-bar);
+}
+.progress--over .progress-label,
+.progress--over .progress-value {
+  color: var(--progress-over-text);
+}
+.progress--over .progress-fill {
+  background: var(--progress-over-bar);
 }

@@ -6,3 +6,126 @@
   font-weight: var(--fw-semibold) !important;
   border-radius: var(--radius-pill) !important;
 }
+
+/* ============================================================
+   Badge — soft (default) + solid, tones + optional dot
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font: var(--type-small);
+}
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* soft */
+.badge--success {
+  background: var(--badge-success-bg);
+  color: var(--badge-success-fg);
+}
+.badge--danger {
+  background: var(--badge-danger-bg);
+  color: var(--badge-danger-fg);
+}
+.badge--warning {
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-fg);
+}
+.badge--neutral {
+  background: var(--badge-neutral-bg);
+  color: var(--badge-neutral-fg);
+}
+.badge--brand,
+.badge--accent {
+  background: var(--danger-100);
+  color: var(--accent);
+}
+.badge--contrast {
+  background: var(--badge-contrast-bg);
+  color: var(--badge-contrast-fg);
+}
+
+/* solid */
+.badge--solid.badge--success {
+  background: var(--success-500);
+  color: var(--ink-0);
+}
+.badge--solid.badge--danger {
+  background: var(--danger-500);
+  color: var(--ink-0);
+}
+.badge--solid.badge--warning {
+  background: var(--warning-300);
+  color: var(--ink-900);
+}
+.badge--solid.badge--neutral {
+  background: var(--ink-700);
+  color: var(--ink-100);
+}
+.badge--solid.badge--brand,
+.badge--solid.badge--accent {
+  background: var(--accent);
+  color: var(--ink-0);
+}
+.badge--solid.badge--contrast {
+  background: var(--ink-900);
+  color: var(--ink-0);
+}
+
+/* ============================================================
+   Chip — soft · outline · active · selected (+ icon, remove)
+   ============================================================ */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font: var(--type-small);
+  background: var(--badge-neutral-bg);
+  color: var(--badge-neutral-fg);
+  border: 1.5px solid transparent;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+.chip:hover {
+  border-color: var(--border-default);
+}
+.chip:focus-within {
+  border-color: var(--primary);
+}
+.chip--selected {
+  background: var(--success-100);
+  border-color: var(--primary);
+  color: var(--success-700);
+}
+.chip-icon {
+  display: inline-flex;
+  font-size: var(--text-sm);
+}
+.chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: var(--text-xs);
+  opacity: 0.65;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.chip-remove:hover {
+  opacity: 1;
+}

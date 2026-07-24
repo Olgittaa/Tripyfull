@@ -8,6 +8,28 @@
         <a href="#selects">Selects</a>
         <a href="#numbers">Number inputs</a>
         <a href="#choice">Radios, checkboxes &amp; switches</a>
+        <a href="#badges">Badge</a>
+        <a href="#chips">Chips</a>
+        <a href="#progress">Progress</a>
+        <a href="#dates">Date &amp; time</a>
+        <a href="#alerts">Alerts</a>
+        <a href="#toasts">Toasts</a>
+        <a href="#tooltip">Tooltip</a>
+        <a href="#modal">Modal</a>
+        <a href="#accordion">Accordion</a>
+        <a href="#dropdown">Dropdown</a>
+        <a href="#table">Table</a>
+        <a href="#stat">Stat</a>
+        <a href="#avatars">Avatars</a>
+        <a href="#skeleton">Skeleton</a>
+        <a href="#spinner">Spinner</a>
+        <a href="#confirm">Confirm</a>
+        <a href="#toast-host">Toast host</a>
+        <a href="#popover">Popover</a>
+        <a href="#multiselect">Multi-select</a>
+        <a href="#upload">File upload</a>
+        <a href="#rating">Rating</a>
+        <a href="#pdf">PDF viewer</a>
         <router-link to="/styleguide">Style guide</router-link>
       </nav>
 
@@ -219,7 +241,385 @@
           </div>
         </div>
       </section>
+
+      <!-- BADGE -->
+      <section id="badges" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Status</span>
+            <h2 class="bc-sec-title">Badge</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-stack-rows">
+            <div class="bc-row">
+              <TfBadge v-for="b in badges" :key="b.label" :tone="b.tone" dot>{{ b.label }}</TfBadge>
+            </div>
+            <div class="bc-row">
+              <TfBadge v-for="b in badges" :key="b.label" :tone="b.tone">{{ b.label }}</TfBadge>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHIPS -->
+      <section id="chips" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Status</span>
+            <h2 class="bc-sec-title">Chips</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-stack-rows">
+            <div class="bc-row">
+              <TfChip>Search</TfChip>
+              <TfChip selected>Search</TfChip>
+            </div>
+            <div class="bc-row">
+              <TfChip icon="pi-search">Search</TfChip>
+              <TfChip icon="pi-search" selected>Search</TfChip>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROGRESS -->
+      <section id="progress" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Status</span>
+            <h2 class="bc-sec-title">Progress</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-progress">
+            <TfProgress label="Spent" :value="75" />
+            <TfProgress label="Spent" :value="100" />
+            <TfProgress label="Spent" :value="125" />
+          </div>
+        </div>
+      </section>
+
+      <!-- DATE & TIME -->
+      <section id="dates" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Forms</span>
+            <h2 class="bc-sec-title">Date &amp; time pickers</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-dates">
+            <TfDatePicker v-model="dateVal" mode="date" label="Date" />
+            <TfDatePicker v-model="dateTimeVal" mode="datetime" label="Date time" />
+            <TfDatePicker v-model="dateRangeVal" mode="range" label="Date range" />
+            <TfDatePicker
+              v-model="dateTimeRangeVal"
+              mode="datetime-range"
+              label="Date time range"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- ALERTS -->
+      <section id="alerts" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Feedback</span>
+            <h2 class="bc-sec-title">Alerts</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-feedback">
+            <TfAlert tone="success" title="Flight confirmed"
+              >Your BCN → NRT booking is saved to Day 1.</TfAlert
+            >
+            <TfAlert tone="warning" title="Layover is tight"
+              >Only 45 min in Doha — consider a later connection.</TfAlert
+            >
+            <TfAlert tone="danger" title="Hotel sold out" />
+            <TfAlert tone="neutral" title="Tip">Book 3 months ahead for the best fares.</TfAlert>
+          </div>
+        </div>
+      </section>
+
+      <!-- TOASTS -->
+      <section id="toasts" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Feedback</span>
+            <h2 class="bc-sec-title">Toasts</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-feedback">
+            <TfToast tone="success" title="Saved to Kyoto" message="Added to Day 3 · 14:00" />
+            <TfToast tone="warning" title="Sync delayed" message="Retrying in the background." />
+            <TfToast tone="danger" title="Upload failed" message="Check your connection." />
+            <TfToast tone="neutral" title="Trip shared" message="Mara can now view & edit." />
+          </div>
+        </div>
+      </section>
+
+      <!-- TOOLTIP -->
+      <section id="tooltip" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Overlay</span>
+            <h2 class="bc-sec-title">Tooltip</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-row" style="gap: 24px">
+            <TfTooltip text="Tooltip on top" position="top">
+              <TfButton variant="secondary">Top</TfButton>
+            </TfTooltip>
+            <TfTooltip text="Tooltip on bottom" position="bottom">
+              <TfButton variant="secondary">Bottom</TfButton>
+            </TfTooltip>
+            <TfTooltip text="Tooltip on left" position="left">
+              <TfButton variant="secondary">Left</TfButton>
+            </TfTooltip>
+            <TfTooltip text="Tooltip on right" position="right">
+              <TfButton variant="secondary">Right</TfButton>
+            </TfTooltip>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODAL -->
+      <section id="modal" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Overlay</span>
+            <h2 class="bc-sec-title">Modal / dialog</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <TfButton variant="primary" @click="modalOpen = true">Open modal</TfButton>
+          <TfModal v-model="modalOpen" title="Delete trip?" subtitle="This action can't be undone.">
+            <p style="margin: 0">
+              You're about to delete “Japan 2026” and all its bookings. This is permanent.
+            </p>
+            <template #footer>
+              <TfButton variant="secondary" @click="modalOpen = false">Cancel</TfButton>
+              <TfButton variant="danger" @click="modalOpen = false">Delete</TfButton>
+            </template>
+          </TfModal>
+        </div>
+      </section>
+
+      <!-- ACCORDION -->
+      <section id="accordion" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Navigation</span><h2 class="bc-sec-title">Accordion</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div style="max-width: 520px"><TfAccordion :items="accordionItems" /></div>
+        </div>
+      </section>
+
+      <!-- DROPDOWN -->
+      <section id="dropdown" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Navigation</span><h2 class="bc-sec-title">Dropdown menu</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <TfDropdown :items="dropdownItems" @select="(it) => toast.info(it.label)">
+            <TfButton variant="secondary" icon="pi-ellipsis-h">Actions</TfButton>
+          </TfDropdown>
+        </div>
+      </section>
+
+      <!-- TABLE -->
+      <section id="table" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Table</h2></div>
+        </div>
+        <div class="bc-demo">
+          <TfTable :columns="tableColumns" :rows="tableRows">
+            <template #status="{ value }">
+              <TfBadge :tone="value === 'Paid' ? 'success' : 'warning'" dot>{{ value }}</TfBadge>
+            </template>
+          </TfTable>
+        </div>
+      </section>
+
+      <!-- STAT -->
+      <section id="stat" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Stat cards</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-row">
+            <TfStat label="Total spent" value="€ 2,480" :delta="12" />
+            <TfStat label="Bookings" value="14" :delta="-3" />
+            <TfStat label="Trip days" value="21" />
+          </div>
+        </div>
+      </section>
+
+      <!-- AVATAR GROUP -->
+      <section id="avatars" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Avatar group</h2></div>
+        </div>
+        <div class="bc-demo">
+          <TfAvatarGroup :items="people" :max="4" />
+        </div>
+      </section>
+
+      <!-- SKELETON -->
+      <section id="skeleton" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Skeleton</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div style="display: flex; flex-direction: column; gap: 14px; max-width: 320px">
+            <div style="display: flex; gap: 12px; align-items: center">
+              <TfSkeleton variant="circle" width="44px" height="44px" />
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
+                <TfSkeleton variant="text" width="60%" />
+                <TfSkeleton variant="text" width="40%" />
+              </div>
+            </div>
+            <TfSkeleton variant="rect" width="100%" height="120px" />
+          </div>
+        </div>
+      </section>
+
+      <!-- SPINNER -->
+      <section id="spinner" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Feedback</span><h2 class="bc-sec-title">Spinner</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-row" style="gap: 24px; align-items: center">
+            <TfSpinner size="18px" />
+            <TfSpinner />
+            <TfSpinner size="36px" />
+          </div>
+        </div>
+      </section>
+
+      <!-- CONFIRM -->
+      <section id="confirm" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Overlay</span><h2 class="bc-sec-title">Confirm dialog</h2></div>
+        </div>
+        <div class="bc-demo">
+          <TfButton variant="danger" @click="confirmOpen = true">Delete trip</TfButton>
+          <TfConfirm
+            v-model="confirmOpen"
+            tone="danger"
+            title="Delete trip?"
+            message="This permanently removes the trip and all its bookings."
+            confirm-label="Delete"
+            @confirm="toast.danger('Trip deleted')"
+          />
+        </div>
+      </section>
+
+      <!-- TOAST HOST -->
+      <section id="toast-host" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Feedback</span><h2 class="bc-sec-title">Toast host</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-row">
+            <TfButton variant="secondary" @click="toast.success('Saved', 'Your changes are saved.')"
+              >Success</TfButton
+            >
+            <TfButton variant="secondary" @click="toast.warning('Heads up', 'Layover is tight.')"
+              >Warning</TfButton
+            >
+            <TfButton variant="secondary" @click="toast.danger('Failed', 'Could not save.')"
+              >Danger</TfButton
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- POPOVER -->
+      <section id="popover" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Overlay</span><h2 class="bc-sec-title">Popover</h2></div>
+        </div>
+        <div class="bc-demo">
+          <TfPopover position="bottom">
+            <TfButton variant="secondary" icon="pi-filter">Filters</TfButton>
+            <template #content>
+              <div style="display: flex; flex-direction: column; gap: 6px; min-width: 200px">
+                <div class="type-body-bold">Quick filters</div>
+                <p class="type-small" style="margin: 0; color: var(--text-secondary)">
+                  Any content fits inside a popover.
+                </p>
+              </div>
+            </template>
+          </TfPopover>
+        </div>
+      </section>
+
+      <!-- MULTI-SELECT -->
+      <section id="multiselect" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Forms</span><h2 class="bc-sec-title">Multi-select</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div style="max-width: 340px">
+            <TfMultiSelect
+              v-model="multiVal"
+              :options="multiOptions"
+              label="Interests"
+              placeholder="Pick a few"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- FILE UPLOAD -->
+      <section id="upload" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Forms</span><h2 class="bc-sec-title">File upload</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div style="display: flex; flex-direction: column; gap: 24px; max-width: 380px">
+            <TfFileUpload label="Full" hint="PNG, JPG or PDF up to 5MB" multiple />
+            <TfFileUpload label="Compact" variant="compact" hint="PNG, JPG or PDF" multiple />
+          </div>
+        </div>
+      </section>
+
+      <!-- RATING -->
+      <section id="rating" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Forms</span><h2 class="bc-sec-title">Rating</h2></div>
+        </div>
+        <div class="bc-demo">
+          <TfRating v-model="ratingVal" />
+        </div>
+      </section>
+
+      <!-- PDF VIEWER -->
+      <section id="pdf" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">PDF viewer</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div style="max-width: 520px; height: 460px">
+            <TfPdfViewer :source="pdfBlob" title="Sample document" />
+          </div>
+        </div>
+      </section>
     </div>
+
+    <TfToastHost />
 
     <footer class="bc-footer">
       <div class="bc-wrap">
@@ -255,6 +655,29 @@ import {
   TfRadio,
   TfCheckbox,
   TfSwitch,
+  TfBadge,
+  TfChip,
+  TfProgress,
+  TfDatePicker,
+  TfAlert,
+  TfToast,
+  TfTooltip,
+  TfModal,
+  TfConfirm,
+  TfToastHost,
+  TfAccordion,
+  TfDropdown,
+  TfPopover,
+  TfTable,
+  TfStat,
+  TfAvatarGroup,
+  TfSkeleton,
+  TfSpinner,
+  TfMultiSelect,
+  TfFileUpload,
+  TfRating,
+  TfPdfViewer,
+  toast,
 } from '@tripyfull/ui';
 
 const btnStates = ['default', 'disabled', 'loading'];
@@ -325,6 +748,80 @@ const switchStates = reactive([
   { label: 'Disabled', checked: false, disabled: true },
   { label: 'Selected but disabled', checked: true, disabled: true },
 ]);
+
+const dateVal = ref(new Date(2026, 7, 17));
+const dateTimeVal = ref(new Date(2026, 6, 15, 14, 15));
+const dateRangeVal = ref([new Date(2026, 7, 17), new Date(2026, 7, 25)]);
+const dateTimeRangeVal = ref([new Date(2026, 7, 17, 14, 15), new Date(2026, 7, 25, 14, 15)]);
+const modalOpen = ref(false);
+const confirmOpen = ref(false);
+const ratingVal = ref(3);
+const multiVal = ref(['Museums', 'Food']);
+const multiOptions = ['Museums', 'Food', 'Nature', 'Nightlife', 'Beaches', 'Shopping'];
+
+const SAMPLE_PDF = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 320 180] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 54 >>
+stream
+BT /F1 20 Tf 28 92 Td (Tripyfull PDF preview) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+trailer
+<< /Root 1 0 R >>
+%%EOF`;
+const pdfBlob = new Blob([SAMPLE_PDF], { type: 'application/pdf' });
+
+const accordionItems = [
+  { title: 'What is included?', text: 'Flights, hotels and daily activities in one itinerary.' },
+  { title: 'Can I change dates?', text: 'Yes — edit any booking and we re-slot the plan for you.' },
+  { title: 'Refund policy', text: 'Free cancellation up to 48 hours before departure.' },
+];
+const dropdownItems = [
+  { label: 'Edit', icon: 'pi-pencil' },
+  { label: 'Duplicate', icon: 'pi-copy' },
+  { label: 'Share', icon: 'pi-share-alt' },
+  { divider: true },
+  { label: 'Delete', icon: 'pi-trash', danger: true },
+];
+const tableColumns = [
+  { key: 'trip', label: 'Trip' },
+  { key: 'date', label: 'Date' },
+  { key: 'status', label: 'Status' },
+  { key: 'total', label: 'Total', align: 'right' },
+];
+const tableRows = [
+  { trip: 'Kyoto → Tokyo', date: '17.08.2026', status: 'Paid', total: '€ 820' },
+  { trip: 'Barcelona', date: '02.09.2026', status: 'Pending', total: '€ 460' },
+  { trip: 'Reykjavík', date: '20.10.2026', status: 'Paid', total: '€ 1,240' },
+];
+const people = [
+  { initials: 'MO', bg: 'var(--danger-100)', fg: 'var(--danger-700)' },
+  { initials: 'KS', bg: 'var(--success-100)', fg: 'var(--success-700)' },
+  { initials: 'AL', bg: 'var(--warning-100)', fg: 'var(--warning-700)' },
+  { initials: 'JD', bg: 'var(--ink-200)', fg: 'var(--ink-700)' },
+  { initials: 'RP', bg: 'var(--ink-200)', fg: 'var(--ink-700)' },
+  { initials: 'TM', bg: 'var(--ink-200)', fg: 'var(--ink-700)' },
+];
+
+const badges = [
+  { tone: 'success', label: 'Paid' },
+  { tone: 'danger', label: 'Due soon' },
+  { tone: 'warning', label: 'Overdue' },
+  { tone: 'neutral', label: 'Neutral' },
+  { tone: 'contrast', label: 'Contrast' },
+];
 </script>
 
 <style scoped>
@@ -525,6 +1022,43 @@ const switchStates = reactive([
   flex-direction: column;
   gap: 14px;
   align-items: flex-start;
+}
+
+/* Badge / chip rows */
+.bc-stack-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Progress */
+.bc-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 420px;
+}
+
+/* Feedback (alerts / toasts) */
+.bc-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+}
+
+/* Date & time pickers */
+.bc-dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 32px;
+  max-width: 680px;
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .bc-dates {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Footer */
