@@ -1,6 +1,7 @@
 package com.example.demo.auth;
 
 import com.example.demo.model.User;
+import com.example.demo.repository.BookingRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,13 +26,16 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final BookingRepository bookingRepository;
 
     public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
+                          JwtUtil jwtUtil, AuthenticationManager authenticationManager,
+                          BookingRepository bookingRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.bookingRepository = bookingRepository;
     }
 
     @PostMapping("/register")
@@ -68,10 +73,19 @@ public class AuthController {
     }
 
     @PatchMapping("/me")
+    @Transactional
     public ResponseEntity<?> updateMe(@AuthenticationPrincipal UserDetails userDetails,
                                       @RequestBody Map<String, String> body) {
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        if (body.containsKey("baseCurrency")) user.setBaseCurrency(body.get("baseCurrency"));
+        if (body.containsKey("baseCurrency")) {
+            String next = body.get("baseCurrency");
+            String prev = user.getBaseCurrency();
+            boolean changed = next == null ? prev != null : !next.equalsIgnoreCase(prev);
+            // Stored booking rates convert to the OLD base and go stale on change —
+            // drop them so auto-fill / live budget rates re-resolve against the new one.
+            if (changed) bookingRepository.clearExchangeRatesForOwner(user.getId());
+            user.setBaseCurrency(next);
+        }
         if (body.containsKey("language")) user.setLanguage(body.get("language"));
         if (body.containsKey("region")) user.setRegion(body.get("region"));
         if (body.containsKey("dateFormat")) user.setDateFormat(body.get("dateFormat"));

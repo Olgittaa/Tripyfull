@@ -12,6 +12,7 @@
   display: flex;
   gap: 0;
   padding: var(--space-4);
+  max-width: calc(100vw - 2 * var(--space-4));
   background: var(--input-select-bg);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
@@ -21,9 +22,33 @@
 /* Calendar */
 .dp-cal {
   width: 280px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
+}
+/* extra right padding only when a time panel sits next to it */
+.dp-cal:has(+ .dp-time) {
   padding-right: var(--space-4);
+}
+
+/* small screens: stack the time panel below the calendar */
+@media (max-width: 720px) {
+  .dp-pop {
+    flex-direction: column;
+  }
+  .dp-cal {
+    width: 100%;
+  }
+  .dp-cal:has(+ .dp-time) {
+    padding-right: 0;
+  }
+  .dp-time {
+    border-left: none;
+    border-top: 1px solid var(--border-default);
+    padding-left: 0;
+    padding-top: var(--space-4);
+    margin-top: var(--space-4);
+  }
 }
 .dp-head {
   display: flex;
@@ -108,11 +133,21 @@
   font: var(--type-small);
   color: var(--text-primary);
 }
-.dp-day:hover:not(.dp-day--selected):not(.dp-day--start):not(.dp-day--end) .dp-day-inner {
+.dp-day:hover:not(.dp-day--selected):not(.dp-day--start):not(.dp-day--end):not(:disabled)
+  .dp-day-inner {
   background: var(--surface);
 }
 .dp-day--muted .dp-day-inner {
   color: var(--text-disabled);
+}
+/* outside the min/max window */
+.dp-day:disabled {
+  cursor: default;
+}
+.dp-day:disabled .dp-day-inner {
+  color: var(--text-disabled);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-default);
 }
 
 /* range band — height of the day circle, vertically centred */
@@ -242,5 +277,28 @@
   align-items: center;
   justify-content: center;
   font: var(--type-code);
+  color: var(--text-primary);
+}
+
+/* ---- Clear (×) in the trigger — shown via the `clearable` prop ---- */
+.dp-clear {
+  position: absolute;
+  right: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+}
+.dp-clear:hover {
+  background: var(--surface);
   color: var(--text-primary);
 }

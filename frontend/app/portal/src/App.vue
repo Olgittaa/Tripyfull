@@ -1,5 +1,6 @@
 <template>
-  <PToast position="top-right" />
+  <TfToastHost />
+  <TfConfirmHost />
 
   <!-- Auth page renders without sidebar -->
   <template v-if="!username">
@@ -45,8 +46,7 @@
             <TfIcon name="dashboard" style="font-size: 20px" /> Overview
           </router-link>
           <router-link
-            v-if="firstDayId"
-            :to="`/trips/${currentTrip.id}/days/${firstDayId}`"
+            :to="`/trips/${currentTrip.id}/itinerary`"
             class="sidebar-nav-btn"
             :class="{ 'active-filled': $route.path.includes('/days/') }"
           >
@@ -96,8 +96,8 @@
         <span
           style="
             font: var(--fw-medium) 11px/1 var(--font-mono);
-            color: var(--text-subtle);
-            background: var(--surface-sunken);
+            color: var(--text-secondary);
+            background: var(--surface);
             padding: 3px 8px;
             border-radius: var(--radius-pill);
           "
@@ -121,14 +121,12 @@ import { ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { username, baseCurrency, clearAuth } from '@tripyfull/core';
 import { useTripStore } from '@/stores/tripStore.js';
-import { TfAvatar, TfIcon } from '@tripyfull/ui';
-import { api } from '@tripyfull/core';
+import { TfAvatar, TfIcon, TfToastHost, TfConfirmHost } from '@tripyfull/ui';
 
 const router = useRouter();
 const route = useRoute();
 const store = useTripStore();
 
-const firstDayId = ref(null);
 const lastTripId = ref(null);
 const sidebarTrip = ref(null);
 
@@ -191,27 +189,19 @@ const formatDateRange = (start, end) => {
   return `${fmt(start)} – ${fmt(end)}`;
 };
 
-// When trip ID changes, fetch trip data for sidebar + first day ID
+// When trip ID changes, make sure the sidebar has the trip's data
+// (the Itinerary link resolves its target day at click time via /itinerary).
 watch(
   activeTripId,
   async (tripId) => {
-    if (!tripId || route.path === '/trips') {
-      firstDayId.value = null;
-      return;
-    }
+    if (!tripId || route.path === '/trips') return;
     // Fetch trip if not in store yet (e.g. after page refresh)
-    if (!store.currentTrip?.id !== tripId && !store.trips.find((t) => t.id === tripId)) {
+    if (store.currentTrip?.id !== tripId && !store.trips.find((t) => t.id === tripId)) {
       try {
         sidebarTrip.value = await store.fetchById(tripId);
       } catch {
         // ignore
       }
-    }
-    try {
-      const res = await api.get(`/api/trips/${tripId}/days`);
-      firstDayId.value = res.data.length ? res.data[0].id : null;
-    } catch {
-      firstDayId.value = null;
     }
   },
   { immediate: true },

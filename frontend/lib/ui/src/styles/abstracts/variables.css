@@ -9,7 +9,7 @@
 
   --success-900: #073531;
   --success-700: #0c4e47;
-  --success-500: #0e5c55;
+  --success-500: var(--primary);
   --success-300: #4f9d92;
   --success-100: #c3ddd8;
 
@@ -21,7 +21,7 @@
 
   --danger-900: #6f2617;
   --danger-700: #9e3722;
-  --danger-500: #e35a38;
+  --danger-500: var(--accent);
   --danger-300: #f0906f;
   --danger-100: #fbdccf;
 

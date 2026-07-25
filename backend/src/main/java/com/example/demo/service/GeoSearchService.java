@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class GeoSearchService {
 
     private static final Logger log = LoggerFactory.getLogger(GeoSearchService.class);
-    private static final ParameterizedTypeReference<List<Map<String, Object>>> LIST_MAP_TYPE = new ParameterizedTypeReference<>() {};
+    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE = new ParameterizedTypeReference<>() {};
     private static final int MIN_LOCAL_RESULTS = 3;
 
     private final CityRepository cityRepository;
@@ -52,10 +52,10 @@ public class GeoSearchService {
                         c.getCountry().getCode(), c.getLatitude() != null ? c.getLatitude() : 0, c.getLongitude() != null ? c.getLongitude() : 0))
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // 2. If not enough results, search Nominatim
+        // 2. If not enough results, search Photon (OSM)
         if (results.size() < MIN_LOCAL_RESULTS) {
             try {
-                List<CityResult> external = searchNominatim(query, countryFilter);
+                List<CityResult> external = searchPhotonCities(query, countryFilter);
                 // Deduplicate by name+country
                 Set<String> existing = results.stream().map(r -> (r.name + r.countryCode).toLowerCase()).collect(Collectors.toSet());
                 for (CityResult ext : external) {
@@ -68,65 +68,52 @@ public class GeoSearchService {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Nominatim search failed for '{}': {}", query, e.getMessage());
+                log.warn("Photon city search failed for '{}': {}", query, e.getMessage());
             }
         }
 
         return results.stream().limit(20).toList();
     }
 
+    private static final Set<String> CITY_VALUES = Set.of("city", "town", "village", "municipality", "hamlet");
+
     @SuppressWarnings("unchecked")
-    private List<CityResult> searchNominatim(String query, String countryFilter) {
-        String url = "https://nominatim.openstreetmap.org/search?q={q}&format=json&addressdetails=1&limit=10&featuretype=city";
-        if (countryFilter != null && !countryFilter.isBlank()) {
-            url += "&countrycodes=" + countryFilter.toLowerCase();
-        }
-
-        List<Map<String, Object>> body = restClient.get()
-                .uri(url, query)
+    private List<CityResult> searchPhotonCities(String query, String countryFilter) {
+        // osm_tag=place narrows Photon to settlements; exact kinds are filtered below.
+        Map<String, Object> body = restClient.get()
+                .uri("https://photon.komoot.io/api?q={q}&limit=10&lang=en&osm_tag=place", query)
                 .retrieve()
-                .body(LIST_MAP_TYPE);
-
-        if (body == null) return List.of();
+                .body(MAP_TYPE);
+        List<Map<String, Object>> features = body != null ? (List<Map<String, Object>>) body.get("features") : null;
+        if (features == null) return List.of();
 
         List<CityResult> results = new ArrayList<>();
-        for (Map<String, Object> item : body) {
-            String type = (String) item.get("type");
-            String classType = (String) item.get("class");
-            // Only accept places that are cities/towns/villages
-            if (!"place".equals(classType) && !"boundary".equals(classType)) continue;
+        for (Map<String, Object> feature : features) {
+            Map<String, Object> props = (Map<String, Object>) feature.get("properties");
+            if (props == null) continue;
+            Object osmValue = props.get("osm_value");
+            if (osmValue == null || !CITY_VALUES.contains(osmValue.toString())) continue;
 
-            Map<String, Object> address = (Map<String, Object>) item.get("address");
-            if (address == null) continue;
-
-            String name = extractCityName(item, address);
+            String name = props.get("name") != null ? props.get("name").toString() : null;
             if (name == null || name.isBlank()) continue;
 
-            String countryCode = address.get("country_code") != null
-                    ? address.get("country_code").toString().toUpperCase() : "";
-            String countryName = address.get("country") != null
-                    ? address.get("country").toString() : "";
+            String countryCode = props.get("countrycode") != null
+                    ? props.get("countrycode").toString().toUpperCase() : "";
+            if (countryFilter != null && !countryFilter.isBlank()
+                    && !countryFilter.equalsIgnoreCase(countryCode)) continue;
+            String countryName = props.get("country") != null ? props.get("country").toString() : "";
 
-            double lat = parseDouble(item.get("lat"));
-            double lng = parseDouble(item.get("lon"));
+            double lat = 0, lng = 0;
+            if (feature.get("geometry") instanceof Map<?, ?> g
+                    && g.get("coordinates") instanceof List<?> coords && coords.size() >= 2) {
+                lng = parseDouble(coords.get(0));   // GeoJSON order: [lon, lat]
+                lat = parseDouble(coords.get(1));
+            }
 
             results.add(new CityResult(null, name, countryName, countryCode, lat, lng));
         }
 
         return results;
-    }
-
-    private String extractCityName(Map<String, Object> item, Map<String, Object> address) {
-        // Try city, town, village, municipality from address
-        for (String key : List.of("city", "town", "village", "municipality", "hamlet")) {
-            if (address.containsKey(key)) return address.get(key).toString();
-        }
-        // Fallback to display name first part
-        String display = (String) item.get("display_name");
-        if (display != null && display.contains(",")) {
-            return display.substring(0, display.indexOf(",")).trim();
-        }
-        return display;
     }
 
     private void cacheCity(CityResult result) {
@@ -166,41 +153,68 @@ public class GeoSearchService {
         return results.isEmpty() ? null : results.get(0);
     }
 
+    @SuppressWarnings("unchecked")
     public List<PlaceResult> searchPlaces(String query) {
         if (query == null || query.length() < 2) return List.of();
         try {
-            List<Map<String, Object>> body = restClient.get()
-                    .uri("https://nominatim.openstreetmap.org/search?q={q}&format=json&addressdetails=1&limit=8", query)
+            Map<String, Object> body = restClient.get()
+                    .uri("https://photon.komoot.io/api?q={q}&limit=8&lang=en", query)
                     .retrieve()
-                    .body(LIST_MAP_TYPE);
-            if (body == null) return List.of();
-            return body.stream()
-                    .map(item -> {
-                        String displayName = (String) item.get("display_name");
-                        Object nameObj = item.get("name");
-                        String name = nameObj != null && !nameObj.toString().isBlank()
-                                ? nameObj.toString()
-                                : (displayName != null && displayName.contains(",")
-                                        ? displayName.substring(0, displayName.indexOf(",")).trim()
-                                        : displayName);
-                        double lat = parseDouble(item.get("lat"));
-                        double lon = parseDouble(item.get("lon"));
-                        String cls = (String) item.get("class");
-                        String type = (String) item.get("type");
-                        String placeType = determinePlaceType(cls, type);
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> addr = (Map<String, Object>) item.get("address");
-                        String city = extractAddrField(addr, "city", "town", "village", "municipality");
-                        String country = addr != null && addr.get("country") != null ? addr.get("country").toString() : "";
-                        return new PlaceResult(name != null ? name : "", displayName != null ? displayName : "", lat, lon, placeType, city, country);
-                    })
+                    .body(MAP_TYPE);
+            List<Map<String, Object>> features = body != null ? (List<Map<String, Object>>) body.get("features") : null;
+            if (features == null) return List.of();
+            return features.stream()
+                    .map(this::toPlaceResult)
+                    .filter(Objects::nonNull)
                     .filter(p -> p.lat() != 0 || p.lon() != 0)
                     .limit(8)
                     .toList();
         } catch (Exception e) {
-            log.warn("Nominatim places search failed for '{}': {}", query, e.getMessage());
+            log.warn("Photon places search failed for '{}': {}", query, e.getMessage());
             return List.of();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private PlaceResult toPlaceResult(Map<String, Object> feature) {
+        Map<String, Object> props = (Map<String, Object>) feature.get("properties");
+        if (props == null) return null;
+
+        double lat = 0, lon = 0;
+        if (feature.get("geometry") instanceof Map<?, ?> g
+                && g.get("coordinates") instanceof List<?> coords && coords.size() >= 2) {
+            lon = parseDouble(coords.get(0));   // GeoJSON order: [lon, lat]
+            lat = parseDouble(coords.get(1));
+        }
+
+        String city = extractProp(props, "city", "district", "locality");
+        String state = extractProp(props, "state");
+        String country = extractProp(props, "country");
+        String street = extractProp(props, "street");
+        String name = extractProp(props, "name");
+        if (name == null || name.isBlank()) name = street != null ? street : city;
+        if (name == null || name.isBlank()) return null;
+
+        // Photon has no preformatted display name — compose "name, street, city, state, country".
+        List<String> parts = new ArrayList<>();
+        for (String p : new String[]{name, street, city, state, country}) {
+            if (p != null && !p.isBlank() && (parts.isEmpty() || !parts.get(parts.size() - 1).equalsIgnoreCase(p))) {
+                parts.add(p);
+            }
+        }
+        String displayName = String.join(", ", parts);
+
+        // osm_key/osm_value use the same OSM class:type taxonomy Nominatim exposed.
+        String placeType = determinePlaceType(extractProp(props, "osm_key"), extractProp(props, "osm_value"));
+        return new PlaceResult(name, displayName, lat, lon, placeType, city != null ? city : "", country != null ? country : "");
+    }
+
+    private String extractProp(Map<String, Object> props, String... keys) {
+        for (String k : keys) {
+            Object v = props.get(k);
+            if (v != null && !v.toString().isBlank()) return v.toString();
+        }
+        return null;
     }
 
     private String determinePlaceType(String cls, String type) {
@@ -214,11 +228,4 @@ public class GeoSearchService {
         return "place";
     }
 
-    private String extractAddrField(Map<String, Object> addr, String... keys) {
-        if (addr == null) return "";
-        for (String k : keys) {
-            if (addr.containsKey(k)) return addr.get(k).toString();
-        }
-        return "";
-    }
 }

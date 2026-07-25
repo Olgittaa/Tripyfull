@@ -1,12 +1,13 @@
 <template>
   <div class="tf-city-search" ref="wrapper">
     <div style="position: relative">
-      <PInputText
-        :modelValue="displayValue"
-        @update:modelValue="onInput"
+      <input
+        class="input w-full"
+        :value="displayValue"
+        @input="onInput($event.target.value)"
         @focus="onFocus"
+        @keydown.escape="open = false"
         :placeholder="placeholder"
-        class="w-full"
         autocomplete="off"
       />
       <i
@@ -80,6 +81,7 @@ const searching = ref(false);
 const searchDone = ref(false);
 const displayValue = ref(props.modelValue || '');
 let debounceTimer = null;
+let searchSeq = 0; // guards against an older response overwriting a newer one
 
 const noResults = computed(
   () => searchDone.value && results.value.length === 0 && displayValue.value?.length >= 2,
@@ -110,18 +112,22 @@ const onFocus = () => {
 };
 
 const search = async (q) => {
+  const seq = ++searchSeq;
   searching.value = true;
   try {
     const params = { q };
     if (props.country) params.country = props.country;
     const res = await api.get('/api/geo/cities', { params });
+    if (seq !== searchSeq) return; // a newer search superseded this one
     results.value = res.data;
     open.value = true;
   } catch {
-    results.value = [];
+    if (seq === searchSeq) results.value = [];
   } finally {
-    searching.value = false;
-    searchDone.value = true;
+    if (seq === searchSeq) {
+      searching.value = false;
+      searchDone.value = true;
+    }
   }
 };
 

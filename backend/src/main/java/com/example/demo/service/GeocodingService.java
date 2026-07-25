@@ -2,18 +2,19 @@ package com.example.demo.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Forward geocoding for the Places library. Geoapify is primary (needs a free key in
- * GEOAPIFY_API_KEY); falls back to Nominatim/OSM (no key, throttled, requires User-Agent).
+ * Forward/reverse geocoding for the Places library. Photon by komoot is primary —
+ * free, no API key, OSM data, built for search (https://photon.komoot.io, fair use).
+ * Nominatim/OSM remains a last-resort fallback (no key, throttled, requires User-Agent).
  * All calls happen server-side — no keys ever reach the frontend.
  */
 @Service
@@ -25,11 +26,8 @@ public class GeocodingService {
 
     private final RestClient restClient = RestClient.builder()
             .defaultHeader("User-Agent", "Tripyfull/1.0 (travel planner app)")
-            .defaultHeader("Accept-Language", "en")   // ask Nominatim for Latin/English names
+            .defaultHeader("Accept-Language", "en")   // ask the geocoders for Latin/English names
             .build();
-
-    @Value("${geoapify.api-key:}")
-    private String geoapifyKey;
 
     public record GeocodeResult(BigDecimal latitude, BigDecimal longitude, String address,
                                 String osmId, String country, String city, String name, String category) {}
@@ -37,56 +35,95 @@ public class GeocodingService {
     /** Best single match for free text, optionally constrained to an ISO country code. */
     public GeocodeResult geocode(String text, String country) {
         if (text == null || text.isBlank()) return null;
-        if (geoapifyKey != null && !geoapifyKey.isBlank()) {
-            GeocodeResult r = geoapify(text, country);
-            if (r != null) return r;
-        }
+        GeocodeResult r = photon(text, country);
+        if (r != null) return r;
         return nominatim(text, country);
     }
 
-    @SuppressWarnings("unchecked")
-    private GeocodeResult geoapify(String text, String country) {
+    /** Reverse geocoding: coordinates -> address/country/city/osmId. */
+    public GeocodeResult reverseGeocode(BigDecimal lat, BigDecimal lon) {
+        if (lat == null || lon == null) return null;
+        GeocodeResult r = photonReverse(lat, lon);
+        if (r != null) return r;
+        return nominatimReverse(lat, lon);
+    }
+
+    /* ---- Photon (primary) ---- */
+
+    private GeocodeResult photon(String text, String country) {
         try {
-            String url = "https://api.geoapify.com/v1/geocode/search?text={text}&limit=1&lang=en&format=geojson&apiKey={key}";
-            if (country != null && !country.isBlank()) {
-                url += "&filter=countrycode:" + country.toLowerCase();
+            // Photon has no server-side country filter — fetch a few and filter here.
+            List<Map<String, Object>> features = photonFeatures(
+                    "https://photon.komoot.io/api?q={q}&limit=5&lang=en", text);
+            if (features == null) return null;
+            for (Map<String, Object> feature : features) {
+                GeocodeResult r = fromPhotonFeature(feature);
+                if (r == null) continue;
+                if (country != null && !country.isBlank()
+                        && r.country() != null && !country.equalsIgnoreCase(r.country())) continue;
+                return r;
             }
-            Map<String, Object> body = restClient.get().uri(url, text, geoapifyKey).retrieve().body(MAP_TYPE);
-            if (body == null) return null;
-            List<Map<String, Object>> features = (List<Map<String, Object>>) body.get("features");
-            if (features == null || features.isEmpty()) return null;
-            Map<String, Object> props = (Map<String, Object>) features.get(0).get("properties");
-            return fromGeoapifyProps(props);
+            return null;
         } catch (Exception e) {
-            log.warn("Geoapify geocode failed for '{}': {}", text, e.getMessage());
+            log.warn("Photon geocode failed for '{}': {}", text, e.getMessage());
+            return null;
+        }
+    }
+
+    private GeocodeResult photonReverse(BigDecimal lat, BigDecimal lon) {
+        try {
+            List<Map<String, Object>> features = photonFeatures(
+                    "https://photon.komoot.io/reverse?lon={lon}&lat={lat}&lang=en", lon, lat);
+            if (features == null || features.isEmpty()) return null;
+            return fromPhotonFeature(features.get(0));
+        } catch (Exception e) {
+            log.warn("Photon reverse failed for {},{}: {}", lat, lon, e.getMessage());
             return null;
         }
     }
 
     @SuppressWarnings("unchecked")
-    private GeocodeResult fromGeoapifyProps(Map<String, Object> props) {
-        if (props == null) return null;
-        String osmId = null;
-        Object ds = props.get("datasource");
-        if (ds instanceof Map<?, ?> dsMap && dsMap.get("raw") instanceof Map<?, ?> raw) {
-            osmId = osmId(str(raw.get("osm_type")), raw.get("osm_id"));
-        }
-        String category = null;
-        Object cats = props.get("categories");
-        if (cats instanceof List<?> list && !list.isEmpty()) category = str(list.get(0));
-        if (category == null) category = str(props.get("result_type"));
-        return new GeocodeResult(
-                num(props.get("lat")), num(props.get("lon")),
-                str(props.get("formatted")),
-                osmId,
-                upper(str(props.get("country_code"))),
-                str(props.get("city")),
-                str(props.get("name")),
-                category
-        );
+    private List<Map<String, Object>> photonFeatures(String url, Object... vars) {
+        Map<String, Object> body = restClient.get().uri(url, vars).retrieve().body(MAP_TYPE);
+        if (body == null) return null;
+        return (List<Map<String, Object>>) body.get("features");
     }
 
     @SuppressWarnings("unchecked")
+    private GeocodeResult fromPhotonFeature(Map<String, Object> feature) {
+        if (feature == null) return null;
+        Map<String, Object> props = (Map<String, Object>) feature.get("properties");
+        if (props == null) return null;
+
+        BigDecimal lat = null, lon = null;
+        if (feature.get("geometry") instanceof Map<?, ?> g
+                && g.get("coordinates") instanceof List<?> coords && coords.size() >= 2) {
+            lon = num(coords.get(0));   // GeoJSON order: [lon, lat]
+            lat = num(coords.get(1));
+        }
+        if (lat == null || lon == null) return null;
+
+        String name = str(props.get("name"));
+        String city = firstNonBlank(str(props.get("city")), str(props.get("district")), str(props.get("locality")));
+        // Photon has no preformatted address — compose one from its parts.
+        String street = joinNonBlank(" ", str(props.get("street")), str(props.get("housenumber")));
+        String address = joinNonBlank(", ", name, street, city, str(props.get("state")), str(props.get("country")));
+        // Same OSM class:type taxonomy Nominatim used — keeps inferType() working.
+        String osmKey = str(props.get("osm_key"));
+        String osmValue = str(props.get("osm_value"));
+        String category = (osmKey != null || osmValue != null)
+                ? (osmKey != null ? osmKey : "") + ":" + (osmValue != null ? osmValue : "")
+                : null;
+        return new GeocodeResult(
+                lat, lon, address,
+                osmId(str(props.get("osm_type")), props.get("osm_id")),
+                upper(str(props.get("countrycode"))),
+                city, name, category
+        );
+    }
+
+    /* ---- Nominatim (fallback) ---- */
+
     private GeocodeResult nominatim(String text, String country) {
         try {
             String url = "https://nominatim.openstreetmap.org/search?q={q}&format=json&addressdetails=1&limit=1";
@@ -129,31 +166,6 @@ public class GeocodingService {
         );
     }
 
-    /** Reverse geocoding: coordinates -> address/country/city/osmId. */
-    public GeocodeResult reverseGeocode(BigDecimal lat, BigDecimal lon) {
-        if (lat == null || lon == null) return null;
-        if (geoapifyKey != null && !geoapifyKey.isBlank()) {
-            GeocodeResult r = geoapifyReverse(lat, lon);
-            if (r != null) return r;
-        }
-        return nominatimReverse(lat, lon);
-    }
-
-    @SuppressWarnings("unchecked")
-    private GeocodeResult geoapifyReverse(BigDecimal lat, BigDecimal lon) {
-        try {
-            String url = "https://api.geoapify.com/v1/geocode/reverse?lat={lat}&lon={lon}&lang=en&format=geojson&apiKey={key}";
-            Map<String, Object> body = restClient.get().uri(url, lat, lon, geoapifyKey).retrieve().body(MAP_TYPE);
-            if (body == null) return null;
-            List<Map<String, Object>> features = (List<Map<String, Object>>) body.get("features");
-            if (features == null || features.isEmpty()) return null;
-            return fromGeoapifyProps((Map<String, Object>) features.get(0).get("properties"));
-        } catch (Exception e) {
-            log.warn("Geoapify reverse failed for {},{}: {}", lat, lon, e.getMessage());
-            return null;
-        }
-    }
-
     private GeocodeResult nominatimReverse(BigDecimal lat, BigDecimal lon) {
         try {
             String url = "https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&addressdetails=1";
@@ -165,16 +177,37 @@ public class GeocodingService {
         }
     }
 
-    /** Combines OSM type + id into a compact key, e.g. node 123 -> "N123". */
+    /* ---- helpers ---- */
+
+    /**
+     * Combines OSM type + id into a compact key, e.g. node 123 -> "N123".
+     * Accepts both Nominatim's long form ("node") and Photon's letter form ("N"),
+     * so places deduped by (owner, osmId) survive the provider switch.
+     */
     private String osmId(String osmType, Object osmId) {
         if (osmId == null) return null;
         String prefix = osmType == null ? "" : switch (osmType.toLowerCase()) {
-            case "node" -> "N";
-            case "way" -> "W";
-            case "relation" -> "R";
+            case "node", "n" -> "N";
+            case "way", "w" -> "W";
+            case "relation", "r" -> "R";
             default -> "";
         };
         return prefix + osmId;
+    }
+
+    private String firstNonBlank(String... vals) {
+        for (String v : vals) if (v != null && !v.isBlank()) return v;
+        return null;
+    }
+
+    private String joinNonBlank(String sep, String... parts) {
+        List<String> out = new ArrayList<>();
+        for (String p : parts) {
+            if (p == null || p.isBlank()) continue;
+            if (!out.isEmpty() && out.get(out.size() - 1).equalsIgnoreCase(p)) continue; // skip duplicates like name==city
+            out.add(p);
+        }
+        return out.isEmpty() ? null : String.join(sep, out);
     }
 
     private BigDecimal num(Object o) {

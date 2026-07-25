@@ -43,5 +43,8 @@ public record BookingRequest(
         String address,
         Double latitude,
         Double longitude,
-        Boolean paidSimple
+        Boolean paidSimple,
+        // PATCH semantics treat null fields as "keep" — this flag explicitly drops the
+        // stored exchange rate (auto-fill then re-fetches one for the current currency).
+        Boolean clearExchangeRate
 ) {}

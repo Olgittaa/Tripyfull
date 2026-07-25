@@ -98,6 +98,7 @@ const searching = ref(false);
 const searched = ref(false);
 const displayValue = ref(props.modelValue || '');
 let timer = null;
+let searchSeq = 0; // guards against an older response overwriting a newer one
 
 const noResults = computed(
   () =>
@@ -137,16 +138,20 @@ const onKeydown = (e) => {
 };
 
 const doSearch = async (q) => {
+  const seq = ++searchSeq;
   searching.value = true;
   try {
     const res = await api.get('/api/geo/places', { params: { q } });
+    if (seq !== searchSeq) return; // a newer search superseded this one
     results.value = res.data;
     open.value = true;
   } catch {
-    results.value = [];
+    if (seq === searchSeq) results.value = [];
   } finally {
-    searching.value = false;
-    searched.value = true;
+    if (seq === searchSeq) {
+      searching.value = false;
+      searched.value = true;
+    }
   }
 };
 
@@ -216,7 +221,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   height: 42px;
   border: 1.5px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: var(--surface-input, #fff);
+  background: var(--input-text-bg);
   color: var(--text-primary);
   font: var(--fw-regular) 14px/1 var(--font-sans);
   box-sizing: border-box;

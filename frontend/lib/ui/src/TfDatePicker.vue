@@ -7,6 +7,15 @@
         <span class="select-value" :class="{ 'is-placeholder': !hasValue }">{{ displayText }}</span>
         <i class="pi pi-chevron-down select-chevron" />
       </button>
+      <button
+        v-if="clearable && hasValue && !disabled"
+        type="button"
+        class="dp-clear"
+        aria-label="Clear date"
+        @click.stop="clearValue"
+      >
+        <i class="pi pi-times" />
+      </button>
 
       <div v-if="open" class="dp-pop">
         <div class="dp-cal">
@@ -59,6 +68,7 @@
               type="button"
               class="dp-day"
               :class="dayClass(d.date)"
+              :disabled="isDayDisabled(d.date)"
               @click="pickDay(d.date)"
             >
               <span class="dp-day-inner">{{ d.date.getDate() }}</span>
@@ -97,6 +107,11 @@ const props = defineProps({
   modelValue: { default: null },
   label: String,
   disabled: Boolean,
+  // Selectable window (inclusive, day granularity). Days outside are disabled.
+  min: { type: Date, default: null },
+  max: { type: Date, default: null },
+  // Show an × in the trigger that resets the value to null.
+  clearable: Boolean,
 });
 const emit = defineEmits(['update:modelValue']);
 
@@ -172,6 +187,10 @@ const sameDay = (a, b) =>
   a.getDate() === b.getDate();
 const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
+const isDayDisabled = (date) =>
+  (props.min && dayStart(date) < dayStart(props.min)) ||
+  (props.max && dayStart(date) > dayStart(props.max));
+
 function dayClass(date) {
   const cls = [];
   if (date.getMonth() !== view.value.getMonth()) cls.push('dp-day--muted');
@@ -200,7 +219,13 @@ function withTime(base, ref_) {
   else d.setHours(0, 0, 0, 0);
   return d;
 }
+function clearValue() {
+  emit('update:modelValue', null);
+  open.value = false;
+}
+
 function pickDay(date) {
+  if (isDayDisabled(date)) return;
   if (!isRange.value) {
     emit('update:modelValue', withTime(date, single.value));
     if (!hasTime.value) open.value = false;
@@ -243,7 +268,14 @@ function onDoc(e) {
   if (root.value && !root.value.contains(e.target)) open.value = false;
 }
 watch(open, (v) => {
-  if (!v) pickMode.value = false;
+  if (!v) {
+    pickMode.value = false;
+  } else {
+    // Re-sync the calendar month with the current value — it may have been
+    // set (or changed) after mount, e.g. when an edit drawer fills the form.
+    const anchor = startDate.value || single.value;
+    if (anchor) view.value = startOfMonth(anchor);
+  }
 });
 onMounted(() => document.addEventListener('click', onDoc));
 onBeforeUnmount(() => document.removeEventListener('click', onDoc));

@@ -79,23 +79,32 @@ public class TripService {
         User user = getUser(username);
         Trip trip = TripMapper.toEntity(request);
         trip.setOwner(user);
-        if (trip.getStartDate() != null && trip.getEndDate() != null) {
-            LocalDate current = trip.getStartDate();
-            while (!current.isAfter(trip.getEndDate())) {
-                Day day = new Day();
-                day.setTrip(trip);
-                day.setDate(current);
-                trip.getDays().add(day);
-                current = current.plusDays(1);
-            }
-        }
+        generateDaysIfMissing(trip);
         return TripMapper.toResponse(tripRepository.save(trip));
     }
 
     public TripResponse update(UUID id, TripRequest request, String username) {
         Trip trip = findTripForUser(id, username);
         TripMapper.updateEntity(trip, request);
+        // Dates set on a trip that had none (or a legacy trip without days) —
+        // days appear automatically, exactly like on create. Date CHANGES on a
+        // trip that already has days go through reschedule() instead.
+        generateDaysIfMissing(trip);
         return TripMapper.toResponse(tripRepository.save(trip));
+    }
+
+    /** One empty Day per date in [start, end] — only when the trip has no days yet. */
+    private void generateDaysIfMissing(Trip trip) {
+        if (trip.getStartDate() == null || trip.getEndDate() == null) return;
+        if (!trip.getDays().isEmpty()) return;
+        LocalDate current = trip.getStartDate();
+        while (!current.isAfter(trip.getEndDate())) {
+            Day day = new Day();
+            day.setTrip(trip);
+            day.setDate(current);
+            trip.getDays().add(day);
+            current = current.plusDays(1);
+        }
     }
 
     /**

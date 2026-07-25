@@ -56,17 +56,20 @@ public class BudgetService {
         for (Booking b : bookings) {
             effectiveRates.put(b.getId(), resolveRate(b, baseCurrency));
         }
+        // Per-request memo for activity/expense currencies (on top of the service's 1h cache)
+        Map<String, BigDecimal> currencyRates = new HashMap<>();
 
         // Expenses grouped by day
         Map<UUID, List<Expense>> expensesByDay = allExpenses.stream()
                 .collect(Collectors.groupingBy(e -> e.getDay().getId()));
 
-        // Actual by category (expenses are assumed to be in base currency)
-        Map<String, BigDecimal> actualByCategory = allExpenses.stream()
-                .collect(Collectors.groupingBy(
-                        e -> e.getCategory() != null ? e.getCategory().name() : "OTHER",
-                        Collectors.reducing(BigDecimal.ZERO, Expense::getAmount, BigDecimal::add)
-                ));
+        // Actual by category — expense amounts converted from their own currency
+        Map<String, BigDecimal> actualByCategory = new LinkedHashMap<>();
+        allExpenses.forEach(e -> actualByCategory.merge(
+                e.getCategory() != null ? e.getCategory().name() : "OTHER",
+                toBase(e.getAmount(), rateFor(e.getCurrency(), baseCurrency, currencyRates)),
+                BigDecimal::add
+        ));
 
         // Per-day budgets
         List<BudgetResponse.DayBudget> dayBudgets = new ArrayList<>();
@@ -77,12 +80,12 @@ public class BudgetService {
             Day day = days.get(i);
 
             BigDecimal planned = day.getActivities().stream()
-                    .map(Activity::getCostEstimate)
-                    .filter(Objects::nonNull)
+                    .filter(a -> a.getCostEstimate() != null)
+                    .map(a -> toBase(a.getCostEstimate(), rateFor(a.getCostCurrency(), baseCurrency, currencyRates)))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             BigDecimal actual = expensesByDay.getOrDefault(day.getId(), List.of()).stream()
-                    .map(Expense::getAmount)
+                    .map(e -> toBase(e.getAmount(), rateFor(e.getCurrency(), baseCurrency, currencyRates)))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             totalPlanned = totalPlanned.add(planned);
@@ -111,7 +114,7 @@ public class BudgetService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal expensesTotal = allExpenses.stream()
-                .map(Expense::getAmount)
+                .map(e -> toBase(e.getAmount(), rateFor(e.getCurrency(), baseCurrency, currencyRates)))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Planned by category — booking full prices in base currency
@@ -122,7 +125,9 @@ public class BudgetService {
         });
         days.forEach(day -> day.getActivities().forEach(a -> {
             if (a.getCostEstimate() != null) {
-                plannedByCategory.merge("ACTIVITY", a.getCostEstimate(), BigDecimal::add);
+                plannedByCategory.merge("ACTIVITY",
+                        toBase(a.getCostEstimate(), rateFor(a.getCostCurrency(), baseCurrency, currencyRates)),
+                        BigDecimal::add);
             }
         }));
 
@@ -178,5 +183,24 @@ public class BudgetService {
         if (amount == null) return BigDecimal.ZERO;
         if (rate == null || rate.compareTo(BigDecimal.ONE) == 0) return amount;
         return amount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Live rate for a free-form currency (activities/expenses store no rate of their own),
+     * memoized per request on top of ExchangeRateService's 1h cache. Falls back to ONE —
+     * raw pass-through — when the currency is empty, equals base, or can't be fetched
+     * (same policy as booking rates).
+     */
+    private BigDecimal rateFor(String currency, String baseCurrency, Map<String, BigDecimal> memo) {
+        if (currency == null || currency.isBlank() || currency.equalsIgnoreCase(baseCurrency)) {
+            return BigDecimal.ONE;
+        }
+        return memo.computeIfAbsent(currency.toUpperCase(), c -> {
+            try {
+                BigDecimal live = exchangeRateService.getRate(c, baseCurrency);
+                if (live != null && live.compareTo(BigDecimal.ZERO) > 0) return live;
+            } catch (Exception ignored) {}
+            return BigDecimal.ONE;
+        });
     }
 }

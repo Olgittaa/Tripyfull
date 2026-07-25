@@ -7,21 +7,17 @@
         <p>Reusable places for your trips — yours and shared public ones.</p>
       </div>
       <div class="page-head-actions">
-        <PButton
-          icon="pi pi-search"
-          label="Find"
-          severity="secondary"
-          outlined
+        <TfButton
+          v-if="FEATURES.geoPlaceSearch"
+          icon="pi-search"
+          variant="secondary"
           @click="showFindDialog = true"
-        />
-        <PButton
-          icon="pi pi-download"
-          label="Import"
-          severity="secondary"
-          outlined
-          @click="showImportDialog = true"
-        />
-        <PButton icon="pi pi-plus" label="Add place" @click="openDialog()" />
+          >Find</TfButton
+        >
+        <TfButton icon="pi-download" variant="secondary" @click="showImportDialog = true"
+          >Import</TfButton
+        >
+        <TfButton icon="pi-plus" @click="openDialog()">Add place</TfButton>
       </div>
     </div>
 
@@ -66,89 +62,62 @@
 
     <!-- Filters -->
     <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-top: 16px">
-      <div class="field" style="flex: 1; min-width: 180px; margin: 0">
-        <label>Search</label>
-        <PInputText
+      <div style="flex: 1; min-width: 180px">
+        <TfInput
           v-model="filterQ"
-          class="w-full"
+          label="Search"
           placeholder="Filter by name"
           @keyup.enter="loadPlaces"
         />
       </div>
-      <div class="field" style="width: 180px; margin: 0">
-        <label>Country</label>
-        <PSelect
-          v-model="filterCountry"
-          :options="countryOptions"
-          optionLabel="label"
-          optionValue="value"
-          filter
-          showClear
+      <div style="width: 180px">
+        <TfSelect
+          label="Country"
+          :modelValue="countryLabel(filterCountry)"
+          @update:modelValue="(v) => { filterCountry = countryValue(v); loadPlaces(); }"
+          :options="countryLabels"
           placeholder="All"
-          class="w-full"
-          @change="loadPlaces"
         />
       </div>
-      <div class="field" style="width: 150px; margin: 0">
-        <label>Type</label>
-        <PSelect
-          v-model="filterType"
-          :options="typeOptions"
-          optionLabel="label"
-          optionValue="value"
-          showClear
+      <div style="width: 150px">
+        <TfSelect
+          label="Type"
+          :modelValue="typeLabelFromValue(filterType)"
+          @update:modelValue="(v) => { filterType = typeValueFromLabel(v); loadPlaces(); }"
+          :options="typeLabels"
           placeholder="All"
-          class="w-full"
-          @change="loadPlaces"
         />
       </div>
-      <div class="field" style="width: 130px; margin: 0">
-        <label>Visibility</label>
-        <PSelect
-          v-model="filterVisibility"
-          :options="visibilityOptions"
-          optionLabel="label"
-          optionValue="value"
-          showClear
+      <div style="width: 130px">
+        <TfSelect
+          label="Visibility"
+          :modelValue="visibilityLabelFromValue(filterVisibility)"
+          @update:modelValue="(v) => { filterVisibility = visibilityValueFromLabel(v); loadPlaces(); }"
+          :options="visibilityLabels"
           placeholder="All"
-          class="w-full"
-          @change="loadPlaces"
         />
       </div>
-      <div class="field" style="width: 140px; margin: 0">
-        <label>Source</label>
-        <PSelect
-          v-model="filterSource"
-          :options="sourceOptions"
-          optionLabel="label"
-          optionValue="value"
-          showClear
+      <div style="width: 140px">
+        <TfSelect
+          label="Source"
+          :modelValue="sourceLabelFromValue(filterSource)"
+          @update:modelValue="(v) => { filterSource = sourceValueFromLabel(v); loadPlaces(); }"
+          :options="sourceLabels"
           placeholder="All"
-          class="w-full"
-          @change="loadPlaces"
         />
       </div>
-      <div class="field" style="width: 130px; margin: 0">
-        <label>City</label>
-        <PInputText
-          v-model="filterCity"
-          class="w-full"
-          placeholder="Any"
-          @keyup.enter="loadPlaces"
+      <div style="width: 130px">
+        <TfInput v-model="filterCity" label="City" placeholder="Any" @keyup.enter="loadPlaces" />
+      </div>
+      <div style="width: 150px">
+        <TfSelect
+          label="Sort"
+          :modelValue="sortLabelFromValue(sortBy)"
+          @update:modelValue="(v) => { sortBy = sortValueFromLabel(v); loadPlaces(); }"
+          :options="sortLabels"
         />
       </div>
-      <div class="field" style="width: 150px; margin: 0">
-        <label>Sort</label>
-        <PSelect
-          v-model="sortBy"
-          :options="sortOptions"
-          optionLabel="label"
-          optionValue="value"
-          class="w-full"
-          @change="loadPlaces"
-        />
-      </div>
-      <PButton label="Apply" severity="secondary" outlined @click="loadPlaces" />
+      <TfButton variant="secondary" @click="loadPlaces">Apply</TfButton>
     </div>
 
     <div
@@ -250,16 +219,14 @@
           </div>
 
           <div class="place-card-foot">
-            <PSelect
-              :modelValue="p.folderId"
-              @update:modelValue="(v) => assignFolder(p, v)"
-              :options="folderSelectOptions"
-              optionLabel="label"
-              optionValue="value"
-              showClear
-              placeholder="＋ Folder"
-              style="flex: 1"
-            />
+            <div style="flex: 1">
+              <TfSelect
+                :modelValue="folderLabel(p.folderId)"
+                @update:modelValue="(v) => assignFolder(p, folderValueFromLabel(v))"
+                :options="folderLabels"
+                placeholder="＋ Folder"
+              />
+            </div>
             <template v-if="p.owned">
               <button class="del-btn" @click="openDialog(p)" v-tooltip="'Edit'">
                 <i class="pi pi-pencil"></i>
@@ -312,16 +279,14 @@
             </div>
           </div>
           <div class="card-right" style="display: flex; gap: 6px; align-items: center">
-            <PSelect
-              :modelValue="p.folderId"
-              @update:modelValue="(v) => assignFolder(p, v)"
-              :options="folderSelectOptions"
-              optionLabel="label"
-              optionValue="value"
-              showClear
-              placeholder="＋ Folder"
-              :style="{ width: '150px' }"
-            />
+            <div style="width: 150px">
+              <TfSelect
+                :modelValue="folderLabel(p.folderId)"
+                @update:modelValue="(v) => assignFolder(p, folderValueFromLabel(v))"
+                :options="folderLabels"
+                placeholder="＋ Folder"
+              />
+            </div>
             <template v-if="p.owned">
               <button class="del-btn" @click="openDialog(p)" v-tooltip="'Edit'">
                 <i class="pi pi-pencil"></i>
@@ -339,66 +304,42 @@
       <div class="empty-state-icon"><i class="pi pi-map-marker"></i></div>
       <h3>No places yet</h3>
       <p>Search above to find & save a place, or add one manually.</p>
-      <PButton icon="pi pi-plus" label="Add place" @click="openDialog()" />
+      <TfButton icon="pi-plus" @click="openDialog()">Add place</TfButton>
     </div>
 
-    <PDialog
-      v-model:visible="showDialog"
-      :header="editing ? 'Edit place' : 'New place'"
-      modal
-      :style="{ width: '520px' }"
-      :draggable="false"
-      @hide="resetForm"
-    >
-      <form @submit.prevent="save" class="dialog-form">
-        <div class="field">
-          <label>Name *</label>
-          <PInputText
-            v-model="form.name"
-            required
-            class="w-full"
-            placeholder="e.g. Navagio Beach"
-          />
-        </div>
+    <TfModal v-model="showDialog" :title="editing ? 'Edit place' : 'New place'">
+      <form id="placeForm" @submit.prevent="save" class="dialog-form">
+        <TfInput v-model="form.name" label="Name *" required placeholder="e.g. Navagio Beach" />
         <div class="form-row">
-          <div class="field" style="flex: 1">
-            <label>Type</label>
-            <PSelect
-              v-model="form.type"
-              :options="typeOptions"
-              optionLabel="label"
-              optionValue="value"
-              class="w-full"
+          <div style="flex: 1">
+            <TfSelect
+              label="Type"
+              :modelValue="typeLabelFromValue(form.type)"
+              @update:modelValue="(v) => (form.type = typeValueFromLabel(v))"
+              :options="typeLabels"
             />
           </div>
-          <div class="field" style="flex: 1">
-            <label>Visibility</label>
-            <PSelect
-              v-model="form.visibility"
-              :options="visibilityOptions"
-              optionLabel="label"
-              optionValue="value"
-              class="w-full"
+          <div style="flex: 1">
+            <TfSelect
+              label="Visibility"
+              :modelValue="visibilityLabelFromValue(form.visibility)"
+              @update:modelValue="(v) => (form.visibility = visibilityValueFromLabel(v))"
+              :options="visibilityLabels"
             />
           </div>
         </div>
         <div class="form-row">
-          <div class="field" style="flex: 1">
-            <label>Country</label>
-            <PSelect
-              v-model="form.country"
-              :options="countryOptions"
-              optionLabel="label"
-              optionValue="value"
-              filter
-              showClear
+          <div style="flex: 1">
+            <TfSelect
+              label="Country"
+              :modelValue="countryLabel(form.country)"
+              @update:modelValue="(v) => (form.country = countryValue(v))"
+              :options="countryLabels"
               placeholder="Country"
-              class="w-full"
             />
           </div>
-          <div class="field" style="flex: 1">
-            <label>City</label>
-            <PInputText v-model="form.city" class="w-full" />
+          <div style="flex: 1">
+            <TfInput v-model="form.city" label="City" />
           </div>
         </div>
         <div class="field">
@@ -408,64 +349,51 @@
               >— auto-filled from name + city/country if left blank</span
             ></label
           >
-          <PInputText v-model="form.address" class="w-full" />
+          <TfInput v-model="form.address" />
         </div>
         <div class="form-row">
-          <div class="field" style="flex: 1">
-            <label>Latitude</label>
-            <PInputNumber v-model="form.latitude" :maxFractionDigits="7" class="w-full" />
+          <div style="flex: 1">
+            <TfNumberInput
+              v-model="form.latitude"
+              label="Latitude"
+              type="plain"
+              :precision="7"
+            />
           </div>
-          <div class="field" style="flex: 1">
-            <label>Longitude</label>
-            <PInputNumber v-model="form.longitude" :maxFractionDigits="7" class="w-full" />
+          <div style="flex: 1">
+            <TfNumberInput
+              v-model="form.longitude"
+              label="Longitude"
+              type="plain"
+              :precision="7"
+            />
           </div>
         </div>
-        <div class="field">
-          <label>Description</label>
-          <PInputText v-model="form.description" class="w-full" />
-        </div>
+        <TfInput v-model="form.description" label="Description" />
         <div class="field">
           <label>Photos <span class="text-muted text-sm">(comma-separated URLs)</span></label>
-          <PInputText v-model="photosText" class="w-full" placeholder="https://… , https://…" />
+          <TfInput v-model="photosText" placeholder="https://… , https://…" />
         </div>
         <div class="field">
           <label>Links <span class="text-muted text-sm">(comma-separated URLs)</span></label>
-          <PInputText v-model="linksText" class="w-full" placeholder="https://… , https://…" />
-        </div>
-        <div class="dialog-actions">
-          <PButton
-            type="button"
-            label="Cancel"
-            severity="secondary"
-            text
-            @click="showDialog = false"
-          />
-          <PButton
-            type="submit"
-            :label="editing ? 'Save' : 'Add'"
-            icon="pi pi-check"
-            :loading="saving"
-          />
+          <TfInput v-model="linksText" placeholder="https://… , https://…" />
         </div>
       </form>
-    </PDialog>
-    <PDialog
-      v-model:visible="showFolderDialog"
-      :header="editingFolder ? 'Rename folder' : 'New folder'"
-      modal
-      :style="{ width: '360px' }"
-      :draggable="false"
-    >
-      <form @submit.prevent="saveFolder" class="dialog-form">
-        <div class="field">
-          <label>Name *</label>
-          <PInputText
-            v-model="folderForm.name"
-            required
-            class="w-full"
-            placeholder="e.g. Beaches, Greece 2026"
-          />
-        </div>
+      <template #footer>
+        <TfButton variant="ghost" @click="showDialog = false">Cancel</TfButton>
+        <TfButton type="submit" form="placeForm" icon="pi-check" :loading="saving">{{
+          editing ? 'Save' : 'Add'
+        }}</TfButton>
+      </template>
+    </TfModal>
+    <TfModal v-model="showFolderDialog" :title="editingFolder ? 'Rename folder' : 'New folder'">
+      <form id="folderForm" @submit.prevent="saveFolder" class="dialog-form">
+        <TfInput
+          v-model="folderForm.name"
+          label="Name *"
+          required
+          placeholder="e.g. Beaches, Greece 2026"
+        />
         <div class="field">
           <label>Color</label>
           <input
@@ -474,106 +402,75 @@
             style="width: 48px; height: 34px; border: none; background: none; cursor: pointer"
           />
         </div>
-        <div class="dialog-actions">
-          <PButton
-            type="button"
-            label="Cancel"
-            severity="secondary"
-            text
-            @click="showFolderDialog = false"
-          />
-          <PButton type="submit" :label="editingFolder ? 'Save' : 'Create'" icon="pi pi-check" />
-        </div>
       </form>
-    </PDialog>
+      <template #footer>
+        <TfButton variant="ghost" @click="showFolderDialog = false">Cancel</TfButton>
+        <TfButton type="submit" form="folderForm" icon="pi-check">{{
+          editingFolder ? 'Save' : 'Create'
+        }}</TfButton>
+      </template>
+    </TfModal>
     <!-- Find a place (geocode autocomplete) -->
-    <PDialog
-      v-model:visible="showFindDialog"
-      modal
-      header="Find a place"
-      :style="{ width: '460px' }"
-      :draggable="false"
-    >
+    <TfModal v-model="showFindDialog" title="Find a place">
       <div class="dialog-form">
         <div class="field">
           <label>Search <span v-if="geocoding" class="text-muted text-sm">· saving…</span></label>
           <TfPlaceSearch placeholder="Navagio Beach, Senso-ji…" @select="onGeoPicked" />
         </div>
-        <div class="field">
-          <label>Country <span class="text-muted text-sm">(optional)</span></label>
-          <PSelect
-            v-model="geocodeCountry"
-            :options="countryOptions"
-            optionLabel="label"
-            optionValue="value"
-            filter
-            showClear
-            placeholder="Any"
-            class="w-full"
-          />
-        </div>
+        <TfSelect
+          label="Country"
+          :modelValue="countryLabel(geocodeCountry)"
+          @update:modelValue="(v) => (geocodeCountry = countryValue(v))"
+          :options="countryLabels"
+          placeholder="Any"
+        />
         <p class="text-muted text-sm" style="margin: 0">
           Pick a suggestion to save it to your library.
         </p>
       </div>
-    </PDialog>
+    </TfModal>
 
-    <!-- Import from Google Maps -->
-    <PDialog
-      v-model:visible="showImportDialog"
-      modal
-      header="Import from Google Maps"
-      :style="{ width: '460px' }"
-      :draggable="false"
-    >
-      <form @submit.prevent="runImport" class="dialog-form">
-        <div class="field">
-          <label>Google Maps link</label>
-          <PInputText
-            v-model="importUrl"
-            class="w-full"
-            placeholder="https://maps.app.goo.gl/…"
-            @keyup.enter="runImport"
-            autofocus
-          />
-        </div>
+    <!-- Import from a link -->
+    <TfModal v-model="showImportDialog" title="Import a place">
+      <form id="importForm" @submit.prevent="runImport" class="dialog-form">
+        <TfInput
+          v-model="importUrl"
+          label="Google Maps or Tripadvisor link"
+          placeholder="https://maps.app.goo.gl/… or tripadvisor.com/…"
+          @keyup.enter="runImport"
+        />
         <p class="text-muted text-sm" style="margin: 0">
-          Paste a share link to a single place (not a saved list).
+          Paste a link to a single place (not a saved list or destination page).
         </p>
-        <div class="dialog-actions">
-          <PButton
-            type="button"
-            label="Cancel"
-            severity="secondary"
-            text
-            @click="showImportDialog = false"
-          />
-          <PButton
-            type="submit"
-            :label="importing ? 'Importing…' : 'Import'"
-            icon="pi pi-download"
-            :loading="importing"
-            @click="runImport"
-          />
-        </div>
       </form>
-    </PDialog>
-
-    <PConfirmDialog />
+      <template #footer>
+        <TfButton variant="ghost" @click="showImportDialog = false">Cancel</TfButton>
+        <TfButton type="submit" form="importForm" icon="pi-download" :loading="importing">{{
+          importing ? 'Importing…' : 'Import'
+        }}</TfButton>
+      </template>
+    </TfModal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
-import { TfBadge, TfPlaceSearch } from '@tripyfull/ui';
+import { ref, computed, onMounted, watch } from 'vue';
+import {
+  TfBadge,
+  TfButton,
+  TfInput,
+  TfSelect,
+  TfNumberInput,
+  TfModal,
+  TfPlaceSearch,
+  toast,
+  confirm,
+} from '@tripyfull/ui';
 import { useTripStore } from '@/stores/tripStore.js';
 import { useRoute, useRouter } from 'vue-router';
+import { FEATURES } from '@/config.js';
 import { api } from '@tripyfull/core';
 
-const toast = useToast();
-const confirm = useConfirm();
 const tripStore = useTripStore();
 const route = useRoute();
 const router = useRouter();
@@ -646,15 +543,13 @@ const folderForm = ref({ name: '', color: '#e35a38' });
 const sourceOptions = [
   { label: 'Manual', value: 'MANUAL' },
   { label: 'Geocoded', value: 'GEOCODED' },
+  { label: 'Imported', value: 'IMPORTED' },
 ];
 const sortOptions = [
   { label: 'Name', value: 'name' },
   { label: 'Recently added', value: 'recent' },
   { label: 'Type', value: 'type' },
 ];
-const folderSelectOptions = computed(() =>
-  folders.value.map((f) => ({ label: f.name, value: f.id })),
-);
 const currentFolder = computed(
   () => folders.value.find((f) => f.id === selectedFolderId.value) || null,
 );
@@ -662,9 +557,9 @@ const chipStyle = (active) => ({
   padding: '6px 12px',
   borderRadius: 'var(--radius-pill)',
   cursor: 'pointer',
-  border: '1px solid var(--border-subtle)',
-  background: active ? 'var(--brand)' : 'var(--surface-card)',
-  color: active ? '#fff' : 'var(--text-body)',
+  border: '1px solid var(--border-default)',
+  background: active ? 'var(--accent)' : 'var(--card)',
+  color: active ? '#fff' : 'var(--text-primary)',
   font: 'var(--fw-medium) 13px/1 var(--font-sans)',
   display: 'inline-flex',
   alignItems: 'center',
@@ -690,6 +585,32 @@ const visibilityOptions = [
   { label: 'Public', value: 'PUBLIC' },
 ];
 const typeLabel = (v) => typeOptions.find((o) => o.value === v)?.label || v;
+
+// --- Label <-> value mapping helpers for TfSelect (string-array based) ---
+const typeLabels = typeOptions.map((o) => o.label);
+const typeLabelFromValue = (v) => typeOptions.find((o) => o.value === v)?.label ?? null;
+const typeValueFromLabel = (l) => typeOptions.find((o) => o.label === l)?.value ?? null;
+
+const visibilityLabels = visibilityOptions.map((o) => o.label);
+const visibilityLabelFromValue = (v) => visibilityOptions.find((o) => o.value === v)?.label ?? null;
+const visibilityValueFromLabel = (l) =>
+  visibilityOptions.find((o) => o.label === l)?.value ?? null;
+
+const sourceLabels = sourceOptions.map((o) => o.label);
+const sourceLabelFromValue = (v) => sourceOptions.find((o) => o.value === v)?.label ?? null;
+const sourceValueFromLabel = (l) => sourceOptions.find((o) => o.label === l)?.value ?? null;
+
+const sortLabels = sortOptions.map((o) => o.label);
+const sortLabelFromValue = (v) => sortOptions.find((o) => o.value === v)?.label ?? null;
+const sortValueFromLabel = (l) => sortOptions.find((o) => o.label === l)?.value ?? null;
+
+const countryLabels = computed(() => countryOptions.value.map((o) => o.label));
+const countryLabel = (v) => countryOptions.value.find((o) => o.value === v)?.label ?? null;
+const countryValue = (l) => countryOptions.value.find((o) => o.label === l)?.value ?? null;
+
+const folderLabels = computed(() => folders.value.map((f) => f.name));
+const folderLabel = (id) => folders.value.find((f) => f.id === id)?.name ?? null;
+const folderValueFromLabel = (name) => folders.value.find((f) => f.name === name)?.id ?? null;
 const linkLabel = (url) => {
   try {
     return new URL(url).hostname.replace(/^www\./, '');
@@ -700,18 +621,18 @@ const linkLabel = (url) => {
 
 // Per-type icon + warm color, matching the Tripyfull category styling.
 const TYPE_META = {
-  SIGHTSEEING: { e: '🏛', bg: 'var(--teal-50)', c: 'var(--accent)' },
-  BEACH: { e: '🏖', bg: 'var(--gold-50)', c: 'var(--gold-400)' },
-  NATURE: { e: '🌿', bg: 'var(--teal-50)', c: 'var(--teal-400)' },
-  RESTAURANT: { e: '🍽', bg: 'var(--gold-50)', c: 'var(--gold-400)' },
-  MUSEUM: { e: '🏺', bg: 'var(--coral-50)', c: 'var(--brand)' },
-  VIEWPOINT: { e: '🌄', bg: 'var(--gold-50)', c: 'var(--gold-500)' },
-  PORT: { e: '⛴', bg: 'var(--teal-50)', c: 'var(--accent)' },
-  AIRPORT: { e: '✈️', bg: 'var(--teal-50)', c: 'var(--accent)' },
-  NEIGHBORHOOD: { e: '🏘', bg: 'var(--coral-50)', c: 'var(--brand)' },
-  PARK: { e: '🌳', bg: 'var(--teal-50)', c: 'var(--teal-400)' },
-  SHOP: { e: '🛍', bg: 'var(--coral-50)', c: 'var(--coral-400)' },
-  OTHER: { e: '📍', bg: 'var(--surface-sunken)', c: 'var(--ink-500)' },
+  SIGHTSEEING: { e: '🏛', bg: 'var(--success-100)', c: 'var(--accent)' },
+  BEACH: { e: '🏖', bg: 'var(--warning-100)', c: 'var(--warning-300)' },
+  NATURE: { e: '🌿', bg: 'var(--success-100)', c: 'var(--success-300)' },
+  RESTAURANT: { e: '🍽', bg: 'var(--warning-100)', c: 'var(--warning-300)' },
+  MUSEUM: { e: '🏺', bg: 'var(--danger-100)', c: 'var(--accent)' },
+  VIEWPOINT: { e: '🌄', bg: 'var(--warning-100)', c: 'var(--warning-500)' },
+  PORT: { e: '⛴', bg: 'var(--success-100)', c: 'var(--accent)' },
+  AIRPORT: { e: '✈️', bg: 'var(--success-100)', c: 'var(--accent)' },
+  NEIGHBORHOOD: { e: '🏘', bg: 'var(--danger-100)', c: 'var(--accent)' },
+  PARK: { e: '🌳', bg: 'var(--success-100)', c: 'var(--success-300)' },
+  SHOP: { e: '🛍', bg: 'var(--danger-100)', c: 'var(--danger-500)' },
+  OTHER: { e: '📍', bg: 'var(--surface)', c: 'var(--ink-500)' },
 };
 const typeEmoji = (t) => (TYPE_META[t] || TYPE_META.OTHER).e;
 const typeStyle = (t) => {
@@ -783,9 +704,9 @@ const save = async () => {
       places.value.unshift(res.data);
     }
     showDialog.value = false;
-    toast.add({ severity: 'success', summary: 'Saved', life: 3000 });
+    toast.success('Saved');
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save place', life: 3000 });
+    toast.danger('Error', 'Failed to save place');
   } finally {
     saving.value = false;
   }
@@ -805,10 +726,10 @@ const runGeocode = async (text) => {
     else places.value.unshift(res.data);
     geocodeText.value = '';
     showFindDialog.value = false;
-    toast.add({ severity: 'success', summary: 'Place saved', detail: res.data.name, life: 3000 });
+    toast.success('Place saved', res.data.name);
   } catch (e) {
     const msg = e.response?.status === 404 ? 'No location found' : 'Geocoding failed';
-    toast.add({ severity: 'warn', summary: 'Not found', detail: msg, life: 3000 });
+    toast.warning('Not found', msg);
   } finally {
     geocoding.value = false;
   }
@@ -833,27 +754,31 @@ const runImport = async () => {
     else places.value.unshift(res.data);
     importUrl.value = '';
     showImportDialog.value = false;
-    toast.add({ severity: 'success', summary: 'Imported', detail: res.data.name, life: 3000 });
+    toast.success('Imported', res.data.name);
   } catch (e) {
     const msg = e.response?.status === 400 ? "Couldn't read that link" : 'Import failed';
-    toast.add({ severity: 'warn', summary: 'Import', detail: msg, life: 3500 });
+    toast.warning('Import', msg);
   } finally {
     importing.value = false;
   }
 };
 
 const confirmDelete = (p) => {
-  confirm.require({
+  confirm({
+    title: 'Confirm',
     message: `Delete "${p.name}"?`,
-    header: 'Confirm',
-    icon: 'pi pi-exclamation-triangle',
-    rejectProps: { label: 'Cancel', severity: 'secondary', text: true },
-    acceptProps: { label: 'Delete', severity: 'danger' },
-    accept: async () => {
+    tone: 'danger',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+  }).then(async (ok) => {
+    if (!ok) return;
+    try {
       await api.delete(`/api/places/${p.id}`);
       places.value = places.value.filter((x) => x.id !== p.id);
-      toast.add({ severity: 'success', summary: 'Deleted', life: 3000 });
-    },
+      toast.success('Deleted');
+    } catch {
+      toast.danger('Error', 'Failed to delete place');
+    }
   });
 };
 
@@ -863,6 +788,11 @@ const resetForm = () => {
   photosText.value = '';
   linksText.value = '';
 };
+
+// TfModal has no @hide event — reset the form whenever the place dialog closes.
+watch(showDialog, (open) => {
+  if (!open) resetForm();
+});
 
 const clean = (s) => (s && String(s).trim() ? String(s).trim() : undefined);
 
@@ -881,7 +811,7 @@ const loadPlaces = async () => {
     };
     places.value = (await api.get('/api/places', { params })).data;
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load places', life: 3000 });
+    toast.danger('Error', 'Failed to load places');
   } finally {
     loading.value = false;
   }
@@ -918,24 +848,28 @@ const saveFolder = async () => {
     showFolderDialog.value = false;
     await loadFolders();
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to save folder', life: 3000 });
+    toast.danger('Error', 'Failed to save folder');
   }
 };
 
 const deleteFolder = (f) => {
-  confirm.require({
+  confirm({
+    title: 'Confirm',
     message: `Delete folder "${f.name}"? Places stay in the library.`,
-    header: 'Confirm',
-    icon: 'pi pi-exclamation-triangle',
-    rejectProps: { label: 'Cancel', severity: 'secondary', text: true },
-    acceptProps: { label: 'Delete', severity: 'danger' },
-    accept: async () => {
+    tone: 'danger',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+  }).then(async (ok) => {
+    if (!ok) return;
+    try {
       await api.delete(`/api/folders/${f.id}`);
       if (selectedFolderId.value === f.id) selectedFolderId.value = null;
       await loadFolders();
       await loadPlaces();
-      toast.add({ severity: 'success', summary: 'Deleted', life: 2500 });
-    },
+      toast.success('Deleted');
+    } catch {
+      toast.danger('Error', 'Failed to delete folder');
+    }
   });
 };
 
@@ -955,12 +889,7 @@ const assignFolder = async (place, folderId) => {
       places.value = places.value.filter((p) => p.id !== place.id);
     }
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to update folder',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to update folder');
   }
 };
 
@@ -1005,12 +934,12 @@ onMounted(async () => {
   border-radius: var(--radius-md);
   background-size: cover;
   background-position: center;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
 }
 
 .place-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--card);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
@@ -1062,14 +991,14 @@ onMounted(async () => {
 
 .place-card-name {
   font: var(--fw-bold) 17px/1.15 var(--font-display);
-  color: var(--text-strong);
+  color: var(--text-primary);
   letter-spacing: -0.01em;
   word-break: break-word;
 }
 
 .place-card-sub {
   font: var(--fw-regular) 12px/1.3 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-top: 3px;
   display: flex;
   align-items: center;
@@ -1085,7 +1014,7 @@ onMounted(async () => {
 
 .place-card-desc {
   font: var(--type-small);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-style: italic;
   margin: 0;
   display: -webkit-box;
@@ -1105,7 +1034,7 @@ onMounted(async () => {
   gap: 4px;
   font: var(--fw-medium) 12px/1 var(--font-sans);
   color: var(--text-link);
-  background: var(--surface-sunken);
+  background: var(--surface);
   padding: 5px 10px;
   border-radius: var(--radius-pill);
   text-decoration: none;
@@ -1120,10 +1049,7 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 10px 14px 12px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-default);
   margin-top: auto;
-}
-.place-card-foot :deep(.p-select) {
-  font-size: var(--text-sm);
 }
 </style>

@@ -99,7 +99,7 @@
         <div class="metric-tile">
           <div class="metric-label">Planned</div>
           <span class="money money--xl"
-            >{{ fmt(clientTotalPlanned) }} <span class="money-cur">{{ currency }}</span></span
+            >{{ fmt(totalPlanned) }} <span class="money-cur">{{ currency }}</span></span
           >
           <div class="metric-sub">bookings + activity estimates</div>
         </div>
@@ -119,10 +119,10 @@
           <div class="metric-label">
             Remaining to pay <i class="pi pi-chevron-right" style="font-size: 11px"></i>
           </div>
-          <span class="money money--xl" style="color: var(--coral-600)"
-            >{{ fmt(clientBookingsRemaining) }} <span class="money-cur">{{ currency }}</span></span
+          <span class="money money--xl" style="color: var(--danger-700)"
+            >{{ fmt(bookingsRemaining) }} <span class="money-cur">{{ currency }}</span></span
           >
-          <div class="metric-sub">{{ clientUpcomingPayments.length }} payments ahead</div>
+          <div class="metric-sub">{{ upcomingPayments.length }} payments ahead</div>
         </div>
         <div class="metric-tile">
           <div class="metric-label">Spent in trip</div>
@@ -144,23 +144,19 @@
           "
         >
           <span
-            style="font: var(--fw-semibold) 15px/1 var(--font-display); color: var(--text-strong)"
+            style="font: var(--fw-semibold) 15px/1 var(--font-display); color: var(--text-primary)"
             >Overall progress</span
           >
-          <TfBadge :tone="paidTotal > clientTotalPlanned ? 'danger' : 'accent'" variant="soft">
-            {{
-              paidTotal > clientTotalPlanned
-                ? 'over budget'
-                : fmt(clientTotalPlanned) + ' ' + currency
-            }}
+          <TfBadge :tone="paidTotal > totalPlanned ? 'danger' : 'accent'" variant="soft">
+            {{ paidTotal > totalPlanned ? 'over budget' : fmt(totalPlanned) + ' ' + currency }}
           </TfBadge>
         </div>
         <div class="tf-progress" style="height: 10px">
           <div
             class="tf-progress-fill"
             :style="{
-              width: progressPct(paidTotal, clientTotalPlanned) + '%',
-              background: paidTotal > clientTotalPlanned ? 'var(--danger-500)' : 'var(--brand)',
+              width: progressPct(paidTotal, totalPlanned) + '%',
+              background: paidTotal > totalPlanned ? 'var(--danger-500)' : 'var(--accent)',
             }"
           ></div>
         </div>
@@ -170,19 +166,19 @@
             justify-content: space-between;
             margin-top: 8px;
             font: var(--fw-medium) 12px/1 var(--font-mono);
-            color: var(--text-muted);
+            color: var(--text-secondary);
           "
         >
           <span>paid {{ fmt(paidTotal) }} {{ currency }} · {{ paidPct }}%</span>
           <span
             :style="{
-              color: paidTotal > clientTotalPlanned ? 'var(--danger-500)' : 'var(--success-500)',
+              color: paidTotal > totalPlanned ? 'var(--danger-500)' : 'var(--success-500)',
             }"
           >
             {{
-              paidTotal > clientTotalPlanned
-                ? 'overspend ' + fmt(paidTotal - clientTotalPlanned)
-                : 'remaining ' + fmt(clientTotalPlanned - paidTotal)
+              paidTotal > totalPlanned
+                ? 'overspend ' + fmt(paidTotal - totalPlanned)
+                : 'remaining ' + fmt(totalPlanned - paidTotal)
             }}
             {{ currency }}
           </span>
@@ -195,7 +191,7 @@
           class="card"
           :style="
             activeMetric === 'remaining'
-              ? 'border:1.5px solid var(--brand);box-shadow:var(--shadow-md)'
+              ? 'border:1.5px solid var(--accent);box-shadow:var(--shadow-md)'
               : ''
           "
         >
@@ -213,7 +209,7 @@
             >
           </div>
           <div
-            v-if="!clientUpcomingPayments.length"
+            v-if="!upcomingPayments.length"
             style="
               display: flex;
               align-items: center;
@@ -227,15 +223,15 @@
           </div>
           <div v-else style="display: flex; flex-direction: column; gap: 10px">
             <div
-              v-for="p in clientUpcomingPayments"
+              v-for="p in upcomingPayments"
               :key="p.paymentId"
               style="
                 display: flex;
                 align-items: center;
                 gap: 12px;
                 padding: 11px 12px;
-                background: var(--surface-page);
-                border: 1px solid var(--border-subtle);
+                background: var(--bg);
+                border: 1px solid var(--border-default);
                 border-radius: var(--radius-md);
               "
             >
@@ -246,7 +242,7 @@
                 <div
                   style="
                     font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                    color: var(--text-strong);
+                    color: var(--text-primary);
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -257,7 +253,7 @@
                 <div
                   style="
                     font: var(--fw-medium) 11px/1 var(--font-mono);
-                    color: var(--coral-600);
+                    color: var(--danger-700);
                     margin-top: 3px;
                   "
                 >
@@ -306,14 +302,14 @@
                 <span
                   style="
                     font: var(--fw-medium) 14px/1 var(--font-sans);
-                    color: var(--text-strong);
+                    color: var(--text-primary);
                     flex: 1;
                   "
                   >{{ catLabel(c.cat) }}</span
                 >
                 <span
                   style="font: var(--fw-medium) 12px/1 var(--font-mono)"
-                  :style="{ color: c.over ? 'var(--danger-500)' : 'var(--text-muted)' }"
+                  :style="{ color: c.over ? 'var(--danger-500)' : 'var(--text-secondary)' }"
                 >
                   {{
                     catMode === 'Actual'
@@ -388,18 +384,18 @@
         <div
           v-for="d in budget.days"
           :key="d.dayId"
-          style="border-bottom: 1px dashed var(--border-subtle)"
+          style="border-bottom: 1px dashed var(--border-default)"
         >
           <button
             class="budget-day-row-btn"
-            :style="expandedDay === d.dayId ? 'background:var(--surface-page)' : ''"
+            :style="expandedDay === d.dayId ? 'background:var(--bg)' : ''"
             @click="toggleDay(d.dayId)"
           >
             <span class="budget-day-label">Day {{ d.dayNumber }} · {{ d.city || '' }}</span>
-            <span class="budget-day-col" style="color: var(--text-muted)">{{
+            <span class="budget-day-col" style="color: var(--text-secondary)">{{
               fmt(d.planned)
             }}</span>
-            <span class="budget-day-col" style="color: var(--text-strong); font-weight: 600">{{
+            <span class="budget-day-col" style="color: var(--text-primary); font-weight: 600">{{
               fmt(d.actual)
             }}</span>
             <span
@@ -418,7 +414,7 @@
                 width: 28px;
                 display: inline-flex;
                 justify-content: flex-end;
-                color: var(--text-subtle);
+                color: var(--text-secondary);
                 transition: transform var(--dur-fast) var(--ease-out);
               "
               :style="{ transform: expandedDay === d.dayId ? 'rotate(90deg)' : 'none' }"
@@ -435,7 +431,7 @@
                   font: var(--fw-medium) 11px/1 var(--font-mono);
                   letter-spacing: 0.08em;
                   text-transform: uppercase;
-                  color: var(--text-subtle);
+                  color: var(--text-secondary);
                   margin: 8px 0;
                 "
               >
@@ -451,27 +447,25 @@
                     {{ catEmoji(e.category) }}
                   </div>
                   <span
-                    style="flex: 1; font: 400 13px/1.3 var(--font-sans); color: var(--text-body)"
+                    style="flex: 1; font: 400 13px/1.3 var(--font-sans); color: var(--text-primary)"
                     >{{ e.description || e.category || 'Expense' }}</span
                   >
-                  <span class="money money--sm" style="color: var(--text-muted)">
+                  <span class="money money--sm" style="color: var(--text-secondary)">
                     {{ Number(e.amount).toFixed(2) }}
                     {{ e.currency && e.currency !== currency ? e.currency : currency }}
                   </span>
-                  <button
-                    class="del-btn"
-                    @click.stop="deleteExpense(d.dayId, e.id)"
-                    v-tooltip="'Delete'"
-                  >
-                    <i class="pi pi-times" style="font-size: 10px"></i>
-                  </button>
+                  <TfTooltip text="Delete">
+                    <button class="del-btn" @click.stop="deleteExpense(d.dayId, e.id)">
+                      <i class="pi pi-times" style="font-size: 10px"></i>
+                    </button>
+                  </TfTooltip>
                 </div>
               </div>
             </template>
 
             <div
               v-if="!filteredDayExpenses(d.dayId).length"
-              style="font: var(--type-small); color: var(--text-subtle); padding: 8px 0"
+              style="font: var(--type-small); color: var(--text-secondary); padding: 8px 0"
             >
               No expenses for this day{{ filterCat !== 'All' ? ' in this category' : '' }}.
             </div>
@@ -492,7 +486,7 @@
       <div
         style="
           font: var(--type-small);
-          color: var(--text-subtle);
+          color: var(--text-secondary);
           margin-top: 14px;
           display: flex;
           align-items: center;
@@ -500,98 +494,69 @@
         "
       >
         <i class="pi pi-info-circle" style="font-size: 13px"></i>
-        Multi-currency: booking amounts are converted to {{ currency }} using the exchange rate
-        saved on each booking. Expenses are tracked as entered — enter them in {{ currency }} for
-        accurate totals.
+        Multi-currency: all amounts are shown in {{ currency }} — bookings use the rate saved on
+        each booking, activity estimates and expenses are converted at live rates.
       </div>
     </template>
 
     <!-- Add Expense Dialog -->
-    <PDialog
-      v-model:visible="showExpenseDialog"
-      header="Add expense"
-      modal
-      :style="{ width: '400px' }"
-      :draggable="false"
-    >
+    <TfModal v-model="showExpenseDialog" title="Add expense" size="sm">
       <form @submit.prevent="saveExpense" class="dialog-form">
-        <div class="field" v-if="!expenseDayId">
-          <label>Day</label>
-          <PSelect
-            v-model="expenseDayIdSelect"
-            :options="
-              budget?.days?.map((d) => ({
-                label: `Day ${d.dayNumber}${d.city ? ' · ' + d.city : ''} (${formatDateShort(d.date)})`,
-                value: d.dayId,
-              })) || []
-            "
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select day"
-            class="w-full"
-          />
-        </div>
-        <div class="field">
-          <label>Category</label>
-          <PSelect
-            v-model="expenseForm.category"
-            :options="expCategoryOptions"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select"
-            class="w-full"
-          />
-        </div>
+        <TfSelect
+          v-if="!expenseDayId"
+          label="Day"
+          v-model="expenseDaySelectLabel"
+          :options="dayOptions.map((o) => o.label)"
+          placeholder="Select day"
+        />
+        <TfSelect
+          label="Category"
+          v-model="expenseCategoryLabel"
+          :options="expCategoryOptions.map((o) => o.label)"
+          placeholder="Select"
+        />
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
-          <div class="field">
-            <label>Amount *</label>
-            <PInputNumber
-              v-model="expenseForm.amount"
-              placeholder="0.00"
-              :minFractionDigits="2"
-              locale="en-US"
-              class="w-full"
-            />
-          </div>
-          <div class="field">
-            <label>Currency</label>
-            <PInputText v-model="expenseForm.currency" :placeholder="currency" class="w-full" />
-          </div>
-        </div>
-        <div class="field">
-          <label>Description</label>
-          <PInputText
-            v-model="expenseForm.description"
-            placeholder="e.g. Lunch at taverna"
-            class="w-full"
+          <TfNumberInput
+            label="Amount *"
+            v-model="expenseForm.amount"
+            type="plain"
+            :precision="2"
           />
+          <TfInput label="Currency" v-model="expenseForm.currency" :placeholder="currency" />
         </div>
+        <TfInput
+          label="Description"
+          v-model="expenseForm.description"
+          placeholder="e.g. Lunch at taverna"
+        />
         <div class="dialog-actions">
-          <PButton
-            type="button"
-            label="Cancel"
-            severity="secondary"
-            text
-            @click="showExpenseDialog = false"
-          />
-          <PButton type="submit" label="Add" icon="pi pi-plus" :loading="savingExpense" />
+          <TfButton type="button" variant="ghost" @click="showExpenseDialog = false">
+            Cancel
+          </TfButton>
+          <TfButton type="submit" icon="pi-plus" :loading="savingExpense">Add</TfButton>
         </div>
       </form>
-    </PDialog>
+    </TfModal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import { TfButton, TfBadge } from '@tripyfull/ui';
+import {
+  TfButton,
+  TfBadge,
+  TfModal,
+  TfSelect,
+  TfInput,
+  TfNumberInput,
+  TfTooltip,
+  toast,
+} from '@tripyfull/ui';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { toBaseCurrency } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 
 const route = useRoute();
-const toast = useToast();
 
 const tripId = route.params.tripId;
 const tripTitle = ref('');
@@ -622,6 +587,29 @@ const expCategoryOptions = [
   { label: 'Other', value: 'OTHER' },
 ];
 
+// TfSelect works with string arrays; bridge label<->value while preserving stored values
+const dayOptions = computed(
+  () =>
+    budget.value?.days?.map((d) => ({
+      label: `Day ${d.dayNumber}${d.city ? ' · ' + d.city : ''} (${formatDateShort(d.date)})`,
+      value: d.dayId,
+    })) || [],
+);
+
+const expenseDaySelectLabel = computed({
+  get: () => dayOptions.value.find((o) => o.value === expenseDayIdSelect.value)?.label || null,
+  set: (label) => {
+    expenseDayIdSelect.value = dayOptions.value.find((o) => o.label === label)?.value ?? null;
+  },
+});
+
+const expenseCategoryLabel = computed({
+  get: () => expCategoryOptions.find((o) => o.value === expenseForm.value.category)?.label || null,
+  set: (label) => {
+    expenseForm.value.category = expCategoryOptions.find((o) => o.label === label)?.value ?? null;
+  },
+});
+
 const catEmoji = (c) =>
   ({
     FOOD: '\u{1F37D}',
@@ -642,22 +630,22 @@ const catLabel = (c) =>
   })[c] ?? c;
 const catColor = (c) =>
   ({
-    FOOD: 'var(--gold-400)',
+    FOOD: 'var(--warning-300)',
     TRANSPORT: 'var(--accent)',
     TRANSPORTATION: 'var(--accent)',
-    ACTIVITY: 'var(--teal-400)',
-    ACCOMMODATION: 'var(--brand)',
+    ACTIVITY: 'var(--success-300)',
+    ACCOMMODATION: 'var(--accent)',
     OTHER: 'var(--ink-400)',
-  })[c] || 'var(--brand)';
+  })[c] || 'var(--accent)';
 const catStyle = (c) =>
   ({
-    FOOD: { background: 'var(--gold-50)', color: 'var(--gold-400)' },
-    TRANSPORT: { background: 'var(--teal-50)', color: 'var(--accent)' },
-    TRANSPORTATION: { background: 'var(--teal-50)', color: 'var(--accent)' },
-    ACTIVITY: { background: 'var(--teal-50)', color: 'var(--teal-400)' },
-    ACCOMMODATION: { background: 'var(--coral-50)', color: 'var(--brand)' },
-    OTHER: { background: 'var(--surface-sunken)', color: 'var(--ink-500)' },
-  })[c] || { background: 'var(--surface-sunken)', color: 'var(--ink-500)' };
+    FOOD: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
+    TRANSPORT: { background: 'var(--success-100)', color: 'var(--accent)' },
+    TRANSPORTATION: { background: 'var(--success-100)', color: 'var(--accent)' },
+    ACTIVITY: { background: 'var(--success-100)', color: 'var(--success-300)' },
+    ACCOMMODATION: { background: 'var(--danger-100)', color: 'var(--accent)' },
+    OTHER: { background: 'var(--surface)', color: 'var(--ink-500)' },
+  })[c] || { background: 'var(--surface)', color: 'var(--ink-500)' };
 
 // Bookings where priceCurrency differs from base but exchangeRate is missing
 const missingRateCount = computed(
@@ -670,96 +658,20 @@ const missingRateCount = computed(
     ).length,
 );
 
-// Client-side booking totals — computed from raw booking data so currency conversion is always correct
-// (does not depend on what the backend calculated in its budget summary)
-const clientBookingsTotal = computed(() => {
-  const base = currency.value;
-  return bookings.value.reduce((sum, b) => {
-    return sum + toBaseCurrency(b.fullPrice, b.priceCurrency || base, base, b.exchangeRate);
-  }, 0);
-});
+// Server-computed budget: the backend converts everything to the base currency
+// (stored booking rates → live rates → raw pass-through, incl. activity estimates
+// and expense currencies), so the Overview card and this screen always agree.
+const totalPlanned = computed(() => Number(budget.value?.totalPlanned || 0));
+const bookingsRemaining = computed(() => Number(budget.value?.bookingsRemaining || 0));
+const upcomingPayments = computed(() => budget.value?.upcomingPayments || []);
 
-const clientBookingsPaid = computed(() => {
-  const base = currency.value;
-  return bookings.value.reduce((sum, b) => {
-    const paid = (b.payments || [])
-      .filter((p) => p.paid)
-      .reduce(
-        (s, p) => s + toBaseCurrency(p.amount, b.priceCurrency || base, base, b.exchangeRate),
-        0,
-      );
-    return sum + paid;
-  }, 0);
-});
-
-const clientBookingsRemaining = computed(() => {
-  const base = currency.value;
-  return bookings.value.reduce((sum, b) => {
-    const unpaid = (b.payments || [])
-      .filter((p) => !p.paid)
-      .reduce(
-        (s, p) => s + toBaseCurrency(p.amount, b.priceCurrency || base, base, b.exchangeRate),
-        0,
-      );
-    return sum + unpaid;
-  }, 0);
-});
-
-const clientPlannedByCategory = computed(() => {
-  const base = currency.value;
-  const map = {};
-  bookings.value.forEach((b) => {
-    const cat = b.category || 'OTHER';
-    map[cat] =
-      (map[cat] || 0) + toBaseCurrency(b.fullPrice, b.priceCurrency || base, base, b.exchangeRate);
-  });
-  // Day activity estimates are in base currency and tracked separately from bookings
-  const activityEstimatesTotal = (budget.value?.days || []).reduce(
-    (s, d) => s + Number(d.planned || 0),
-    0,
-  );
-  if (activityEstimatesTotal > 0) {
-    map['ACTIVITY'] = (map['ACTIVITY'] || 0) + activityEstimatesTotal;
-  }
-  return map;
-});
-
-const clientTotalPlanned = computed(() => {
-  const dayTotal = (budget.value?.days || []).reduce((s, d) => s + Number(d.planned || 0), 0);
-  return clientBookingsTotal.value + dayTotal;
-});
-
-const clientUpcomingPayments = computed(() => {
-  const base = currency.value;
-  const list = [];
-  bookings.value.forEach((b) => {
-    (b.payments || [])
-      .filter((p) => !p.paid)
-      .forEach((p) => {
-        list.push({
-          paymentId: p.id,
-          bookingId: b.id,
-          bookingName: b.name,
-          category: b.category,
-          amount: toBaseCurrency(p.amount, b.priceCurrency || base, base, b.exchangeRate),
-          dueDate: p.dueDate,
-        });
-      });
-  });
-  return list.sort((a, bItem) => {
-    if (!a.dueDate) return 1;
-    if (!bItem.dueDate) return -1;
-    return a.dueDate.localeCompare(bItem.dueDate);
-  });
-});
-
-const paidTotal = computed(() => {
-  return clientBookingsPaid.value + Number(budget.value?.expensesTotal || 0);
-});
+const paidTotal = computed(
+  () => Number(budget.value?.bookingsPaid || 0) + Number(budget.value?.expensesTotal || 0),
+);
 
 const paidPct = computed(() => {
-  if (!clientTotalPlanned.value) return 0;
-  return Math.round((paidTotal.value / clientTotalPlanned.value) * 100);
+  if (!totalPlanned.value) return 0;
+  return Math.round((paidTotal.value / totalPlanned.value) * 100);
 });
 
 const expenseCount = computed(() => {
@@ -769,7 +681,7 @@ const expenseCount = computed(() => {
 const allCategories = computed(() => {
   const cats = new Set([
     ...Object.keys(budget.value?.actualByCategory || {}),
-    ...Object.keys(clientPlannedByCategory.value),
+    ...Object.keys(budget.value?.plannedByCategory || {}),
   ]);
   return [...cats];
 });
@@ -777,7 +689,7 @@ const allCategories = computed(() => {
 const categoryBreakdown = computed(() => {
   return allCategories.value
     .map((cat) => {
-      const plan = clientPlannedByCategory.value[cat] || 0;
+      const plan = Number(budget.value?.plannedByCategory?.[cat] || 0);
       const actualCat = Number(budget.value?.actualByCategory?.[cat] || 0);
       return { cat, plan, fact: actualCat, over: actualCat > plan && plan > 0 };
     })
@@ -853,9 +765,9 @@ const saveExpense = async () => {
     showExpenseDialog.value = false;
     expandedDay.value = targetDayId;
     await refreshBudget();
-    toast.add({ severity: 'success', summary: 'Added', detail: 'Expense recorded', life: 3000 });
+    toast.success('Added', 'Expense recorded');
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add expense', life: 3000 });
+    toast.danger('Error', 'Failed to add expense');
   } finally {
     savingExpense.value = false;
   }
@@ -866,14 +778,9 @@ const deleteExpense = async (dayId, expenseId) => {
     await api.delete(`/api/expenses/${expenseId}`);
     dayExpenses.value[dayId] = (dayExpenses.value[dayId] || []).filter((e) => e.id !== expenseId);
     await refreshBudget();
-    toast.add({ severity: 'success', summary: 'Deleted', life: 3000 });
+    toast.success('Deleted');
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to delete expense',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to delete expense');
   }
 };
 
@@ -881,14 +788,9 @@ const markPaymentPaid = async (p) => {
   try {
     await api.patch(`/api/payments/${p.paymentId}/paid`);
     await refreshBudget();
-    toast.add({ severity: 'success', summary: 'Marked paid', detail: p.bookingName, life: 3000 });
+    toast.success('Marked paid', p.bookingName);
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to mark payment',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to mark payment');
   }
 };
 
@@ -936,7 +838,7 @@ onMounted(async () => {
       expandedDay.value = budgetRes.data.days[0].dayId;
     }
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load budget', life: 3000 });
+    toast.danger('Error', 'Failed to load budget');
   } finally {
     loading.value = false;
   }

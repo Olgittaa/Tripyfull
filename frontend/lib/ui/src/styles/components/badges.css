@@ -52,6 +52,10 @@
   background: var(--badge-contrast-bg);
   color: var(--badge-contrast-fg);
 }
+.badge--gold {
+  background: var(--warning-100);
+  color: var(--warning-500);
+}
 
 /* solid */
 .badge--solid.badge--success {
@@ -78,6 +82,10 @@
 .badge--solid.badge--contrast {
   background: var(--ink-900);
   color: var(--ink-0);
+}
+.badge--solid.badge--gold {
+  background: var(--warning-300);
+  color: var(--ink-900);
 }
 
 /* ============================================================

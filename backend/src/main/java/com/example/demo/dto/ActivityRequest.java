@@ -16,5 +16,6 @@ public record ActivityRequest(
         String costCurrency,
         String notes,
         UUID placeId,          // link to a library Place (inherits address when blank)
-        Boolean clearPlace     // true to unlink
+        Boolean clearPlace,    // true to unlink
+        UUID dayId             // on update: move the activity to this day (same trip only)
 ) {}

@@ -13,6 +13,7 @@
         :placeholder="placeholder"
         :value="modelValue"
         :disabled="disabled"
+        v-bind="$attrs"
         @input="$emit('update:modelValue', $event.target.value)"
       />
       <span v-if="$slots.suffix" class="input-affix input-affix--suffix"><slot name="suffix" /></span>
@@ -24,6 +25,8 @@
 
 <script setup>
 import { computed } from 'vue';
+
+defineOptions({ inheritAttrs: false });
 
 const props = defineProps({
   label: String,

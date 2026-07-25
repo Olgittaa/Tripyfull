@@ -131,7 +131,7 @@ watch(
 .booking-map {
   height: 210px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   overflow: hidden;
   margin-top: 12px;
   transition: opacity 0.2s;

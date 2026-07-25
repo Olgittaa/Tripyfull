@@ -29,6 +29,7 @@
         <a href="#multiselect">Multi-select</a>
         <a href="#upload">File upload</a>
         <a href="#rating">Rating</a>
+        <a href="#drawers">Drawer</a>
         <a href="#pdf">PDF viewer</a>
         <router-link to="/styleguide">Style guide</router-link>
       </nav>
@@ -319,6 +320,14 @@
               mode="datetime-range"
               label="Date time range"
             />
+            <TfDatePicker v-model="dateClearableVal" mode="date" label="Clearable" clearable />
+            <TfDatePicker
+              v-model="dateBoundedVal"
+              mode="range"
+              label="Min / max (Aug 17–25)"
+              :min="new Date(2026, 7, 17)"
+              :max="new Date(2026, 7, 25)"
+            />
           </div>
         </div>
       </section>
@@ -606,6 +615,49 @@
         </div>
       </section>
 
+      <!-- DRAWERS -->
+      <section id="drawers" class="bc-block">
+        <div class="bc-sec-head">
+          <div><span class="tf-eyebrow">Overlay</span><h2 class="bc-sec-title">Side drawer</h2></div>
+        </div>
+        <div class="bc-demo">
+          <div class="bc-row">
+            <TfButton variant="secondary" icon="pi-arrow-right" @click="drawerRight = true"
+              >Open right</TfButton
+            >
+            <TfButton variant="secondary" icon="pi-arrow-left" @click="drawerLeft = true"
+              >Open left</TfButton
+            >
+          </div>
+
+          <TfDrawer v-model="drawerRight" eyebrow="Booking" title="Flight details">
+            <TfDrawerSection label="Route">
+              <p class="type-small" style="margin: 0; color: var(--text-secondary)">
+                Barcelona (BCN) → Tokyo (NRT), 17 Aug 2026.
+              </p>
+            </TfDrawerSection>
+            <TfDrawerSection label="Passengers">
+              <TfInput label="Lead traveller" model-value="Mara Ortiz" />
+              <TfSelect label="Seat" :options="['Aisle', 'Window', 'Middle']" model-value="Window" />
+            </TfDrawerSection>
+            <template #footer>
+              <TfButton variant="ghost" @click="drawerRight = false">Cancel</TfButton>
+              <TfButton variant="primary" @click="drawerRight = false">Save</TfButton>
+            </template>
+          </TfDrawer>
+
+          <TfDrawer v-model="drawerLeft" position="left" width="narrow" title="Filters">
+            <TfDrawerSection label="Status">
+              <TfCheckbox :model-value="true">Confirmed</TfCheckbox>
+              <TfCheckbox :model-value="false">Pending</TfCheckbox>
+            </TfDrawerSection>
+            <TfDrawerSection label="Budget">
+              <TfSlider :model-value="60" :min="0" :max="100" />
+            </TfDrawerSection>
+          </TfDrawer>
+        </div>
+      </section>
+
       <!-- PDF VIEWER -->
       <section id="pdf" class="bc-block">
         <div class="bc-sec-head">
@@ -677,6 +729,8 @@ import {
   TfFileUpload,
   TfRating,
   TfPdfViewer,
+  TfDrawer,
+  TfDrawerSection,
   toast,
 } from '@tripyfull/ui';
 
@@ -753,8 +807,12 @@ const dateVal = ref(new Date(2026, 7, 17));
 const dateTimeVal = ref(new Date(2026, 6, 15, 14, 15));
 const dateRangeVal = ref([new Date(2026, 7, 17), new Date(2026, 7, 25)]);
 const dateTimeRangeVal = ref([new Date(2026, 7, 17, 14, 15), new Date(2026, 7, 25, 14, 15)]);
+const dateClearableVal = ref(new Date(2026, 7, 17));
+const dateBoundedVal = ref(null);
 const modalOpen = ref(false);
 const confirmOpen = ref(false);
+const drawerRight = ref(false);
+const drawerLeft = ref(false);
 const ratingVal = ref(3);
 const multiVal = ref(['Museums', 'Food']);
 const multiOptions = ['Museums', 'Food', 'Nature', 'Nightlife', 'Beaches', 'Shopping'];

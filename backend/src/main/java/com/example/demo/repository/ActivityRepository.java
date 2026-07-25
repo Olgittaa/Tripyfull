@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ActivityRepository extends JpaRepository<Activity, UUID> {
-    List<Activity> findByDayIdOrderByStartTimeAscOrderIndexAsc(UUID dayId);
-    int countByDayId(UUID dayId);
+    // Manual order is the source of truth (drag-and-drop); id breaks legacy ties.
+    List<Activity> findByDayIdOrderByOrderIndexAscIdAsc(UUID dayId);
 }

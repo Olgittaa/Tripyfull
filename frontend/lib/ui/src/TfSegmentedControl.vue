@@ -3,6 +3,7 @@
     <button
       v-for="opt in options"
       :key="opt"
+      type="button"
       class="tf-seg-btn"
       :class="{ 'tf-seg-btn--active': modelValue === opt }"
       @click="$emit('update:modelValue', opt)"

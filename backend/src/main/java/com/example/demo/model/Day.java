@@ -33,7 +33,7 @@ public class Day {
     private String notes;
 
     @OneToMany(mappedBy = "day", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("startTime ASC, orderIndex ASC")
+    @OrderBy("orderIndex ASC, id ASC")
     private List<Activity> activities = new ArrayList<>();
 
     @OneToMany(mappedBy = "day", cascade = CascadeType.ALL, orphanRemoval = true)

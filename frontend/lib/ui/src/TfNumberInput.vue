@@ -89,7 +89,8 @@ function clamp(v) {
   return v;
 }
 function round(v) {
-  return props.precision > 0 ? v : Math.round(v);
+  const f = 10 ** props.precision;
+  return Math.round(v * f) / f;
 }
 function format(v) {
   if (v == null) return '';

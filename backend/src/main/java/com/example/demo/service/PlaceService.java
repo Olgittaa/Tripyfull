@@ -35,15 +35,17 @@ public class PlaceService {
     private final GeocodingService geocodingService;
     private final PlaceFolderRepository folderRepository;
     private final MapLinkService mapLinkService;
+    private final OpenTripMapService openTripMapService;
 
     public PlaceService(PlaceRepository placeRepository, UserRepository userRepository,
                         GeocodingService geocodingService, PlaceFolderRepository folderRepository,
-                        MapLinkService mapLinkService) {
+                        MapLinkService mapLinkService, OpenTripMapService openTripMapService) {
         this.placeRepository = placeRepository;
         this.userRepository = userRepository;
         this.geocodingService = geocodingService;
         this.folderRepository = folderRepository;
         this.mapLinkService = mapLinkService;
+        this.openTripMapService = openTripMapService;
     }
 
     /**
@@ -111,7 +113,7 @@ public class PlaceService {
 
     private String blankToNull(String s) { return (s == null || s.isBlank()) ? null : s; }
 
-    /** Maps an OSM/Geoapify category hint (e.g. "natural:beach", "amenity:restaurant") to a PlaceType. */
+    /** Maps an OSM category hint (e.g. "natural:beach", "amenity:restaurant") to a PlaceType. */
     private PlaceType inferType(String category) {
         if (category == null || category.isBlank()) return PlaceType.OTHER;
         String c = category.toLowerCase();
@@ -145,6 +147,7 @@ public class PlaceService {
         if (place.getLatitude() == null || place.getLongitude() == null) {
             geocodeInto(place);
         }
+        openTripMapService.enrich(place);   // best-effort description + photo
         return toResponse(placeRepository.save(place), user, null);   // new place, not in a folder yet
     }
 
@@ -173,6 +176,7 @@ public class PlaceService {
         String country = r.country() != null ? r.country()
                 : (request.country() != null && !request.country().isBlank() ? request.country().toUpperCase() : null);
         place.setCountry(country);
+        openTripMapService.enrich(place);   // best-effort description + photo
         return toResponse(placeRepository.save(place), user, null);
     }
 
@@ -182,11 +186,11 @@ public class PlaceService {
         MapLinkService.ParsedLink parsed = mapLinkService.parse(request.url());
         if (parsed == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Couldn't read that link — paste a Google Maps place link");
+                    "Couldn't read that link — paste a Google Maps or Tripadvisor place link");
         }
         if (parsed.isList()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "That's a saved Google Maps list, not a single place. Open it and share an individual place.");
+                    "That link opens a list or destination page, not a single place. Open a specific place and share its link.");
         }
 
         GeocodingService.GeocodeResult r = null;
@@ -194,12 +198,19 @@ public class PlaceService {
             r = geocodingService.reverseGeocode(parsed.lat(), parsed.lon());
         }
         if (r == null && parsed.name() != null) {
-            r = geocodingService.geocode(parsed.name(), null);
+            // geoQuery carries location context (e.g. "Eiffel Tower, Paris") for
+            // links that don't embed coordinates, like Tripadvisor ones.
+            r = geocodingService.geocode(
+                    parsed.geoQuery() != null ? parsed.geoQuery() : parsed.name(), null);
         }
 
         if (r != null && r.osmId() != null) {
             Place existing = placeRepository.findByOwnerIdAndOsmId(user.getId(), r.osmId()).orElse(null);
-            if (existing != null) return toResponse(existing, user, myPlaceFolderMap(user).get(existing.getId()));
+            if (existing != null) {
+                // Re-import of a known place — still remember the Google Maps link on it.
+                if (addSourceLink(existing, request.url())) placeRepository.save(existing);
+                return toResponse(existing, user, myPlaceFolderMap(user).get(existing.getId()));
+            }
         }
 
         // Type from the geocoder's category, falling back to the place description (e.g. "Buddhist temple").
@@ -224,7 +235,19 @@ public class PlaceService {
         }
         if (parsed.description() != null) place.setDescription(parsed.description());
         if (parsed.photo() != null) place.getPhotos().add(parsed.photo());
+        addSourceLink(place, request.url());   // keep the Google Maps link the place came from
+        openTripMapService.enrich(place);   // fills whatever the link didn't provide
         return toResponse(placeRepository.save(place), user, null);
+    }
+
+    /** Attaches the link a place was imported from — trimmed, deduped, sized for the column. */
+    private boolean addSourceLink(Place place, String url) {
+        if (url == null) return false;
+        String link = url.trim();
+        if (link.isEmpty() || link.length() > 1000) return false;
+        if (place.getLinks().stream().anyMatch(link::equalsIgnoreCase)) return false;
+        place.getLinks().add(link);
+        return true;
     }
 
     public PlaceResponse update(UUID id, PlaceRequest request, String username) {

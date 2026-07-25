@@ -30,8 +30,11 @@ rest.** All third-party calls happen on the backend only; keys never reach the f
 ## Free API stack (on the backend)
 
 - **Frankfurter** (+ open.er-api fallback) — currency conversion.
-- **Nominatim/OSM + Geoapify** — forward and reverse geocoding; result language is
-  forced to English (`Accept-Language: en` / `lang=en`) → Latin script.
+- **Photon by komoot** (primary, no key) + **Nominatim/OSM** (fallback) — place
+  autocomplete, forward and reverse geocoding; result language is forced to
+  English (`Accept-Language: en` / `lang=en`) → Latin script.
+- **OpenTripMap** (optional free key) — attraction enrichment: Wikipedia
+  descriptions + photos auto-filled on saved places.
 - **AeroDataBox** (RapidAPI) — flight by number+date (times, terminals, airports),
   with AviationStack/AirLabs as fallback.
 - **Google Maps import** — expands a share link via its redirect, reads Open Graph
@@ -70,5 +73,6 @@ CSS tokens in `src/index.css` + PrimeVue overrides.
   non-empty tables — so new enum values go through `columnDefinition`, new columns are
   nullable, and the stale `places_source_check` is dropped by the `SchemaFixup`
   auto-runner at startup.
-- Currency amounts in the "day total"/budget are currently summed without conversion
-  (a potential upgrade — conversion via the already-integrated Frankfurter).
+- Budget math converts everything to the user's base currency (stored booking rates →
+  live rates → raw pass-through); changing the base currency clears stored booking rates
+  so they re-resolve. The day-itinerary cost widget still sums raw amounts client-side.

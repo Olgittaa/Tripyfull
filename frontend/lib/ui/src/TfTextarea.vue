@@ -8,6 +8,7 @@
       :value="modelValue"
       :disabled="disabled"
       :rows="rows"
+      v-bind="$attrs"
       @input="$emit('update:modelValue', $event.target.value)"
     />
     <span v-if="error" class="hint hint--error">{{ error }}</span>
@@ -17,6 +18,8 @@
 
 <script setup>
 import { computed } from 'vue';
+
+defineOptions({ inheritAttrs: false });
 
 const props = defineProps({
   label: String,

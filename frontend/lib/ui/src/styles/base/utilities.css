@@ -2,6 +2,13 @@
    BASE · Utilities
    ============================================================ */
 
+.divider {
+  height: 1px;
+  border: none;
+  background: var(--border-default);
+  margin: var(--space-4) 0;
+}
+
 .text-muted {
   color: var(--text-secondary);
 }

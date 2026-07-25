@@ -58,7 +58,7 @@ npm run dev                 # http://localhost:5173, proxies to the API on :8080
 | `spring.datasource.*` | `application-local.properties` | PostgreSQL connection |
 | `jwt.secret` | `application-local.properties` | JWT signing (≥ 32 characters) |
 | `AERODATABOX_API_KEY` | env / local props | flight lookup (RapidAPI) |
-| `GEOAPIFY_API_KEY` | env / local props | geocoding for places (Nominatim as fallback) |
+| `OPENTRIPMAP_API_KEY` | env / local props | optional: attraction descriptions & photos on saved places (free key at dev.opentripmap.org) |
 | `VITE_API_URL` | `frontend/.env.development` | API address for the frontend |
 
 ## Domain model

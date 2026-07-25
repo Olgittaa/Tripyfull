@@ -8,17 +8,15 @@
         <p>Everything you planned — beautifully in order.</p>
       </div>
       <div class="page-head-actions">
-        <PButton icon="pi pi-plus" label="New trip" @click="showDialog = true" />
+        <TfButton icon="pi-plus" @click="showDialog = true">New trip</TfButton>
       </div>
     </div>
 
     <!-- Filter -->
     <div style="margin-bottom: 20px">
-      <PSelectButton
-        v-model="filterStatus"
-        :options="filterOptions"
-        optionLabel="label"
-        optionValue="value"
+      <TfSegmentedControl
+        v-model="filterLabel"
+        :options="filterLabels"
         class="status-filter"
       />
     </div>
@@ -32,8 +30,8 @@
         v-for="i in 3"
         :key="i"
         style="
-          background: var(--surface-card);
-          border: 1px solid var(--border-subtle);
+          background: var(--card);
+          border: 1px solid var(--border-default);
           border-radius: var(--radius-lg);
           overflow: hidden;
         "
@@ -66,9 +64,11 @@
             <h3>{{ trip.title }}</h3>
             <p v-if="trip.destination">{{ trip.destination }}</p>
           </div>
-          <button class="trip-card-del" @click.stop="confirmDelete(trip)" v-tooltip="'Delete'">
-            <i class="pi pi-times"></i>
-          </button>
+          <TfTooltip text="Delete">
+            <button class="trip-card-del" @click.stop="confirmDelete(trip)">
+              <i class="pi pi-times"></i>
+            </button>
+          </TfTooltip>
         </div>
 
         <!-- Card body with dates + budget progress -->
@@ -92,63 +92,36 @@
             : 'No trips with this status.'
         }}
       </p>
-      <PButton
+      <TfButton
         v-if="filterStatus === 'ALL'"
-        icon="pi pi-plus"
-        label="New trip"
+        icon="pi-plus"
         @click="showDialog = true"
-      />
+        >New trip</TfButton
+      >
     </div>
 
     <!-- Add Trip Dialog -->
-    <PDialog
-      v-model:visible="showDialog"
-      header="New trip"
-      modal
-      :style="{ width: '480px' }"
-      :draggable="false"
-      @hide="resetForm"
-    >
+    <TfModal v-model="showDialog" title="New trip" @update:model-value="onDialogToggle">
       <form @submit.prevent="addTrip" class="dialog-form">
-        <div class="field">
-          <label>Title *</label>
-          <PInputText v-model="form.title" placeholder="e.g. Greece 2026" required class="w-full" />
-        </div>
+        <TfInput label="Title *" v-model="form.title" placeholder="e.g. Greece 2026" />
         <div class="field">
           <label>Destination</label>
           <TfCitySearch v-model="form.destination" placeholder="City or country" />
         </div>
         <div class="field">
           <label>Dates</label>
-          <PDatePicker
-            v-model="dateRange"
-            selectionMode="range"
-            placeholder="Select date range"
-            showIcon
-            dateFormat="dd/mm/yy"
-            class="w-full"
-            :manualInput="false"
-          />
+          <TfDatePicker v-model="dateRange" mode="range" />
         </div>
-        <div class="field">
-          <label>Status</label>
-          <PSelect
-            v-model="form.status"
-            :options="statusOptions"
-            optionLabel="label"
-            optionValue="value"
-            class="w-full"
-          />
-        </div>
+        <TfSelect label="Status" v-model="statusLabelModel" :options="statusLabels" />
         <div
           style="
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 11px 14px;
-            background: var(--info-100);
+            background: var(--success-100);
             border-radius: var(--radius-md);
-            color: var(--info-500);
+            color: var(--success-500);
             font: var(--type-small);
           "
         >
@@ -156,31 +129,31 @@
           dates.
         </div>
         <div class="dialog-actions">
-          <PButton
-            type="button"
-            label="Cancel"
-            severity="secondary"
-            text
-            @click="showDialog = false"
-          />
-          <PButton type="submit" label="Create" icon="pi pi-plus" :loading="adding" />
+          <TfButton type="button" variant="ghost" @click="showDialog = false">Cancel</TfButton>
+          <TfButton type="submit" icon="pi-plus" :loading="adding">Create</TfButton>
         </div>
       </form>
-    </PDialog>
-
-    <PConfirmDialog />
+    </TfModal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 import { useTripStore } from '@/stores/tripStore.js';
-import { TfBadge, TfCitySearch } from '@tripyfull/ui';
+import {
+  TfBadge,
+  TfCitySearch,
+  TfButton,
+  TfSegmentedControl,
+  TfModal,
+  TfInput,
+  TfSelect,
+  TfDatePicker,
+  TfTooltip,
+  toast,
+  confirm,
+} from '@tripyfull/ui';
 
-const toast = useToast();
-const confirm = useConfirm();
 const store = useTripStore();
 
 const adding = ref(false);
@@ -203,6 +176,23 @@ const statusOptions = [
   { label: 'Active', value: 'ACTIVE' },
   { label: 'Completed', value: 'COMPLETED' },
 ];
+
+// TfSegmentedControl / TfSelect use string options; map label <-> value here.
+const filterLabels = filterOptions.map((o) => o.label);
+const filterLabel = computed({
+  get: () => filterOptions.find((o) => o.value === filterStatus.value)?.label ?? filterLabels[0],
+  set: (label) => {
+    filterStatus.value = filterOptions.find((o) => o.label === label)?.value ?? 'ALL';
+  },
+});
+
+const statusLabels = statusOptions.map((o) => o.label);
+const statusLabelModel = computed({
+  get: () => statusOptions.find((o) => o.value === form.value.status)?.label,
+  set: (label) => {
+    form.value.status = statusOptions.find((o) => o.label === label)?.value ?? 'DRAFT';
+  },
+});
 
 const filteredTrips = computed(() => store.tripsByStatus(filterStatus.value));
 
@@ -243,42 +233,45 @@ const addTrip = async () => {
     };
     const trip = await store.create(payload);
     showDialog.value = false;
-    toast.add({
-      severity: 'success',
-      summary: 'Created',
-      detail: `Trip "${trip.title}" added`,
-      life: 3000,
-    });
+    toast.success('Created', `Trip "${trip.title}" added`);
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create trip', life: 3000 });
+    toast.danger('Error', 'Failed to create trip');
   } finally {
     adding.value = false;
   }
 };
 
 const confirmDelete = (trip) => {
-  confirm.require({
+  confirm({
+    title: 'Confirm Delete',
     message: `Delete trip "${trip.title}"? This cannot be undone.`,
-    header: 'Confirm Delete',
-    icon: 'pi pi-exclamation-triangle',
-    rejectProps: { label: 'Cancel', severity: 'secondary', text: true },
-    acceptProps: { label: 'Delete', severity: 'danger' },
-    accept: () => deleteTrip(trip.id),
+    tone: 'danger',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+  }).then((ok) => {
+    if (ok) {
+      deleteTrip(trip.id);
+    }
   });
 };
 
 const deleteTrip = async (id) => {
   try {
     await store.remove(id);
-    toast.add({ severity: 'success', summary: 'Deleted', detail: 'Trip deleted', life: 3000 });
+    toast.success('Deleted', 'Trip deleted');
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete trip', life: 3000 });
+    toast.danger('Error', 'Failed to delete trip');
   }
 };
 
 const resetForm = () => {
   form.value = { title: '', destination: '', status: 'DRAFT' };
   dateRange.value = null;
+};
+
+// TfModal has no @hide; reset the form when it closes.
+const onDialogToggle = (open) => {
+  if (!open) resetForm();
 };
 
 const formatDate = (d) => {
@@ -304,7 +297,7 @@ const formatDate = (d) => {
 
 onMounted(() => {
   store.fetchAll().catch(() => {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load trips', life: 3000 });
+    toast.danger('Error', 'Failed to load trips');
   });
 });
 </script>

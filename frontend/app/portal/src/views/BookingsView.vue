@@ -67,7 +67,7 @@
                         align-items: center;
                         gap: 3px;
                         font: var(--fw-medium) 11px/1 var(--font-mono);
-                        color: var(--text-subtle);
+                        color: var(--text-secondary);
                       "
                       v-tooltip="'Attachments'"
                     >
@@ -113,65 +113,37 @@
       eyebrow="Bookings & payments"
       wide
     >
-      <form @submit.prevent="saveBooking" style="display: flex; flex-direction: column; gap: 16px">
-        <!-- 1. Required: Name + Category -->
-        <div class="field">
-          <label>Name *</label>
-          <PInputText
+      <form @submit.prevent="saveBooking">
+        <!-- What is being booked -->
+        <TfDrawerSection label="Booking">
+          <TfInput
             v-model="form.name"
+            label="Name *"
             placeholder="e.g. Athens to Santorini ferry"
-            required
-            class="w-full"
           />
-        </div>
-        <div class="field">
-          <label>Category *</label>
-          <PSelect
-            v-model="form.category"
-            :options="categoryOptions"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select"
-            class="w-full"
-          />
-        </div>
-
-        <!-- 2. Category-specific required fields -->
-        <!-- Transport: from/to -->
-        <template v-if="form.category === 'TRANSPORTATION'">
           <div class="field">
-            <label>Transport mode</label>
-            <PSelect
-              v-model="form.transportMode"
-              :options="transportOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select"
-              class="w-full"
-            />
+            <label>Category *</label>
+            <TfSegmentedControl v-model="categoryLabel" :options="categoryOptions" size="sm" />
           </div>
+        </TfDrawerSection>
+
+        <!-- Transport: route -->
+        <TfDrawerSection v-if="form.category === 'TRANSPORTATION'" label="Route">
+          <TfSelect
+            v-model="transportModeLabel"
+            label="Transport mode"
+            :options="transportOptions"
+            placeholder="Select"
+          />
           <template v-if="form.transportMode === 'FLIGHT'">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-              <div class="field">
-                <label>Flight number</label>
-                <PInputText
-                  v-model="form.flightNumber"
-                  placeholder="e.g. QR305"
-                  class="w-full"
-                  @keyup.enter="lookupFlight"
-                />
-              </div>
-              <div class="field">
-                <label>Flight date</label>
-                <PDatePicker
-                  v-model="flightDate"
-                  showIcon
-                  dateFormat="dd/mm/yy"
-                  placeholder="for lookup"
-                  class="w-full"
-                  :manualInput="false"
-                />
-              </div>
+              <TfInput
+                v-model="form.flightNumber"
+                label="Flight number"
+                placeholder="e.g. QR305"
+                @keyup.enter="lookupFlight"
+              />
+              <TfDatePicker v-model="flightDate" mode="date" label="Flight date" clearable />
             </div>
             <TfButton
               size="sm"
@@ -190,7 +162,7 @@
             <small
               style="
                 font: var(--fw-regular) 11px/1.3 var(--font-mono);
-                color: var(--text-subtle);
+                color: var(--text-secondary);
                 margin-top: -4px;
               "
             >
@@ -202,6 +174,7 @@
             <div class="field">
               <label>From</label>
               <TfPlaceSearch
+                v-if="FEATURES.geoPlaceSearch"
                 v-model="form.fromPlace"
                 :placeholder="
                   form.transportMode === 'FLIGHT'
@@ -210,10 +183,21 @@
                 "
                 @select="onFromSelect"
               />
+              <input
+                v-else
+                class="input"
+                v-model="form.fromPlace"
+                :placeholder="
+                  form.transportMode === 'FLIGHT'
+                    ? 'Airport or city (e.g. Bangkok)'
+                    : 'Departure city or station'
+                "
+              />
             </div>
             <div class="field">
               <label>To</label>
               <TfPlaceSearch
+                v-if="FEATURES.geoPlaceSearch"
                 v-model="form.toPlace"
                 :placeholder="
                   form.transportMode === 'FLIGHT'
@@ -222,9 +206,19 @@
                 "
                 @select="onToSelect"
               />
+              <input
+                v-else
+                class="input"
+                v-model="form.toPlace"
+                :placeholder="
+                  form.transportMode === 'FLIGHT'
+                    ? 'Airport or city (e.g. Krabi)'
+                    : 'Arrival city or station'
+                "
+              />
             </div>
           </div>
-          <BookingMap :markers="transportMarkers" />
+          <BookingMap v-if="FEATURES.geoPlaceSearch" :markers="transportMarkers" />
 
           <!-- Flight extras (terminals/seat auto-filled where possible) -->
           <template v-if="form.transportMode === 'FLIGHT'">
@@ -235,44 +229,35 @@
                 gap: 18px;
                 flex-wrap: wrap;
                 padding: 10px 14px;
-                background: var(--surface-sunken);
+                background: var(--surface);
                 border-radius: var(--radius-md);
                 font: var(--type-small);
-                color: var(--text-muted);
+                color: var(--text-secondary);
               "
             >
               <span v-if="form.departureAt"
                 >Departs
-                <strong style="color: var(--text-strong)">{{
+                <strong style="color: var(--text-primary)">{{
                   formatDateTime(form.departureAt)
                 }}</strong></span
               >
               <span v-if="form.arrivalAt"
                 >Arrives
-                <strong style="color: var(--text-strong)">{{
+                <strong style="color: var(--text-primary)">{{
                   formatDateTime(form.arrivalAt)
                 }}</strong></span
               >
               <span v-if="formDurationMin"
                 >Duration
-                <strong style="color: var(--text-strong)">{{
+                <strong style="color: var(--text-primary)">{{
                   formatDuration(formDurationMin)
                 }}</strong></span
               >
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px">
-              <div class="field">
-                <label>Dep. terminal</label>
-                <PInputText v-model="form.departureTerminal" placeholder="—" class="w-full" />
-              </div>
-              <div class="field">
-                <label>Arr. terminal</label>
-                <PInputText v-model="form.arrivalTerminal" placeholder="—" class="w-full" />
-              </div>
-              <div class="field">
-                <label>Seat</label>
-                <PInputText v-model="form.seat" placeholder="e.g. 14C" class="w-full" />
-              </div>
+              <TfInput v-model="form.departureTerminal" label="Dep. terminal" placeholder="—" />
+              <TfInput v-model="form.arrivalTerminal" label="Arr. terminal" placeholder="—" />
+              <TfInput v-model="form.seat" label="Seat" placeholder="e.g. 14C" />
             </div>
           </template>
 
@@ -281,48 +266,49 @@
             v-if="form.transportMode === 'FERRY'"
             style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px"
           >
-            <div class="field">
-              <label>Vessel name</label>
-              <PInputText
-                v-model="form.vesselName"
-                placeholder="e.g. Blue Star Delos"
-                class="w-full"
-              />
-            </div>
-            <div class="field">
-              <label>Seat type / cabin</label>
-              <PInputText v-model="form.cabin" placeholder="e.g. Deck, Cabin 4B" class="w-full" />
-            </div>
+            <TfInput
+              v-model="form.vesselName"
+              label="Vessel name"
+              placeholder="e.g. Blue Star Delos"
+            />
+            <TfInput
+              v-model="form.cabin"
+              label="Seat type / cabin"
+              placeholder="e.g. Deck, Cabin 4B"
+            />
           </div>
 
           <!-- Car rental extras -->
-          <div v-if="form.transportMode === 'CAR_RENTAL'" class="field">
-            <label>Car class / model</label>
-            <PInputText
-              v-model="form.carClass"
-              placeholder="e.g. Compact / VW Golf"
-              class="w-full"
-            />
-          </div>
-        </template>
+          <TfInput
+            v-if="form.transportMode === 'CAR_RENTAL'"
+            v-model="form.carClass"
+            label="Car class / model"
+            placeholder="e.g. Compact / VW Golf"
+          />
+        </TfDrawerSection>
 
-        <!-- Accommodation: hotel search + city + dates -->
-        <template v-if="form.category === 'ACCOMMODATION'">
-          <div class="field">
-            <label style="display: flex; align-items: center; gap: 6px">
-              Search hotel / property
-              <span
-                style="font: var(--fw-regular) 11px/1 var(--font-mono); color: var(--text-subtle)"
-                >auto-fills name & city</span
-              >
-            </label>
-            <TfPlaceSearch
-              v-model="hotelSearchText"
-              placeholder="e.g. Le Patta Resort, Marriott Bangkok..."
-              @select="onHotelSelect"
-            />
-          </div>
-          <BookingMap :markers="placeMarkers" />
+        <!-- Accommodation: hotel + city + dates -->
+        <TfDrawerSection v-if="form.category === 'ACCOMMODATION'" label="Stay">
+          <template v-if="FEATURES.geoPlaceSearch">
+            <div class="field">
+              <label style="display: flex; align-items: center; gap: 6px">
+                Search hotel / property
+                <span
+                  style="
+                    font: var(--fw-regular) 11px/1 var(--font-mono);
+                    color: var(--text-secondary);
+                  "
+                  >auto-fills name & city</span
+                >
+              </label>
+              <TfPlaceSearch
+                v-model="hotelSearchText"
+                placeholder="e.g. Le Patta Resort, Marriott Bangkok..."
+                @select="onHotelSelect"
+              />
+            </div>
+            <BookingMap :markers="placeMarkers" />
+          </template>
           <div class="field">
             <label>City *</label>
             <TfCitySearch
@@ -334,34 +320,29 @@
             <label style="display: flex; align-items: center; gap: 6px">
               Address
               <span
-                style="font: var(--fw-regular) 11px/1 var(--font-mono); color: var(--text-subtle)"
+                style="
+                  font: var(--fw-regular) 11px/1 var(--font-mono);
+                  color: var(--text-secondary);
+                "
                 >auto-filled on save</span
               >
             </label>
-            <PInputText
-              v-model="form.address"
-              placeholder="Auto-geocoded from property name + city"
-              class="w-full"
-            />
+            <TfInput v-model="form.address" placeholder="Auto-geocoded from property name + city" />
           </div>
           <div class="field">
             <label>Check-in / Check-out dates</label>
-            <PDatePicker
+            <TfDatePicker
               v-model="stayDateRange"
-              selectionMode="range"
-              showIcon
-              dateFormat="dd/mm/yy"
-              placeholder="Select dates"
-              class="w-full"
-              :manualInput="false"
-              :minDate="tripStartDate ? new Date(tripStartDate) : undefined"
-              :maxDate="tripEndDate ? new Date(tripEndDate) : undefined"
+              mode="range"
+              :min="stayMinDate"
+              :max="stayMaxDate"
+              clearable
             />
             <small
               v-if="tripStartDate"
               style="
                 font: var(--fw-regular) 11px/1.3 var(--font-mono);
-                color: var(--text-subtle);
+                color: var(--text-secondary);
                 margin-top: 4px;
                 display: block;
               "
@@ -372,7 +353,7 @@
               v-if="formNights"
               style="
                 font: var(--fw-medium) 11px/1.3 var(--font-mono);
-                color: var(--text-muted);
+                color: var(--text-secondary);
                 margin-top: 4px;
                 display: block;
               "
@@ -385,328 +366,295 @@
             </small>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-            <div class="field">
-              <label>Check-in time</label>
-              <PInputText v-model="form.checkInTime" placeholder="14:00" class="w-full" />
-            </div>
-            <div class="field">
-              <label>Check-out time</label>
-              <PInputText v-model="form.checkOutTime" placeholder="11:00" class="w-full" />
-            </div>
+            <TfInput v-model="form.checkInTime" label="Check-in time" placeholder="14:00" />
+            <TfInput v-model="form.checkOutTime" label="Check-out time" placeholder="11:00" />
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-            <div class="field">
-              <label>Room type</label>
-              <PInputText v-model="form.roomType" placeholder="e.g. Double, Suite" class="w-full" />
-            </div>
-            <div class="field">
-              <label>Guests</label>
-              <PInputNumber
-                v-model="form.guests"
-                placeholder="2"
-                :min="1"
-                :useGrouping="false"
-                class="w-full"
-              />
-            </div>
+            <TfInput v-model="form.roomType" label="Room type" placeholder="e.g. Double, Suite" />
+            <TfNumberInput v-model="form.guests" type="plain" label="Guests" :min="1" />
           </div>
-        </template>
+        </TfDrawerSection>
 
-        <!-- Activity: optional location search -->
-        <template v-if="form.category === 'ACTIVITY'">
+        <!-- Activity: optional location -->
+        <TfDrawerSection v-if="form.category === 'ACTIVITY'" label="Location">
           <div class="field">
-            <label style="display: flex; align-items: center; gap: 6px">
-              Location
-              <span
-                style="font: var(--fw-regular) 11px/1 var(--font-mono); color: var(--text-subtle)"
-                >optional</span
-              >
-            </label>
+            <label>Where <span class="text-muted text-xs">optional</span></label>
             <TfPlaceSearch
+              v-if="FEATURES.geoPlaceSearch"
               v-model="form.fromPlace"
               placeholder="e.g. Elephant Sanctuary, Central Park..."
               @select="onActivityLocationSelect"
             />
-          </div>
-          <BookingMap :markers="placeMarkers" />
-        </template>
-
-        <!-- 3. Price + currency -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
-          <div class="field">
-            <label>Full price</label>
-            <PInputNumber
-              v-model="form.fullPrice"
-              placeholder="0"
-              :minFractionDigits="2"
-              :maxFractionDigits="2"
-              locale="en-US"
-              class="w-full"
+            <input
+              v-else
+              class="input"
+              v-model="form.fromPlace"
+              placeholder="e.g. Elephant Sanctuary, Central Park..."
             />
           </div>
-          <div class="field">
-            <label>Currency</label>
-            <PSelect
+          <BookingMap v-if="FEATURES.geoPlaceSearch" :markers="placeMarkers" />
+        </TfDrawerSection>
+
+        <!-- Money -->
+        <TfDrawerSection label="Price & payments">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
+            <TfNumberInput
+              v-model="form.fullPrice"
+              type="plain"
+              label="Full price"
+              :precision="2"
+            />
+            <TfSelect
               v-model="form.priceCurrency"
+              label="Currency"
               :options="currencySelectOptions"
-              editable
               placeholder="EUR"
-              class="w-full"
               @update:modelValue="onCurrencyChange"
             />
           </div>
-        </div>
-        <div
-          v-if="showExchangeRate"
-          style="
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-            padding: 12px 14px;
-            background: var(--surface-sunken);
-            border-radius: var(--radius-md);
-          "
-        >
-          <div style="flex: 1">
-            <div
-              style="
-                font: var(--fw-medium) 12px/1 var(--font-mono);
-                color: var(--text-subtle);
-                margin-bottom: 6px;
-              "
-            >
-              1 {{ form.priceCurrency }} = ? {{ accountCurrency }}
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px">
-              <span
-                style="font: var(--fw-bold) 20px/1 var(--font-display); color: var(--text-strong)"
-              >
-                {{ form.exchangeRate ? Number(form.exchangeRate).toFixed(4) : '—' }}
-              </span>
-              <span
-                style="font: var(--fw-medium) 13px/1 var(--font-sans); color: var(--text-muted)"
-                >{{ accountCurrency }}</span
-              >
-            </div>
-            <div
-              v-if="form.fullPrice && form.exchangeRate"
-              style="font: var(--type-small); color: var(--text-muted); margin-top: 4px"
-            >
-              {{ Number(form.fullPrice).toFixed(2) }} {{ form.priceCurrency }} ≈
-              {{ (Number(form.fullPrice) * Number(form.exchangeRate)).toFixed(2) }}
-              {{ accountCurrency }}
-            </div>
-          </div>
-          <TfButton size="sm" variant="secondary" @click="fetchRate" :disabled="fetchingRate">
-            <i
-              class="pi pi-sync"
-              :style="fetchingRate ? 'animation:spin 1s linear infinite' : ''"
-              style="font-size: 13px"
-            ></i>
-            {{ fetchingRate ? '' : 'Update rate' }}
-          </TfButton>
-        </div>
-
-        <!-- 4. Simple paid checkbox (no installments needed) -->
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 14px;
-            background: var(--surface-sunken);
-            border-radius: var(--radius-md);
-          "
-        >
-          <input
-            type="checkbox"
-            v-model="form.paidSimple"
-            style="accent-color: var(--brand); width: 18px; height: 18px"
-            id="paid-simple"
-          />
-          <label
-            for="paid-simple"
+          <div
+            v-if="showExchangeRate"
             style="
-              font: var(--fw-medium) 14px/1 var(--font-sans);
-              color: var(--text-strong);
-              cursor: pointer;
-              flex: 1;
+              display: flex;
+              align-items: flex-end;
+              gap: 10px;
+              padding: 12px 14px;
+              background: var(--surface);
+              border-radius: var(--radius-md);
             "
-            >Paid in full</label
           >
-          <span style="font: var(--type-small); color: var(--text-subtle)"
-            >or use installments below</span
-          >
-        </div>
+            <div style="flex: 1">
+              <div
+                style="
+                  font: var(--fw-medium) 12px/1 var(--font-mono);
+                  color: var(--text-secondary);
+                  margin-bottom: 6px;
+                "
+              >
+                1 {{ form.priceCurrency }} = ? {{ accountCurrency }}
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span
+                  style="
+                    font: var(--fw-bold) 20px/1 var(--font-display);
+                    color: var(--text-primary);
+                  "
+                >
+                  {{ form.exchangeRate ? Number(form.exchangeRate).toFixed(4) : '—' }}
+                </span>
+                <span
+                  style="
+                    font: var(--fw-medium) 13px/1 var(--font-sans);
+                    color: var(--text-secondary);
+                  "
+                  >{{ accountCurrency }}</span
+                >
+              </div>
+              <div
+                v-if="form.fullPrice && form.exchangeRate"
+                style="font: var(--type-small); color: var(--text-secondary); margin-top: 4px"
+              >
+                {{ Number(form.fullPrice).toFixed(2) }} {{ form.priceCurrency }} ≈
+                {{ (Number(form.fullPrice) * Number(form.exchangeRate)).toFixed(2) }}
+                {{ accountCurrency }}
+              </div>
+            </div>
+            <TfButton size="sm" variant="secondary" @click="fetchRate" :disabled="fetchingRate">
+              <i
+                class="pi pi-sync"
+                :style="fetchingRate ? 'animation:spin 1s linear infinite' : ''"
+                style="font-size: 13px"
+              ></i>
+              {{ fetchingRate ? '' : 'Update rate' }}
+            </TfButton>
+          </div>
 
-        <!-- 5. Schedule payments -->
-        <div v-if="editingBooking && !form.paidSimple">
+          <!-- 4. Simple paid checkbox (no installments needed) -->
           <div
             style="
               display: flex;
-              justify-content: space-between;
               align-items: center;
-              margin-bottom: 10px;
+              gap: 10px;
+              padding: 12px 14px;
+              background: var(--surface);
+              border-radius: var(--radius-md);
             "
           >
+            <input
+              type="checkbox"
+              v-model="form.paidSimple"
+              style="accent-color: var(--accent); width: 18px; height: 18px"
+              id="paid-simple"
+            />
             <label
-              style="font: var(--fw-semibold) 15px/1 var(--font-display); color: var(--text-strong)"
-              >Schedule payments</label
-            >
-            <TfBadge
-              v-if="editingBooking.payments.length"
-              :tone="paymentsMatch ? 'success' : 'warning'"
-              variant="soft"
-            >
-              {{
-                paymentsMatch
-                  ? 'Matches total'
-                  : `${paymentsTotal.toFixed(2)} / ${Number(editingBooking.fullPrice || 0).toFixed(2)}`
-              }}
-            </TfBadge>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 8px">
-            <div
-              v-for="p in editingBooking.payments"
-              :key="p.id"
-              class="payment-row"
-              style="cursor: pointer"
-              @click="openPaymentDialog(editingBooking, p)"
-            >
-              <input
-                type="checkbox"
-                :checked="p.paid"
-                @change.stop="togglePaid(editingBooking.id, p)"
-                @click.stop
-                style="accent-color: var(--brand); width: 18px; height: 18px"
-              />
-              <div style="flex: 1">
-                <div
-                  style="
-                    font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                    color: var(--text-strong);
-                  "
-                >
-                  {{ p.amount }} {{ bookingCurrency }}
-                </div>
-                <div
-                  v-if="p.dueDate"
-                  style="
-                    font: var(--fw-medium) 11px/1 var(--font-mono);
-                    color: var(--text-muted);
-                    margin-top: 2px;
-                  "
-                >
-                  {{ formatDateShort(p.dueDate) }}
-                </div>
-              </div>
-              <TfBadge :tone="p.paid ? 'success' : 'neutral'" variant="soft">{{
-                p.paid ? 'Paid' : 'Pending'
-              }}</TfBadge>
-              <button
-                type="button"
-                class="del-btn"
-                @click.stop="deletePayment(p.id)"
-                v-tooltip="'Delete'"
-              >
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
-            <button
-              v-if="paymentRemaining > 0"
-              type="button"
-              class="payment-add-btn"
-              @click="openPaymentDialog(editingBooking, null)"
-            >
-              <i class="pi pi-plus" style="font-size: 14px"></i>
-              Schedule payment ({{ paymentRemaining.toFixed(2) }} {{ bookingCurrency }} remaining)
-            </button>
-            <div
-              v-else-if="editingBooking.fullPrice && editingBooking.payments.length"
+              for="paid-simple"
               style="
-                font: var(--type-small);
-                color: var(--success-500);
-                text-align: center;
-                padding: 8px;
+                font: var(--fw-medium) 14px/1 var(--font-sans);
+                color: var(--text-primary);
+                cursor: pointer;
+                flex: 1;
+              "
+              >Paid in full</label
+            >
+            <span style="font: var(--type-small); color: var(--text-secondary)"
+              >or use installments below</span
+            >
+          </div>
+
+          <!-- 5. Schedule payments -->
+          <div v-if="editingBooking && !form.paidSimple">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
               "
             >
-              Full amount covered
+              <label
+                style="
+                  font: var(--fw-semibold) 15px/1 var(--font-display);
+                  color: var(--text-primary);
+                "
+                >Schedule payments</label
+              >
+              <TfBadge
+                v-if="editingBooking.payments.length"
+                :tone="paymentsMatch ? 'success' : 'warning'"
+                variant="soft"
+              >
+                {{
+                  paymentsMatch
+                    ? 'Matches total'
+                    : `${paymentsTotal.toFixed(2)} / ${Number(editingBooking.fullPrice || 0).toFixed(2)}`
+                }}
+              </TfBadge>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                v-for="p in editingBooking.payments"
+                :key="p.id"
+                class="payment-row"
+                style="cursor: pointer"
+                @click="openPaymentDialog(editingBooking, p)"
+              >
+                <input
+                  type="checkbox"
+                  :checked="p.paid"
+                  @change.stop="togglePaid(editingBooking.id, p)"
+                  @click.stop
+                  style="accent-color: var(--accent); width: 18px; height: 18px"
+                />
+                <div style="flex: 1">
+                  <div
+                    style="
+                      font: var(--fw-semibold) 14px/1.2 var(--font-sans);
+                      color: var(--text-primary);
+                    "
+                  >
+                    {{ p.amount }} {{ bookingCurrency }}
+                  </div>
+                  <div
+                    v-if="p.dueDate"
+                    style="
+                      font: var(--fw-medium) 11px/1 var(--font-mono);
+                      color: var(--text-secondary);
+                      margin-top: 2px;
+                    "
+                  >
+                    {{ formatDateShort(p.dueDate) }}
+                  </div>
+                </div>
+                <TfBadge :tone="p.paid ? 'success' : 'neutral'" variant="soft">{{
+                  p.paid ? 'Paid' : 'Pending'
+                }}</TfBadge>
+                <button
+                  type="button"
+                  class="del-btn"
+                  @click.stop="deletePayment(p.id)"
+                  v-tooltip="'Delete'"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+              <button
+                v-if="paymentRemaining > 0"
+                type="button"
+                class="payment-add-btn"
+                @click="openPaymentDialog(editingBooking, null)"
+              >
+                <i class="pi pi-plus" style="font-size: 14px"></i>
+                Schedule payment ({{ paymentRemaining.toFixed(2) }} {{ bookingCurrency }} remaining)
+              </button>
+              <div
+                v-else-if="editingBooking.fullPrice && editingBooking.payments.length"
+                style="
+                  font: var(--type-small);
+                  color: var(--success-500);
+                  text-align: center;
+                  padding: 8px;
+                "
+              >
+                Full amount covered
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Hint: save first -->
-        <div
-          v-if="!editingBooking && !form.paidSimple && form.fullPrice"
-          style="
-            font: var(--type-small);
-            color: var(--text-subtle);
-            background: var(--surface-sunken);
-            padding: 10px 14px;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          "
-        >
-          <i class="pi pi-info-circle" style="font-size: 14px"></i>
-          Save first, then schedule payments.
-        </div>
+          <!-- Hint: save first -->
+          <div
+            v-if="!editingBooking && !form.paidSimple && form.fullPrice"
+            style="
+              font: var(--type-small);
+              color: var(--text-secondary);
+              background: var(--surface);
+              padding: 10px 14px;
+              border-radius: var(--radius-md);
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            "
+          >
+            <i class="pi pi-info-circle" style="font-size: 14px"></i>
+            Save first, then schedule payments and attach files.
+          </div>
+        </TfDrawerSection>
 
-        <!-- 6. Optional: vendor, confirmation, notes -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-          <div class="field">
-            <label>{{ form.category === 'ACCOMMODATION' ? 'Booked via' : 'Vendor' }}</label>
-            <PSelect
+        <!-- Optional: vendor, confirmation, notes -->
+        <TfDrawerSection label="Details">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+            <TfSelect
               v-if="form.category === 'ACCOMMODATION'"
               v-model="form.vendor"
+              :label="'Booked via'"
               :options="accommodationVendorOptions"
-              optionLabel="label"
-              optionValue="value"
               placeholder="Select platform"
-              editable
-              class="w-full"
             />
-            <PInputText
+            <TfInput
               v-else
               v-model="form.vendor"
+              label="Vendor"
               placeholder="Airline, tour operator..."
-              class="w-full"
+            />
+            <TfInput
+              v-model="form.confirmationNumber"
+              label="Confirmation #"
+              placeholder="ABC-123"
             />
           </div>
-          <div class="field">
-            <label>Confirmation #</label>
-            <PInputText v-model="form.confirmationNumber" placeholder="ABC-123" class="w-full" />
-          </div>
-        </div>
-        <div class="field">
-          <label>Booking link</label>
-          <PInputText
+          <TfInput
             v-model="form.bookingUrl"
+            label="Booking link"
             placeholder="https://… (confirmation page, e-ticket)"
-            class="w-full"
           />
-        </div>
-        <div class="field">
-          <label>Notes</label>
-          <PInputText
+          <TfInput
             v-model="form.notes"
+            label="Notes"
             placeholder="Conditions, cancellation, details"
-            class="w-full"
           />
-        </div>
+        </TfDrawerSection>
 
-        <!-- 7. Attachments (PDFs, tickets, confirmation emails) -->
-        <div v-if="editingBooking">
-          <label
-            style="
-              font: var(--fw-semibold) 15px/1 var(--font-display);
-              color: var(--text-strong);
-              display: block;
-              margin-bottom: 10px;
-            "
-            >Attachments</label
-          >
+        <!-- Attachments (PDFs, tickets, confirmation emails) -->
+        <TfDrawerSection v-if="editingBooking" label="Attachments">
           <div style="display: flex; flex-direction: column; gap: 8px">
             <div
               v-for="a in editingBooking.attachments || []"
@@ -716,12 +664,12 @@
                 align-items: center;
                 gap: 10px;
                 padding: 10px 12px;
-                background: var(--surface-card);
-                border: 1px solid var(--border-subtle);
+                background: var(--card);
+                border: 1px solid var(--border-default);
                 border-radius: var(--radius-md);
               "
             >
-              <i class="pi pi-file" style="color: var(--brand)"></i>
+              <i class="pi pi-file" style="color: var(--accent)"></i>
               <button
                 type="button"
                 @click="downloadAttachment(a)"
@@ -738,7 +686,7 @@
                 <div
                   style="
                     font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                    color: var(--text-strong);
+                    color: var(--text-primary);
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -749,7 +697,7 @@
                 <div
                   style="
                     font: var(--fw-medium) 11px/1 var(--font-mono);
-                    color: var(--text-muted);
+                    color: var(--text-secondary);
                     margin-top: 2px;
                   "
                 >
@@ -781,23 +729,7 @@
               {{ uploadingAttachment ? 'Uploading…' : 'Upload PDF / file (max 10 MB)' }}
             </button>
           </div>
-        </div>
-        <div
-          v-else-if="form.name"
-          style="
-            font: var(--type-small);
-            color: var(--text-subtle);
-            background: var(--surface-sunken);
-            padding: 10px 14px;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          "
-        >
-          <i class="pi pi-paperclip" style="font-size: 14px"></i>
-          Save first, then attach files.
-        </div>
+        </TfDrawerSection>
       </form>
       <template #footer>
         <TfButton variant="primary" style="flex: 1" @click="saveBooking" :disabled="saving">
@@ -810,12 +742,10 @@
     </TfDrawer>
 
     <!-- Payment Dialog (add/edit) -->
-    <PDialog
-      v-model:visible="showPaymentDialog"
-      :header="editingPayment ? 'Edit payment' : 'Schedule payment'"
-      modal
-      :style="{ width: '400px' }"
-      :draggable="false"
+    <TfModal
+      v-model="showPaymentDialog"
+      :title="editingPayment ? 'Edit payment' : 'Schedule payment'"
+      size="sm"
     >
       <form @submit.prevent="savePayment" class="dialog-form">
         <!-- Quick fill: full remaining amount -->
@@ -834,31 +764,28 @@
               justify-content: center;
               gap: 8px;
               font: var(--fw-medium) 14px/1 var(--font-sans);
-              color: var(--text-body);
+              color: var(--text-primary);
               transition: all var(--dur-fast) var(--ease-out);
             "
             @click="paymentForm.amount = paymentRemaining"
           >
-            <i class="pi pi-check-circle" style="font-size: 14px; color: var(--brand)"></i>
+            <i class="pi pi-check-circle" style="font-size: 14px; color: var(--accent)"></i>
             Fill full amount: {{ paymentRemaining.toFixed(2) }} {{ bookingCurrency }}
           </button>
         </div>
         <div class="field">
           <label>Amount * ({{ bookingCurrency }})</label>
-          <PInputNumber
+          <TfNumberInput
             v-model="paymentForm.amount"
-            placeholder="0.00"
-            :minFractionDigits="2"
-            :maxFractionDigits="2"
-            locale="en-US"
+            type="plain"
+            :precision="2"
             :max="paymentMaxAmount"
-            class="w-full"
           />
           <small
             v-if="!editingPayment && paymentRemaining > 0"
             style="
               font: var(--fw-regular) 11px/1.3 var(--font-mono);
-              color: var(--text-subtle);
+              color: var(--text-secondary);
               margin-top: 4px;
               display: block;
             "
@@ -868,59 +795,56 @@
         </div>
         <div class="field">
           <label>Due date</label>
-          <PDatePicker
-            v-model="paymentDueDate"
-            showIcon
-            dateFormat="dd/mm/yy"
-            class="w-full"
-            :manualInput="false"
-          />
-        </div>
-        <div class="dialog-actions">
-          <PButton
-            v-if="editingPayment"
-            type="button"
-            label="Delete"
-            severity="danger"
-            text
-            @click="deletePaymentAndClose"
-          />
-          <span style="flex: 1"></span>
-          <PButton
-            type="button"
-            label="Cancel"
-            severity="secondary"
-            text
-            @click="showPaymentDialog = false"
-          />
-          <PButton
-            type="submit"
-            :label="editingPayment ? 'Save' : 'Add'"
-            :icon="editingPayment ? 'pi pi-check' : 'pi pi-plus'"
-            :loading="savingPayment"
-          />
+          <TfDatePicker v-model="paymentDueDate" mode="date" clearable />
         </div>
       </form>
-    </PDialog>
-
-    <PConfirmDialog />
+      <template #footer>
+        <div class="dialog-actions">
+          <TfButton v-if="editingPayment" variant="ghost" @click="deletePaymentAndClose"
+            >Delete</TfButton
+          >
+          <span style="flex: 1"></span>
+          <TfButton variant="ghost" @click="showPaymentDialog = false">Cancel</TfButton>
+          <TfButton
+            variant="primary"
+            :icon="editingPayment ? 'pi-check' : 'pi-plus'"
+            :loading="savingPayment"
+            @click="savePayment"
+            >{{ editingPayment ? 'Save' : 'Add' }}</TfButton
+          >
+        </div>
+      </template>
+    </TfModal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
-import { TfButton, TfBadge, TfCard, TfDrawer, TfCitySearch, TfPlaceSearch } from '@tripyfull/ui';
+import {
+  TfButton,
+  TfBadge,
+  TfCard,
+  TfDrawer,
+  TfDrawerSection,
+  TfSegmentedControl,
+  TfCitySearch,
+  TfPlaceSearch,
+  TfInput,
+  TfNumberInput,
+  TfSelect,
+  TfModal,
+  TfDatePicker,
+  toast,
+  confirm,
+} from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
+import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import { formatDualPrice, CURRENCIES } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 
 const route = useRoute();
-const toast = useToast();
-const confirm = useConfirm();
 
 const tripId = route.params.tripId;
 const tripTitle = ref('');
@@ -1079,12 +1003,7 @@ const fetchRate = async () => {
     });
     form.value.exchangeRate = res.data.rate;
   } catch {
-    toast.add({
-      severity: 'warn',
-      summary: 'Rate unavailable',
-      detail: `Could not fetch rate for ${form.value.priceCurrency}`,
-      life: 3000,
-    });
+    toast.warning('Rate unavailable', `Could not fetch rate for ${form.value.priceCurrency}`);
   } finally {
     fetchingRate.value = false;
   }
@@ -1118,19 +1037,12 @@ const lookupFlight = async () => {
     if (d.arrTime) form.value.arrivalAt = d.arrTime;
 
     const hasTimes = d.depTime || d.arrTime;
-    toast.add({
-      severity: 'success',
-      summary: hasTimes ? 'Flight found' : 'Route found',
-      detail: `${d.depIata || '?'} → ${d.arrIata || '?'}${hasTimes ? '' : ' (add a date for times & terminals)'}`,
-      life: 3500,
-    });
+    toast.success(
+      hasTimes ? 'Flight found' : 'Route found',
+      `${d.depIata || '?'} → ${d.arrIata || '?'}${hasTimes ? '' : ' (add a date for times & terminals)'}`,
+    );
   } catch {
-    toast.add({
-      severity: 'warn',
-      summary: 'Not found',
-      detail: `No flight found for ${form.value.flightNumber}`,
-      life: 3000,
-    });
+    toast.warning('Not found', `No flight found for ${form.value.flightNumber}`);
   } finally {
     lookingUpFlight.value = false;
   }
@@ -1146,13 +1058,14 @@ const onCurrencyChange = (val) => {
   }
 };
 
-const categoryOptions = [
+const categoryMap = [
   { label: 'Transportation', value: 'TRANSPORTATION' },
   { label: 'Accommodation', value: 'ACCOMMODATION' },
   { label: 'Activity', value: 'ACTIVITY' },
 ];
+const categoryOptions = categoryMap.map((o) => o.label);
 
-const transportOptions = [
+const transportMap = [
   { label: 'Flight', value: 'FLIGHT' },
   { label: 'Ferry', value: 'FERRY' },
   { label: 'Bus', value: 'BUS' },
@@ -1161,17 +1074,34 @@ const transportOptions = [
   { label: 'Taxi', value: 'TAXI' },
   { label: 'Walk', value: 'WALK' },
 ];
+const transportOptions = transportMap.map((o) => o.label);
 
 const accommodationVendorOptions = [
-  { label: 'Booking.com', value: 'Booking.com' },
-  { label: 'Airbnb', value: 'Airbnb' },
-  { label: 'Hotels.com', value: 'Hotels.com' },
-  { label: 'Expedia', value: 'Expedia' },
-  { label: 'Agoda', value: 'Agoda' },
-  { label: 'Hostelworld', value: 'Hostelworld' },
-  { label: 'Direct (hotel website)', value: 'Direct' },
-  { label: 'Other', value: 'Other' },
+  'Booking.com',
+  'Airbnb',
+  'Hotels.com',
+  'Expedia',
+  'Agoda',
+  'Hostelworld',
+  'Direct (hotel website)',
+  'Other',
 ];
+// TfSelect works with string labels; bridge label <-> stored value for category/transport.
+const labelToValue = (map, label) => map.find((o) => o.label === label)?.value ?? label;
+const valueToLabel = (map, value) => map.find((o) => o.value === value)?.label ?? value;
+
+const categoryLabel = computed({
+  get: () => valueToLabel(categoryMap, form.value.category),
+  set: (label) => {
+    form.value.category = labelToValue(categoryMap, label);
+  },
+});
+const transportModeLabel = computed({
+  get: () => valueToLabel(transportMap, form.value.transportMode),
+  set: (label) => {
+    form.value.transportMode = labelToValue(transportMap, label);
+  },
+});
 
 const catEmoji = (c) =>
   ({ TRANSPORTATION: '\u2708\uFE0F', ACCOMMODATION: '\u{1F3E8}', ACTIVITY: '\u{1F3AB}' })[c] ??
@@ -1218,10 +1148,10 @@ const paymentsMatch = computed(() => {
 
 const catIconStyle = (cat) =>
   ({
-    TRANSPORTATION: { background: 'var(--teal-50)', color: 'var(--accent)' },
-    ACCOMMODATION: { background: 'var(--coral-50)', color: 'var(--brand)' },
-    ACTIVITY: { background: 'var(--teal-50)', color: 'var(--teal-400)' },
-  })[cat] || { background: 'var(--surface-sunken)', color: 'var(--ink-500)' };
+    TRANSPORTATION: { background: 'var(--success-100)', color: 'var(--accent)' },
+    ACCOMMODATION: { background: 'var(--danger-100)', color: 'var(--accent)' },
+    ACTIVITY: { background: 'var(--success-100)', color: 'var(--success-300)' },
+  })[cat] || { background: 'var(--surface)', color: 'var(--ink-500)' };
 
 const bookingGroups = computed(() => {
   const groups = [
@@ -1295,6 +1225,24 @@ const toDateStr = (d) => {
   return `${y}-${m}-${day}`;
 };
 
+// Parse 'YYYY-MM-DD' as LOCAL midnight — new Date('YYYY-MM-DD') is UTC and
+// shifts a day back for users west of UTC, corrupting dates on each edit.
+const parseDate = (s) => {
+  if (!s) return null;
+  const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+// Stay dates must fall inside the trip; the server allows check-out up to
+// trip end + 1 day (leaving on the morning after the last day).
+const stayMinDate = computed(() => parseDate(tripStartDate.value));
+const stayMaxDate = computed(() => {
+  const d = parseDate(tripEndDate.value);
+  if (!d) return null;
+  d.setDate(d.getDate() + 1);
+  return d;
+});
+
 const resetLocationState = () => {
   fromCoords.value = null;
   toCoords.value = null;
@@ -1350,7 +1298,7 @@ const editBooking = (b) => {
   };
   flightDate.value = b.departureAt ? new Date(b.departureAt) : null;
   stayDateRange.value =
-    b.checkIn && b.checkOut ? [new Date(b.checkIn), new Date(b.checkOut)] : null;
+    b.checkIn && b.checkOut ? [parseDate(b.checkIn), parseDate(b.checkOut)] : null;
   showDrawer.value = true;
 };
 
@@ -1361,6 +1309,9 @@ const saveBooking = async () => {
       ...form.value,
       priceCurrency: form.value.priceCurrency || accountCurrency.value,
       exchangeRate: form.value.exchangeRate || null,
+      // PATCH keeps null fields; explicitly drop a stale rate (e.g. after a currency
+      // change) — the server auto-fills a fresh one for the current currency.
+      clearExchangeRate: editingBooking.value ? !form.value.exchangeRate : undefined,
       checkIn: toDateStr(stayDateRange.value?.[0]),
       checkOut: toDateStr(stayDateRange.value?.[1]),
       checkInTime: form.value.checkInTime || null,
@@ -1378,32 +1329,31 @@ const saveBooking = async () => {
       // Auto-switch to edit mode so user can add payments
       editingBooking.value = res.data;
     }
-    toast.add({ severity: 'success', summary: 'Saved', life: 3000 });
+    toast.success('Saved');
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to save booking',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to save booking');
   } finally {
     saving.value = false;
   }
 };
 
 const confirmDelete = (b) => {
-  confirm.require({
+  confirm({
+    title: 'Confirm',
     message: `Delete "${b.name}"?`,
-    header: 'Confirm',
-    icon: 'pi pi-exclamation-triangle',
-    rejectProps: { label: 'Cancel', severity: 'secondary', text: true },
-    acceptProps: { label: 'Delete', severity: 'danger' },
-    accept: async () => {
+    tone: 'danger',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+  }).then(async (ok) => {
+    if (!ok) return;
+    try {
       await api.delete(`/api/bookings/${b.id}`);
       bookings.value = bookings.value.filter((x) => x.id !== b.id);
       showDrawer.value = false;
-      toast.add({ severity: 'success', summary: 'Deleted', life: 3000 });
-    },
+      toast.success('Deleted');
+    } catch {
+      toast.danger('Error', 'Failed to delete booking');
+    }
   });
 };
 
@@ -1426,6 +1376,8 @@ const savePayment = async () => {
     const payload = {
       amount: paymentForm.value.amount,
       dueDate: toDateStr(paymentDueDate.value),
+      // PATCH keeps null fields; ask explicitly to drop a cleared due date.
+      clearDueDate: editingPayment.value ? !paymentDueDate.value : undefined,
     };
     let res;
     if (editingPayment.value) {
@@ -1435,18 +1387,12 @@ const savePayment = async () => {
     }
     updateBookingLocal(res.data);
     showPaymentDialog.value = false;
-    toast.add({
-      severity: 'success',
-      summary: editingPayment.value ? 'Updated' : 'Added',
-      life: 3000,
-    });
+    toast.success(editingPayment.value ? 'Updated' : 'Added');
   } catch (err) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: err.response?.data || 'Failed to save payment',
-      life: 3000,
-    });
+    // GlobalExceptionHandler returns { error: "..." }; never toast a raw object.
+    const data = err.response?.data;
+    const msg = data?.error || (typeof data === 'string' ? data : null);
+    toast.danger('Error', msg || 'Failed to save payment');
   } finally {
     savingPayment.value = false;
   }
@@ -1458,12 +1404,7 @@ const togglePaid = async (bookingId, payment) => {
     const res = await api.patch(`/api/payments/${payment.id}/${endpoint}`);
     updateBookingLocal(res.data);
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to update payment',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to update payment');
   }
 };
 
@@ -1471,14 +1412,9 @@ const deletePayment = async (paymentId) => {
   try {
     const res = await api.delete(`/api/payments/${paymentId}`);
     updateBookingLocal(res.data);
-    toast.add({ severity: 'success', summary: 'Deleted', life: 3000 });
+    toast.success('Deleted');
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to delete payment',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to delete payment');
   }
 };
 
@@ -1512,14 +1448,9 @@ const onAttachmentPicked = async (e) => {
     fd.append('file', file);
     const res = await api.post(`/api/bookings/${editingBooking.value.id}/attachments`, fd);
     updateBookingLocal(res.data);
-    toast.add({ severity: 'success', summary: 'Uploaded', detail: file.name, life: 3000 });
+    toast.success('Uploaded', file.name);
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Upload failed (max 10 MB)',
-      life: 3000,
-    });
+    toast.danger('Error', 'Upload failed (max 10 MB)');
   } finally {
     uploadingAttachment.value = false;
     e.target.value = '';
@@ -1538,7 +1469,7 @@ const downloadAttachment = async (a) => {
     link.remove();
     URL.revokeObjectURL(url);
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Download failed', life: 3000 });
+    toast.danger('Error', 'Download failed');
   }
 };
 
@@ -1546,9 +1477,9 @@ const removeAttachment = async (a) => {
   try {
     const res = await api.delete(`/api/attachments/${a.id}`);
     updateBookingLocal(res.data);
-    toast.add({ severity: 'success', summary: 'Removed', detail: a.fileName, life: 2500 });
+    toast.success('Removed', a.fileName);
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Delete failed', life: 3000 });
+    toast.danger('Error', 'Delete failed');
   }
 };
 
@@ -1557,7 +1488,7 @@ const refreshAllRates = async () => {
     (b) => b.priceCurrency && b.priceCurrency !== accountCurrency.value,
   );
   if (!needsUpdate.length) {
-    toast.add({ severity: 'info', summary: 'All bookings are in your base currency', life: 3000 });
+    toast.info('All bookings are in your base currency');
     return;
   }
   refreshingRates.value = true;
@@ -1581,11 +1512,7 @@ const refreshAllRates = async () => {
     /* ignore */
   }
   refreshingRates.value = false;
-  toast.add({
-    severity: 'success',
-    summary: `${updated} rate${updated !== 1 ? 's' : ''} updated`,
-    life: 3000,
-  });
+  toast.success(`${updated} rate${updated !== 1 ? 's' : ''} updated`);
 };
 
 const importCsv = async (event) => {
@@ -1595,16 +1522,11 @@ const importCsv = async (event) => {
   formData.append('file', file);
   try {
     const res = await api.post(`/api/trips/${tripId}/import/csv`, formData);
-    toast.add({
-      severity: 'success',
-      summary: 'Imported',
-      detail: `${res.data.imported} bookings imported`,
-      life: 3000,
-    });
+    toast.success('Imported', `${res.data.imported} bookings imported`);
     const bookingsRes = await api.get(`/api/trips/${tripId}/bookings`);
     bookings.value = bookingsRes.data;
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to import CSV', life: 3000 });
+    toast.danger('Error', 'Failed to import CSV');
   }
   event.target.value = '';
 };
@@ -1654,12 +1576,7 @@ onMounted(async () => {
     tripEndDate.value = tripRes.data.endDate;
     bookings.value = bookingsRes.data;
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load bookings',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to load bookings');
   } finally {
     loading.value = false;
   }

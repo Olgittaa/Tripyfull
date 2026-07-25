@@ -22,6 +22,7 @@
 
 <script setup>
 import { watch, onBeforeUnmount } from 'vue';
+import { pushOverlay, popOverlay, isTopOverlay } from './overlayStack.js';
 
 const props = defineProps({
   modelValue: Boolean,
@@ -32,6 +33,10 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:modelValue']);
 
+// Unique token in the shared overlay stack: Escape only closes the top layer,
+// and the body scroll lock is released only when the last overlay closes.
+const token = Symbol('modal');
+
 function close() {
   emit('update:modelValue', false);
 }
@@ -39,7 +44,7 @@ function onBackdrop() {
   if (props.closeOnBackdrop) close();
 }
 function onKey(e) {
-  if (e.key === 'Escape') close();
+  if (e.key === 'Escape' && isTopOverlay(token)) close();
 }
 
 watch(
@@ -47,15 +52,15 @@ watch(
   (v) => {
     if (v) {
       document.addEventListener('keydown', onKey);
-      document.body.style.overflow = 'hidden';
+      pushOverlay(token);
     } else {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      popOverlay(token);
     }
   },
 );
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKey);
-  document.body.style.overflow = '';
+  popOverlay(token);
 });
 </script>

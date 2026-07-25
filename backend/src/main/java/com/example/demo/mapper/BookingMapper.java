@@ -67,7 +67,8 @@ public final class BookingMapper {
         if (req.bookingUrl() != null) b.setBookingUrl(req.bookingUrl());
         if (req.fullPrice() != null) b.setFullPrice(req.fullPrice());
         if (req.priceCurrency() != null) b.setPriceCurrency(req.priceCurrency());
-        if (req.exchangeRate() != null) b.setExchangeRate(req.exchangeRate());
+        if (Boolean.TRUE.equals(req.clearExchangeRate())) b.setExchangeRate(null);
+        else if (req.exchangeRate() != null) b.setExchangeRate(req.exchangeRate());
         if (req.notes() != null) b.setNotes(req.notes());
         if (req.linkedDayId() != null) b.setLinkedDayId(req.linkedDayId());
         if (req.flightNumber() != null) b.setFlightNumber(req.flightNumber());

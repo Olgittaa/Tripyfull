@@ -13,3 +13,7 @@ jwt.secret=CHANGE_ME_local-dev-secret-min-32-chars
 
 # AeroDataBox (RapidAPI) — get your own key at https://rapidapi.com
 aerodatabox.api-key=CHANGE_ME
+
+# Optional: OpenTripMap attraction enrichment (Wikipedia descriptions + photos on saved
+# places). Free non-commercial key at https://dev.opentripmap.org — remove to disable.
+opentripmap.api-key=CHANGE_ME

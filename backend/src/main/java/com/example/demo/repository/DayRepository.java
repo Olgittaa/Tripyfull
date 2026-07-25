@@ -10,6 +10,5 @@ import java.util.UUID;
 public interface DayRepository extends JpaRepository<Day, UUID> {
     List<Day> findByTripIdOrderByDateAsc(UUID tripId);
     Optional<Day> findByIdAndTripId(UUID id, UUID tripId);
-    void deleteByTripId(UUID tripId);
     boolean existsByTripId(UUID tripId);
 }

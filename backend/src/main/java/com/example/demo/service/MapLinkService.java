@@ -16,9 +16,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Resolves a Google Maps share link (incl. maps.app.goo.gl short links) by following
- * redirects, then reads Open Graph metadata (served to crawlers) for the place name,
- * photo and description, plus coordinates from the resolved URL.
+ * Resolves a place share link into name/coordinates/photo.
+ *
+ * Google Maps (incl. maps.app.goo.gl short links): follows redirects, then reads
+ * Open Graph metadata (served to crawlers) for the place name, photo and
+ * description, plus coordinates from the resolved URL.
+ *
+ * Tripadvisor: the place name and location live in the URL slug itself
+ * (…/Attraction_Review-g187147-d188757-Reviews-Eiffel_Tower-Paris….html), so no
+ * page access is required; fetching the page for og:image / embedded coordinates
+ * is attempted but best-effort — Tripadvisor's bot protection usually blocks
+ * server-side requests, in which case coordinates come from the geocoder via
+ * {@code geoQuery}.
  */
 @Service
 public class MapLinkService {
@@ -36,11 +45,19 @@ public class MapLinkService {
     private static final Pattern PLACE = Pattern.compile("/place/([^/@?]+)");
     private static final Pattern LIST_DESC = Pattern.compile("(?i)\\b\\d+\\s+places?\\b");
 
+    // Any single-place Tripadvisor page: …-g<geo>-d<place>(-r<review>)?-(Reviews-)?(or30-)?Name_Slug-Location_Slug.html
+    private static final Pattern TA_PLACE = Pattern.compile("-g\\d+-d\\d+(?:-r\\d+)?-(?:Reviews-)?(?:or\\d+-)?([^/]+?)\\.html");
+    private static final Pattern TA_LAT = Pattern.compile("\"latitude\"\\s*:\\s*\"?(-?\\d+\\.\\d+)\"?");
+    private static final Pattern TA_LON = Pattern.compile("\"longitude\"\\s*:\\s*\"?(-?\\d+\\.\\d+)\"?");
+
+    /** {@code geoQuery} — search text for the geocoder when the link itself has no coordinates. */
     public record ParsedLink(String name, BigDecimal lat, BigDecimal lon,
-                             String photo, String description, boolean isList) {}
+                             String photo, String description, boolean isList,
+                             String geoQuery) {}
 
     public ParsedLink parse(String url) {
         if (url == null || url.isBlank()) return null;
+        if (url.toLowerCase().contains("tripadvisor.")) return parseTripAdvisor(url.trim());
         Resolved res = resolve(url.trim());
         String finalUrl = res.url != null ? res.url : url.trim();
         String body = res.body != null ? res.body : "";
@@ -77,7 +94,44 @@ public class MapLinkService {
         String description = (ogDesc != null && !ogDesc.isBlank() && !isList && !isGenericDesc(ogDesc)) ? ogDesc.trim() : null;
 
         if (name == null && lat == null && !isList) return null;
-        return new ParsedLink(name, lat, lon, photo, description, isList);
+        return new ParsedLink(name, lat, lon, photo, description, isList, null);
+    }
+
+    private ParsedLink parseTripAdvisor(String url) {
+        String pageUrl = url;
+        String body = "";
+        // Expands short links (tripadvisor.app.link) and grabs the page body while at
+        // it — usually a bot-protection page, so everything below must degrade cleanly.
+        Resolved res = resolve(url);
+        if (res.url != null) pageUrl = res.url;
+        if (res.body != null) body = res.body;
+
+        Matcher m = TA_PLACE.matcher(URLDecoder.decode(pageUrl, StandardCharsets.UTF_8));
+        if (!m.find()) {
+            // Tourism-g…/Attractions-g… destination pages have no -d<id>: not a single place.
+            return new ParsedLink(null, null, null, null, null, true, null);
+        }
+        String[] slugParts = m.group(1).split("-", 2);
+        String name = slugParts[0].replace('_', ' ').trim();
+        if (name.isBlank()) return new ParsedLink(null, null, null, null, null, true, null);
+        String location = slugParts.length > 1
+                ? slugParts[1].replace('-', ' ').replace('_', ' ').trim()
+                : null;
+
+        BigDecimal lat = firstNum(body, TA_LAT);
+        BigDecimal lon = firstNum(body, TA_LON);
+        String ogImage = og(body, "og:image");
+        String photo = (ogImage != null && !ogImage.isBlank()) ? ogImage : null;
+        String geoQuery = (location != null && !location.isBlank()) ? name + ", " + location : name;
+        return new ParsedLink(name, lat, lon, photo, null, false, geoQuery);
+    }
+
+    private BigDecimal firstNum(String body, Pattern p) {
+        Matcher m = p.matcher(body);
+        if (m.find()) {
+            try { return new BigDecimal(m.group(1)); } catch (NumberFormatException ignored) {}
+        }
+        return null;
     }
 
     /** Google serves a real Street View / place photo, or a generic map tile/icon we skip. */

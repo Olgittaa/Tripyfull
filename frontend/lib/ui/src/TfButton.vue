@@ -2,6 +2,7 @@
   <button
     class="btn"
     :class="classes"
+    :type="type"
     :disabled="disabled || loading"
     @click="$emit('click', $event)"
   >
@@ -20,6 +21,9 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
   icon: { type: String, default: '' },
+  // Native buttons default to type="submit" inside a <form>; an action button
+  // in a drawer/dialog form must not submit it, so default to "button".
+  type: { type: String, default: 'button' },
 });
 
 defineEmits(['click']);

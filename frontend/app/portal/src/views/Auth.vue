@@ -15,33 +15,16 @@
         </div>
 
         <form @submit.prevent="submit" class="auth-form">
-          <div class="field">
-            <label>Username</label>
-            <PInputText v-model="username" placeholder="username" required class="w-full" />
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <PInputText
-              v-model="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              class="w-full"
-            />
-          </div>
+          <TfInput v-model="username" label="Username" placeholder="username" />
+          <TfInput v-model="password" label="Password" type="password" placeholder="••••••••" />
           <Transition name="fade">
             <p v-if="error" class="auth-error">
               <i class="pi pi-exclamation-circle"></i> {{ error }}
             </p>
           </Transition>
-          <PButton
-            type="submit"
-            :label="isLogin ? 'Sign in' : 'Register'"
-            icon="pi pi-arrow-right"
-            iconPos="right"
-            class="w-full submit-btn"
-            :loading="loading"
-          />
+          <TfButton type="submit" variant="primary" class="w-full submit-btn" :loading="loading">
+            {{ isLogin ? 'Sign in' : 'Register' }} <i class="pi pi-arrow-right"></i>
+          </TfButton>
         </form>
       </div>
     </Transition>
@@ -53,6 +36,7 @@ import { ref } from 'vue';
 import { api } from '@tripyfull/core';
 import { useRouter, useRoute } from 'vue-router';
 import { setAuth } from '@tripyfull/core';
+import { TfInput, TfButton } from '@tripyfull/ui';
 
 const router = useRouter();
 const route = useRoute();
@@ -71,7 +55,10 @@ const submit = async () => {
     setAuth(res.data.token, res.data.username, res.data);
     router.push(route.query.redirect || '/trips');
   } catch (err) {
-    error.value = err.response?.data || 'Something went wrong. Please try again.';
+    // The API returns errors as { error: "..." } (or occasionally plain text).
+    const data = err.response?.data;
+    error.value =
+      data?.error || (typeof data === 'string' && data) || 'Something went wrong. Please try again.';
   } finally {
     loading.value = false;
   }

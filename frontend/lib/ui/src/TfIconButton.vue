@@ -1,5 +1,11 @@
 <template>
-  <button class="tf-icon-btn" :class="classes" :title="label" @click="$emit('click', $event)">
+  <button
+    class="tf-icon-btn"
+    :class="classes"
+    :type="type"
+    :title="label"
+    @click="$emit('click', $event)"
+  >
     <slot />
   </button>
 </template>
@@ -11,6 +17,8 @@ const props = defineProps({
   variant: { type: String, default: 'solid' },
   size: { type: String, default: 'md' },
   label: { type: String, default: '' },
+  // Avoid implicit type="submit" when used inside forms.
+  type: { type: String, default: 'button' },
 });
 
 defineEmits(['click']);

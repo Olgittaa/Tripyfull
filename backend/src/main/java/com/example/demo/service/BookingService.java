@@ -167,7 +167,8 @@ public class BookingService {
         }
 
         if (request.amount() != null) payment.setAmount(request.amount());
-        if (request.dueDate() != null) payment.setDueDate(request.dueDate());
+        if (Boolean.TRUE.equals(request.clearDueDate())) payment.setDueDate(null);
+        else if (request.dueDate() != null) payment.setDueDate(request.dueDate());
         paymentRepository.save(payment);
         return BookingMapper.toResponse(booking);
     }

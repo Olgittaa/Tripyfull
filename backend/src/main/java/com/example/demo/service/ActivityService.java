@@ -44,7 +44,7 @@ public class ActivityService {
 
     public List<ActivityResponse> getActivities(UUID dayId, String username) {
         Day day = findDayForUser(dayId, username);
-        return activityRepository.findByDayIdOrderByStartTimeAscOrderIndexAsc(day.getId()).stream()
+        return activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(day.getId()).stream()
                 .map(ActivityMapper::toResponse)
                 .toList();
     }
@@ -53,16 +53,33 @@ public class ActivityService {
         Day day = findDayForUser(dayId, username);
         Activity activity = ActivityMapper.toEntity(request);
         activity.setDay(day);
-        activity.setOrderIndex(activityRepository.countByDayId(dayId));
+        activity.setOrderIndex(nextOrderIndex(dayId));
         applyPlace(activity, request, getUser(username));
         return ActivityMapper.toResponse(activityRepository.save(activity));
     }
 
     public ActivityResponse update(UUID activityId, ActivityRequest request, String username) {
         Activity activity = findActivityForUser(activityId, username);
+        // Optional move to another day of the same trip; appended at the target's end.
+        if (request.dayId() != null && !request.dayId().equals(activity.getDay().getId())) {
+            Day target = findDayForUser(request.dayId(), username);
+            if (!target.getTrip().getId().equals(activity.getDay().getTrip().getId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Target day belongs to a different trip");
+            }
+            int nextIndex = nextOrderIndex(target.getId());
+            activity.setDay(target);
+            activity.setOrderIndex(nextIndex);
+        }
         ActivityMapper.updateEntity(activity, request);
         applyPlace(activity, request, getUser(username));
         return ActivityMapper.toResponse(activityRepository.save(activity));
+    }
+
+    /** Append position: one past the day's current highest orderIndex (count would collide after deletes). */
+    private int nextOrderIndex(UUID dayId) {
+        List<Activity> existing = activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(dayId);
+        return existing.isEmpty() ? 0 : existing.get(existing.size() - 1).getOrderIndex() + 1;
     }
 
     /** Links/unlinks a library Place; inherits the place address when the activity has none. */
@@ -99,10 +116,15 @@ public class ActivityService {
         for (int i = 0; i < orderedIds.size(); i++) {
             Activity activity = activityRepository.findById(orderedIds.get(i))
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found"));
+            // The day was ownership-checked above; every reordered activity must
+            // belong to it — otherwise arbitrary ids could mutate other users' data.
+            if (!activity.getDay().getId().equals(dayId)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found");
+            }
             activity.setOrderIndex(i);
             activityRepository.save(activity);
         }
-        return activityRepository.findByDayIdOrderByStartTimeAscOrderIndexAsc(dayId).stream()
+        return activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(dayId).stream()
                 .map(ActivityMapper::toResponse)
                 .toList();
     }

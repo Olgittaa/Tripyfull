@@ -59,9 +59,20 @@
             <i class="pi pi-chevron-right"></i>
           </TfIconButton>
         </div>
-        <TfButton variant="primary" @click="openAddDialog">
-          <i class="pi pi-plus" style="font-size: 14px"></i> Activity
-        </TfButton>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <TfButton
+            v-if="activities.length > 1"
+            variant="ghost"
+            size="sm"
+            @click="sortByTime"
+            title="Reorder activities by their start time"
+          >
+            <i class="pi pi-sort-amount-down" style="font-size: 13px"></i> Sort by time
+          </TfButton>
+          <TfButton variant="primary" @click="openAddDialog">
+            <i class="pi pi-plus" style="font-size: 14px"></i> Activity
+          </TfButton>
+        </div>
       </div>
 
       <!-- Day picker strip -->
@@ -95,11 +106,11 @@
             <!-- Cities / places -->
             <div style="flex: 1; min-width: 200px">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
-                <i class="pi pi-map-marker" style="color: var(--brand); font-size: 16px"></i>
+                <i class="pi pi-map-marker" style="color: var(--accent); font-size: 16px"></i>
                 <span
                   style="
                     font: var(--fw-semibold) 14px/1 var(--font-sans);
-                    color: var(--text-strong);
+                    color: var(--text-primary);
                   "
                   >Visiting</span
                 >
@@ -115,12 +126,12 @@
                 <span
                   style="
                     font: var(--fw-medium) 15px/1.2 var(--font-display);
-                    color: var(--text-strong);
+                    color: var(--text-primary);
                   "
                 >
                   {{ day?.city || 'Set cities...' }}
                 </span>
-                <i class="pi pi-pencil" style="font-size: 11px; color: var(--text-subtle)"></i>
+                <i class="pi pi-pencil" style="font-size: 11px; color: var(--text-secondary)"></i>
               </div>
               <div v-else style="display: flex; gap: 6px; align-items: center">
                 <TfCitySearch
@@ -145,7 +156,7 @@
                 <span
                   style="
                     font: var(--fw-semibold) 14px/1 var(--font-sans);
-                    color: var(--text-strong);
+                    color: var(--text-primary);
                   "
                   >Overnight</span
                 >
@@ -159,14 +170,14 @@
                     <span
                       style="
                         font: var(--fw-medium) 15px/1.2 var(--font-display);
-                        color: var(--text-strong);
+                        color: var(--text-primary);
                       "
                     >
                       {{ day.overnightStay }}
                     </span>
                     <i
                       class="pi pi-pencil"
-                      style="font-size: 11px; color: var(--text-subtle); cursor: pointer"
+                      style="font-size: 11px; color: var(--text-secondary); cursor: pointer"
                       @click="
                         editingOvernight = true;
                         overnightDraft = day.overnightStay;
@@ -187,20 +198,21 @@
                           : ''
                       }}
                     </TfBadge>
-                    <button
-                      style="
-                        background: none;
-                        border: none;
-                        color: var(--text-subtle);
-                        font-size: 11px;
-                        cursor: pointer;
-                        padding: 2px;
-                      "
-                      @click="unlinkBooking"
-                      v-tooltip="'Unlink booking'"
-                    >
-                      <i class="pi pi-times"></i>
-                    </button>
+                    <TfTooltip text="Unlink booking">
+                      <button
+                        style="
+                          background: none;
+                          border: none;
+                          color: var(--text-secondary);
+                          font-size: 11px;
+                          cursor: pointer;
+                          padding: 2px;
+                        "
+                        @click="unlinkBooking"
+                      >
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </TfTooltip>
                   </div>
                 </template>
 
@@ -218,7 +230,7 @@
                         display: flex;
                         align-items: center;
                         gap: 10px;
-                        color: var(--text-muted);
+                        color: var(--text-secondary);
                         font: var(--type-small);
                         width: 100%;
                         transition: all var(--dur-fast) var(--ease-out);
@@ -226,12 +238,15 @@
                       "
                       @click="applyOvernightSuggestion"
                     >
-                      <i class="pi pi-sparkles" style="color: var(--gold-400); font-size: 16px"></i>
+                      <i
+                        class="pi pi-sparkles"
+                        style="color: var(--warning-300); font-size: 16px"
+                      ></i>
                       <div>
                         <div
                           style="
                             font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                            color: var(--text-strong);
+                            color: var(--text-primary);
                           "
                         >
                           {{ overnightSuggestion.name }}
@@ -239,7 +254,7 @@
                         <div
                           style="
                             font: var(--fw-regular) 12px/1.2 var(--font-sans);
-                            color: var(--text-muted);
+                            color: var(--text-secondary);
                             margin-top: 2px;
                           "
                         >
@@ -251,7 +266,7 @@
                       style="
                         margin-top: 6px;
                         font: var(--type-small);
-                        color: var(--text-subtle);
+                        color: var(--text-secondary);
                         cursor: pointer;
                       "
                       @click="
@@ -274,7 +289,7 @@
                     <span
                       style="
                         font: var(--fw-regular) 14px/1.2 var(--font-sans);
-                        color: var(--text-subtle);
+                        color: var(--text-secondary);
                       "
                       >Not set — click to add</span
                     >
@@ -284,14 +299,12 @@
 
               <!-- Editing manually -->
               <div v-else style="display: flex; gap: 6px; align-items: center">
-                <PInputText
+                <TfInput
                   v-model="overnightDraft"
                   placeholder="e.g. Friend's apartment, Airbnb..."
-                  size="small"
                   style="flex: 1"
                   @keyup.enter="saveOvernightManual"
                   @keyup.escape="editingOvernight = false"
-                  autofocus
                 />
                 <TfIconButton variant="ghost" size="sm" @click="saveOvernightManual"
                   ><i class="pi pi-check"></i
@@ -305,8 +318,19 @@
 
           <!-- Activities timeline -->
           <div v-if="activities.length" style="display: flex; flex-direction: column; gap: 12px">
-            <div v-for="(a, i) in activities" :key="a.id" class="timeline-row">
+            <div
+              v-for="(a, i) in activities"
+              :key="a.id"
+              class="timeline-row"
+              :class="{ 'is-dragging': dragIndex === i }"
+              draggable="true"
+              @dragstart="onDragStart(i, $event)"
+              @dragover.prevent="onDragOver(i)"
+              @drop.prevent
+              @dragend="onDragEnd"
+            >
               <div class="timeline-gutter">
+                <i class="pi pi-bars drag-grip" title="Drag to reorder"></i>
                 <span class="timeline-time">{{ a.startTime?.slice(0, 5) || '--:--' }}</span>
                 <span v-if="i < activities.length - 1" class="timeline-line"></span>
               </div>
@@ -321,7 +345,7 @@
                         <span
                           style="
                             font: var(--fw-semibold) 16px/1.2 var(--font-sans);
-                            color: var(--text-strong);
+                            color: var(--text-primary);
                           "
                           >{{ a.name }}</span
                         >
@@ -332,7 +356,7 @@
                       <div
                         style="
                           font: var(--fw-regular) 13px/1.3 var(--font-sans);
-                          color: var(--text-muted);
+                          color: var(--text-secondary);
                           margin-top: 3px;
                           display: flex;
                           gap: 10px;
@@ -374,7 +398,7 @@
                         v-if="a.notes"
                         style="
                           font: var(--type-small);
-                          color: var(--text-muted);
+                          color: var(--text-secondary);
                           margin-top: 4px;
                           font-style: italic;
                         "
@@ -401,7 +425,7 @@
 
             <div v-if="cityPlaces.length" style="margin-top: 18px">
               <div class="addfrom-title">
-                <i class="pi pi-map-marker" style="color: var(--brand)"></i> Add from places ·
+                <i class="pi pi-map-marker" style="color: var(--accent)"></i> Add from places ·
                 {{ day?.city }}
               </div>
               <div class="addfrom-grid">
@@ -426,7 +450,7 @@
                       [placeTypeLabel(p.type), p.city || p.address].filter(Boolean).join(' · ')
                     }}</span>
                   </span>
-                  <i class="pi pi-plus" style="color: var(--brand); font-size: 16px"></i>
+                  <i class="pi pi-plus" style="color: var(--accent); font-size: 16px"></i>
                 </button>
               </div>
               <div style="text-align: center; margin-top: 16px">
@@ -465,14 +489,18 @@
                   {{ typeIcon(type) }}
                 </div>
                 <span
-                  style="font: var(--fw-medium) 13px/1 var(--font-sans); color: var(--text-muted)"
+                  style="
+                    font: var(--fw-medium) 13px/1 var(--font-sans);
+                    color: var(--text-secondary);
+                  "
                   >{{ typeLabel(type) }}</span
                 >
                 <span class="money money--sm">{{ amount.toFixed(2) }} {{ currency }}</span>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px">
-              <span style="font: var(--fw-medium) 13px/1 var(--font-sans); color: var(--text-muted)"
+              <span
+                style="font: var(--fw-medium) 13px/1 var(--font-sans); color: var(--text-secondary)"
                 >Day total</span
               >
               <span class="money money--md">{{ dayTotal.toFixed(2) }} {{ currency }}</span>
@@ -505,240 +533,244 @@
       :title="editingActivity ? 'Edit activity' : 'New activity'"
       :eyebrow="day ? `Day ${day.dayNumber} · ${day.city || ''}` : ''"
     >
-      <form @submit.prevent="saveActivity" style="display: flex; flex-direction: column; gap: 16px">
-        <!-- 1. Where does this activity come from? -->
-        <div class="field" style="gap: 8px">
-          <label>How do you want to add it?</label>
-          <div class="src-choice">
-            <button
-              type="button"
-              class="src-btn"
-              :class="{ 'src-btn--on': actSource === 'search' }"
-              @click="setActSource('search')"
-            >
-              <i class="pi pi-search"></i><span>Search</span>
-            </button>
-            <button
-              type="button"
-              class="src-btn"
-              :class="{ 'src-btn--on': actSource === 'import' }"
-              @click="setActSource('import')"
-            >
-              <i class="pi pi-download"></i><span>Import</span>
-            </button>
-            <button
-              type="button"
-              class="src-btn"
-              :class="{ 'src-btn--on': actSource === 'manual' }"
-              @click="setActSource('manual')"
-            >
-              <i class="pi pi-pencil"></i><span>Manually</span>
-            </button>
+      <form @submit.prevent="saveActivity">
+        <!-- Where the place comes from: saved / imported / manual -->
+        <TfDrawerSection label="Place">
+          <div class="field" style="gap: 8px">
+            <label>How do you want to add it?</label>
+            <div class="src-choice">
+              <button
+                type="button"
+                class="src-btn"
+                :class="{ 'src-btn--on': actSource === 'search' }"
+                @click="setActSource('search')"
+              >
+                <i class="pi pi-search"></i><span>Search</span>
+              </button>
+              <button
+                type="button"
+                class="src-btn"
+                :class="{ 'src-btn--on': actSource === 'import' }"
+                @click="setActSource('import')"
+              >
+                <i class="pi pi-download"></i><span>Import</span>
+              </button>
+              <button
+                type="button"
+                class="src-btn"
+                :class="{ 'src-btn--on': actSource === 'manual' }"
+                @click="setActSource('manual')"
+              >
+                <i class="pi pi-pencil"></i><span>Manually</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Search a place (library + geocoding) -->
-        <div v-if="actSource === 'search'" class="src-panel">
-          <template v-if="!form.placeId">
-            <div class="field">
-              <label>From your places</label>
-              <PSelect
-                :modelValue="form.placeId"
-                @update:modelValue="onPlacePicked"
-                :options="placeOptions"
-                optionLabel="label"
-                optionValue="value"
-                filter
-                showClear
+          <!-- Search a place (library + geocoding) -->
+          <div v-if="actSource === 'search'" class="src-panel">
+            <template v-if="!form.placeId">
+              <TfSelect
+                label="From your places"
+                :modelValue="selectedPlaceLabel"
+                @update:modelValue="onPlaceLabelPicked"
+                :options="placeLabelOptions"
                 placeholder="Pick a saved place…"
                 class="w-full"
               />
-            </div>
-            <div class="field">
-              <label
-                >…or find a new place
-                <span
-                  v-if="findingPlace"
-                  class="text-muted"
-                  style="font-weight: 400; font-size: 12px"
-                  >· saving…</span
-                ></label
-              >
-              <TfPlaceSearch
-                placeholder="Search a beach, restaurant, landmark…"
-                @select="onActivityGeoPicked"
-              />
-            </div>
-          </template>
-          <div v-else class="linked-place">
-            <i class="pi pi-bookmark" style="color: var(--accent)"></i>
-            <span class="linked-name">{{ linkedPlaceName }}</span>
-            <button type="button" class="link-edit" @click="goEditPlace">
-              Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
-            </button>
-            <button type="button" class="del-btn" @click="unlinkPlace" v-tooltip="'Unlink'">
-              <i class="pi pi-times"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Import from a Google Maps link -->
-        <div v-else-if="actSource === 'import'" class="src-panel">
-          <template v-if="!form.placeId">
-            <div class="field">
-              <label>Google Maps link</label>
-              <div style="display: flex; gap: 8px">
-                <PInputText
-                  v-model="activityImportUrl"
-                  placeholder="https://maps.app.goo.gl/…"
-                  class="w-full"
-                  @keyup.enter="runActivityImport"
-                />
-                <TfButton
-                  variant="soft"
-                  @click="runActivityImport"
-                  :disabled="findingPlace || !activityImportUrl"
+              <div v-if="FEATURES.geoPlaceSearch" class="field">
+                <label
+                  >…or find a new place
+                  <span
+                    v-if="findingPlace"
+                    class="text-muted"
+                    style="font-weight: 400; font-size: 12px"
+                    >· saving…</span
+                  ></label
                 >
-                  <i
-                    class="pi pi-download"
-                    :style="findingPlace ? 'animation:spin 1s linear infinite' : ''"
-                  ></i>
-                </TfButton>
+                <TfPlaceSearch
+                  placeholder="Search a beach, restaurant, landmark…"
+                  @select="onActivityGeoPicked"
+                />
               </div>
-              <small class="text-muted text-sm">Paste a share link to a single place.</small>
+              <small v-else class="text-muted text-sm" style="margin: 0">
+                Don't see it here? Import it from a Google Maps / Tripadvisor link or add it
+                manually.
+              </small>
+            </template>
+            <div v-else class="linked-place">
+              <i class="pi pi-bookmark" style="color: var(--accent)"></i>
+              <span class="linked-name">{{ linkedPlaceName }}</span>
+              <button type="button" class="link-edit" @click="goEditPlace">
+                Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
+              </button>
+              <TfTooltip text="Unlink">
+                <button type="button" class="del-btn" @click="unlinkPlace">
+                  <i class="pi pi-times"></i>
+                </button>
+              </TfTooltip>
             </div>
-          </template>
-          <div v-else class="linked-place">
-            <i class="pi pi-bookmark" style="color: var(--accent)"></i>
-            <span class="linked-name">{{ linkedPlaceName }}</span>
-            <button type="button" class="link-edit" @click="goEditPlace">
-              Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
-            </button>
-            <button type="button" class="del-btn" @click="unlinkPlace" v-tooltip="'Unlink'">
-              <i class="pi pi-times"></i>
-            </button>
           </div>
-        </div>
 
-        <!-- Fill in manually (type, address, coordinates here only) -->
-        <div v-else-if="actSource === 'manual'" class="src-panel">
-          <div class="field">
-            <label>Name *</label>
-            <PInputText v-model="form.name" placeholder="What's planned?" class="w-full" />
+          <!-- Import from a Google Maps link -->
+          <div v-else-if="actSource === 'import'" class="src-panel">
+            <template v-if="!form.placeId">
+              <div class="field">
+                <label>Google Maps or Tripadvisor link</label>
+                <div style="display: flex; gap: 8px">
+                  <TfInput
+                    v-model="activityImportUrl"
+                    placeholder="https://maps.app.goo.gl/… or tripadvisor.com/…"
+                    class="w-full"
+                    @keyup.enter="runActivityImport"
+                  />
+                  <TfButton
+                    variant="soft"
+                    @click="runActivityImport"
+                    :disabled="findingPlace || !activityImportUrl"
+                  >
+                    <i
+                      class="pi pi-download"
+                      :style="findingPlace ? 'animation:spin 1s linear infinite' : ''"
+                    ></i>
+                  </TfButton>
+                </div>
+                <small class="text-muted text-sm">Paste a link to a single place.</small>
+              </div>
+            </template>
+            <div v-else class="linked-place">
+              <i class="pi pi-bookmark" style="color: var(--accent)"></i>
+              <span class="linked-name">{{ linkedPlaceName }}</span>
+              <button type="button" class="link-edit" @click="goEditPlace">
+                Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
+              </button>
+              <TfTooltip text="Unlink">
+                <button type="button" class="del-btn" @click="unlinkPlace">
+                  <i class="pi pi-times"></i>
+                </button>
+              </TfTooltip>
+            </div>
           </div>
-          <div class="field">
-            <label>Type</label>
-            <PSelect
-              v-model="form.type"
-              :options="typeOptions"
-              optionLabel="label"
-              optionValue="value"
+
+          <!-- Fill in manually (type, address, coordinates here only) -->
+          <div v-else-if="actSource === 'manual'" class="src-panel">
+            <TfInput
+              label="Name *"
+              v-model="form.name"
+              placeholder="What's planned?"
+              class="w-full"
+            />
+            <TfSelect
+              label="Type"
+              :modelValue="selectedTypeLabel"
+              @update:modelValue="onTypeLabelPicked"
+              :options="typeLabelOptions"
               placeholder="Select type"
               class="w-full"
             />
-          </div>
-          <div class="field">
-            <label>Address</label>
-            <PInputText v-model="form.address" placeholder="Street, area…" class="w-full" />
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-            <div class="field">
-              <label
-                >Latitude
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-muted)"
-                  >(optional)</span
-                ></label
-              >
-              <PInputNumber
-                v-model="form.latitude"
-                :maxFractionDigits="7"
-                placeholder="35.0116"
-                class="w-full"
-              />
+            <TfInput
+              label="Address"
+              v-model="form.address"
+              placeholder="Street, area…"
+              class="w-full"
+            />
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+              <div class="field">
+                <label
+                  >Latitude
+                  <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
+                    >(optional)</span
+                  ></label
+                >
+                <TfNumberInput v-model="form.latitude" type="plain" :precision="7" class="w-full" />
+              </div>
+              <div class="field">
+                <label
+                  >Longitude
+                  <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
+                    >(optional)</span
+                  ></label
+                >
+                <TfNumberInput
+                  v-model="form.longitude"
+                  type="plain"
+                  :precision="7"
+                  class="w-full"
+                />
+              </div>
             </div>
-            <div class="field">
-              <label
-                >Longitude
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-muted)"
-                  >(optional)</span
-                ></label
+            <label class="save-place-toggle">
+              <input type="checkbox" v-model="saveToPlaces" />
+              <span
+                ><i class="pi pi-bookmark" style="font-size: 13px"></i> Save as a place (so it shows
+                on the map)</span
               >
-              <PInputNumber
-                v-model="form.longitude"
-                :maxFractionDigits="7"
-                placeholder="135.7681"
-                class="w-full"
-              />
-            </div>
+            </label>
           </div>
-          <label class="save-place-toggle">
-            <input type="checkbox" v-model="saveToPlaces" />
-            <span
-              ><i class="pi pi-bookmark" style="font-size: 13px"></i> Save as a place (so it shows
-              on the map)</span
-            >
-          </label>
-        </div>
+        </TfDrawerSection>
 
-        <!-- 2. Details (once a source has set the activity base) -->
-        <template v-if="showCommon">
-          <div class="act-divider"><span>details</span></div>
+        <!-- Details (once a source has set the activity base) -->
+        <TfDrawerSection v-if="showCommon" label="Details">
+          <TfInput
+            v-if="actSource !== 'manual'"
+            label="Name *"
+            v-model="form.name"
+            placeholder="What's planned?"
+            class="w-full"
+          />
 
-          <div v-if="actSource !== 'manual'" class="field">
-            <label>Name *</label>
-            <PInputText v-model="form.name" placeholder="What's planned?" class="w-full" />
-          </div>
+          <TfSelect
+            v-if="editingActivity && moveDayLabels.length > 1"
+            label="Day"
+            v-model="moveDayLabel"
+            :options="moveDayLabels"
+            class="w-full"
+            helper="Pick another day to move this activity there"
+          />
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
             <div class="field">
               <label
                 >Start time
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-muted)"
+                <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
                   >(optional)</span
                 ></label
               >
-              <PInputText v-model="form.startTime" placeholder="09:00" class="w-full" />
+              <TfInput v-model="form.startTime" placeholder="09:00" class="w-full" />
             </div>
             <div class="field">
               <label
                 >End time
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-muted)"
+                <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
                   >(optional)</span
                 ></label
               >
-              <PInputText v-model="form.endTime" placeholder="11:00" class="w-full" />
+              <TfInput v-model="form.endTime" placeholder="11:00" class="w-full" />
             </div>
           </div>
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
             <div class="field">
               <label
                 >Cost
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-muted)"
+                <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
                   >(optional)</span
                 ></label
               >
-              <PInputNumber
+              <TfNumberInput
                 v-model="form.costEstimate"
-                placeholder="0.00"
-                :minFractionDigits="2"
+                type="plain"
+                :precision="2"
                 class="w-full"
               />
             </div>
-            <div class="field">
-              <label>Currency</label>
-              <PSelect
-                v-model="form.costCurrency"
-                :options="currencyOptions"
-                editable
-                class="w-full"
-              />
-            </div>
+            <TfSelect
+              label="Currency"
+              v-model="form.costCurrency"
+              :options="currencyOptions"
+              class="w-full"
+            />
           </div>
-          <div class="field">
-            <label>Notes</label>
-            <PInputText v-model="form.notes" placeholder="Any details" class="w-full" />
-          </div>
-        </template>
+          <TfInput label="Notes" v-model="form.notes" placeholder="Any details" class="w-full" />
+        </TfDrawerSection>
       </form>
       <template #footer>
         <TfButton variant="primary" style="flex: 1" @click="saveActivity" :disabled="saving">
@@ -749,26 +781,30 @@
         >
       </template>
     </TfDrawer>
-
-    <PConfirmDialog />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 import {
   TfButton,
   TfIconButton,
   TfBadge,
   TfCard,
   TfDrawer,
+  TfDrawerSection,
   TfCitySearch,
   TfPlaceSearch,
+  TfInput,
+  TfSelect,
+  TfNumberInput,
+  TfTooltip,
+  toast,
+  confirm,
 } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
+import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import { CURRENCIES } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
@@ -776,8 +812,6 @@ const currencyOptions = CURRENCIES;
 
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
-const confirm = useConfirm();
 
 const tripId = route.params.tripId;
 const dayId = ref(route.params.dayId);
@@ -844,6 +878,15 @@ const placesLib = ref([]);
 const placeOptions = computed(() =>
   placesLib.value.map((p) => ({ label: p.city ? `${p.name} · ${p.city}` : p.name, value: p.id })),
 );
+// TfSelect works with string options; map label <-> place id.
+const placeLabelOptions = computed(() => placeOptions.value.map((o) => o.label));
+const selectedPlaceLabel = computed(
+  () => placeOptions.value.find((o) => o.value === form.value.placeId)?.label || '',
+);
+const onPlaceLabelPicked = (label) => {
+  const id = placeOptions.value.find((o) => o.label === label)?.value ?? null;
+  onPlacePicked(id);
+};
 const loadPlacesLib = async () => {
   try {
     placesLib.value = (await api.get('/api/places')).data || [];
@@ -863,18 +906,18 @@ const saveToPlaces = ref(false);
 
 // Place-type meta for the "Add from places" cards.
 const PLACE_TYPE_META = {
-  SIGHTSEEING: { e: '🏛', bg: 'var(--teal-50)', c: 'var(--accent)', l: 'Sightseeing' },
-  BEACH: { e: '🏖', bg: 'var(--gold-50)', c: 'var(--gold-400)', l: 'Beach' },
-  NATURE: { e: '🌿', bg: 'var(--teal-50)', c: 'var(--teal-400)', l: 'Nature' },
-  RESTAURANT: { e: '🍽', bg: 'var(--gold-50)', c: 'var(--gold-400)', l: 'Restaurant' },
-  MUSEUM: { e: '🏺', bg: 'var(--coral-50)', c: 'var(--brand)', l: 'Museum' },
-  VIEWPOINT: { e: '🌄', bg: 'var(--gold-50)', c: 'var(--gold-500)', l: 'Viewpoint' },
-  PORT: { e: '⛴', bg: 'var(--teal-50)', c: 'var(--accent)', l: 'Port' },
-  AIRPORT: { e: '✈️', bg: 'var(--teal-50)', c: 'var(--accent)', l: 'Airport' },
-  NEIGHBORHOOD: { e: '🏘', bg: 'var(--coral-50)', c: 'var(--brand)', l: 'Neighborhood' },
-  PARK: { e: '🌳', bg: 'var(--teal-50)', c: 'var(--teal-400)', l: 'Park' },
-  SHOP: { e: '🛍', bg: 'var(--coral-50)', c: 'var(--coral-400)', l: 'Shop' },
-  OTHER: { e: '📍', bg: 'var(--surface-sunken)', c: 'var(--ink-500)', l: 'Place' },
+  SIGHTSEEING: { e: '🏛', bg: 'var(--success-100)', c: 'var(--accent)', l: 'Sightseeing' },
+  BEACH: { e: '🏖', bg: 'var(--warning-100)', c: 'var(--warning-300)', l: 'Beach' },
+  NATURE: { e: '🌿', bg: 'var(--success-100)', c: 'var(--success-300)', l: 'Nature' },
+  RESTAURANT: { e: '🍽', bg: 'var(--warning-100)', c: 'var(--warning-300)', l: 'Restaurant' },
+  MUSEUM: { e: '🏺', bg: 'var(--danger-100)', c: 'var(--accent)', l: 'Museum' },
+  VIEWPOINT: { e: '🌄', bg: 'var(--warning-100)', c: 'var(--warning-500)', l: 'Viewpoint' },
+  PORT: { e: '⛴', bg: 'var(--success-100)', c: 'var(--accent)', l: 'Port' },
+  AIRPORT: { e: '✈️', bg: 'var(--success-100)', c: 'var(--accent)', l: 'Airport' },
+  NEIGHBORHOOD: { e: '🏘', bg: 'var(--danger-100)', c: 'var(--accent)', l: 'Neighborhood' },
+  PARK: { e: '🌳', bg: 'var(--success-100)', c: 'var(--success-300)', l: 'Park' },
+  SHOP: { e: '🛍', bg: 'var(--danger-100)', c: 'var(--danger-500)', l: 'Shop' },
+  OTHER: { e: '📍', bg: 'var(--surface)', c: 'var(--ink-500)', l: 'Place' },
 };
 const pm = (t) => PLACE_TYPE_META[t] || PLACE_TYPE_META.OTHER;
 const placeTypeEmoji = (t) => pm(t).e;
@@ -912,6 +955,7 @@ const openAddFromPlace = (p) => {
   saveToPlaces.value = false;
   actSource.value = 'search';
   activityImportUrl.value = '';
+  moveTargetDayId.value = null;
   showDrawer.value = true;
 };
 
@@ -945,9 +989,9 @@ const onActivityGeoPicked = async (geo) => {
     if (!form.value.name && place.name) form.value.name = place.name;
     if (!form.value.address && place.address) form.value.address = place.address;
     if (!form.value.type && place.type) form.value.type = placeToActivityType(place.type);
-    toast.add({ severity: 'success', summary: 'Place linked', detail: place.name, life: 3000 });
+    toast.success('Place linked', place.name);
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not save place', life: 3000 });
+    toast.danger('Error', 'Could not save place');
   } finally {
     findingPlace.value = false;
   }
@@ -966,10 +1010,10 @@ const runActivityImport = async () => {
     if (!form.value.address && place.address) form.value.address = place.address;
     if (!form.value.type && place.type) form.value.type = placeToActivityType(place.type);
     activityImportUrl.value = '';
-    toast.add({ severity: 'success', summary: 'Imported', detail: place.name, life: 3000 });
+    toast.success('Imported', place.name);
   } catch (e) {
     const msg = e.response?.status === 400 ? "Couldn't read that link" : 'Import failed';
-    toast.add({ severity: 'warn', summary: 'Import', detail: msg, life: 3500 });
+    toast.warning('Import', msg);
   } finally {
     findingPlace.value = false;
   }
@@ -986,6 +1030,15 @@ const typeOptions = [
   { label: 'Transport', value: 'TRANSPORT' },
   { label: 'Other', value: 'OTHER' },
 ];
+
+// TfSelect works with string options; map label <-> type value.
+const typeLabelOptions = typeOptions.map((o) => o.label);
+const selectedTypeLabel = computed(
+  () => typeOptions.find((o) => o.value === form.value.type)?.label || '',
+);
+const onTypeLabelPicked = (label) => {
+  form.value.type = typeOptions.find((o) => o.label === label)?.value ?? null;
+};
 
 const typeIcon = (t) =>
   ({
@@ -1004,20 +1057,82 @@ const typeLabel = (t) => typeOptions.find((o) => o.value === t)?.label ?? t ?? '
 
 const catStyle = (type) => {
   const styles = {
-    SIGHTSEEING: { background: 'var(--teal-50)', color: 'var(--teal-400)' },
-    BEACH: { background: 'var(--gold-50)', color: 'var(--gold-400)' },
-    NATURE: { background: 'var(--teal-50)', color: 'var(--accent)' },
-    NEIGHBORHOOD: { background: 'var(--coral-50)', color: 'var(--brand)' },
-    RESTAURANT: { background: 'var(--gold-50)', color: 'var(--gold-400)' },
-    MEAL_STOP: { background: 'var(--gold-50)', color: 'var(--gold-500)' },
-    SHOPPING: { background: 'var(--coral-50)', color: 'var(--coral-400)' },
-    TRANSPORT: { background: 'var(--teal-50)', color: 'var(--accent)' },
-    OTHER: { background: 'var(--surface-sunken)', color: 'var(--ink-500)' },
+    SIGHTSEEING: { background: 'var(--success-100)', color: 'var(--success-300)' },
+    BEACH: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
+    NATURE: { background: 'var(--success-100)', color: 'var(--accent)' },
+    NEIGHBORHOOD: { background: 'var(--danger-100)', color: 'var(--accent)' },
+    RESTAURANT: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
+    MEAL_STOP: { background: 'var(--warning-100)', color: 'var(--warning-500)' },
+    SHOPPING: { background: 'var(--danger-100)', color: 'var(--danger-500)' },
+    TRANSPORT: { background: 'var(--success-100)', color: 'var(--accent)' },
+    OTHER: { background: 'var(--surface)', color: 'var(--ink-500)' },
   };
   return styles[type] || styles.OTHER;
 };
 
 const currentDayIndex = computed(() => allDays.value.findIndex((d) => d.id === dayId.value));
+
+/* ---- Manual ordering: drag-and-drop + sort by time ---- */
+const dragIndex = ref(null);
+
+const onDragStart = (i, e) => {
+  dragIndex.value = i;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', String(i)); // Firefox refuses to drag without data
+};
+
+// Live reorder while hovering: the list (and the numbered map pins) preview the result.
+const onDragOver = (i) => {
+  if (dragIndex.value === null || i === dragIndex.value) return;
+  const arr = activities.value;
+  const [moved] = arr.splice(dragIndex.value, 1);
+  arr.splice(i, 0, moved);
+  dragIndex.value = i;
+};
+
+const onDragEnd = () => {
+  if (dragIndex.value === null) return;
+  dragIndex.value = null;
+  persistOrder();
+};
+
+const persistOrder = async () => {
+  try {
+    const res = await api.patch(`/api/days/${dayId.value}/activities/reorder`, {
+      orderedIds: activities.value.map((a) => a.id),
+    });
+    activities.value = res.data;
+  } catch {
+    toast.danger('Error', 'Failed to save the order');
+    loadDay(dayId.value); // restore the server's order
+  }
+};
+
+const sortByTime = () => {
+  activities.value = [...activities.value].sort((a, b) => {
+    if (!a.startTime && !b.startTime) return 0;
+    if (!a.startTime) return 1; // untimed go last
+    if (!b.startTime) return -1;
+    return a.startTime.localeCompare(b.startTime);
+  });
+  persistOrder();
+};
+
+/* ---- Move an activity to another day (edit drawer) ---- */
+const moveTargetDayId = ref(null);
+const moveDayOptions = computed(() =>
+  allDays.value.map((d) => ({
+    label: `Day ${d.dayNumber} · ${formatDateShort(d.date)}`,
+    value: d.id,
+  })),
+);
+const moveDayLabels = computed(() => moveDayOptions.value.map((o) => o.label));
+const moveDayLabel = computed({
+  get: () => moveDayOptions.value.find((o) => o.value === moveTargetDayId.value)?.label || '',
+  set: (label) => {
+    moveTargetDayId.value = moveDayOptions.value.find((o) => o.label === label)?.value ?? null;
+  },
+});
 
 const dayTotal = computed(() =>
   activities.value.reduce((s, a) => s + (Number(a.costEstimate) || 0), 0),
@@ -1097,7 +1212,7 @@ const saveCity = async () => {
     updateDayLocal(res.data);
     editingCity.value = false;
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update city', life: 3000 });
+    toast.danger('Error', 'Failed to update city');
   }
 };
 
@@ -1111,12 +1226,7 @@ const saveOvernightManual = async () => {
     updateDayLocal(res.data);
     editingOvernight.value = false;
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to update overnight',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to update overnight');
   }
 };
 
@@ -1132,12 +1242,7 @@ const applyOvernightSuggestion = async () => {
     });
     updateDayLocal(res.data);
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to link booking',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to link booking');
   }
 };
 
@@ -1147,7 +1252,7 @@ const unlinkBooking = async () => {
     const res = await api.patch(`/api/days/${dayId.value}`, { clearLinkedBooking: true });
     updateDayLocal(res.data);
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to unlink', life: 3000 });
+    toast.danger('Error', 'Failed to unlink');
   }
 };
 
@@ -1163,6 +1268,18 @@ const switchDay = (id) => {
   dayId.value = id;
   loadDay(id);
 };
+
+// The route can also change without switchDay — sidebar "Itinerary" link,
+// browser back/forward. The component is reused, so react to the param.
+watch(
+  () => route.params.dayId,
+  (id) => {
+    if (id && id !== dayId.value) {
+      dayId.value = id;
+      loadDay(id);
+    }
+  },
+);
 
 const goToDay = (idx) => {
   if (idx >= 0 && idx < allDays.value.length) {
@@ -1194,6 +1311,7 @@ const openAddDialog = () => {
   saveToPlaces.value = false;
   actSource.value = null;
   activityImportUrl.value = '';
+  moveTargetDayId.value = null;
   showDrawer.value = true;
 };
 
@@ -1213,6 +1331,7 @@ const startEdit = (a) => {
   saveToPlaces.value = false;
   actSource.value = a.placeId ? 'search' : 'manual';
   activityImportUrl.value = '';
+  moveTargetDayId.value = dayId.value; // preselect the current day in the move select
   showDrawer.value = true;
 };
 
@@ -1234,12 +1353,7 @@ const saveActivity = async () => {
         form.value.placeId = res.data.id;
         if (!form.value.address && res.data.address) form.value.address = res.data.address;
       } catch {
-        toast.add({
-          severity: 'warn',
-          summary: 'Note',
-          detail: 'Activity saved, but adding to places failed',
-          life: 3000,
-        });
+        toast.warning('Note', 'Activity saved, but adding to places failed');
       }
     }
 
@@ -1251,63 +1365,51 @@ const saveActivity = async () => {
       costCurrency: form.value.costCurrency || accountCurrency.value,
       placeId: form.value.placeId || null,
       clearPlace: !form.value.placeId,
+      // On edit: a different day here moves the activity (appended at its end).
+      dayId: editingActivity.value ? moveTargetDayId.value || undefined : undefined,
     };
 
     if (editingActivity.value) {
       const res = await api.patch(`/api/activities/${editingActivity.value.id}`, payload);
-      const idx = activities.value.findIndex((a) => a.id === editingActivity.value.id);
-      if (idx !== -1) activities.value[idx] = res.data;
-      toast.add({
-        severity: 'success',
-        summary: 'Updated',
-        detail: 'Activity updated',
-        life: 3000,
-      });
+      if (moveTargetDayId.value && moveTargetDayId.value !== dayId.value) {
+        activities.value = activities.value.filter((a) => a.id !== editingActivity.value.id);
+        toast.success('Moved', `Activity moved to ${moveDayLabel.value}`);
+      } else {
+        const idx = activities.value.findIndex((a) => a.id === editingActivity.value.id);
+        if (idx !== -1) activities.value[idx] = res.data;
+        toast.success('Updated', 'Activity updated');
+      }
     } else {
       const res = await api.post(`/api/days/${dayId.value}/activities`, payload);
       activities.value.push(res.data);
-      toast.add({
-        severity: 'success',
-        summary: 'Added',
-        detail: `"${res.data.name}" added`,
-        life: 3000,
-      });
+      toast.success('Added', `"${res.data.name}" added`);
     }
     showDrawer.value = false;
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to save activity',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to save activity');
   } finally {
     saving.value = false;
   }
 };
 
 const confirmDelete = (a) => {
-  confirm.require({
+  confirm({
+    title: 'Confirm',
     message: `Delete "${a.name}"?`,
-    header: 'Confirm',
-    icon: 'pi pi-exclamation-triangle',
-    rejectProps: { label: 'Cancel', severity: 'secondary', text: true },
-    acceptProps: { label: 'Delete', severity: 'danger' },
-    accept: async () => {
+    tone: 'danger',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+  }).then(async (ok) => {
+    if (ok) {
       try {
         await api.delete(`/api/activities/${a.id}`);
         activities.value = activities.value.filter((x) => x.id !== a.id);
         showDrawer.value = false;
-        toast.add({
-          severity: 'success',
-          summary: 'Deleted',
-          detail: 'Activity deleted',
-          life: 3000,
-        });
+        toast.success('Deleted', 'Activity deleted');
       } catch {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 3000 });
+        toast.danger('Error', 'Failed to delete');
       }
-    },
+    }
   });
 };
 
@@ -1346,7 +1448,7 @@ onMounted(async () => {
     activities.value = activitiesRes.data;
     bookings.value = bookingsRes.data;
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load day', life: 3000 });
+    toast.danger('Error', 'Failed to load day');
   } finally {
     loading.value = false;
   }
@@ -1373,14 +1475,14 @@ onMounted(async () => {
 .itin-map-empty {
   height: 520px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-sunken);
+  border: 1px solid var(--border-default);
+  background: var(--surface);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: var(--text-subtle);
+  color: var(--text-secondary);
   font: var(--fw-medium) 13px/1 var(--font-sans);
 }
 
@@ -1389,7 +1491,7 @@ onMounted(async () => {
   align-items: center;
   gap: 9px;
   font: var(--fw-semibold) 16px/1 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
   margin-bottom: 14px;
 }
 .addfrom-grid {
@@ -1404,8 +1506,8 @@ onMounted(async () => {
   padding: 12px 14px;
   cursor: pointer;
   text-align: left;
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--card);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   transition:
     border-color var(--dur-fast) var(--ease-out),
@@ -1422,12 +1524,12 @@ onMounted(async () => {
   border-radius: var(--radius-md);
   background-size: cover;
   background-position: center;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
 }
 .addfrom-name {
   display: block;
   font: var(--fw-semibold) 15px/1.2 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1435,7 +1537,7 @@ onMounted(async () => {
 .addfrom-sub {
   display: block;
   font: var(--fw-regular) 13px/1.3 var(--font-sans);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 
@@ -1443,19 +1545,40 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--teal-600);
+  color: var(--success-700);
   font: var(--fw-semibold) 12px/1 var(--font-mono);
 }
 .onmap-dot {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: var(--teal-500);
+  background: var(--success-500);
   color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 9px;
+}
+
+/* drag-and-drop ordering */
+.timeline-row {
+  cursor: grab;
+}
+.timeline-row:active {
+  cursor: grabbing;
+}
+.timeline-row.is-dragging {
+  opacity: 0.45;
+}
+.drag-grip {
+  font-size: 11px;
+  color: var(--text-disabled);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+  margin-bottom: 4px;
+}
+.timeline-row:hover .drag-grip {
+  opacity: 1;
 }
 
 @media (max-width: 1024px) {
@@ -1481,11 +1604,11 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 14px 8px;
-  border: 1.5px solid var(--border-subtle);
-  background: var(--surface-card);
+  border: 1.5px solid var(--border-default);
+  background: var(--card);
   border-radius: var(--radius-md);
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font: var(--fw-semibold) 13px/1 var(--font-sans);
   transition: all var(--dur-fast) var(--ease-out);
 }
@@ -1494,12 +1617,12 @@ onMounted(async () => {
 }
 .src-btn:hover {
   border-color: var(--border-default);
-  color: var(--text-strong);
+  color: var(--text-primary);
 }
 .src-btn--on {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-  color: var(--brand-pressed);
+  border-color: var(--accent);
+  background: var(--danger-100);
+  color: var(--danger-900);
 }
 
 .src-panel {
@@ -1507,7 +1630,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 14px;
   padding: 14px;
-  background: var(--surface-sunken);
+  background: var(--surface);
   border-radius: var(--radius-md);
 }
 
@@ -1516,15 +1639,15 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: var(--surface-card);
-  border: 1.5px solid var(--teal-200);
+  background: var(--card);
+  border: 1.5px solid var(--success-100);
   border-radius: var(--radius-md);
 }
 .linked-place .linked-name {
   flex: 1;
   min-width: 0;
   font: var(--fw-semibold) 15px/1.2 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1544,39 +1667,19 @@ onMounted(async () => {
   text-decoration: underline;
 }
 
-.act-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 4px 0;
-  color: var(--text-subtle);
-}
-.act-divider::before,
-.act-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-subtle);
-}
-.act-divider span {
-  font: var(--fw-medium) 11px/1 var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .save-place-toggle {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  background: var(--surface-sunken);
+  background: var(--surface);
   border-radius: var(--radius-md);
   cursor: pointer;
   font: var(--fw-medium) 14px/1.3 var(--font-sans);
-  color: var(--text-strong);
+  color: var(--text-primary);
 }
 .save-place-toggle input {
-  accent-color: var(--brand);
+  accent-color: var(--accent);
   width: 18px;
   height: 18px;
 }

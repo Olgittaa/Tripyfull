@@ -16,13 +16,12 @@
         <h3 style="font: var(--type-h3); margin: 0 0 16px">Currency</h3>
         <div class="field">
           <label>Base currency</label>
-          <p style="font: var(--type-small); color: var(--text-muted); margin: 0 0 6px">
+          <p style="font: var(--type-small); color: var(--text-secondary); margin: 0 0 6px">
             All prices will be converted to this currency for totals.
           </p>
-          <PSelect
+          <TfSelect
             v-model="form.baseCurrency"
             :options="currencyOptions"
-            editable
             placeholder="EUR"
             class="w-full"
           />
@@ -34,13 +33,7 @@
         <h3 style="font: var(--type-h3); margin: 0 0 16px">Language</h3>
         <div class="field">
           <label>Interface language</label>
-          <PSelect
-            v-model="form.language"
-            :options="languageOptions"
-            optionLabel="label"
-            optionValue="value"
-            class="w-full"
-          />
+          <TfSelect v-model="languageLabel" :options="languageLabels" class="w-full" />
         </div>
       </div>
 
@@ -49,17 +42,13 @@
         <h3 style="font: var(--type-h3); margin: 0 0 16px">Region</h3>
         <div class="field">
           <label>Home region</label>
-          <p style="font: var(--type-small); color: var(--text-muted); margin: 0 0 6px">
+          <p style="font: var(--type-small); color: var(--text-secondary); margin: 0 0 6px">
             Optional. Used for suggestions and defaults.
           </p>
-          <PSelect
-            v-model="form.region"
-            :options="regionOptions"
-            optionLabel="label"
-            optionValue="value"
-            editable
+          <TfSelect
+            v-model="regionLabel"
+            :options="regionLabels"
             placeholder="Not set"
-            showClear
             class="w-full"
           />
         </div>
@@ -71,37 +60,25 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
           <div class="field">
             <label>Date format</label>
-            <PSelect
-              v-model="form.dateFormat"
-              :options="dateFormatOptions"
-              optionLabel="label"
-              optionValue="value"
-              class="w-full"
-            />
+            <TfSelect v-model="dateFormatLabel" :options="dateFormatLabels" class="w-full" />
           </div>
           <div class="field">
             <label>Time format</label>
-            <PSelect
-              v-model="form.timeFormat"
-              :options="timeFormatOptions"
-              optionLabel="label"
-              optionValue="value"
-              class="w-full"
-            />
+            <TfSelect v-model="timeFormatLabel" :options="timeFormatLabels" class="w-full" />
           </div>
         </div>
         <div
           style="
             margin-top: 12px;
             padding: 10px 14px;
-            background: var(--surface-sunken);
+            background: var(--surface);
             border-radius: var(--radius-md);
             font: var(--type-small);
-            color: var(--text-muted);
+            color: var(--text-secondary);
           "
         >
-          Preview: <strong style="color: var(--text-strong)">{{ datePreview }}</strong> ·
-          <strong style="color: var(--text-strong)">{{ timePreview }}</strong>
+          Preview: <strong style="color: var(--text-primary)">{{ datePreview }}</strong> ·
+          <strong style="color: var(--text-primary)">{{ timePreview }}</strong>
         </div>
       </div>
 
@@ -118,13 +95,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useToast } from 'primevue/usetoast';
 import { prefs, baseCurrency, updateSettings } from '@tripyfull/core';
 import { CURRENCIES } from '@tripyfull/core';
-import { TfButton } from '@tripyfull/ui';
+import { TfButton, TfSelect, toast } from '@tripyfull/ui';
 import { api } from '@tripyfull/core';
 
-const toast = useToast();
 const loading = ref(false);
 const saving = ref(false);
 
@@ -157,6 +132,9 @@ const languageOptions = [
 ];
 
 const regionOptions = [
+  // Region is optional — the null option lets the user clear it again
+  // (PATCH /me stores an explicit null).
+  { label: 'Not set', value: null },
   { label: 'Western Europe', value: 'Western Europe' },
   { label: 'Eastern Europe', value: 'Eastern Europe' },
   { label: 'Northern Europe', value: 'Northern Europe' },
@@ -184,6 +162,34 @@ const timeFormatOptions = [
   { label: '24-hour — 14:30', value: '24h' },
   { label: '12-hour — 2:30 PM', value: '12h' },
 ];
+
+// TfSelect works with string options; map label <-> stored value.
+function makeLabelProxy(options, key) {
+  const labels = options.map((o) => o.label);
+  const proxy = computed({
+    get() {
+      const opt = options.find((o) => o.value === form.value[key]);
+      return opt ? opt.label : '';
+    },
+    set(label) {
+      const opt = options.find((o) => o.label === label);
+      form.value[key] = opt ? opt.value : label;
+    },
+  });
+  return { labels, proxy };
+}
+
+const languageLabels = languageOptions.map((o) => o.label);
+const languageLabel = makeLabelProxy(languageOptions, 'language').proxy;
+
+const regionLabels = regionOptions.map((o) => o.label);
+const regionLabel = makeLabelProxy(regionOptions, 'region').proxy;
+
+const dateFormatLabels = dateFormatOptions.map((o) => o.label);
+const dateFormatLabel = makeLabelProxy(dateFormatOptions, 'dateFormat').proxy;
+
+const timeFormatLabels = timeFormatOptions.map((o) => o.label);
+const timeFormatLabel = makeLabelProxy(timeFormatOptions, 'timeFormat').proxy;
 
 const datePreview = computed(() => {
   const d = new Date();
@@ -244,14 +250,9 @@ const save = async () => {
   try {
     const res = await api.patch('/api/auth/me', form.value);
     updateSettings(res.data);
-    toast.add({ severity: 'success', summary: 'Saved', detail: 'Settings updated', life: 3000 });
+    toast.success('Saved', 'Settings updated');
   } catch {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to save settings',
-      life: 3000,
-    });
+    toast.danger('Error', 'Failed to save settings');
   } finally {
     saving.value = false;
   }

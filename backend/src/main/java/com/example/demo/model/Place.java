@@ -58,11 +58,11 @@ public class Place {
     private String osmId;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(16) not null")
+    @Column(nullable = false, length = 16)
     private PlaceVisibility visibility = PlaceVisibility.PRIVATE;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(16) not null")
+    @Column(nullable = false, length = 16)
     private PlaceSource source = PlaceSource.MANUAL;
 
     @ManyToOne(fetch = FetchType.LAZY)
