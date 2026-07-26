@@ -295,6 +295,9 @@
   gap: 2px;
 }
 .segmented-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   border: none;
   background: transparent;
@@ -304,8 +307,21 @@
   cursor: pointer;
   transition: all var(--dur-fast) var(--ease-out);
 }
+.segmented-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
 .segmented-btn--on {
   background: var(--card);
   color: var(--text-primary);
   box-shadow: var(--shadow-xs);
+}
+
+/* Compact variant, e.g. inline mode toggles */
+.segmented-control--xs {
+  padding: 2px;
+}
+.segmented-control--xs .segmented-btn {
+  padding: 6px 10px;
+  font-size: 12px;
 }

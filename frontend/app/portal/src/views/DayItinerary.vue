@@ -411,6 +411,37 @@
                     </span>
                   </div>
                 </TfCard>
+                <!-- @dragstart guard: a press that drifts must not hijack the row drag -->
+                <div
+                  v-if="legInfoByActivity[a.id]"
+                  class="timeline-leg"
+                  @dragstart.prevent.stop
+                >
+                  <div class="segmented-control segmented-control--xs">
+                    <button
+                      class="segmented-btn"
+                      :class="{ 'segmented-btn--on': legInfoByActivity[a.id].mode === 'foot' }"
+                      title="Walk to the next stop"
+                      @click="setLegMode(a, 'foot')"
+                    >
+                      <i class="pi pi-directions"></i>
+                    </button>
+                    <button
+                      class="segmented-btn"
+                      :class="{ 'segmented-btn--on': legInfoByActivity[a.id].mode === 'car' }"
+                      title="Drive to the next stop"
+                      @click="setLegMode(a, 'car')"
+                    >
+                      <i class="pi pi-car"></i>
+                    </button>
+                  </div>
+                  <span v-if="legInfoByActivity[a.id].data"
+                    >{{ fmtDur(legInfoByActivity[a.id].data.durationSec) }} ·
+                    {{ fmtDist(legInfoByActivity[a.id].data.distanceM) }} to next stop</span
+                  >
+                  <span v-else-if="legInfoByActivity[a.id].data === null">no route found</span>
+                  <span v-else>…</span>
+                </div>
               </div>
             </div>
           </div>
@@ -517,7 +548,14 @@
               >{{ activityMarkers.length }} point{{ activityMarkers.length === 1 ? '' : 's' }}</span
             >
           </div>
-          <BookingMap :markers="activityMarkers" numbered :height="520" />
+          <BookingMap :markers="activityMarkers" :legs="mapLegs" numbered :height="520" />
+          <div v-if="routeTotal" class="itin-route-total">
+            <i class="pi pi-directions"></i>
+            <span
+              >{{ fmtDur(routeTotal.durationSec) }} · {{ fmtDist(routeTotal.distanceM) }} ·
+              {{ activityMarkers.length }} stops</span
+            >
+          </div>
           <div v-if="!activityMarkers.length" class="itin-map-empty">
             <i class="pi pi-map" style="font-size: 22px"></i>
             <span>No places with coordinates yet</span>
@@ -785,7 +823,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   TfButton,
@@ -1157,6 +1195,153 @@ const stopNumbers = computed(() => {
   });
   return map;
 });
+
+// Per-leg road routes (OSRM via /api/geo/route): each pair of consecutive
+// mapped stops is routed with its own travel mode (activity.travelModeToNext,
+// walking by default). Results are keyed by mode+coords — toggling a leg only
+// fetches what's missing, and late responses can never mismatch their leg.
+// Non-fatal: a failed leg falls back to a straight segment and a "no route" chip.
+const LEG_CACHE_MAX = 150;
+const legCache = ref(new Map()); // key -> { durationSec, distanceM, geometry } | null (no route)
+const legsInFlight = new Set();
+let legTimer = null;
+let legRetryTimer = null;
+
+const legMode = (a) => (a.travelModeToNext === 'car' ? 'car' : 'foot');
+
+// One leg per consecutive pair of mapped stops, owned by the departing activity.
+const dayLegs = computed(() => {
+  const stops = activities.value.filter(
+    (a) => a.placeLatitude != null && a.placeLongitude != null,
+  );
+  const legs = [];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const from = stops[i];
+    const to = stops[i + 1];
+    const mode = legMode(from);
+    const points = `${Number(from.placeLatitude)},${Number(from.placeLongitude)};${Number(to.placeLatitude)},${Number(to.placeLongitude)}`;
+    legs.push({ fromId: from.id, mode, key: `${mode}|${points}` });
+  }
+  return legs;
+});
+
+// Fetch every leg without a cached result. Only a definite 404 ("no route
+// between these points" — the backend caches that verdict too) is stored as
+// null; transient failures (backend/OSRM down, timeouts) stay uncached and are
+// retried on a timer, so one blip can't pin "no route found" on a leg.
+const fetchMissingLegs = () => {
+  const missing = dayLegs.value.filter(
+    (l) => !legCache.value.has(l.key) && !legsInFlight.has(l.key),
+  );
+  missing.forEach(async ({ key }) => {
+    legsInFlight.add(key);
+    try {
+      const [mode, points] = key.split('|');
+      const res = await api.get('/api/geo/route', { params: { points, mode } });
+      legCache.value.set(key, {
+        durationSec: res.data.durationSec,
+        distanceM: res.data.distanceM,
+        geometry: res.data.geometry,
+      });
+    } catch (err) {
+      if (err.response?.status === 404) {
+        legCache.value.set(key, null); // genuinely unroutable
+      } else if (!legRetryTimer) {
+        legRetryTimer = setTimeout(() => {
+          legRetryTimer = null;
+          fetchMissingLegs();
+        }, 8000);
+      }
+    } finally {
+      legsInFlight.delete(key);
+    }
+  });
+  // keep the cache bounded; drop entries the current day no longer uses
+  if (legCache.value.size > LEG_CACHE_MAX) {
+    const keep = new Set(dayLegs.value.map((l) => l.key));
+    for (const k of legCache.value.keys()) if (!keep.has(k)) legCache.value.delete(k);
+  }
+};
+
+// Debounced — drag-reordering mutates the list many times per second.
+watch(
+  () => dayLegs.value.map((l) => l.key).join(' '),
+  () => {
+    clearTimeout(legTimer);
+    legTimer = setTimeout(fetchMissingLegs, 400);
+  },
+);
+
+onUnmounted(() => {
+  clearTimeout(legTimer);
+  clearTimeout(legRetryTimer);
+});
+
+// activity id -> its outgoing leg { mode, data } (data: undefined = loading, null = failed)
+const legInfoByActivity = computed(() => {
+  const m = {};
+  for (const l of dayLegs.value) m[l.fromId] = { mode: l.mode, data: legCache.value.get(l.key) };
+  return m;
+});
+
+// Latest requested mode per activity: quick repeated toggles are last-write-wins,
+// and stale settlements (or a reorder replacing the array) can't desync the UI.
+const pendingModeSaves = new Map(); // activity id -> mode of the newest in-flight PATCH
+const setLegMode = async (a, mode) => {
+  if (legMode(a) === mode) return;
+  const id = a.id;
+  pendingModeSaves.set(id, mode);
+  a.travelModeToNext = mode; // optimistic — dayLegs recomputes and fetches
+  try {
+    const res = await api.patch(`/api/activities/${id}`, { travelModeToNext: mode });
+    if (pendingModeSaves.get(id) !== mode) return; // superseded by a newer click
+    pendingModeSaves.delete(id);
+    // re-apply to the current object — the array may have been replaced meanwhile
+    const cur = activities.value.find((x) => x.id === id);
+    if (cur) cur.travelModeToNext = res.data.travelModeToNext;
+  } catch {
+    if (pendingModeSaves.get(id) !== mode) return; // a newer click owns the state now
+    pendingModeSaves.delete(id);
+    toast.danger('Error', 'Failed to save travel mode');
+    loadDay(dayId.value); // resync from the server instead of guessing a revert
+  }
+};
+
+// Map geometry per leg: road points when routed, straight segment while
+// loading or when unroutable.
+const mapLegs = computed(() =>
+  dayLegs.value.map((l) => {
+    const cached = legCache.value.get(l.key);
+    const [from, to] = l.key
+      .split('|')[1]
+      .split(';')
+      .map((p) => p.split(',').map(Number));
+    return {
+      mode: l.mode,
+      points: cached?.geometry?.length >= 2 ? cached.geometry : [from, to],
+    };
+  }),
+);
+
+// Whole-day totals; hidden until every leg has real numbers.
+const routeTotal = computed(() => {
+  if (!dayLegs.value.length) return null;
+  let durationSec = 0;
+  let distanceM = 0;
+  for (const l of dayLegs.value) {
+    const d = legCache.value.get(l.key);
+    if (!d) return null;
+    durationSec += d.durationSec;
+    distanceM += d.distanceM;
+  }
+  return { durationSec, distanceM };
+});
+
+const fmtDur = (sec) => {
+  const min = Math.max(1, Math.round(sec / 60));
+  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60} min`;
+};
+const fmtDist = (m) => (m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`);
 // Saved places in this day's city, for quick-add in the empty state.
 const cityPlaces = computed(() => {
   const c = (day.value?.city || '').trim().toLowerCase();
@@ -1484,6 +1669,26 @@ onMounted(async () => {
   gap: 8px;
   color: var(--text-secondary);
   font: var(--fw-medium) 13px/1 var(--font-sans);
+}
+.itin-route-total {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font: var(--fw-medium) 12px/1 var(--font-sans);
+}
+.itin-route-total i {
+  font-size: 12px;
+  color: var(--success-700);
+}
+.timeline-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0 4px;
+  color: var(--text-secondary);
+  font: var(--fw-medium) 12px/1 var(--font-sans);
 }
 
 .addfrom-title {

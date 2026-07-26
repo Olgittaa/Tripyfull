@@ -4,8 +4,14 @@ import com.example.demo.dto.ActivityRequest;
 import com.example.demo.dto.ActivityResponse;
 import com.example.demo.model.Activity;
 import com.example.demo.model.ActivityType;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Set;
 
 public final class ActivityMapper {
+
+    private static final Set<String> TRAVEL_MODES = Set.of("foot", "car");
 
     private ActivityMapper() {}
 
@@ -19,6 +25,7 @@ public final class ActivityMapper {
         a.setCostEstimate(req.costEstimate());
         a.setCostCurrency(req.costCurrency());
         a.setNotes(req.notes());
+        a.setTravelModeToNext(validTravelMode(req.travelModeToNext()));
         return a;
     }
 
@@ -31,6 +38,15 @@ public final class ActivityMapper {
         if (req.costEstimate() != null) a.setCostEstimate(req.costEstimate());
         if (req.costCurrency() != null) a.setCostCurrency(req.costCurrency());
         if (req.notes() != null) a.setNotes(req.notes());
+        if (req.travelModeToNext() != null) a.setTravelModeToNext(validTravelMode(req.travelModeToNext()));
+    }
+
+    private static String validTravelMode(String mode) {
+        if (mode == null) return null;
+        if (!TRAVEL_MODES.contains(mode)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid travel mode: " + mode);
+        }
+        return mode;
     }
 
     public static ActivityResponse toResponse(Activity a) {
@@ -48,7 +64,8 @@ public final class ActivityMapper {
                 a.getPlace() != null ? a.getPlace().getId() : null,
                 a.getPlace() != null ? a.getPlace().getName() : null,
                 a.getPlace() != null ? a.getPlace().getLatitude() : null,
-                a.getPlace() != null ? a.getPlace().getLongitude() : null
+                a.getPlace() != null ? a.getPlace().getLongitude() : null,
+                a.getTravelModeToNext()
         );
     }
 }

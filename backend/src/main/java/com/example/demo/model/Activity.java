@@ -47,6 +47,10 @@ public class Activity {
     @Column(nullable = false)
     private int orderIndex;
 
+    /** How to travel from this stop to the day's next mapped stop: foot | car (null = foot). */
+    @Column(length = 8)
+    private String travelModeToNext;
+
     public UUID getId() { return id; }
     public Day getDay() { return day; }
     public void setDay(Day day) { this.day = day; }
@@ -70,4 +74,6 @@ public class Activity {
     public void setPlace(Place place) { this.place = place; }
     public int getOrderIndex() { return orderIndex; }
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
+    public String getTravelModeToNext() { return travelModeToNext; }
+    public void setTravelModeToNext(String travelModeToNext) { this.travelModeToNext = travelModeToNext; }
 }

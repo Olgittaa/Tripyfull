@@ -18,5 +18,6 @@ public record ActivityResponse(
         UUID placeId,
         String placeName,
         BigDecimal placeLatitude,
-        BigDecimal placeLongitude
+        BigDecimal placeLongitude,
+        String travelModeToNext
 ) {}

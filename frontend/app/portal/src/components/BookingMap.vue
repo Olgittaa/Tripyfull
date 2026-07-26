@@ -14,6 +14,9 @@ const props = defineProps({
   markers: { type: Array, default: () => [] },
   numbered: { type: Boolean, default: false }, // teal numbered pins + route line
   height: { type: Number, default: 0 },
+  // [{ points: [[lat, lon], …], mode: 'foot'|'car' }] — one road geometry per leg
+  // (foot dotted, car solid); falls back to a straight dashed line when absent.
+  legs: { type: Array, default: null },
 });
 
 const el = ref(null);
@@ -85,7 +88,24 @@ function renderMarkers() {
     marker.addTo(map);
   });
 
-  if (valid.length >= 2) {
+  const routedLegs = (props.legs || []).filter(
+    (l) => Array.isArray(l.points) && l.points.length >= 2,
+  );
+  if (routedLegs.length) {
+    // Real road geometry per leg; markers may sit slightly off the path.
+    routedLegs.forEach((l) => {
+      L.polyline(
+        l.points,
+        l.mode === 'car'
+          ? { color: '#0e5c55', weight: 3, opacity: 0.9 }
+          : { color: '#0e5c55', weight: 3, dashArray: '2 7', opacity: 0.9 }, // dotted = on foot
+      ).addTo(map);
+    });
+    map.fitBounds(
+      [...routedLegs.flatMap((l) => l.points), ...valid.map((m) => [m.lat, m.lon])],
+      { padding: [40, 40] },
+    );
+  } else if (valid.length >= 2) {
     L.polyline(
       valid.map((m) => [m.lat, m.lon]),
       props.numbered
@@ -114,9 +134,9 @@ onUnmounted(() => {
 });
 
 watch(
-  () => props.markers,
-  async (newVal) => {
-    if (!newVal.some((m) => m.lat && m.lon)) return;
+  [() => props.markers, () => props.legs],
+  async ([markers]) => {
+    if (!markers.some((m) => m.lat && m.lon)) return;
     if (!map) {
       await initMap();
     } else {
