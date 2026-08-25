@@ -96,7 +96,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { prefs, baseCurrency, updateSettings } from '@tripyfull/core';
-import { CURRENCIES } from '@tripyfull/core';
+import { CURRENCIES, MONTHS_SHORT } from '@tripyfull/core';
 import { TfButton, TfSelect, toast } from '@tripyfull/ui';
 import { api } from '@tripyfull/core';
 
@@ -196,20 +196,6 @@ const datePreview = computed(() => {
   const day = d.getDate();
   const mon = String(d.getMonth() + 1).padStart(2, '0');
   const yr = d.getFullYear();
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
   switch (form.value.dateFormat) {
     case 'MM/DD/YYYY':
       return `${mon}/${String(day).padStart(2, '0')}/${yr}`;
@@ -218,7 +204,7 @@ const datePreview = computed(() => {
     case 'DD.MM.YYYY':
       return `${String(day).padStart(2, '0')}.${mon}.${yr}`;
     case 'D MMM YYYY':
-      return `${day} ${months[d.getMonth()]} ${yr}`;
+      return `${day} ${MONTHS_SHORT[d.getMonth()]} ${yr}`;
     default:
       return `${String(day).padStart(2, '0')}/${mon}/${yr}`;
   }

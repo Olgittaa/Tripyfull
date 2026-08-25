@@ -841,7 +841,13 @@ import {
 import BookingMap from '@/components/BookingMap.vue';
 import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { formatDualPrice, CURRENCIES } from '@tripyfull/core';
+import {
+  formatDualPrice,
+  CURRENCIES,
+  toDateStr,
+  parseDate,
+  formatDateShort,
+} from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 
 const route = useRoute();
@@ -1217,22 +1223,6 @@ const bookingMeta = (b) => {
   return '';
 };
 
-const toDateStr = (d) => {
-  if (!d) return null;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-};
-
-// Parse 'YYYY-MM-DD' as LOCAL midnight — new Date('YYYY-MM-DD') is UTC and
-// shifts a day back for users west of UTC, corrupting dates on each edit.
-const parseDate = (s) => {
-  if (!s) return null;
-  const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
-
 // Stay dates must fall inside the trip; the server allows check-out up to
 // trip end + 1 day (leaving on the morning after the last day).
 const stayMinDate = computed(() => parseDate(tripStartDate.value));
@@ -1531,25 +1521,6 @@ const importCsv = async (event) => {
   event.target.value = '';
 };
 
-const formatDateShort = (d) => {
-  if (!d) return '—';
-  const dt = new Date(d);
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return `${dt.getDate()} ${months[dt.getMonth()]}`;
-};
 const formatDateTime = (d) => {
   if (!d) return '—';
   const dt = new Date(d);

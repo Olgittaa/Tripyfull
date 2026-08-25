@@ -5,7 +5,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/tripdb
 spring.datasource.username=postgres
 spring.datasource.password=CHANGE_ME
 
-spring.jpa.hibernate.ddl-auto=update
+# Schema is managed by Flyway migrations (db/migration); Hibernate only validates.
 spring.jpa.show-sql=true
 
 # Must be at least 32 characters.

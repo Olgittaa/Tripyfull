@@ -554,7 +554,7 @@ import {
   toast,
 } from '@tripyfull/ui';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { api } from '@tripyfull/core';
+import { api, formatDateShort } from '@tripyfull/core';
 
 const route = useRoute();
 
@@ -713,26 +713,6 @@ const fmt = (v) => `${Number(v || 0).toFixed(2)}`;
 const delta = (actual, planned) => {
   const d = Number(actual) - Number(planned);
   return (d > 0 ? '+' : '') + d.toFixed(2);
-};
-
-const formatDateShort = (d) => {
-  if (!d) return '—';
-  const dt = new Date(d);
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return `${dt.getDate()} ${months[dt.getMonth()]}`;
 };
 
 const toggleMetric = (m) => {

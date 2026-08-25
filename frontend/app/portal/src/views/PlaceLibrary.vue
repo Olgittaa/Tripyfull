@@ -74,7 +74,12 @@
         <TfSelect
           label="Country"
           :modelValue="countryLabel(filterCountry)"
-          @update:modelValue="(v) => { filterCountry = countryValue(v); loadPlaces(); }"
+          @update:modelValue="
+            (v) => {
+              filterCountry = countryValue(v);
+              loadPlaces();
+            }
+          "
           :options="countryLabels"
           placeholder="All"
         />
@@ -83,7 +88,12 @@
         <TfSelect
           label="Type"
           :modelValue="typeLabelFromValue(filterType)"
-          @update:modelValue="(v) => { filterType = typeValueFromLabel(v); loadPlaces(); }"
+          @update:modelValue="
+            (v) => {
+              filterType = typeValueFromLabel(v);
+              loadPlaces();
+            }
+          "
           :options="typeLabels"
           placeholder="All"
         />
@@ -92,7 +102,12 @@
         <TfSelect
           label="Visibility"
           :modelValue="visibilityLabelFromValue(filterVisibility)"
-          @update:modelValue="(v) => { filterVisibility = visibilityValueFromLabel(v); loadPlaces(); }"
+          @update:modelValue="
+            (v) => {
+              filterVisibility = visibilityValueFromLabel(v);
+              loadPlaces();
+            }
+          "
           :options="visibilityLabels"
           placeholder="All"
         />
@@ -101,7 +116,12 @@
         <TfSelect
           label="Source"
           :modelValue="sourceLabelFromValue(filterSource)"
-          @update:modelValue="(v) => { filterSource = sourceValueFromLabel(v); loadPlaces(); }"
+          @update:modelValue="
+            (v) => {
+              filterSource = sourceValueFromLabel(v);
+              loadPlaces();
+            }
+          "
           :options="sourceLabels"
           placeholder="All"
         />
@@ -113,7 +133,12 @@
         <TfSelect
           label="Sort"
           :modelValue="sortLabelFromValue(sortBy)"
-          @update:modelValue="(v) => { sortBy = sortValueFromLabel(v); loadPlaces(); }"
+          @update:modelValue="
+            (v) => {
+              sortBy = sortValueFromLabel(v);
+              loadPlaces();
+            }
+          "
           :options="sortLabels"
         />
       </div>
@@ -187,6 +212,10 @@
 
             <div class="place-card-tags">
               <TfBadge tone="neutral" variant="soft">{{ typeLabel(p.type) }}</TfBadge>
+              <TfBadge v-if="p.priority === 'MUST_SEE'" tone="gold" variant="soft"
+                >⭐ Must see</TfBadge
+              >
+              <TfBadge v-if="p.needsBooking" tone="brand" variant="soft" dot>Book ahead</TfBadge>
               <TfBadge
                 v-if="!(p.photos && p.photos.length)"
                 :tone="p.visibility === 'PUBLIC' ? 'success' : 'neutral'"
@@ -264,6 +293,10 @@
               >
                 {{ p.name }}
                 <TfBadge tone="neutral" variant="soft">{{ typeLabel(p.type) }}</TfBadge>
+                <TfBadge v-if="p.priority === 'MUST_SEE'" tone="gold" variant="soft"
+                  >⭐ Must see</TfBadge
+                >
+                <TfBadge v-if="p.needsBooking" tone="brand" variant="soft" dot>Book ahead</TfBadge>
                 <TfBadge :tone="p.visibility === 'PUBLIC' ? 'success' : 'neutral'" variant="soft">{{
                   p.visibility === 'PUBLIC' ? 'Public' : 'Private'
                 }}</TfBadge>
@@ -353,20 +386,33 @@
         </div>
         <div class="form-row">
           <div style="flex: 1">
-            <TfNumberInput
-              v-model="form.latitude"
-              label="Latitude"
-              type="plain"
-              :precision="7"
-            />
+            <TfNumberInput v-model="form.latitude" label="Latitude" type="plain" :precision="7" />
           </div>
           <div style="flex: 1">
-            <TfNumberInput
-              v-model="form.longitude"
-              label="Longitude"
-              type="plain"
-              :precision="7"
-            />
+            <TfNumberInput v-model="form.longitude" label="Longitude" type="plain" :precision="7" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex: 1">
+            <div class="field">
+              <label>Priority</label>
+              <TfSegmentedControl
+                :modelValue="form.priority === 'MUST_SEE' ? '⭐ Must see' : 'Optional'"
+                @update:modelValue="
+                  (v) => (form.priority = v === '⭐ Must see' ? 'MUST_SEE' : 'OPTIONAL')
+                "
+                :options="['⭐ Must see', 'Optional']"
+                size="sm"
+              />
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; align-items: flex-end">
+            <label class="save-place-toggle">
+              <input type="checkbox" v-model="form.needsBooking" />
+              <span
+                ><i class="pi pi-ticket" style="font-size: 13px"></i> Needs advance booking</span
+              >
+            </label>
           </div>
         </div>
         <TfInput v-model="form.description" label="Description" />
@@ -460,6 +506,7 @@ import {
   TfButton,
   TfInput,
   TfSelect,
+  TfSegmentedControl,
   TfNumberInput,
   TfModal,
   TfPlaceSearch,
@@ -469,7 +516,7 @@ import {
 import { useTripStore } from '@/stores/tripStore.js';
 import { useRoute, useRouter } from 'vue-router';
 import { FEATURES } from '@/config.js';
-import { api } from '@tripyfull/core';
+import { api, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
 
 const tripStore = useTripStore();
 const route = useRoute();
@@ -566,20 +613,7 @@ const chipStyle = (active) => ({
   gap: '6px',
 });
 
-const typeOptions = [
-  { label: 'Sightseeing', value: 'SIGHTSEEING' },
-  { label: 'Beach', value: 'BEACH' },
-  { label: 'Nature', value: 'NATURE' },
-  { label: 'Restaurant', value: 'RESTAURANT' },
-  { label: 'Museum', value: 'MUSEUM' },
-  { label: 'Viewpoint', value: 'VIEWPOINT' },
-  { label: 'Port', value: 'PORT' },
-  { label: 'Airport', value: 'AIRPORT' },
-  { label: 'Neighborhood', value: 'NEIGHBORHOOD' },
-  { label: 'Park', value: 'PARK' },
-  { label: 'Shop', value: 'SHOP' },
-  { label: 'Other', value: 'OTHER' },
-];
+const typeOptions = PLACE_TYPE_OPTIONS;
 const visibilityOptions = [
   { label: 'Private', value: 'PRIVATE' },
   { label: 'Public', value: 'PUBLIC' },
@@ -593,8 +627,7 @@ const typeValueFromLabel = (l) => typeOptions.find((o) => o.label === l)?.value 
 
 const visibilityLabels = visibilityOptions.map((o) => o.label);
 const visibilityLabelFromValue = (v) => visibilityOptions.find((o) => o.value === v)?.label ?? null;
-const visibilityValueFromLabel = (l) =>
-  visibilityOptions.find((o) => o.label === l)?.value ?? null;
+const visibilityValueFromLabel = (l) => visibilityOptions.find((o) => o.label === l)?.value ?? null;
 
 const sourceLabels = sourceOptions.map((o) => o.label);
 const sourceLabelFromValue = (v) => sourceOptions.find((o) => o.value === v)?.label ?? null;
@@ -619,25 +652,11 @@ const linkLabel = (url) => {
   }
 };
 
-// Per-type icon + warm color, matching the Tripyfull category styling.
-const TYPE_META = {
-  SIGHTSEEING: { e: '🏛', bg: 'var(--success-100)', c: 'var(--accent)' },
-  BEACH: { e: '🏖', bg: 'var(--warning-100)', c: 'var(--warning-300)' },
-  NATURE: { e: '🌿', bg: 'var(--success-100)', c: 'var(--success-300)' },
-  RESTAURANT: { e: '🍽', bg: 'var(--warning-100)', c: 'var(--warning-300)' },
-  MUSEUM: { e: '🏺', bg: 'var(--danger-100)', c: 'var(--accent)' },
-  VIEWPOINT: { e: '🌄', bg: 'var(--warning-100)', c: 'var(--warning-500)' },
-  PORT: { e: '⛴', bg: 'var(--success-100)', c: 'var(--accent)' },
-  AIRPORT: { e: '✈️', bg: 'var(--success-100)', c: 'var(--accent)' },
-  NEIGHBORHOOD: { e: '🏘', bg: 'var(--danger-100)', c: 'var(--accent)' },
-  PARK: { e: '🌳', bg: 'var(--success-100)', c: 'var(--success-300)' },
-  SHOP: { e: '🛍', bg: 'var(--danger-100)', c: 'var(--danger-500)' },
-  OTHER: { e: '📍', bg: 'var(--surface)', c: 'var(--ink-500)' },
-};
-const typeEmoji = (t) => (TYPE_META[t] || TYPE_META.OTHER).e;
+// Per-type icon + warm color (shared via @tripyfull/core).
+const typeEmoji = (t) => placeTypeMeta(t).emoji;
 const typeStyle = (t) => {
-  const m = TYPE_META[t] || TYPE_META.OTHER;
-  return { background: m.bg, color: m.c };
+  const m = placeTypeMeta(t);
+  return { background: m.bg, color: m.color };
 };
 const countryName = (code) => allCountries.value.find((c) => c.code === code)?.name || code || '';
 
@@ -651,6 +670,8 @@ const emptyForm = {
   longitude: null,
   description: '',
   visibility: 'PRIVATE',
+  priority: 'OPTIONAL',
+  needsBooking: false,
 };
 const form = ref({ ...emptyForm });
 const photosText = ref('');
@@ -675,6 +696,8 @@ const openDialog = (p) => {
       longitude: p.longitude,
       description: p.description || '',
       visibility: p.visibility || 'PRIVATE',
+      priority: p.priority || 'OPTIONAL',
+      needsBooking: !!p.needsBooking,
     };
     photosText.value = (p.photos || []).join(', ');
     linksText.value = (p.links || []).join(', ');

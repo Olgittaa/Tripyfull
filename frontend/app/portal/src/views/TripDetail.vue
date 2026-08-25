@@ -244,10 +244,16 @@
         "
       >
         <h3 style="font: var(--type-h3); margin: 0">Trip days</h3>
-        <TfButton v-if="days.length" size="sm" variant="ghost" @click="goToFirstDay">
-          Open itinerary <i class="pi pi-chevron-right" style="font-size: 12px"></i>
-        </TfButton>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <TfButton v-if="days.length" size="sm" variant="secondary" @click="showAutoPlan = true">
+            <i class="pi pi-sparkles" style="font-size: 12px"></i> Auto-plan
+          </TfButton>
+          <TfButton v-if="days.length" size="sm" variant="ghost" @click="goToFirstDay">
+            Open itinerary <i class="pi pi-chevron-right" style="font-size: 12px"></i>
+          </TfButton>
+        </div>
       </div>
+      <AutoPlanModal v-model="showAutoPlan" :trip-id="tripId" @applied="fetchDays" />
 
       <div
         v-if="daysLoading"
@@ -474,6 +480,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTripStore } from '@/stores/tripStore.js';
+import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import {
   TfButton,
   TfBadge,
@@ -489,6 +496,15 @@ import {
 } from '@tripyfull/ui';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
+import {
+  toDateStr,
+  parseDate,
+  diffInDays,
+  formatDateShort,
+  formatDateRange,
+  tripStatusLabel as statusLabel,
+  tripStatusTone as statusTone,
+} from '@tripyfull/core';
 
 const route = useRoute();
 const router = useRouter();
@@ -503,6 +519,7 @@ const saving = ref(false);
 const editForm = ref({});
 const editDateRange = ref(null);
 const daysLoading = ref(false);
+const showAutoPlan = ref(false);
 const rescheduleConfirm = ref(false);
 const pendingEdit = ref(null);
 const editingDayId = ref(null);
@@ -523,11 +540,6 @@ const editStatusLabel = computed({
   },
 });
 
-const statusLabel = (s) =>
-  ({ DRAFT: 'Draft', PLANNED: 'Planned', ACTIVE: 'Active', COMPLETED: 'Completed' })[s];
-const statusTone = (s) =>
-  ({ DRAFT: 'neutral', PLANNED: 'gold', ACTIVE: 'brand', COMPLETED: 'success' })[s] || 'neutral';
-
 const upcomingPayments = computed(() => (budgetData.value?.upcomingPayments || []).slice(0, 3));
 const fmtMoney = (v) => Number(v || 0).toFixed(2);
 const catIcon = (c) =>
@@ -539,23 +551,6 @@ const catIconStyle = (c) =>
     ACCOMMODATION: { background: 'var(--danger-100)', color: 'var(--accent)' },
     ACTIVITY: { background: 'var(--success-100)', color: 'var(--success-300)' },
   })[c] || { background: 'var(--surface)', color: 'var(--ink-500)' };
-
-const toDateStr = (d) => {
-  if (!d) return null;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-};
-
-// Parse a Date or 'YYYY-MM-DD' string into a local-midnight Date (timezone-safe).
-const parseDate = (v) => {
-  if (!v) return null;
-  if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
-  const [y, m, d] = String(v).slice(0, 10).split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
-const diffInDays = (a, b) => Math.round((parseDate(b) - parseDate(a)) / 86400000);
 
 // What will happen to the itinerary if the edited dates are applied.
 const rescheduleImpact = computed(() => {
@@ -721,29 +716,6 @@ const saveDayCity = async (dayId) => {
 };
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '—');
-const formatDateShort = (d) => {
-  if (!d) return '—';
-  const dt = new Date(d);
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return `${dt.getDate()} ${months[dt.getMonth()]}`;
-};
-const formatDateRange = (start, end) => {
-  if (!start) return '';
-  return `${formatDateShort(start)} – ${formatDateShort(end)}`;
-};
 
 onMounted(async () => {
   try {

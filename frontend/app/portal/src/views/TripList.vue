@@ -14,11 +14,7 @@
 
     <!-- Filter -->
     <div style="margin-bottom: 20px">
-      <TfSegmentedControl
-        v-model="filterLabel"
-        :options="filterLabels"
-        class="status-filter"
-      />
+      <TfSegmentedControl v-model="filterLabel" :options="filterLabels" class="status-filter" />
     </div>
 
     <!-- Loading skeleton -->
@@ -92,10 +88,7 @@
             : 'No trips with this status.'
         }}
       </p>
-      <TfButton
-        v-if="filterStatus === 'ALL'"
-        icon="pi-plus"
-        @click="showDialog = true"
+      <TfButton v-if="filterStatus === 'ALL'" icon="pi-plus" @click="showDialog = true"
         >New trip</TfButton
       >
     </div>
@@ -140,6 +133,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useTripStore } from '@/stores/tripStore.js';
+import {
+  toDateStr,
+  formatDateShort,
+  tripStatusLabel as statusLabel,
+  tripStatusTone as statusTone,
+} from '@tripyfull/core';
 import {
   TfBadge,
   TfCitySearch,
@@ -204,25 +203,6 @@ const washClass = (status) =>
     COMPLETED: 'wash-dusk',
   })[status] || 'wash-neutral';
 
-const statusTone = (status) =>
-  ({
-    DRAFT: 'neutral',
-    PLANNED: 'gold',
-    ACTIVE: 'brand',
-    COMPLETED: 'success',
-  })[status] || 'neutral';
-
-const statusLabel = (s) =>
-  ({ DRAFT: 'Draft', PLANNED: 'Planned', ACTIVE: 'Active', COMPLETED: 'Completed' })[s];
-
-const toDateStr = (d) => {
-  if (!d) return null;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-};
-
 const addTrip = async () => {
   adding.value = true;
   try {
@@ -274,26 +254,7 @@ const onDialogToggle = (open) => {
   if (!open) resetForm();
 };
 
-const formatDate = (d) => {
-  if (!d) return '—';
-  const dt = new Date(d);
-  const day = dt.getDate();
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return `${day} ${months[dt.getMonth()]}`;
-};
+const formatDate = formatDateShort;
 
 onMounted(() => {
   store.fetchAll().catch(() => {

@@ -27,7 +27,7 @@ frontend/
 ```
 @tripyfull/core   →  no workspace deps (axios + vue only). The circle-breaker.
 @tripyfull/ui     →  may depend on @tripyfull/core (+ vue)
-app/portal        →  depends on ui + core (+ vue-router, pinia, primevue, leaflet)
+app/portal        →  depends on ui + core (+ vue-router, pinia, leaflet, primeicons)
 app/dev           →  depends on ui + core (+ vue-router)
 ```
 

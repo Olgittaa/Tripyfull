@@ -119,7 +119,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { username, baseCurrency, clearAuth } from '@tripyfull/core';
+import { username, baseCurrency, clearAuth, formatDateRange } from '@tripyfull/core';
 import { useTripStore } from '@/stores/tripStore.js';
 import { TfAvatar, TfIcon, TfToastHost, TfConfirmHost } from '@tripyfull/ui';
 
@@ -165,29 +165,6 @@ const currentTrip = computed(() => {
 });
 
 const isExactRoute = (path) => route.path === path;
-
-const formatDateRange = (start, end) => {
-  const fmt = (d) => {
-    const dt = new Date(d);
-    const day = dt.getDate();
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return `${day} ${months[dt.getMonth()]}`;
-  };
-  return `${fmt(start)} – ${fmt(end)}`;
-};
 
 // When trip ID changes, make sure the sidebar has the trip's data
 // (the Itinerary link resolves its target day at click time via /itinerary).

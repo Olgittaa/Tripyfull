@@ -8,9 +8,9 @@ rest.** All third-party calls happen on the backend only; keys never reach the f
 
 ## Stack and structure (monorepo)
 
-- **Backend** (`backend/`) — Spring Boot + PostgreSQL, JWT authentication, JPA (`ddl-auto=update`).
-- **Frontend** (`frontend/`) — Vue 3 + Pinia + PrimeVue + Vue Router + Leaflet.
-- **Design system** (`design-system/`) — Tripyfull tokens, styles, and UI kit.
+- **Backend** (`backend/`) — Spring Boot + PostgreSQL, JWT authentication, JPA + Flyway migrations.
+- **Frontend** (`frontend/`) — Vue 3 + Pinia + Vue Router + Leaflet.
+- **Design system** — tokens and styles live in `frontend/lib/ui/src/styles/` (see ARCHITECTURE.md).
 - Secrets (DB, jwt, API keys) live in `application-local.properties` (outside git).
 - Visual language comes from the Tripyfull mockup system (Claude Design).
 
@@ -62,17 +62,16 @@ rest.** All third-party calls happen on the backend only; keys never reach the f
 
 ## Design system
 
-A warm "paper" palette (`--paper`, coral brand, teal accent, gold), fonts
+A warm "paper" palette (teal primary, coral accent, gold warning), fonts
 Bricolage Grotesque / Hanken Grotesk / JetBrains Mono, generous radii, pill badges and
 buttons, cards with a soft shadow and hover lift, eyebrow labels. All via
-CSS tokens in `src/index.css` + PrimeVue overrides.
+CSS tokens in `lib/ui/src/styles/abstracts/variables.css` (see CLAUDE.md).
 
 ## Engineering notes
 
-- `ddl-auto=update` won't alter existing CHECK constraints and won't add NOT NULL to
-  non-empty tables — so new enum values go through `columnDefinition`, new columns are
-  nullable, and the stale `places_source_check` is dropped by the `SchemaFixup`
-  auto-runner at startup.
+- Schema changes go through Flyway migrations (`backend/src/main/resources/db/migration`);
+  Hibernate runs with `ddl-auto=validate`. `V1__baseline.sql` captures the pre-Flyway
+  schema — existing databases are baselined past it via `baseline-on-migrate`.
 - Budget math converts everything to the user's base currency (stored booking rates →
   live rates → raw pass-through); changing the base currency clears stored booking rates
   so they re-resolve. The day-itinerary cost widget still sums raw amounts client-side.

@@ -69,6 +69,24 @@
           >
             <i class="pi pi-sort-amount-down" style="font-size: 13px"></i> Sort by time
           </TfButton>
+          <TfButton
+            variant="ghost"
+            size="sm"
+            @click="toggleBuffer"
+            title="Buffer day: intentionally unplanned (weather, rest, spontaneous finds)"
+          >
+            <i class="pi pi-pause-circle" style="font-size: 13px"></i>
+            {{ day?.isBuffer ? 'Buffer ✓' : 'Buffer' }}
+          </TfButton>
+          <TfButton
+            v-if="allDays.length > 1"
+            variant="ghost"
+            size="sm"
+            @click="openSwapModal"
+            title="Swap this day's plan with another day"
+          >
+            <i class="pi pi-arrow-right-arrow-left" style="font-size: 13px"></i> Swap
+          </TfButton>
           <TfButton variant="primary" @click="openAddDialog">
             <i class="pi pi-plus" style="font-size: 14px"></i> Activity
           </TfButton>
@@ -84,7 +102,7 @@
           :class="d.id === dayId ? 'day-picker-btn--on' : 'day-picker-btn--off'"
           @click="switchDay(d.id)"
         >
-          <div class="day-picker-label">D{{ d.dayNumber }}</div>
+          <div class="day-picker-label">D{{ d.dayNumber }}{{ d.isBuffer ? ' ☕' : '' }}</div>
           <div class="day-picker-date">{{ formatDateShort(d.date) }}</div>
         </button>
       </div>
@@ -352,6 +370,9 @@
                         <TfBadge v-if="a.type" tone="neutral" variant="soft">{{
                           typeLabel(a.type)
                         }}</TfBadge>
+                        <TfBadge v-if="a.needsBooking" tone="gold" variant="soft" dot
+                          >Book ahead</TfBadge
+                        >
                       </div>
                       <div
                         style="
@@ -412,11 +433,7 @@
                   </div>
                 </TfCard>
                 <!-- @dragstart guard: a press that drifts must not hijack the row drag -->
-                <div
-                  v-if="legInfoByActivity[a.id]"
-                  class="timeline-leg"
-                  @dragstart.prevent.stop
-                >
+                <div v-if="legInfoByActivity[a.id]" class="timeline-leg" @dragstart.prevent.stop>
                   <div class="segmented-control segmented-control--xs">
                     <button
                       class="segmented-btn"
@@ -548,7 +565,18 @@
               >{{ activityMarkers.length }} point{{ activityMarkers.length === 1 ? '' : 's' }}</span
             >
           </div>
-          <BookingMap :markers="activityMarkers" :legs="mapLegs" numbered :height="520" />
+          <BookingMap
+            :markers="activityMarkers"
+            :legs="mapLegs"
+            :dots="libraryDots"
+            numbered
+            :height="520"
+            @dot-add="onMapDotAdd"
+          />
+          <div v-if="libraryDots.length" class="text-subtle text-xs" style="margin-top: 6px">
+            <i class="pi pi-circle-fill" style="font-size: 8px; opacity: 0.5"></i>
+            Grey dots — your saved places nearby; click one to add it to this day.
+          </div>
           <div v-if="routeTotal" class="itin-route-total">
             <i class="pi pi-directions"></i>
             <span
@@ -808,6 +836,13 @@
             />
           </div>
           <TfInput label="Notes" v-model="form.notes" placeholder="Any details" class="w-full" />
+          <label class="save-place-toggle">
+            <input type="checkbox" v-model="form.needsBooking" />
+            <span
+              ><i class="pi pi-ticket" style="font-size: 13px"></i> Needs advance booking (tour,
+              show, popular spot)</span
+            >
+          </label>
         </TfDrawerSection>
       </form>
       <template #footer>
@@ -819,6 +854,27 @@
         >
       </template>
     </TfDrawer>
+
+    <!-- Swap-days modal -->
+    <TfModal v-model="showSwapModal" title="Swap days">
+      <p class="text-muted text-sm" style="margin: 0 0 12px">
+        The two days trade their plans — activities, cities, stays and notes. Date-bound things
+        (expenses, the linked overnight booking) stay on their dates.
+      </p>
+      <TfSelect
+        label="Swap this day with"
+        v-model="swapTargetLabel"
+        :options="swapDayLabels"
+        placeholder="Pick a day"
+        class="w-full"
+      />
+      <div class="dialog-actions" style="margin-top: 16px">
+        <TfButton variant="ghost" @click="showSwapModal = false">Cancel</TfButton>
+        <TfButton variant="primary" :disabled="!swapTargetLabel || swapping" @click="doSwap">
+          {{ swapping ? 'Swapping…' : 'Swap' }}
+        </TfButton>
+      </div>
+    </TfModal>
   </div>
 </template>
 
@@ -837,6 +893,7 @@ import {
   TfInput,
   TfSelect,
   TfNumberInput,
+  TfModal,
   TfTooltip,
   toast,
   confirm,
@@ -844,7 +901,7 @@ import {
 import BookingMap from '@/components/BookingMap.vue';
 import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { CURRENCIES } from '@tripyfull/core';
+import { CURRENCIES, formatDateShort, placeTypeMeta, PLACE_TYPE_META } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 const currencyOptions = CURRENCIES;
 
@@ -882,6 +939,7 @@ const emptyForm = {
   placeId: null,
   latitude: null,
   longitude: null,
+  needsBooking: false,
 };
 const form = ref({ ...emptyForm });
 
@@ -942,25 +1000,12 @@ const onPlacePicked = (id) => {
 
 const saveToPlaces = ref(false);
 
-// Place-type meta for the "Add from places" cards.
-const PLACE_TYPE_META = {
-  SIGHTSEEING: { e: '🏛', bg: 'var(--success-100)', c: 'var(--accent)', l: 'Sightseeing' },
-  BEACH: { e: '🏖', bg: 'var(--warning-100)', c: 'var(--warning-300)', l: 'Beach' },
-  NATURE: { e: '🌿', bg: 'var(--success-100)', c: 'var(--success-300)', l: 'Nature' },
-  RESTAURANT: { e: '🍽', bg: 'var(--warning-100)', c: 'var(--warning-300)', l: 'Restaurant' },
-  MUSEUM: { e: '🏺', bg: 'var(--danger-100)', c: 'var(--accent)', l: 'Museum' },
-  VIEWPOINT: { e: '🌄', bg: 'var(--warning-100)', c: 'var(--warning-500)', l: 'Viewpoint' },
-  PORT: { e: '⛴', bg: 'var(--success-100)', c: 'var(--accent)', l: 'Port' },
-  AIRPORT: { e: '✈️', bg: 'var(--success-100)', c: 'var(--accent)', l: 'Airport' },
-  NEIGHBORHOOD: { e: '🏘', bg: 'var(--danger-100)', c: 'var(--accent)', l: 'Neighborhood' },
-  PARK: { e: '🌳', bg: 'var(--success-100)', c: 'var(--success-300)', l: 'Park' },
-  SHOP: { e: '🛍', bg: 'var(--danger-100)', c: 'var(--danger-500)', l: 'Shop' },
-  OTHER: { e: '📍', bg: 'var(--surface)', c: 'var(--ink-500)', l: 'Place' },
-};
-const pm = (t) => PLACE_TYPE_META[t] || PLACE_TYPE_META.OTHER;
-const placeTypeEmoji = (t) => pm(t).e;
-const placeTypeStyle = (t) => ({ background: pm(t).bg, color: pm(t).c });
-const placeTypeLabel = (t) => pm(t).l;
+// Place-type meta for the "Add from places" cards (shared via @tripyfull/core).
+const placeTypeEmoji = (t) => placeTypeMeta(t).emoji;
+const placeTypeStyle = (t) => ({ background: placeTypeMeta(t).bg, color: placeTypeMeta(t).color });
+// Untyped places read better as "Place" than "Other" on the cards.
+const placeTypeLabel = (t) =>
+  t && t !== 'OTHER' && PLACE_TYPE_META[t] ? PLACE_TYPE_META[t].label : 'Place';
 
 const PLACE_TO_ACT = {
   BEACH: 'BEACH',
@@ -1176,6 +1221,25 @@ const dayTotal = computed(() =>
   activities.value.reduce((s, a) => s + (Number(a.costEstimate) || 0), 0),
 );
 
+// Saved places near the route: grey context dots on the map. Places already
+// planned today are hidden — they're route pins.
+const libraryDots = computed(() => {
+  const planned = new Set(activities.value.map((a) => a.placeId).filter(Boolean));
+  return placesLib.value
+    .filter((p) => p.latitude != null && p.longitude != null && !planned.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      lat: Number(p.latitude),
+      lon: Number(p.longitude),
+      label: (p.priority === 'MUST_SEE' ? '⭐ ' : '') + p.name,
+      sub: placeTypeLabel(p.type) + (p.needsBooking ? ' · book ahead' : ''),
+    }));
+});
+const onMapDotAdd = (id) => {
+  const p = placesLib.value.find((x) => x.id === id);
+  if (p) openAddFromPlace(p);
+};
+
 // Pins for activities whose linked place has coordinates (ordered = numbered).
 const activityMarkers = computed(() =>
   activities.value
@@ -1211,9 +1275,7 @@ const legMode = (a) => (a.travelModeToNext === 'car' ? 'car' : 'foot');
 
 // One leg per consecutive pair of mapped stops, owned by the departing activity.
 const dayLegs = computed(() => {
-  const stops = activities.value.filter(
-    (a) => a.placeLatitude != null && a.placeLongitude != null,
-  );
+  const stops = activities.value.filter((a) => a.placeLatitude != null && a.placeLongitude != null);
   const legs = [];
   for (let i = 0; i < stops.length - 1; i++) {
     const from = stops[i];
@@ -1454,6 +1516,47 @@ const switchDay = (id) => {
   loadDay(id);
 };
 
+// Buffer flag: this day is deliberately left unplanned (auto-plan skips it too).
+const toggleBuffer = async () => {
+  try {
+    const res = await api.patch(`/api/days/${dayId.value}`, { isBuffer: !day.value?.isBuffer });
+    updateDayLocal(res.data);
+    toast.success('Saved', res.data.isBuffer ? 'Marked as buffer day' : 'Buffer flag removed');
+  } catch {
+    toast.danger('Error', 'Failed to update the day');
+  }
+};
+
+// Swap this day's plan with another day of the trip.
+const showSwapModal = ref(false);
+const swapping = ref(false);
+const swapTargetLabel = ref(null);
+const swapDayOptions = computed(() =>
+  allDays.value
+    .filter((d) => d.id !== dayId.value)
+    .map((d) => ({ label: `Day ${d.dayNumber} · ${formatDateShort(d.date)}`, value: d.id })),
+);
+const swapDayLabels = computed(() => swapDayOptions.value.map((o) => o.label));
+const openSwapModal = () => {
+  swapTargetLabel.value = null;
+  showSwapModal.value = true;
+};
+const doSwap = async () => {
+  const target = swapDayOptions.value.find((o) => o.label === swapTargetLabel.value)?.value;
+  if (!target) return;
+  swapping.value = true;
+  try {
+    await api.post(`/api/trips/${tripId}/days/${dayId.value}/swap/${target}`);
+    showSwapModal.value = false;
+    await loadDay(dayId.value);
+    toast.success('Swapped', `Plans traded with ${swapTargetLabel.value}`);
+  } catch {
+    toast.danger('Error', 'Failed to swap days');
+  } finally {
+    swapping.value = false;
+  }
+};
+
 // The route can also change without switchDay — sidebar "Itinerary" link,
 // browser back/forward. The component is reused, so react to the param.
 watch(
@@ -1512,6 +1615,7 @@ const startEdit = (a) => {
     notes: a.notes || '',
     placeId: a.placeId || null,
     costCurrency: a.costCurrency || accountCurrency.value,
+    needsBooking: !!a.needsBooking,
   };
   saveToPlaces.value = false;
   actSource.value = a.placeId ? 'search' : 'manual';
@@ -1596,26 +1700,6 @@ const confirmDelete = (a) => {
       }
     }
   });
-};
-
-const formatDateShort = (d) => {
-  if (!d) return '—';
-  const dt = new Date(d);
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return `${dt.getDate()} ${months[dt.getMonth()]}`;
 };
 
 onMounted(async () => {

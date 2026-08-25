@@ -17,13 +17,19 @@ const props = defineProps({
   // [{ points: [[lat, lon], …], mode: 'foot'|'car' }] — one road geometry per leg
   // (foot dotted, car solid); falls back to a straight dashed line when absent.
   legs: { type: Array, default: null },
+  // Context layer: nearby saved places as small muted dots — [{ id, lat, lon, label, sub }].
+  // Excluded from fitBounds so the view stays framed on the actual route.
+  dots: { type: Array, default: () => [] },
 });
+const emit = defineEmits(['dot-add']);
 
 const el = ref(null);
 let map = null;
 let L = null;
 
-const hasMarkers = computed(() => props.markers.some((m) => m.lat && m.lon));
+const hasMarkers = computed(
+  () => props.markers.some((m) => m.lat && m.lon) || props.dots.some((d) => d.lat && d.lon),
+);
 
 const PIN_COLORS = { from: '#22c55e', to: '#ef4444', single: '#6366f1' };
 
@@ -34,6 +40,16 @@ function pinIcon(color) {
     iconSize: [16, 16],
     iconAnchor: [8, 8],
     popupAnchor: [0, -12],
+  });
+}
+
+function dotIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:11px;height:11px;background:#8b8478;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);opacity:.85"></div>`,
+    iconSize: [11, 11],
+    iconAnchor: [6, 6],
+    popupAnchor: [0, -8],
   });
 }
 
@@ -77,7 +93,36 @@ function renderMarkers() {
   });
 
   const valid = props.markers.filter((m) => m.lat && m.lon);
-  if (!valid.length) return;
+  const dots = props.dots.filter((d) => d.lat && d.lon);
+  if (!valid.length && !dots.length) return;
+
+  // Nearby saved places first, so route pins render above them.
+  dots.forEach((d) => {
+    const marker = L.marker([d.lat, d.lon], { icon: dotIcon(), zIndexOffset: -100 });
+    const sub = d.sub ? `<br><small>${d.sub}</small>` : '';
+    marker.bindPopup(
+      `<b>${d.label}</b>${sub}<br><button type="button" class="map-dot-add" style="margin-top:6px;padding:3px 10px;border:1px solid #0e5c55;border-radius:99px;background:#fff;color:#0e5c55;font:600 12px/1.4 sans-serif;cursor:pointer">+ Add to this day</button>`,
+    );
+    marker.on('popupopen', (e) => {
+      const btn = e.popup.getElement()?.querySelector('.map-dot-add');
+      if (btn) {
+        btn.onclick = () => {
+          marker.closePopup();
+          emit('dot-add', d.id);
+        };
+      }
+    });
+    marker.addTo(map);
+  });
+
+  if (!valid.length) {
+    map.fitBounds(
+      dots.map((d) => [d.lat, d.lon]),
+      { padding: [40, 40], maxZoom: 14 },
+    );
+    map.invalidateSize();
+    return;
+  }
 
   valid.forEach((m, i) => {
     const icon = props.numbered
@@ -101,10 +146,9 @@ function renderMarkers() {
           : { color: '#0e5c55', weight: 3, dashArray: '2 7', opacity: 0.9 }, // dotted = on foot
       ).addTo(map);
     });
-    map.fitBounds(
-      [...routedLegs.flatMap((l) => l.points), ...valid.map((m) => [m.lat, m.lon])],
-      { padding: [40, 40] },
-    );
+    map.fitBounds([...routedLegs.flatMap((l) => l.points), ...valid.map((m) => [m.lat, m.lon])], {
+      padding: [40, 40],
+    });
   } else if (valid.length >= 2) {
     L.polyline(
       valid.map((m) => [m.lat, m.lon]),
@@ -134,9 +178,9 @@ onUnmounted(() => {
 });
 
 watch(
-  [() => props.markers, () => props.legs],
-  async ([markers]) => {
-    if (!markers.some((m) => m.lat && m.lon)) return;
+  [() => props.markers, () => props.legs, () => props.dots],
+  async ([markers, , dots]) => {
+    if (!markers.some((m) => m.lat && m.lon) && !dots.some((d) => d.lat && d.lon)) return;
     if (!map) {
       await initMap();
     } else {

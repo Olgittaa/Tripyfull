@@ -8,24 +8,11 @@
 		<version>4.0.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example</groupId>
+	<groupId>com.tripyfull</groupId>
 	<artifactId>tripyfull</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>tripyfull</name>
 	<description>Tripyfull — personal trip planner backend</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
 	<properties>
 		<java.version>25</java.version>
 	</properties>
@@ -72,10 +59,28 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
-<dependency>
+		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+		<!-- Boot 4 ships Flyway auto-config in its own module. Versions are pinned to what's
+		     in the local Maven cache (central is unreachable behind the corporate proxy);
+		     replace with the managed spring-boot-starter-flyway once downloads work. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+			<version>4.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>11.14.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<version>11.14.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -83,10 +83,7 @@
           <template v-if="isRange">
             <div v-for="grp in ['start', 'end']" :key="grp" class="dp-time-group">
               <div class="dp-time-label">{{ grp === 'start' ? 'Start' : 'End' }}</div>
-              <TfTimeWheel
-                :model-value="timeOf(grp)"
-                @update="(h, m) => setTime(grp, h, m)"
-              />
+              <TfTimeWheel :model-value="timeOf(grp)" @update="(h, m) => setTime(grp, h, m)" />
             </div>
           </template>
 
@@ -99,6 +96,7 @@
 
 <script setup>
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { MONTHS_SHORT } from '@tripyfull/core';
 import TfTimeWheel from './TfTimeWheel.vue';
 
 const props = defineProps({
@@ -116,7 +114,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 
 const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS = MONTHS_SHORT;
 
 const isRange = computed(() => props.mode.includes('range'));
 const hasTime = computed(() => props.mode.includes('datetime'));

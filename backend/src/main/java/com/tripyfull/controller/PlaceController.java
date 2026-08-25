@@ -1,0 +1,74 @@
+package com.tripyfull.controller;
+
+import com.tripyfull.dto.PlaceGeocodeRequest;
+import com.tripyfull.dto.PlaceImportRequest;
+import com.tripyfull.dto.PlaceRequest;
+import com.tripyfull.dto.PlaceResponse;
+import com.tripyfull.service.PlaceService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/places")
+public class PlaceController {
+
+    private final PlaceService placeService;
+
+    public PlaceController(PlaceService placeService) {
+        this.placeService = placeService;
+    }
+
+    @GetMapping
+    public List<PlaceResponse> getAll(@RequestParam(required = false) UUID folderId,
+                                      @RequestParam(required = false) String country,
+                                      @RequestParam(required = false) String type,
+                                      @RequestParam(required = false) String visibility,
+                                      @RequestParam(required = false) String source,
+                                      @RequestParam(required = false) String city,
+                                      @RequestParam(required = false) String q,
+                                      @RequestParam(required = false) String sort,
+                                      @AuthenticationPrincipal UserDetails user) {
+        return placeService.getAll(user.getUsername(), folderId, country, type, visibility, source, city, q, sort);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public PlaceResponse create(@Valid @RequestBody PlaceRequest request,
+                                @AuthenticationPrincipal UserDetails user) {
+        return placeService.create(request, user.getUsername());
+    }
+
+    @PostMapping("/geocode")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PlaceResponse geocode(@Valid @RequestBody PlaceGeocodeRequest request,
+                                 @AuthenticationPrincipal UserDetails user) {
+        return placeService.geocodeCreate(request, user.getUsername());
+    }
+
+    @PostMapping("/import")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PlaceResponse importFromUrl(@Valid @RequestBody PlaceImportRequest request,
+                                       @AuthenticationPrincipal UserDetails user) {
+        return placeService.importFromUrl(request, user.getUsername());
+    }
+
+    @PatchMapping("/{id}")
+    public PlaceResponse update(@PathVariable UUID id,
+                                @RequestBody PlaceRequest request,
+                                @AuthenticationPrincipal UserDetails user) {
+        return placeService.update(id, request, user.getUsername());
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id,
+                       @AuthenticationPrincipal UserDetails user) {
+        placeService.delete(id, user.getUsername());
+    }
+}

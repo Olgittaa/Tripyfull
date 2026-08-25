@@ -10,8 +10,7 @@ reach the frontend.
 ```
 Tripyfull/
 ├── backend/         Spring Boot + PostgreSQL REST API (Java 25, Maven)
-├── frontend/        Vue 3 + Pinia + PrimeVue + Vue Router + Leaflet (Vite)
-├── design-system/   Tripyfull tokens, styles, and UI kit
+├── frontend/        Vue 3 + Pinia + Vue Router + Leaflet (Vite)
 └── docker-compose.yml   Local PostgreSQL
 ```
 
