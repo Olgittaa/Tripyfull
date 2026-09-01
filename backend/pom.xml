@@ -64,23 +64,13 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- Boot 4 ships Flyway auto-config in its own module. Versions are pinned to what's
-		     in the local Maven cache (central is unreachable behind the corporate proxy);
-		     replace with the managed spring-boot-starter-flyway once downloads work. -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-flyway</artifactId>
-			<version>4.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
-			<version>11.14.1</version>
+			<artifactId>spring-boot-starter-flyway</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
-			<version>11.14.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

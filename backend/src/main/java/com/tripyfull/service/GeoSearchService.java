@@ -22,11 +22,14 @@ public class GeoSearchService {
 
     private final CityRepository cityRepository;
     private final CountryRepository countryRepository;
+    private final GooglePlacesService googlePlaces;
     private final RestClient restClient;
 
-    public GeoSearchService(CityRepository cityRepository, CountryRepository countryRepository) {
+    public GeoSearchService(CityRepository cityRepository, CountryRepository countryRepository,
+                            GooglePlacesService googlePlaces) {
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;
+        this.googlePlaces = googlePlaces;
         this.restClient = RestClient.builder()
                 .defaultHeader("User-Agent", "Tripyfull/1.0 (travel planner app)")
                 .defaultHeader("Accept-Language", "en")   // return Latin/English place names
@@ -38,12 +41,13 @@ public class GeoSearchService {
     public List<CityResult> search(String query, String countryFilter) {
         if (query == null || query.length() < 2) return List.of();
 
-        // 1. Search local DB
+        // 1. Search local DB (full GeoNames dataset, ranked by prefix match + population)
+        var page = org.springframework.data.domain.PageRequest.of(0, 15);
         List<City> local;
         if (countryFilter != null && !countryFilter.isBlank()) {
-            local = cityRepository.searchByCountry(query, countryFilter.toUpperCase());
+            local = cityRepository.searchByCountry(query, countryFilter.toUpperCase(), page);
         } else {
-            local = cityRepository.search(query);
+            local = cityRepository.search(query, page);
         }
 
         List<CityResult> results = local.stream()
@@ -156,6 +160,15 @@ public class GeoSearchService {
     @SuppressWarnings("unchecked")
     public List<PlaceResult> searchPlaces(String query) {
         if (query == null || query.length() < 2) return List.of();
+        // Google first when configured; Photon stays as the free fallback.
+        if (googlePlaces.isEnabled()) {
+            try {
+                List<PlaceResult> results = googlePlaces.searchText(query, null, 8);
+                if (!results.isEmpty()) return results;
+            } catch (Exception e) {
+                log.warn("Google places search failed for '{}', falling back to Photon: {}", query, e.getMessage());
+            }
+        }
         try {
             Map<String, Object> body = restClient.get()
                     .uri("https://photon.komoot.io/api?q={q}&limit=8&lang=en", query)

@@ -22,6 +22,10 @@ public class City {
 
     private boolean popular;
 
+    /** GeoNames population — the primary search-ranking signal. */
+    @Column(nullable = false)
+    private long population;
+
     public Long getId() { return id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -33,4 +37,6 @@ public class City {
     public void setLongitude(Double longitude) { this.longitude = longitude; }
     public boolean isPopular() { return popular; }
     public void setPopular(boolean popular) { this.popular = popular; }
+    public long getPopulation() { return population; }
+    public void setPopulation(long population) { this.population = population; }
 }

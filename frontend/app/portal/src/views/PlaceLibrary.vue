@@ -341,6 +341,44 @@
     </div>
 
     <TfModal v-model="showDialog" :title="editing ? 'Edit place' : 'New place'">
+      <!-- Tripadvisor rating + latest reviews (live, with mandatory attribution) -->
+      <div v-if="taData" class="card" style="padding: 12px 14px; margin-bottom: 14px">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <img
+            v-if="taData.ratingIconUrl"
+            :src="taData.ratingIconUrl"
+            alt=""
+            style="height: 16px"
+          />
+          <span style="font: var(--fw-semibold) 14px/1 var(--font-sans)"
+            >{{ taData.rating }} / 5</span
+          >
+          <span class="text-muted text-sm">{{ taData.reviewCount.toLocaleString() }} reviews</span>
+          <a
+            v-if="taData.url"
+            :href="taData.url"
+            target="_blank"
+            rel="noopener"
+            class="text-sm"
+            style="color: var(--primary); margin-left: auto"
+            >Tripadvisor <i class="pi pi-external-link" style="font-size: 10px"></i
+          ></a>
+        </div>
+        <div v-for="r in taData.reviews" :key="r.url" style="margin-top: 10px">
+          <div style="font: var(--fw-semibold) 13px/1.3 var(--font-sans)">
+            {{ '●'.repeat(r.rating) }}{{ '○'.repeat(5 - r.rating) }} {{ r.title }}
+          </div>
+          <div class="text-muted text-sm" style="margin-top: 2px">
+            {{ r.text?.length > 220 ? r.text.slice(0, 220) + '…' : r.text }}
+          </div>
+          <div class="text-subtle text-xs" style="margin-top: 2px">
+            {{ r.username }} · {{ r.publishedDate }}
+          </div>
+        </div>
+      </div>
+      <div v-else-if="taLoading" class="text-subtle text-sm" style="margin-bottom: 14px">
+        <i class="pi pi-spinner pi-spin" style="font-size: 12px"></i> Checking Tripadvisor…
+      </div>
       <form id="placeForm" @submit.prevent="save" class="dialog-form">
         <TfInput v-model="form.name" label="Name *" required placeholder="e.g. Navagio Beach" />
         <div class="form-row">
@@ -683,9 +721,26 @@ const splitList = (s) =>
     .map((x) => x.trim())
     .filter(Boolean);
 
+// Tripadvisor block in the edit dialog — fetched live, absent = quietly hidden.
+const taData = ref(null);
+const taLoading = ref(false);
+const loadTripadvisor = async (placeId) => {
+  taData.value = null;
+  taLoading.value = true;
+  try {
+    const res = await api.get(`/api/places/${placeId}/tripadvisor`);
+    taData.value = res.status === 200 ? res.data : null;
+  } catch {
+    taData.value = null;
+  } finally {
+    taLoading.value = false;
+  }
+};
+
 const openDialog = (p) => {
   if (p) {
     editing.value = p;
+    loadTripadvisor(p.id);
     form.value = {
       name: p.name,
       type: p.type || 'OTHER',
@@ -703,6 +758,8 @@ const openDialog = (p) => {
     linksText.value = (p.links || []).join(', ');
   } else {
     editing.value = null;
+    taData.value = null;
+    taLoading.value = false;
     form.value = { ...emptyForm, country: tripCountryCodes.value[0] || '' };
     photosText.value = '';
     linksText.value = '';

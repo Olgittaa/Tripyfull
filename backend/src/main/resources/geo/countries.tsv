@@ -1,0 +1,253 @@
+code	name	region
+AF	Afghanistan	Asia
+AX	Aland Islands	Europe
+AL	Albania	Europe
+DZ	Algeria	Africa
+AS	American Samoa	Oceania
+AD	Andorra	Europe
+AO	Angola	Africa
+AI	Anguilla	North America
+AQ	Antarctica	Antarctica
+AG	Antigua and Barbuda	North America
+AR	Argentina	South America
+AM	Armenia	Asia
+AW	Aruba	North America
+AU	Australia	Oceania
+AT	Austria	Europe
+AZ	Azerbaijan	Asia
+BS	Bahamas	North America
+BH	Bahrain	Asia
+BD	Bangladesh	Asia
+BB	Barbados	North America
+BY	Belarus	Europe
+BE	Belgium	Europe
+BZ	Belize	North America
+BJ	Benin	Africa
+BM	Bermuda	North America
+BT	Bhutan	Asia
+BO	Bolivia	South America
+BQ	Bonaire, Saint Eustatius and Saba 	North America
+BA	Bosnia and Herzegovina	Europe
+BW	Botswana	Africa
+BV	Bouvet Island	Antarctica
+BR	Brazil	South America
+IO	British Indian Ocean Territory	Asia
+VG	British Virgin Islands	North America
+BN	Brunei	Asia
+BG	Bulgaria	Europe
+BF	Burkina Faso	Africa
+BI	Burundi	Africa
+CV	Cabo Verde	Africa
+KH	Cambodia	Asia
+CM	Cameroon	Africa
+CA	Canada	North America
+KY	Cayman Islands	North America
+CF	Central African Republic	Africa
+TD	Chad	Africa
+CL	Chile	South America
+CN	China	Asia
+CX	Christmas Island	Oceania
+CC	Cocos Islands	Asia
+CO	Colombia	South America
+KM	Comoros	Africa
+CK	Cook Islands	Oceania
+CR	Costa Rica	North America
+HR	Croatia	Europe
+CU	Cuba	North America
+CW	Curacao	North America
+CY	Cyprus	Europe
+CZ	Czechia	Europe
+CD	Democratic Republic of the Congo	Africa
+DK	Denmark	Europe
+DJ	Djibouti	Africa
+DM	Dominica	North America
+DO	Dominican Republic	North America
+EC	Ecuador	South America
+EG	Egypt	Africa
+SV	El Salvador	North America
+GQ	Equatorial Guinea	Africa
+ER	Eritrea	Africa
+EE	Estonia	Europe
+SZ	Eswatini	Africa
+ET	Ethiopia	Africa
+FK	Falkland Islands	South America
+FO	Faroe Islands	Europe
+FJ	Fiji	Oceania
+FI	Finland	Europe
+FR	France	Europe
+GF	French Guiana	South America
+PF	French Polynesia	Oceania
+TF	French Southern Territories	Antarctica
+GA	Gabon	Africa
+GM	Gambia	Africa
+GE	Georgia	Asia
+DE	Germany	Europe
+GH	Ghana	Africa
+GI	Gibraltar	Europe
+GR	Greece	Europe
+GL	Greenland	North America
+GD	Grenada	North America
+GP	Guadeloupe	North America
+GU	Guam	Oceania
+GT	Guatemala	North America
+GG	Guernsey	Europe
+GN	Guinea	Africa
+GW	Guinea-Bissau	Africa
+GY	Guyana	South America
+HT	Haiti	North America
+HM	Heard Island and McDonald Islands	Antarctica
+HN	Honduras	North America
+HK	Hong Kong	Asia
+HU	Hungary	Europe
+IS	Iceland	Europe
+IN	India	Asia
+ID	Indonesia	Asia
+IR	Iran	Asia
+IQ	Iraq	Asia
+IE	Ireland	Europe
+IM	Isle of Man	Europe
+IL	Israel	Asia
+IT	Italy	Europe
+CI	Ivory Coast	Africa
+JM	Jamaica	North America
+JP	Japan	Asia
+JE	Jersey	Europe
+JO	Jordan	Asia
+KZ	Kazakhstan	Asia
+KE	Kenya	Africa
+KI	Kiribati	Oceania
+XK	Kosovo	Europe
+KW	Kuwait	Asia
+KG	Kyrgyzstan	Asia
+LA	Laos	Asia
+LV	Latvia	Europe
+LB	Lebanon	Asia
+LS	Lesotho	Africa
+LR	Liberia	Africa
+LY	Libya	Africa
+LI	Liechtenstein	Europe
+LT	Lithuania	Europe
+LU	Luxembourg	Europe
+MO	Macao	Asia
+MG	Madagascar	Africa
+MW	Malawi	Africa
+MY	Malaysia	Asia
+MV	Maldives	Asia
+ML	Mali	Africa
+MT	Malta	Europe
+MH	Marshall Islands	Oceania
+MQ	Martinique	North America
+MR	Mauritania	Africa
+MU	Mauritius	Africa
+YT	Mayotte	Africa
+MX	Mexico	North America
+FM	Micronesia	Oceania
+MD	Moldova	Europe
+MC	Monaco	Europe
+MN	Mongolia	Asia
+ME	Montenegro	Europe
+MS	Montserrat	North America
+MA	Morocco	Africa
+MZ	Mozambique	Africa
+MM	Myanmar	Asia
+NA	Namibia	Africa
+NR	Nauru	Oceania
+NP	Nepal	Asia
+AN	Netherlands Antilles	North America
+NC	New Caledonia	Oceania
+NZ	New Zealand	Oceania
+NI	Nicaragua	North America
+NE	Niger	Africa
+NG	Nigeria	Africa
+NU	Niue	Oceania
+NF	Norfolk Island	Oceania
+KP	North Korea	Asia
+MK	North Macedonia	Europe
+MP	Northern Mariana Islands	Oceania
+NO	Norway	Europe
+OM	Oman	Asia
+PK	Pakistan	Asia
+PW	Palau	Oceania
+PS	Palestinian Territory	Asia
+PA	Panama	North America
+PG	Papua New Guinea	Oceania
+PY	Paraguay	South America
+PE	Peru	South America
+PH	Philippines	Asia
+PN	Pitcairn	Oceania
+PL	Poland	Europe
+PT	Portugal	Europe
+PR	Puerto Rico	North America
+QA	Qatar	Asia
+CG	Republic of the Congo	Africa
+RE	Reunion	Africa
+RO	Romania	Europe
+RU	Russia	Europe
+RW	Rwanda	Africa
+BL	Saint Barthelemy	North America
+SH	Saint Helena	Africa
+KN	Saint Kitts and Nevis	North America
+LC	Saint Lucia	North America
+MF	Saint Martin	North America
+PM	Saint Pierre and Miquelon	North America
+VC	Saint Vincent and the Grenadines	North America
+WS	Samoa	Oceania
+SM	San Marino	Europe
+ST	Sao Tome and Principe	Africa
+SA	Saudi Arabia	Asia
+SN	Senegal	Africa
+RS	Serbia	Europe
+CS	Serbia and Montenegro	Europe
+SC	Seychelles	Africa
+SL	Sierra Leone	Africa
+SG	Singapore	Asia
+SX	Sint Maarten	North America
+SK	Slovakia	Europe
+SI	Slovenia	Europe
+SB	Solomon Islands	Oceania
+SO	Somalia	Africa
+ZA	South Africa	Africa
+GS	South Georgia and the South Sandwich Islands	Antarctica
+KR	South Korea	Asia
+SS	South Sudan	Africa
+ES	Spain	Europe
+LK	Sri Lanka	Asia
+SD	Sudan	Africa
+SR	Suriname	South America
+SJ	Svalbard and Jan Mayen	Europe
+SE	Sweden	Europe
+CH	Switzerland	Europe
+SY	Syria	Asia
+TW	Taiwan	Asia
+TJ	Tajikistan	Asia
+TZ	Tanzania	Africa
+TH	Thailand	Asia
+NL	The Netherlands	Europe
+TL	Timor Leste	Oceania
+TG	Togo	Africa
+TK	Tokelau	Oceania
+TO	Tonga	Oceania
+TT	Trinidad and Tobago	North America
+TN	Tunisia	Africa
+TR	Turkey	Asia
+TM	Turkmenistan	Asia
+TC	Turks and Caicos Islands	North America
+TV	Tuvalu	Oceania
+VI	U.S. Virgin Islands	North America
+UG	Uganda	Africa
+UA	Ukraine	Europe
+AE	United Arab Emirates	Asia
+GB	United Kingdom	Europe
+US	United States	North America
+UM	United States Minor Outlying Islands	Oceania
+UY	Uruguay	South America
+UZ	Uzbekistan	Asia
+VU	Vanuatu	Oceania
+VA	Vatican	Europe
+VE	Venezuela	South America
+VN	Vietnam	Asia
+WF	Wallis and Futuna	Oceania
+EH	Western Sahara	Africa
+YE	Yemen	Asia
+ZM	Zambia	Africa
+ZW	Zimbabwe	Africa

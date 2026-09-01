@@ -38,6 +38,11 @@ public class RoutingService {
             "bike", "routed-bike");
 
     private final RestClient restClient = buildClient();
+    private final GoogleRoutesService googleRoutes;
+
+    public RoutingService(GoogleRoutesService googleRoutes) {
+        this.googleRoutes = googleRoutes;
+    }
 
     private static RestClient buildClient() {
         // Explicit timeouts — a hung upstream must not park a servlet thread forever.
@@ -90,7 +95,9 @@ public class RoutingService {
             return cached.route;
         }
 
-        RouteResult result = fetchFromOsrm(profile, coords, mode, points.size());
+        // Google Routes first when configured; the public OSRM instance stays as fallback.
+        RouteResult result = googleRoutes.isEnabled() ? googleRoutes.route(points, mode) : null;
+        if (result == null) result = fetchFromOsrm(profile, coords, mode, points.size());
         if (result != null) {
             if (cache.size() >= CACHE_MAX_ENTRIES) cache.clear(); // crude, but keeps memory bounded
             cache.put(key, new CachedRoute(result, System.currentTimeMillis()));

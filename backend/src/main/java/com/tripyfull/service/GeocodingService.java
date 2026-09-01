@@ -29,12 +29,23 @@ public class GeocodingService {
             .defaultHeader("Accept-Language", "en")   // ask the geocoders for Latin/English names
             .build();
 
+    private final GooglePlacesService googlePlaces;
+
+    public GeocodingService(GooglePlacesService googlePlaces) {
+        this.googlePlaces = googlePlaces;
+    }
+
     public record GeocodeResult(BigDecimal latitude, BigDecimal longitude, String address,
                                 String osmId, String country, String city, String name, String category) {}
 
     /** Best single match for free text, optionally constrained to an ISO country code. */
     public GeocodeResult geocode(String text, String country) {
         if (text == null || text.isBlank()) return null;
+        // Google first when configured; OSM geocoders stay as the free fallback.
+        if (googlePlaces.isEnabled()) {
+            GeocodeResult g = googlePlaces.geocode(text, country);
+            if (g != null) return g;
+        }
         GeocodeResult r = photon(text, country);
         if (r != null) return r;
         return nominatim(text, country);

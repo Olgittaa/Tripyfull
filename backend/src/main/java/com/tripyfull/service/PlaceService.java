@@ -36,17 +36,26 @@ public class PlaceService {
     private final PlaceFolderRepository folderRepository;
     private final MapLinkService mapLinkService;
     private final OpenTripMapService openTripMapService;
+    private final GooglePlacesService googlePlacesService;
     private final OwnershipGuard guard;
 
     public PlaceService(PlaceRepository placeRepository, GeocodingService geocodingService,
                         PlaceFolderRepository folderRepository, MapLinkService mapLinkService,
-                        OpenTripMapService openTripMapService, OwnershipGuard guard) {
+                        OpenTripMapService openTripMapService, GooglePlacesService googlePlacesService,
+                        OwnershipGuard guard) {
         this.placeRepository = placeRepository;
         this.geocodingService = geocodingService;
         this.folderRepository = folderRepository;
         this.mapLinkService = mapLinkService;
         this.openTripMapService = openTripMapService;
+        this.googlePlacesService = googlePlacesService;
         this.guard = guard;
+    }
+
+    /** Google (photos + editorial summary) first when configured; OpenTripMap fills remaining gaps. */
+    private void enrichPlace(Place place) {
+        if (googlePlacesService.isEnabled()) googlePlacesService.enrich(place);
+        openTripMapService.enrich(place);
     }
 
     /**
@@ -148,7 +157,7 @@ public class PlaceService {
         if (place.getLatitude() == null || place.getLongitude() == null) {
             geocodeInto(place);
         }
-        openTripMapService.enrich(place);   // best-effort description + photo
+        enrichPlace(place);   // best-effort description + photos
         return toResponse(placeRepository.save(place), user, null);   // new place, not in a folder yet
     }
 
@@ -177,7 +186,7 @@ public class PlaceService {
         String country = r.country() != null ? r.country()
                 : (request.country() != null && !request.country().isBlank() ? request.country().toUpperCase() : null);
         place.setCountry(country);
-        openTripMapService.enrich(place);   // best-effort description + photo
+        enrichPlace(place);   // best-effort description + photos
         return toResponse(placeRepository.save(place), user, null);
     }
 
@@ -237,7 +246,7 @@ public class PlaceService {
         if (parsed.description() != null) place.setDescription(parsed.description());
         if (parsed.photo() != null) place.getPhotos().add(parsed.photo());
         addSourceLink(place, request.url());   // keep the Google Maps link the place came from
-        openTripMapService.enrich(place);   // fills whatever the link didn't provide
+        enrichPlace(place);   // fills whatever the link didn't provide
         return toResponse(placeRepository.save(place), user, null);
     }
 
