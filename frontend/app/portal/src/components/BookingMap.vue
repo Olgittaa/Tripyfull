@@ -26,6 +26,7 @@ const emit = defineEmits(['dot-add']);
 const el = ref(null);
 let map = null;
 let L = null;
+let resizeObserver = null;
 
 const hasMarkers = computed(
   () => props.markers.some((m) => m.lat && m.lon) || props.dots.some((d) => d.lat && d.lon),
@@ -77,12 +78,19 @@ async function initMap() {
   }
   map = L.map(el.value, { zoomControl: false, attributionControl: true });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // Same keyless basemap as the plan map: local labels, calmer under markers.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution:
-      '© <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
-    maxZoom: 18,
+      '© <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank">CARTO</a>',
+    maxZoom: 20,
   }).addTo(map);
   renderMarkers();
+  // The map can be born inside a panel that is still animating open (width ~0),
+  // and Leaflet caches that size — so follow the container.
+  if (!resizeObserver && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => map?.invalidateSize());
+    resizeObserver.observe(el.value);
+  }
 }
 
 function renderMarkers() {
@@ -171,6 +179,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  resizeObserver?.disconnect();
+  resizeObserver = null;
   if (map) {
     map.remove();
     map = null;

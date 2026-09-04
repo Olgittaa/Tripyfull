@@ -35,6 +35,16 @@ const routes = [
     },
   },
   {
+    path: '/trips/:tripId/places',
+    component: () => import('@/views/PlaceLibrary.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/trips/:tripId/map',
+    component: () => import('@/views/PlanMap.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/trips/:tripId/bookings',
     component: () => import('@/views/BookingsView.vue'),
     meta: { requiresAuth: true },

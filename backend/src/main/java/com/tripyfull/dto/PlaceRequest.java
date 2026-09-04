@@ -17,6 +17,10 @@ public record PlaceRequest(
         List<String> photos,
         List<String> links,
         String visibility,      // PUBLIC | PRIVATE
-        String priority,        // MUST_SEE | OPTIONAL
+        Integer rating,         // 1..5 (5 = worth the whole trip)
+        String ratingComment,
+        Integer visitMinutes,
+        String audience,        // ALL | ADULTS | KIDS
+        Boolean needsPreparation,
         Boolean needsBooking
 ) {}

@@ -1,5 +1,5 @@
 <template>
-  <div class="page-content">
+  <div class="page-content page-content--full">
     <div v-if="store.loading" style="display: flex; flex-direction: column; gap: 20px">
       <div class="skeleton" style="height: 40px; width: 280px"></div>
       <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px">

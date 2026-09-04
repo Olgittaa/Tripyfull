@@ -40,5 +40,6 @@ export { toast, pushToast, dismissToast } from './toast.js';
 export { confirm, confirmState, resolveConfirm } from './confirm.js';
 export { default as TfDrawer } from './TfDrawer.vue';
 export { default as TfDrawerSection } from './TfDrawerSection.vue';
+export { default as TfLightbox } from './TfLightbox.vue';
 export { default as TfCitySearch } from './TfCitySearch.vue';
 export { default as TfPlaceSearch } from './TfPlaceSearch.vue';

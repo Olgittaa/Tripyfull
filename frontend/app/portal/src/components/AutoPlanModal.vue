@@ -52,10 +52,10 @@
             <TfBadge
               v-for="(p, i) in d.places"
               :key="p.placeId"
-              :tone="p.priority === 'MUST_SEE' ? 'gold' : 'neutral'"
+              :tone="p.rating === 5 ? 'gold' : 'neutral'"
               variant="soft"
             >
-              {{ i + 1 }}. {{ p.priority === 'MUST_SEE' ? '⭐ ' : '' }}{{ p.name
+              {{ i + 1 }}. {{ p.rating === 5 ? '⭐ ' : '' }}{{ p.name
               }}{{ p.needsBooking ? ' 🎟' : '' }}
             </TfBadge>
           </div>
@@ -66,7 +66,7 @@
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px">
             <TfBadge v-for="p in plan.unassigned" :key="p.placeId" tone="neutral" variant="soft">
-              {{ p.priority === 'MUST_SEE' ? '⭐ ' : '' }}{{ p.name }}
+              {{ p.rating === 5 ? '⭐ ' : '' }}{{ p.name }}
             </TfBadge>
           </div>
         </div>

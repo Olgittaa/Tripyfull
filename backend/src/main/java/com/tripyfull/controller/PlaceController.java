@@ -28,6 +28,20 @@ public class PlaceController {
         this.tripAdvisorService = tripAdvisorService;
     }
 
+    /** Adds a place to a trip's own list (the trip's Places tab). */
+    @PutMapping("/{placeId}/trips/{tripId}")
+    public PlaceResponse addToTrip(@PathVariable UUID placeId, @PathVariable UUID tripId,
+                                   @AuthenticationPrincipal UserDetails user) {
+        return placeService.addToTrip(tripId, placeId, user.getUsername());
+    }
+
+    /** Removes a place from a trip's list; the place stays in the global library. */
+    @DeleteMapping("/{placeId}/trips/{tripId}")
+    public PlaceResponse removeFromTrip(@PathVariable UUID placeId, @PathVariable UUID tripId,
+                                        @AuthenticationPrincipal UserDetails user) {
+        return placeService.removeFromTrip(tripId, placeId, user.getUsername());
+    }
+
     /** Tripadvisor rating + top reviews for a place; 204 when TA has no confident match. */
     @GetMapping("/{id}/tripadvisor")
     public ResponseEntity<TripAdvisorService.TaSummary> tripadvisor(@PathVariable UUID id,
@@ -38,6 +52,7 @@ public class PlaceController {
 
     @GetMapping
     public List<PlaceResponse> getAll(@RequestParam(required = false) UUID folderId,
+                                      @RequestParam(required = false) UUID tripId,
                                       @RequestParam(required = false) String country,
                                       @RequestParam(required = false) String type,
                                       @RequestParam(required = false) String visibility,
@@ -46,7 +61,8 @@ public class PlaceController {
                                       @RequestParam(required = false) String q,
                                       @RequestParam(required = false) String sort,
                                       @AuthenticationPrincipal UserDetails user) {
-        return placeService.getAll(user.getUsername(), folderId, country, type, visibility, source, city, q, sort);
+        return placeService.getAll(user.getUsername(), folderId, tripId, country, type, visibility,
+                source, city, q, sort);
     }
 
     @PostMapping

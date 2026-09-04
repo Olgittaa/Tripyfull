@@ -23,8 +23,9 @@ public class FolderController {
     }
 
     @GetMapping
-    public List<FolderResponse> list(@AuthenticationPrincipal UserDetails user) {
-        return folderService.list(user.getUsername());
+    public List<FolderResponse> list(@RequestParam(required = false) UUID tripId,
+                                     @AuthenticationPrincipal UserDetails user) {
+        return folderService.list(user.getUsername(), tripId);
     }
 
     @PostMapping

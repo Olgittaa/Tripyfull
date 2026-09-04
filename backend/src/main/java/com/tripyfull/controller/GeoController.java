@@ -4,6 +4,7 @@ import com.tripyfull.model.Country;
 import com.tripyfull.repository.CountryRepository;
 import com.tripyfull.service.GeoSearchService;
 import com.tripyfull.service.RoutingService;
+import com.tripyfull.service.TripAdvisorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,12 +20,22 @@ public class GeoController {
     private final CountryRepository countryRepository;
     private final GeoSearchService geoSearchService;
     private final RoutingService routingService;
+    private final TripAdvisorService tripAdvisorService;
 
     public GeoController(CountryRepository countryRepository, GeoSearchService geoSearchService,
-                         RoutingService routingService) {
+                         RoutingService routingService, TripAdvisorService tripAdvisorService) {
         this.countryRepository = countryRepository;
         this.geoSearchService = geoSearchService;
         this.routingService = routingService;
+        this.tripAdvisorService = tripAdvisorService;
+    }
+
+    /** Tripadvisor location search for the Find dialog; empty list when TA is not configured. */
+    @GetMapping("/tripadvisor")
+    public List<TripAdvisorService.TaSearchResult> searchTripadvisor(
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) String country) {
+        return tripAdvisorService.search(q, country);
     }
 
     @GetMapping("/countries")

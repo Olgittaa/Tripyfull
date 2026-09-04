@@ -26,6 +26,7 @@
 @import './components/forms.css';
 @import './components/badges.css';
 @import './components/drawer.css';
+@import './components/lightbox.css';
 @import './components/timeline.css';
 @import './components/progress.css';
 @import './components/empty-state.css';

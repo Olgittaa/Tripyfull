@@ -6,17 +6,20 @@ import com.tripyfull.dto.PlaceRequest;
 import com.tripyfull.dto.PlaceResponse;
 import com.tripyfull.model.Place;
 import com.tripyfull.model.PlaceFolder;
-import com.tripyfull.model.PlacePriority;
+import com.tripyfull.model.PlaceAudience;
 import com.tripyfull.model.PlaceSource;
 import com.tripyfull.model.PlaceType;
 import com.tripyfull.model.PlaceVisibility;
+import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.PlaceFolderRepository;
 import com.tripyfull.repository.PlaceRepository;
+import com.tripyfull.repository.TripRepository;
 import com.tripyfull.security.OwnershipGuard;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -37,11 +40,14 @@ public class PlaceService {
     private final MapLinkService mapLinkService;
     private final OpenTripMapService openTripMapService;
     private final GooglePlacesService googlePlacesService;
+    private final TripRepository tripRepository;
+    private final PlacePhotoService placePhotoService;
     private final OwnershipGuard guard;
 
     public PlaceService(PlaceRepository placeRepository, GeocodingService geocodingService,
                         PlaceFolderRepository folderRepository, MapLinkService mapLinkService,
                         OpenTripMapService openTripMapService, GooglePlacesService googlePlacesService,
+                        TripRepository tripRepository, PlacePhotoService placePhotoService,
                         OwnershipGuard guard) {
         this.placeRepository = placeRepository;
         this.geocodingService = geocodingService;
@@ -49,6 +55,8 @@ public class PlaceService {
         this.mapLinkService = mapLinkService;
         this.openTripMapService = openTripMapService;
         this.googlePlacesService = googlePlacesService;
+        this.tripRepository = tripRepository;
+        this.placePhotoService = placePhotoService;
         this.guard = guard;
     }
 
@@ -59,11 +67,13 @@ public class PlaceService {
     }
 
     /**
-     * Visible places (own + everyone's PUBLIC) or a single folder's contents, with optional
-     * filters (country/type/visibility/source/city/name) and sort (name|recent|type).
+     * Visible places (own + everyone's PUBLIC), narrowed to one folder or to a trip's
+     * itinerary, with optional filters (country/type/visibility/source/city/text) and
+     * sort (name|recent|type|rating). The text query matches name, city or address.
      */
-    public List<PlaceResponse> getAll(String username, UUID folderId, String country, String type,
-                                      String visibility, String source, String city, String q, String sort) {
+    public List<PlaceResponse> getAll(String username, UUID folderId, UUID tripId, String country,
+                                      String type, String visibility, String source, String city,
+                                      String q, String sort) {
         User user = getUser(username);
         Map<UUID, UUID> placeToFolder = myPlaceFolderMap(user);
 
@@ -72,6 +82,11 @@ public class PlaceService {
             PlaceFolder folder = folderRepository.findByIdAndOwnerId(folderId, user.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
             base = folder.getPlaces().stream()
+                    .filter(p -> isVisible(p, user))
+                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        } else if (tripId != null) {
+            Trip trip = guard.requireTrip(tripId, user);   // 404 for someone else's trip
+            base = trip.getPlaces().stream()
                     .filter(p -> isVisible(p, user))
                     .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
         } else {
@@ -91,11 +106,46 @@ public class PlaceService {
                 .filter(p -> visibility2 == null || (p.getVisibility() != null && p.getVisibility().name().equalsIgnoreCase(visibility2)))
                 .filter(p -> source2 == null || (p.getSource() != null && p.getSource().name().equalsIgnoreCase(source2)))
                 .filter(p -> city2 == null || (p.getCity() != null && p.getCity().toLowerCase().contains(city2.toLowerCase())))
-                .filter(p -> q2 == null || (p.getName() != null && p.getName().toLowerCase().contains(q2.toLowerCase())))
+                .filter(p -> q2 == null || matchesText(p, q2.toLowerCase()))
                 .sorted(comparatorFor(sort))
                 .toList();
 
-        return filtered.stream().map(p -> toResponse(p, user, placeToFolder.get(p.getId()))).toList();
+        Map<UUID, List<UUID>> placeToTrips = myPlaceTripMap(user);
+        return filtered.stream()
+                .map(p -> toResponse(p, user, placeToFolder.get(p.getId()), placeToTrips.get(p.getId())))
+                .toList();
+    }
+
+    /** Map of placeId -> trips of the user whose list contains it. */
+    private Map<UUID, List<UUID>> myPlaceTripMap(User user) {
+        Map<UUID, List<UUID>> map = new HashMap<>();
+        for (Trip t : tripRepository.findByOwnerId(user.getId())) {
+            for (Place p : t.getPlaces()) {
+                map.computeIfAbsent(p.getId(), k -> new ArrayList<>()).add(t.getId());
+            }
+        }
+        return map;
+    }
+
+    /** Adds a place to a trip's list. */
+    public PlaceResponse addToTrip(UUID tripId, UUID placeId, String username) {
+        User user = getUser(username);
+        Trip trip = guard.requireTrip(tripId, user);
+        Place place = placeRepository.findById(placeId)
+                .filter(p -> isVisible(p, user))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
+        if (trip.getPlaces().add(place)) tripRepository.save(trip);
+        return toResponse(place, user, myPlaceFolderMap(user).get(placeId), myPlaceTripMap(user).get(placeId));
+    }
+
+    /** Removes a place from a trip's list; the place itself and its folders stay. */
+    public PlaceResponse removeFromTrip(UUID tripId, UUID placeId, String username) {
+        User user = getUser(username);
+        Trip trip = guard.requireTrip(tripId, user);
+        Place place = placeRepository.findById(placeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
+        if (trip.getPlaces().removeIf(p -> p.getId().equals(placeId))) tripRepository.save(trip);
+        return toResponse(place, user, myPlaceFolderMap(user).get(placeId), myPlaceTripMap(user).get(placeId));
     }
 
     private Comparator<Place> comparatorFor(String sort) {
@@ -103,6 +153,8 @@ public class PlaceService {
         return switch (s) {
             case "recent" -> Comparator.comparing(Place::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
             case "type" -> Comparator.comparing((Place p) -> p.getType() != null ? p.getType().name() : "")
+                    .thenComparing(p -> p.getName() != null ? p.getName().toLowerCase() : "");
+            case "rating" -> Comparator.comparingInt(Place::getRating).reversed()
                     .thenComparing(p -> p.getName() != null ? p.getName().toLowerCase() : "");
             default -> Comparator.comparing(p -> p.getName() != null ? p.getName().toLowerCase() : "");
         };
@@ -122,6 +174,15 @@ public class PlaceService {
     }
 
     private String blankToNull(String s) { return (s == null || s.isBlank()) ? null : s; }
+
+    /** One search box covers name, city and address. */
+    private boolean matchesText(Place p, String needle) {
+        return contains(p.getName(), needle) || contains(p.getCity(), needle) || contains(p.getAddress(), needle);
+    }
+
+    private boolean contains(String haystack, String needle) {
+        return haystack != null && haystack.toLowerCase().contains(needle);
+    }
 
     /** Maps an OSM category hint (e.g. "natural:beach", "amenity:restaurant") to a PlaceType. */
     private PlaceType inferType(String category) {
@@ -268,6 +329,31 @@ public class PlaceService {
         return toResponse(saved, user, myPlaceFolderMap(user).get(saved.getId()));
     }
 
+    /** Stores an uploaded image (downscaled and re-encoded) as the place's next photo. */
+    public PlaceResponse addPhoto(UUID id, MultipartFile file, String username) {
+        User user = getUser(username);
+        Place place = findOwned(id, user);
+        if (place.getPhotos().size() >= PlacePhotoService.MAX_PER_PLACE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A place holds up to " + PlacePhotoService.MAX_PER_PLACE + " photos");
+        }
+        place.getPhotos().add(placePhotoService.store(file, place.getId()));
+        Place saved = placeRepository.save(place);
+        return toResponse(saved, user, myPlaceFolderMap(user).get(saved.getId()));
+    }
+
+    /** Drops one photo; the file is deleted too when we are the ones storing it. */
+    public PlaceResponse removePhoto(UUID id, String url, String username) {
+        User user = getUser(username);
+        Place place = findOwned(id, user);
+        if (!place.getPhotos().remove(url)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found on this place");
+        }
+        Place saved = placeRepository.save(place);
+        placePhotoService.deleteFile(url);
+        return toResponse(saved, user, myPlaceFolderMap(user).get(saved.getId()));
+    }
+
     public void delete(UUID id, String username) {
         User user = getUser(username);
         Place place = findOwned(id, user);
@@ -294,15 +380,24 @@ public class PlaceService {
         if (request.photos() != null) place.setPhotos(request.photos());
         if (request.links() != null) place.setLinks(request.links());
         if (request.visibility() != null) place.setVisibility(parseVisibility(request.visibility()));
-        if (request.priority() != null) place.setPriority(parsePriority(request.priority()));
+        if (request.rating() != null) {
+            if (request.rating() < 1 || request.rating() > 5) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be 1..5");
+            }
+            place.setRating(request.rating());
+        }
+        if (request.ratingComment() != null) place.setRatingComment(blankToNull(request.ratingComment()));
+        if (request.visitMinutes() != null) place.setVisitMinutes(request.visitMinutes() > 0 ? request.visitMinutes() : null);
+        if (request.audience() != null) place.setAudience(parseAudience(request.audience()));
+        if (request.needsPreparation() != null) place.setNeedsPreparation(request.needsPreparation());
         if (request.needsBooking() != null) place.setNeedsBooking(request.needsBooking());
     }
 
-    private PlacePriority parsePriority(String value) {
+    private PlaceAudience parseAudience(String value) {
         try {
-            return PlacePriority.valueOf(value);
+            return PlaceAudience.valueOf(value);
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid priority: " + value);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid audience: " + value);
         }
     }
 
@@ -350,6 +445,10 @@ public class PlaceService {
     }
 
     private PlaceResponse toResponse(Place p, User currentUser, UUID folderId) {
+        return toResponse(p, currentUser, folderId, null);
+    }
+
+    private PlaceResponse toResponse(Place p, User currentUser, UUID folderId, List<UUID> tripIds) {
         return new PlaceResponse(
                 p.getId(), p.getName(),
                 p.getType() != null ? p.getType().name() : null,
@@ -358,10 +457,15 @@ public class PlaceService {
                 p.getPhotos(), p.getLinks(), p.getOsmId(),
                 p.getVisibility() != null ? p.getVisibility().name() : null,
                 p.getSource() != null ? p.getSource().name() : null,
-                p.getPriority() != null ? p.getPriority().name() : PlacePriority.OPTIONAL.name(),
+                p.getRating(),
+                p.getRatingComment(),
+                p.getVisitMinutes(),
+                p.getAudience() != null ? p.getAudience().name() : PlaceAudience.ALL.name(),
+                p.isNeedsPreparation(),
                 p.isNeedsBooking(),
                 p.getOwner().getId().equals(currentUser.getId()),
-                folderId
+                folderId,
+                tripIds != null ? tripIds : List.of()
         );
     }
 }

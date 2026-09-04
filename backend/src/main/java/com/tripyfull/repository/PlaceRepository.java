@@ -31,4 +31,13 @@ public interface PlaceRepository extends JpaRepository<Place, UUID> {
                             @Param("publicVisibility") PlaceVisibility publicVisibility,
                             @Param("country") String country,
                             @Param("q") String q);
+
+    /** Places already used by a trip's itinerary (linked through its activities). */
+    @Query("""
+            select distinct p from Place p
+            join Activity a on a.place = p
+            where a.day.trip.id = :tripId
+            order by p.name asc
+            """)
+    List<Place> findByTripId(@Param("tripId") UUID tripId);
 }

@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,7 +47,15 @@ public class Trip {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
+    /** The trip's own place list: candidates collected before anything is scheduled. */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "trip_places",
+            joinColumns = @JoinColumn(name = "trip_id"),
+            inverseJoinColumns = @JoinColumn(name = "place_id"))
+    private Set<Place> places = new HashSet<>();
+
     public UUID getId() { return id; }
+    public Set<Place> getPlaces() { return places; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDestination() { return destination; }

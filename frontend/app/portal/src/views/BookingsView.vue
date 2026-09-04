@@ -1,5 +1,5 @@
 <template>
-  <div class="page-content--narrow">
+  <div class="page-content page-content--full">
     <!-- Page head -->
     <div class="page-head">
       <div>

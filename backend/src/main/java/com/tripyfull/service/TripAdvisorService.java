@@ -94,6 +94,77 @@ public class TripAdvisorService {
         return summary;
     }
 
+    /* ---- location search (Find dialog) ---- */
+
+    public record TaSearchResult(long locationId, String name, String address, String city,
+                                 String countryCode, Double latitude, Double longitude,
+                                 String category, Double rating, Integer reviewCount) {}
+
+    /** Free-text location search on Terra; empty when the key is not configured. */
+    @SuppressWarnings("unchecked")
+    public List<TaSearchResult> search(String query, String country) {
+        if (!isEnabled() || query == null || query.length() < 2) return List.of();
+        try {
+            String uri = BASE + "/locations/search?query={q}&size=8"
+                    + (country != null && !country.isBlank() ? "&country_code={cc}" : "");
+            Map<String, Object> body = country != null && !country.isBlank()
+                    ? restClient.get().uri(uri, query, country).retrieve().body(MAP_TYPE)
+                    : restClient.get().uri(uri, query).retrieve().body(MAP_TYPE);
+            List<Map<String, Object>> data = body != null ? (List<Map<String, Object>>) body.get("data") : null;
+            if (data == null) return List.of();
+
+            List<TaSearchResult> results = new ArrayList<>();
+            for (Map<String, Object> item : data) {
+                if (!(item.get("location") instanceof Map<?, ?> raw)) continue;
+                Map<String, Object> loc = (Map<String, Object>) raw;
+                if (loc.get("id") == null) continue;
+
+                String name = null;
+                if (loc.get("names") instanceof List<?> names && !names.isEmpty()
+                        && names.get(0) instanceof Map<?, ?> n) {
+                    name = str(n.get("value"));
+                }
+                if (name == null) continue;
+
+                Double lat = null, lng = null;
+                if (loc.get("coordinates") instanceof Map<?, ?> c) {
+                    lat = c.get("latitude") instanceof Number v ? v.doubleValue() : null;
+                    lng = c.get("longitude") instanceof Number v ? v.doubleValue() : null;
+                }
+                String address = null, city = null, countryCode = null;
+                if (loc.get("addresses") instanceof List<?> addrs && !addrs.isEmpty()
+                        && addrs.get(0) instanceof Map<?, ?> a) {
+                    address = str(a.get("formatted"));
+                    city = str(a.get("city"));
+                    countryCode = str(a.get("country_code"));
+                }
+                if (city == null) city = str(loc.get("geo"));
+
+                String category = null;
+                if (loc.get("categories") instanceof List<?> cats && !cats.isEmpty()
+                        && cats.get(0) instanceof Map<?, ?> cat) {
+                    category = str(cat.get("id") != null ? cat.get("id") : cat.get("display_name"));
+                }
+                Double rating = null;
+                Integer reviewCount = null;
+                if (loc.get("traveler_ratings") instanceof Map<?, ?> tr
+                        && tr.get("overall") instanceof Map<?, ?> overall) {
+                    rating = overall.get("rating") instanceof Number v ? v.doubleValue() : null;
+                    reviewCount = overall.get("count") instanceof Number v ? v.intValue() : null;
+                }
+                results.add(new TaSearchResult((long) toDouble(loc.get("id")), name, address, city,
+                        countryCode, lat, lng, category, rating, reviewCount));
+            }
+            // Popular places first — Terra's own order often leads with small namesakes.
+            results.sort(Comparator.comparingInt(
+                    (TaSearchResult r) -> r.reviewCount() != null ? r.reviewCount() : 0).reversed());
+            return results;
+        } catch (Exception e) {
+            log.warn("Tripadvisor search failed for '{}': {}", query, e.getMessage());
+            return List.of();
+        }
+    }
+
     /* ---- Terra calls ---- */
 
     @SuppressWarnings("unchecked")

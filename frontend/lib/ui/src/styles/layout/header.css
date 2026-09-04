@@ -3,21 +3,26 @@
    ============================================================ */
 
 .page-content {
-  padding: 40px;
+  padding: var(--page-pad);
   max-width: 1040px;
   margin: 0 auto;
 }
 
 .page-content--narrow {
-  padding: 40px;
+  padding: var(--page-pad);
   max-width: 880px;
   margin: 0 auto;
 }
 
 .page-content--wide {
-  padding: 40px;
+  padding: var(--page-pad);
   max-width: var(--container-lg);
   margin: 0 auto;
+}
+
+.page-content--full {
+  padding: var(--page-pad);
+  max-width: none;
 }
 
 .page-head {

@@ -9,7 +9,6 @@ import com.tripyfull.model.Activity;
 import com.tripyfull.model.ActivityType;
 import com.tripyfull.model.Day;
 import com.tripyfull.model.Place;
-import com.tripyfull.model.PlacePriority;
 import com.tripyfull.model.PlaceType;
 import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.Trip;
@@ -17,6 +16,7 @@ import com.tripyfull.model.User;
 import com.tripyfull.repository.ActivityRepository;
 import com.tripyfull.repository.DayRepository;
 import com.tripyfull.repository.PlaceRepository;
+import com.tripyfull.repository.TripRepository;
 import com.tripyfull.security.OwnershipGuard;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -47,13 +47,16 @@ public class TripPlanningService {
     private final PlaceRepository placeRepository;
     private final DayRepository dayRepository;
     private final ActivityRepository activityRepository;
+    private final TripRepository tripRepository;
     private final OwnershipGuard guard;
 
     public TripPlanningService(PlaceRepository placeRepository, DayRepository dayRepository,
-                               ActivityRepository activityRepository, OwnershipGuard guard) {
+                               ActivityRepository activityRepository, TripRepository tripRepository,
+                               OwnershipGuard guard) {
         this.placeRepository = placeRepository;
         this.dayRepository = dayRepository;
         this.activityRepository = activityRepository;
+        this.tripRepository = tripRepository;
         this.guard = guard;
     }
 
@@ -142,8 +145,10 @@ public class TripPlanningService {
                 activity.setNeedsBooking(place.isNeedsBooking());
                 activity.setOrderIndex(nextIndex++);
                 activityRepository.save(activity);
+                trip.getPlaces().add(place);   // keep the trip's place list in sync
             }
         }
+        tripRepository.save(trip);
         return DayMapper.toResponseList(dayRepository.findByTripIdOrderByDateAsc(trip.getId()));
     }
 
@@ -196,7 +201,7 @@ public class TripPlanningService {
 
         List<Place> rest = pool.stream()
                 .filter(p -> !seeds.contains(p))
-                .sorted(Comparator.comparing((Place p) -> p.getPriority() != PlacePriority.MUST_SEE))
+                .sorted(Comparator.comparingInt(Place::getRating).reversed())
                 .toList();
         for (Place p : rest) {
             Cluster best = clusters.stream()
@@ -209,8 +214,8 @@ public class TripPlanningService {
                 unassigned.add(p);   // everything is full
             }
         }
-        // OPTIONAL places bump before MUST_SEE in the pool listing.
-        unassigned.sort(Comparator.comparing((Place p) -> p.getPriority() == PlacePriority.MUST_SEE));
+        // Low-rated places bump first in the pool listing.
+        unassigned.sort(Comparator.comparingInt(Place::getRating));
         return clusters;
     }
 
@@ -228,11 +233,11 @@ public class TripPlanningService {
             }
             for (List<Place> group : byType.values()) {
                 if (group.size() <= MAX_SAME_TYPE_PER_DAY) continue;
-                // Move OPTIONAL surplus first; keep MUST_SEE in place.
+                // Move the lowest-rated surplus first; 5-star places stay put.
                 List<Place> surplus = group.stream()
-                        .sorted(Comparator.comparing((Place p) -> p.getPriority() == PlacePriority.MUST_SEE))
+                        .sorted(Comparator.comparingInt(Place::getRating))
                         .limit(group.size() - MAX_SAME_TYPE_PER_DAY)
-                        .filter(p -> p.getPriority() != PlacePriority.MUST_SEE)
+                        .filter(p -> p.getRating() < 5)
                         .toList();
                 for (Place p : surplus) {
                     Cluster target = clusters.stream()
@@ -365,7 +370,7 @@ public class TripPlanningService {
         return new PlanResponse.PlanPlace(
                 p.getId(), p.getName(),
                 p.getType() != null ? p.getType().name() : null,
-                p.getPriority() != null ? p.getPriority().name() : PlacePriority.OPTIONAL.name(),
+                p.getRating(),
                 p.isNeedsBooking());
     }
 

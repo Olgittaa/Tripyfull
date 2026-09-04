@@ -8,9 +8,11 @@ import com.tripyfull.model.Activity;
 import com.tripyfull.model.Day;
 import com.tripyfull.model.Place;
 import com.tripyfull.model.PlaceVisibility;
+import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.ActivityRepository;
 import com.tripyfull.repository.PlaceRepository;
+import com.tripyfull.repository.TripRepository;
 import com.tripyfull.security.OwnershipGuard;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,12 +28,14 @@ public class ActivityService {
 
     private final ActivityRepository activityRepository;
     private final PlaceRepository placeRepository;
+    private final TripRepository tripRepository;
     private final OwnershipGuard guard;
 
     public ActivityService(ActivityRepository activityRepository, PlaceRepository placeRepository,
-                           OwnershipGuard guard) {
+                           TripRepository tripRepository, OwnershipGuard guard) {
         this.activityRepository = activityRepository;
         this.placeRepository = placeRepository;
+        this.tripRepository = tripRepository;
         this.guard = guard;
     }
 
@@ -91,6 +95,9 @@ public class ActivityService {
         if (activity.getAddress() == null || activity.getAddress().isBlank()) {
             activity.setAddress(place.getAddress());
         }
+        // Scheduling a place implies it belongs to the trip's own place list.
+        Trip trip = activity.getDay().getTrip();
+        if (trip.getPlaces().add(place)) tripRepository.save(trip);
     }
 
     public void delete(UUID activityId, String username) {

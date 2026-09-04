@@ -1,0 +1,151 @@
+/* ============================================================
+   COMPONENTS · Lightbox (full-screen photo viewer)
+   ============================================================ */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-8);
+  /* Deliberately darker than a dialog scrim: the photo is the whole point. */
+  background: rgba(20, 16, 14, 0.9);
+}
+
+.lightbox-figure {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.lightbox-img {
+  max-width: 100%;
+  /* Leave room for the caption under the image. */
+  max-height: calc(100vh - 160px);
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  background: var(--ink-800);
+}
+
+.lightbox-caption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: #fff;
+  font: var(--type-small);
+  text-align: center;
+}
+
+.lightbox-title {
+  font-weight: var(--fw-semibold);
+}
+
+.lightbox-count {
+  font: var(--fw-medium) var(--text-xs)/1 var(--font-mono);
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.lightbox-nav,
+.lightbox-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.lightbox-nav:hover,
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+}
+
+.lightbox-enter-active,
+.lightbox-leave-active {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.lightbox-enter-from,
+.lightbox-leave-to {
+  opacity: 0;
+}
+
+/* ---- Thumbnail strip (a photo grid inside a panel or card) ---- */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: var(--space-1);
+}
+
+.photo-thumb {
+  position: relative;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-thumb:hover {
+  border-color: var(--border-strong);
+}
+
+/* Remove button, shown on hover or keyboard focus within the thumbnail. */
+.photo-thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: rgba(20, 16, 14, 0.62);
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.photo-thumb:hover .photo-thumb-remove,
+.photo-thumb-remove:focus-visible {
+  opacity: 1;
+}
+
+.photo-thumb-remove:hover {
+  background: var(--danger-700);
+}

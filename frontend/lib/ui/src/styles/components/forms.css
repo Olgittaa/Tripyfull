@@ -219,6 +219,16 @@ input:focus {
   border-color: var(--input-text-focus-border);
   box-shadow: 0 0 0 3px var(--input-select-focus-bg);
 }
+
+/* Small variant — matches btn--sm so toolbars keep one control height. */
+.select--sm .select-trigger {
+  padding: 6px 10px;
+  gap: 6px;
+  font-size: var(--text-xs);
+}
+.select--sm .select-chevron {
+  font-size: 10px;
+}
 .select-trigger.is-error {
   border-color: var(--input-text-danger-border);
 }
@@ -260,14 +270,65 @@ input:focus {
   left: 0;
   right: 0;
   z-index: 20;
-  list-style: none;
-  margin: 0;
   padding: var(--space-1);
   background: var(--input-text-bg);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   box-shadow: var(--elevation-3);
 }
+
+/* Teleported to <body> and anchored to the trigger, so an overflow-hidden
+   modal or card can't clip it. Height is set inline from the space available. */
+.select-menu--floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  z-index: 1100; /* above modals */
+}
+
+/* The options scroll inside the menu; long lists never stretch the page. */
+.select-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 264px; /* fallback; the component sets the real value inline */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.select-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-2) var(--space-1);
+  margin-bottom: var(--space-1);
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+.select-search .pi {
+  font-size: var(--text-xs);
+}
+.select-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  padding: var(--space-2) 0;
+  font: var(--fw-regular) var(--text-sm)/1.2 var(--font-sans);
+  color: var(--text-primary);
+}
+.select-search input::placeholder {
+  color: var(--text-disabled);
+}
+
+.select-empty {
+  padding: 10px 12px;
+  font: var(--fw-regular) var(--text-sm)/1.2 var(--font-sans);
+  color: var(--text-disabled);
+}
+
 .select-option {
   display: flex;
   align-items: center;

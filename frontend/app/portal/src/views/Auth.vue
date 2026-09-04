@@ -58,7 +58,9 @@ const submit = async () => {
     // The API returns errors as { error: "..." } (or occasionally plain text).
     const data = err.response?.data;
     error.value =
-      data?.error || (typeof data === 'string' && data) || 'Something went wrong. Please try again.';
+      data?.error ||
+      (typeof data === 'string' && data) ||
+      'Something went wrong. Please try again.';
   } finally {
     loading.value = false;
   }

@@ -1,5 +1,5 @@
 <template>
-  <div class="page-content--wide">
+  <div class="page-content page-content--full">
     <div v-if="loading" style="display: flex; flex-direction: column; gap: 20px">
       <div class="skeleton" style="height: 40px; width: 300px"></div>
       <div style="display: flex; gap: 8px">
@@ -1231,7 +1231,7 @@ const libraryDots = computed(() => {
       id: p.id,
       lat: Number(p.latitude),
       lon: Number(p.longitude),
-      label: (p.priority === 'MUST_SEE' ? '⭐ ' : '') + p.name,
+      label: (p.rating === 5 ? '⭐ ' : '') + p.name,
       sub: placeTypeLabel(p.type) + (p.needsBooking ? ' · book ahead' : ''),
     }));
 });

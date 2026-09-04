@@ -57,9 +57,28 @@ public class Place {
     @Column(name = "osm_id")
     private String osmId;
 
+    /**
+     * Planning rating 1–5: 5 = worth the whole trip, 4 = big detour OK,
+     * 3 = small detour, 2 = only if on the way, 1 = maybe skip.
+     */
+    @Column(nullable = false)
+    private int rating = 3;
+
+    /** Why this rating (e.g. "iconic view, but 2h queue"). */
+    @Column(name = "rating_comment", length = 500)
+    private String ratingComment;
+
+    /** Typical time to visit, in minutes — feeds day-capacity planning. */
+    @Column(name = "visit_minutes")
+    private Integer visitMinutes;
+
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(16)", nullable = false)
-    private PlacePriority priority = PlacePriority.OPTIONAL;
+    @Column(columnDefinition = "varchar(8)", nullable = false)
+    private PlaceAudience audience = PlaceAudience.ALL;
+
+    /** Needs special preparation (gear, fitness, permits). */
+    @Column(name = "needs_preparation", nullable = false)
+    private boolean needsPreparation = false;
 
     /** Requires advance booking (tours, shows, popular restaurants). */
     @Column(name = "needs_booking", nullable = false)
@@ -106,8 +125,16 @@ public class Place {
     public void setLinks(List<String> links) { this.links = links; }
     public String getOsmId() { return osmId; }
     public void setOsmId(String osmId) { this.osmId = osmId; }
-    public PlacePriority getPriority() { return priority; }
-    public void setPriority(PlacePriority priority) { this.priority = priority; }
+    public int getRating() { return rating; }
+    public void setRating(int rating) { this.rating = rating; }
+    public String getRatingComment() { return ratingComment; }
+    public void setRatingComment(String ratingComment) { this.ratingComment = ratingComment; }
+    public Integer getVisitMinutes() { return visitMinutes; }
+    public void setVisitMinutes(Integer visitMinutes) { this.visitMinutes = visitMinutes; }
+    public PlaceAudience getAudience() { return audience; }
+    public void setAudience(PlaceAudience audience) { this.audience = audience; }
+    public boolean isNeedsPreparation() { return needsPreparation; }
+    public void setNeedsPreparation(boolean needsPreparation) { this.needsPreparation = needsPreparation; }
     public boolean isNeedsBooking() { return needsBooking; }
     public void setNeedsBooking(boolean needsBooking) { this.needsBooking = needsBooking; }
     public PlaceVisibility getVisibility() { return visibility; }

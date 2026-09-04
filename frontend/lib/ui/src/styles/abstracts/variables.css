@@ -232,6 +232,9 @@
   --container-xl: 1320px;
   --gutter: clamp(1rem, 4vw, 3rem);
   --sidebar-width: 248px;
+  --topbar-height: 60px;
+  /* Padding of .page-content — inline panels cancel it to sit flush. */
+  --page-pad: var(--space-7);
 
   /* -- Motion -- */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);

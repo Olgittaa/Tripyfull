@@ -20,3 +20,9 @@ export function popOverlay(token) {
 export function isTopOverlay(token) {
   return stack.length > 0 && stack[stack.length - 1] === token;
 }
+
+// An inline panel is part of the page, so it never joins the stack — but it
+// still must not swallow Escape while a real overlay sits above it.
+export function hasOverlays() {
+  return stack.length > 0;
+}

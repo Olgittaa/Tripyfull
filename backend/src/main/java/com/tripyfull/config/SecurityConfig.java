@@ -56,6 +56,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/geo/route").authenticated()
                 .requestMatchers("/api/geo/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                // <img> can't send the bearer token: the random per-file URL is
+                // the capability (see PlacePhotoController#serve).
+                .requestMatchers(HttpMethod.GET, "/api/place-photos/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

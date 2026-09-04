@@ -48,6 +48,18 @@ public class FileStorageService {
         }
     }
 
+    /** Saves already-processed bytes under an explicit key (see PlacePhotoService). */
+    public String storeBytes(byte[] bytes, String storageKey) {
+        try {
+            Path target = resolve(storageKey);
+            Files.createDirectories(target.getParent());
+            Files.write(target, bytes);
+            return storageKey;
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store file", e);
+        }
+    }
+
     public Path resolve(String storageKey) {
         Path p = root.resolve(storageKey).normalize();
         if (!p.startsWith(root)) {

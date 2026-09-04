@@ -23,18 +23,23 @@ public class FolderService {
 
     private final PlaceFolderRepository folderRepository;
     private final PlaceRepository placeRepository;
+    private final com.tripyfull.repository.TripRepository tripRepository;
     private final OwnershipGuard guard;
 
     public FolderService(PlaceFolderRepository folderRepository, PlaceRepository placeRepository,
-                         OwnershipGuard guard) {
+                         com.tripyfull.repository.TripRepository tripRepository, OwnershipGuard guard) {
         this.folderRepository = folderRepository;
         this.placeRepository = placeRepository;
+        this.tripRepository = tripRepository;
         this.guard = guard;
     }
 
-    public List<FolderResponse> list(String username) {
+    /** All of the user's folders, or only those belonging to one trip. */
+    public List<FolderResponse> list(String username, UUID tripId) {
         User user = getUser(username);
         return folderRepository.findByOwnerIdOrderByNameAsc(user.getId()).stream()
+                .filter(f -> tripId == null
+                        || (f.getTrip() != null && f.getTrip().getId().equals(tripId)))
                 .map(this::toResponse).toList();
     }
 
@@ -44,6 +49,13 @@ public class FolderService {
         folder.setOwner(user);
         folder.setName(request.name());
         folder.setColor(request.color());
+        // A folder without a trip is invisible in the trip's list and silently
+        // breaks "file a place into a folder" (the place never joins the trip),
+        // so new folders always belong to one. Older trip-less rows still load.
+        if (request.tripId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A folder must belong to a trip");
+        }
+        folder.setTrip(guard.requireTrip(request.tripId(), user));
         return toResponse(folderRepository.save(folder));
     }
 
@@ -72,6 +84,10 @@ public class FolderService {
             if (!f.getId().equals(folderId) && f.getPlaces().remove(place)) folderRepository.save(f);
         }
         folder.getPlaces().add(place);
+        // Filing into a trip's folder implies the place belongs to that trip's list.
+        if (folder.getTrip() != null && folder.getTrip().getPlaces().add(place)) {
+            tripRepository.save(folder.getTrip());
+        }
         return toResponse(folderRepository.save(folder));
     }
 
@@ -95,6 +111,7 @@ public class FolderService {
     }
 
     private FolderResponse toResponse(PlaceFolder f) {
-        return new FolderResponse(f.getId(), f.getName(), f.getColor(), f.getPlaces().size());
+        return new FolderResponse(f.getId(), f.getName(), f.getColor(), f.getPlaces().size(),
+                f.getTrip() != null ? f.getTrip().getId() : null);
     }
 }

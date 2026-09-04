@@ -17,5 +17,5 @@ public record PlanResponse(
             double totalKm            // base -> stops, Haversine
     ) {}
 
-    public record PlanPlace(UUID placeId, String name, String type, String priority, boolean needsBooking) {}
+    public record PlanPlace(UUID placeId, String name, String type, int rating, boolean needsBooking) {}
 }

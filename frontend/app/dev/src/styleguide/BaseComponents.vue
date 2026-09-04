@@ -30,6 +30,7 @@
         <a href="#upload">File upload</a>
         <a href="#rating">Rating</a>
         <a href="#drawers">Drawer</a>
+        <a href="#lightbox">Lightbox</a>
         <a href="#pdf">PDF viewer</a>
         <router-link to="/styleguide">Style guide</router-link>
       </nav>
@@ -100,8 +101,12 @@
                   :error="row.errHint"
                   :disabled="row.disabled"
                 >
-                  <template v-if="row.prefix" #prefix><i class="pi" :class="row.prefix" /></template>
-                  <template v-if="row.suffix" #suffix><i class="pi" :class="row.suffix" /></template>
+                  <template v-if="row.prefix" #prefix
+                    ><i class="pi" :class="row.prefix"
+                  /></template>
+                  <template v-if="row.suffix" #suffix
+                    ><i class="pi" :class="row.suffix"
+                  /></template>
                 </TfInput>
               </div>
             </div>
@@ -188,7 +193,13 @@
               <div class="bc-num-name">Slider input</div>
               <div class="bc-num-slider">
                 <TfSlider v-model="sliderValue" :min="0" :max="10" />
-                <TfSlider :model-value="4" :min="0" :max="10" disabled hint="This input is disabled" />
+                <TfSlider
+                  :model-value="4"
+                  :min="0"
+                  :max="10"
+                  disabled
+                  hint="This input is disabled"
+                />
               </div>
             </div>
           </div>
@@ -423,7 +434,10 @@
       <!-- ACCORDION -->
       <section id="accordion" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Navigation</span><h2 class="bc-sec-title">Accordion</h2></div>
+          <div>
+            <span class="tf-eyebrow">Navigation</span>
+            <h2 class="bc-sec-title">Accordion</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div style="max-width: 520px"><TfAccordion :items="accordionItems" /></div>
@@ -434,7 +448,8 @@
       <section id="dropdown" class="bc-block">
         <div class="bc-sec-head">
           <div>
-            <span class="tf-eyebrow">Navigation</span><h2 class="bc-sec-title">Dropdown menu</h2>
+            <span class="tf-eyebrow">Navigation</span>
+            <h2 class="bc-sec-title">Dropdown menu</h2>
           </div>
         </div>
         <div class="bc-demo">
@@ -447,7 +462,10 @@
       <!-- TABLE -->
       <section id="table" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Table</h2></div>
+          <div>
+            <span class="tf-eyebrow">Data</span>
+            <h2 class="bc-sec-title">Table</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <TfTable :columns="tableColumns" :rows="tableRows">
@@ -461,7 +479,10 @@
       <!-- STAT -->
       <section id="stat" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Stat cards</h2></div>
+          <div>
+            <span class="tf-eyebrow">Data</span>
+            <h2 class="bc-sec-title">Stat cards</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div class="bc-row">
@@ -475,7 +496,10 @@
       <!-- AVATAR GROUP -->
       <section id="avatars" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Avatar group</h2></div>
+          <div>
+            <span class="tf-eyebrow">Data</span>
+            <h2 class="bc-sec-title">Avatar group</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <TfAvatarGroup :items="people" :max="4" />
@@ -485,7 +509,10 @@
       <!-- SKELETON -->
       <section id="skeleton" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">Skeleton</h2></div>
+          <div>
+            <span class="tf-eyebrow">Data</span>
+            <h2 class="bc-sec-title">Skeleton</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div style="display: flex; flex-direction: column; gap: 14px; max-width: 320px">
@@ -504,7 +531,10 @@
       <!-- SPINNER -->
       <section id="spinner" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Feedback</span><h2 class="bc-sec-title">Spinner</h2></div>
+          <div>
+            <span class="tf-eyebrow">Feedback</span>
+            <h2 class="bc-sec-title">Spinner</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div class="bc-row" style="gap: 24px; align-items: center">
@@ -518,7 +548,10 @@
       <!-- CONFIRM -->
       <section id="confirm" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Overlay</span><h2 class="bc-sec-title">Confirm dialog</h2></div>
+          <div>
+            <span class="tf-eyebrow">Overlay</span>
+            <h2 class="bc-sec-title">Confirm dialog</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <TfButton variant="danger" @click="confirmOpen = true">Delete trip</TfButton>
@@ -537,7 +570,8 @@
       <section id="toast-host" class="bc-block">
         <div class="bc-sec-head">
           <div>
-            <span class="tf-eyebrow">Feedback</span><h2 class="bc-sec-title">Toast host</h2>
+            <span class="tf-eyebrow">Feedback</span>
+            <h2 class="bc-sec-title">Toast host</h2>
           </div>
         </div>
         <div class="bc-demo">
@@ -558,7 +592,10 @@
       <!-- POPOVER -->
       <section id="popover" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Overlay</span><h2 class="bc-sec-title">Popover</h2></div>
+          <div>
+            <span class="tf-eyebrow">Overlay</span>
+            <h2 class="bc-sec-title">Popover</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <TfPopover position="bottom">
@@ -578,7 +615,10 @@
       <!-- MULTI-SELECT -->
       <section id="multiselect" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Forms</span><h2 class="bc-sec-title">Multi-select</h2></div>
+          <div>
+            <span class="tf-eyebrow">Forms</span>
+            <h2 class="bc-sec-title">Multi-select</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div style="max-width: 340px">
@@ -595,7 +635,10 @@
       <!-- FILE UPLOAD -->
       <section id="upload" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Forms</span><h2 class="bc-sec-title">File upload</h2></div>
+          <div>
+            <span class="tf-eyebrow">Forms</span>
+            <h2 class="bc-sec-title">File upload</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div style="display: flex; flex-direction: column; gap: 24px; max-width: 380px">
@@ -608,7 +651,10 @@
       <!-- RATING -->
       <section id="rating" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Forms</span><h2 class="bc-sec-title">Rating</h2></div>
+          <div>
+            <span class="tf-eyebrow">Forms</span>
+            <h2 class="bc-sec-title">Rating</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <TfRating v-model="ratingVal" />
@@ -618,7 +664,10 @@
       <!-- DRAWERS -->
       <section id="drawers" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Overlay</span><h2 class="bc-sec-title">Side drawer</h2></div>
+          <div>
+            <span class="tf-eyebrow">Overlay</span>
+            <h2 class="bc-sec-title">Side drawer</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div class="bc-row">
@@ -638,7 +687,11 @@
             </TfDrawerSection>
             <TfDrawerSection label="Passengers">
               <TfInput label="Lead traveller" model-value="Mara Ortiz" />
-              <TfSelect label="Seat" :options="['Aisle', 'Window', 'Middle']" model-value="Window" />
+              <TfSelect
+                label="Seat"
+                :options="['Aisle', 'Window', 'Middle']"
+                model-value="Window"
+              />
             </TfDrawerSection>
             <template #footer>
               <TfButton variant="ghost" @click="drawerRight = false">Cancel</TfButton>
@@ -658,10 +711,43 @@
         </div>
       </section>
 
+      <!-- LIGHTBOX -->
+      <section id="lightbox" class="bc-block">
+        <div class="bc-sec-head">
+          <div>
+            <span class="tf-eyebrow">Overlay</span>
+            <h2 class="bc-sec-title">Lightbox</h2>
+          </div>
+        </div>
+        <div class="bc-demo">
+          <div class="photo-grid" style="max-width: 340px">
+            <button
+              v-for="(url, i) in demoPhotos"
+              :key="url"
+              type="button"
+              class="photo-thumb"
+              @click="openLightbox(i)"
+            >
+              <img :src="url" alt="" />
+            </button>
+          </div>
+          <TfLightbox
+            v-model="lightboxOpen"
+            :photos="demoPhotos"
+            :index="lightboxIndex"
+            caption="Sagrada Família"
+            @update:index="(i) => (lightboxIndex = i)"
+          />
+        </div>
+      </section>
+
       <!-- PDF VIEWER -->
       <section id="pdf" class="bc-block">
         <div class="bc-sec-head">
-          <div><span class="tf-eyebrow">Data</span><h2 class="bc-sec-title">PDF viewer</h2></div>
+          <div>
+            <span class="tf-eyebrow">Data</span>
+            <h2 class="bc-sec-title">PDF viewer</h2>
+          </div>
         </div>
         <div class="bc-demo">
           <div style="max-width: 520px; height: 460px">
@@ -731,6 +817,7 @@ import {
   TfPdfViewer,
   TfDrawer,
   TfDrawerSection,
+  TfLightbox,
   toast,
 } from '@tripyfull/ui';
 
@@ -811,6 +898,20 @@ const dateClearableVal = ref(new Date(2026, 7, 17));
 const dateBoundedVal = ref(null);
 const modalOpen = ref(false);
 const confirmOpen = ref(false);
+const lightboxOpen = ref(false);
+const lightboxIndex = ref(0);
+// Inline SVG data URIs: the styleguide must render with no network at all.
+const demoPhotos = ['#e8734a', '#2f7d72', '#d9a53b'].map(
+  (c) =>
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><rect width="800" height="600" fill="${c}"/><circle cx="400" cy="300" r="150" fill="rgba(255,255,255,.35)"/></svg>`,
+    ),
+);
+const openLightbox = (i) => {
+  lightboxIndex.value = i;
+  lightboxOpen.value = true;
+};
 const drawerRight = ref(false);
 const drawerLeft = ref(false);
 const ratingVal = ref(3);

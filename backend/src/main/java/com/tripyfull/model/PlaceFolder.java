@@ -26,6 +26,11 @@ public class PlaceFolder {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
+    /** The trip this folder organizes. Null only for pre-trip-scoping legacy folders. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id")
+    private Trip trip;
+
     /**
      * Places filed into this folder. Membership belongs to the folder's owner, so a place
      * (including someone else's PUBLIC place) can live in at most one of a given user's folders.
@@ -46,6 +51,8 @@ public class PlaceFolder {
     public void setColor(String color) { this.color = color; }
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
+    public Trip getTrip() { return trip; }
+    public void setTrip(Trip trip) { this.trip = trip; }
     public Set<Place> getPlaces() { return places; }
     public Instant getCreatedAt() { return createdAt; }
 }

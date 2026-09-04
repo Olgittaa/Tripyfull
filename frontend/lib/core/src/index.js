@@ -5,3 +5,4 @@ export * from './auth.js';
 export * from './currency.js';
 export * from './date.js';
 export * from './constants.js';
+export * from './media.js';

@@ -9,110 +9,120 @@
 
   <!-- Main app with sidebar -->
   <div v-else class="app-shell">
-    <aside class="app-sidebar">
-      <!-- Logo -->
-      <div class="sidebar-logo" @click="goHome">
+    <!-- Full-width top bar: logo + global nav -->
+    <header class="app-topbar">
+      <div class="topbar-logo" @click="goHome">
+        <img :src="logoMark" alt="" />
         <span class="sidebar-logo-text">Tripy<span>full</span></span>
       </div>
 
-      <!-- All trips button -->
-      <div class="sidebar-section">
-        <router-link to="/trips" class="sidebar-nav-btn" :class="{ active: !currentTrip }">
-          <TfIcon name="map" style="font-size: 20px" /> All trips
+      <nav class="topbar-nav">
+        <router-link to="/trips" class="topbar-link" :class="{ active: $route.path === '/trips' }">
+          <TfIcon name="map" style="font-size: 18px" /> All trips
         </router-link>
-      </div>
-
-      <!-- Trip context nav -->
-      <template v-if="currentTrip">
-        <div class="sidebar-trip-info">
-          <div class="sidebar-trip-label">Trip</div>
-          <div class="sidebar-trip-name">{{ currentTrip.title }}</div>
-          <div class="sidebar-trip-meta">
-            {{ currentTrip.destination || ''
-            }}{{ currentTrip.destination && currentTrip.startDate ? ' · ' : ''
-            }}{{
-              currentTrip.startDate
-                ? formatDateRange(currentTrip.startDate, currentTrip.endDate)
-                : ''
-            }}
-          </div>
-        </div>
-        <nav class="sidebar-trip-nav">
-          <router-link
-            :to="`/trips/${currentTrip.id}`"
-            class="sidebar-nav-btn"
-            :class="{ 'active-filled': isExactRoute(`/trips/${currentTrip.id}`) }"
-          >
-            <TfIcon name="dashboard" style="font-size: 20px" /> Overview
-          </router-link>
-          <router-link
-            :to="`/trips/${currentTrip.id}/itinerary`"
-            class="sidebar-nav-btn"
-            :class="{ 'active-filled': $route.path.includes('/days/') }"
-          >
-            <TfIcon name="route" style="font-size: 20px" /> Itinerary
-          </router-link>
-          <router-link
-            :to="`/trips/${currentTrip.id}/bookings`"
-            class="sidebar-nav-btn"
-            :class="{ 'active-filled': $route.path.includes('/bookings') }"
-          >
-            <TfIcon name="confirmation_number" style="font-size: 20px" /> Bookings
-          </router-link>
-          <router-link
-            :to="`/trips/${currentTrip.id}/budget`"
-            class="sidebar-nav-btn"
-            :class="{ 'active-filled': $route.path.includes('/budget') }"
-          >
-            <TfIcon name="account_balance_wallet" style="font-size: 20px" /> Budget
-          </router-link>
-        </nav>
-      </template>
-
-      <!-- Places link -->
-      <div class="sidebar-section" style="margin-top: 8px">
         <router-link
           to="/places"
-          class="sidebar-nav-btn"
+          class="topbar-link"
           :class="{ active: $route.path === '/places' }"
         >
-          <TfIcon name="place" style="font-size: 20px" /> Places
+          <TfIcon name="place" style="font-size: 18px" /> All places
         </router-link>
-      </div>
 
-      <!-- User -->
-      <div class="sidebar-user">
-        <TfAvatar :name="username" size="sm" />
-        <div style="min-width: 0; line-height: 1.25; flex: 1">
-          <div class="sidebar-user-name">{{ username }}</div>
-          <div style="display: flex; gap: 8px; align-items: center; margin-top: 2px">
-            <router-link to="/settings" class="sidebar-user-sub" style="text-decoration: none"
-              >Settings</router-link
-            >
-            <span style="color: var(--border-default)">·</span>
-            <span class="sidebar-user-sub" @click="logout">Sign out</span>
+        <TfPopover position="bottom-end">
+          <span class="topbar-user">
+            <span class="topbar-user-cur">{{ baseCurrency }}</span>
+            <TfAvatar :name="username" size="sm" />
+          </span>
+          <template #content>
+            <div class="topbar-menu">
+              <div class="topbar-user-name" style="padding: 10px 12px 8px">{{ username }}</div>
+              <router-link to="/settings" class="topbar-link">
+                <i class="pi pi-cog" style="font-size: 13px"></i> Settings
+              </router-link>
+              <button type="button" class="topbar-link" @click="logout">
+                <i class="pi pi-sign-out" style="font-size: 13px"></i> Sign out
+              </button>
+            </div>
+          </template>
+        </TfPopover>
+      </nav>
+    </header>
+
+    <div class="app-body">
+      <aside class="app-sidebar">
+        <!-- Trip context nav (global nav lives in the top bar) -->
+        <template v-if="currentTrip">
+          <div class="sidebar-trip-info">
+            <div class="sidebar-trip-name">{{ currentTrip.title }}</div>
+            <div v-if="currentTrip.destination" class="sidebar-trip-meta">
+              <i class="pi pi-map-marker"></i> {{ currentTrip.destination }}
+            </div>
+            <div v-if="currentTrip.startDate" class="sidebar-trip-meta">
+              <i class="pi pi-calendar"></i>
+              {{ formatDateRange(currentTrip.startDate, currentTrip.endDate) }}
+            </div>
           </div>
-        </div>
-        <span
-          style="
-            font: var(--fw-medium) 11px/1 var(--font-mono);
-            color: var(--text-secondary);
-            background: var(--surface);
-            padding: 3px 8px;
-            border-radius: var(--radius-pill);
-          "
-          >{{ baseCurrency }}</span
-        >
-      </div>
-    </aside>
+          <nav class="sidebar-trip-nav">
+            <router-link
+              :to="`/trips/${currentTrip.id}`"
+              class="sidebar-nav-btn"
+              :class="{ 'active-filled': isExactRoute(`/trips/${currentTrip.id}`) }"
+            >
+              <TfIcon name="dashboard" style="font-size: 20px" /> Overview
+            </router-link>
+            <router-link
+              :to="`/trips/${currentTrip.id}/itinerary`"
+              class="sidebar-nav-btn"
+              :class="{ 'active-filled': $route.path.includes('/days/') }"
+            >
+              <TfIcon name="route" style="font-size: 20px" /> Itinerary
+            </router-link>
+            <router-link
+              :to="`/trips/${currentTrip.id}/map`"
+              class="sidebar-nav-btn"
+              :class="{ 'active-filled': $route.path.includes('/map') }"
+            >
+              <TfIcon name="map" style="font-size: 20px" /> Map
+            </router-link>
+            <router-link
+              :to="`/trips/${currentTrip.id}/places`"
+              class="sidebar-nav-btn"
+              :class="{ 'active-filled': isExactRoute(`/trips/${currentTrip.id}/places`) }"
+            >
+              <TfIcon name="location_on" style="font-size: 20px" /> Trip places
+            </router-link>
+            <router-link
+              :to="`/trips/${currentTrip.id}/bookings`"
+              class="sidebar-nav-btn"
+              :class="{ 'active-filled': $route.path.includes('/bookings') }"
+            >
+              <TfIcon name="confirmation_number" style="font-size: 20px" /> Bookings
+            </router-link>
+            <router-link
+              :to="`/trips/${currentTrip.id}/budget`"
+              class="sidebar-nav-btn"
+              :class="{ 'active-filled': $route.path.includes('/budget') }"
+            >
+              <TfIcon name="account_balance_wallet" style="font-size: 20px" /> Budget
+            </router-link>
+          </nav>
+        </template>
 
-    <main class="app-main">
-      <router-view v-slot="{ Component }">
-        <Transition name="page" mode="out-in">
-          <component :is="Component" />
-        </Transition>
-      </router-view>
-    </main>
+        <p v-else class="sidebar-caption" style="padding-top: 12px">
+          Pick a trip to see its menu here.
+        </p>
+      </aside>
+
+      <main class="app-main">
+        <div class="app-content">
+          <router-view v-slot="{ Component }">
+            <Transition name="page" mode="out-in">
+              <component :is="Component" />
+            </Transition>
+          </router-view>
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
@@ -121,7 +131,8 @@ import { ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { username, baseCurrency, clearAuth, formatDateRange } from '@tripyfull/core';
 import { useTripStore } from '@/stores/tripStore.js';
-import { TfAvatar, TfIcon, TfToastHost, TfConfirmHost } from '@tripyfull/ui';
+import { TfAvatar, TfIcon, TfPopover, TfToastHost, TfConfirmHost } from '@tripyfull/ui';
+import logoMark from '@/assets/logo-mark.svg';
 
 const router = useRouter();
 const route = useRoute();
