@@ -19,7 +19,7 @@ public class Day {
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
 
-    @Column(nullable = false)
+    /** Null for a reserve (buffer) day: it belongs to the trip, not to a date. */
     private LocalDate date;
 
     private String city;

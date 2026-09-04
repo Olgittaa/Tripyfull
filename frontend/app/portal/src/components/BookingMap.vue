@@ -17,11 +17,11 @@ const props = defineProps({
   // [{ points: [[lat, lon], …], mode: 'foot'|'car' }] — one road geometry per leg
   // (foot dotted, car solid); falls back to a straight dashed line when absent.
   legs: { type: Array, default: null },
-  // Context layer: nearby saved places as small muted dots — [{ id, lat, lon, label, sub }].
-  // Excluded from fitBounds so the view stays framed on the actual route.
+  // Context layer: saved places not planned yet — [{ id, lat, lon, label, sub, rating, note }].
+  // Coloured by rating; excluded from fitBounds so the view stays on the route.
   dots: { type: Array, default: () => [] },
 });
-const emit = defineEmits(['dot-add']);
+const emit = defineEmits(['dot-add', 'dot-hide']);
 
 const el = ref(null);
 let map = null;
@@ -44,15 +44,28 @@ function pinIcon(color) {
   });
 }
 
-function dotIcon() {
+/** Saved-place dot, sized and coloured by rating so must-sees read first. */
+const DOT_BY_RATING = {
+  5: { size: 15, color: '#dc2626' },
+  4: { size: 13, color: '#f97316' },
+  3: { size: 11, color: '#eab308' },
+  2: { size: 10, color: '#9ca3af' },
+  1: { size: 9, color: '#d1d5db' },
+};
+
+function dotIcon(rating) {
+  const { size, color } = DOT_BY_RATING[rating] || DOT_BY_RATING[3];
   return L.divIcon({
     className: '',
-    html: `<div style="width:11px;height:11px;background:#8b8478;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);opacity:.85"></div>`,
-    iconSize: [11, 11],
-    iconAnchor: [6, 6],
-    popupAnchor: [0, -8],
+    html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2 - 2],
   });
 }
+
+const POPUP_BTN =
+  'margin-top:6px;padding:3px 10px;border-radius:99px;background:#fff;font:600 12px/1.4 sans-serif;cursor:pointer';
 
 function numberIcon(n) {
   return L.divIcon({
@@ -104,19 +117,34 @@ function renderMarkers() {
   const dots = props.dots.filter((d) => d.lat && d.lon);
   if (!valid.length && !dots.length) return;
 
-  // Nearby saved places first, so route pins render above them.
+  // Saved places first, so route pins render above them.
   dots.forEach((d) => {
-    const marker = L.marker([d.lat, d.lon], { icon: dotIcon(), zIndexOffset: -100 });
+    const marker = L.marker([d.lat, d.lon], {
+      icon: dotIcon(d.rating),
+      zIndexOffset: -100,
+    });
+    const stars = d.rating ? `★ ${d.rating}` : '';
     const sub = d.sub ? `<br><small>${d.sub}</small>` : '';
+    const note = d.note ? `<br><small style="color:#6b5f56">${d.note}</small>` : '';
     marker.bindPopup(
-      `<b>${d.label}</b>${sub}<br><button type="button" class="map-dot-add" style="margin-top:6px;padding:3px 10px;border:1px solid #0e5c55;border-radius:99px;background:#fff;color:#0e5c55;font:600 12px/1.4 sans-serif;cursor:pointer">+ Add to this day</button>`,
+      `<b>${d.label}</b> <span style="color:#855309">${stars}</span>${sub}${note}` +
+        `<br><button type="button" class="map-dot-add" style="${POPUP_BTN};border:1px solid #0e5c55;color:#0e5c55">+ Add to this day</button>` +
+        `<button type="button" class="map-dot-hide" style="${POPUP_BTN};margin-left:6px;border:1px solid #cdc6bd;color:#6b5f56">Hide</button>`,
     );
     marker.on('popupopen', (e) => {
-      const btn = e.popup.getElement()?.querySelector('.map-dot-add');
-      if (btn) {
-        btn.onclick = () => {
+      const el = e.popup.getElement();
+      const add = el?.querySelector('.map-dot-add');
+      if (add) {
+        add.onclick = () => {
           marker.closePopup();
           emit('dot-add', d.id);
+        };
+      }
+      const hide = el?.querySelector('.map-dot-hide');
+      if (hide) {
+        hide.onclick = () => {
+          marker.closePopup();
+          emit('dot-hide', d.id);
         };
       }
     });

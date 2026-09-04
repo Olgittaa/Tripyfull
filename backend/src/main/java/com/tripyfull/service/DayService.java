@@ -68,6 +68,33 @@ public class DayService {
         return DayMapper.toResponseList(saved);
     }
 
+    /**
+     * A reserve day: belongs to the trip but has no date, so it sits outside the
+     * numbered sequence and costs the plan nothing. Its content is moved into a
+     * real day with a swap once the plan changes.
+     */
+    public List<DayResponse> addBufferDay(UUID tripId, String username) {
+        Trip trip = findTripForUser(tripId, username);
+        Day day = new Day();
+        day.setTrip(trip);
+        day.setDate(null);
+        day.setBuffer(true);
+        dayRepository.save(day);
+        return DayMapper.toResponseList(dayRepository.findByTripIdOrderByDateAsc(trip.getId()));
+    }
+
+    /** Only reserve days can be removed — dated ones follow the trip's dates. */
+    public void deleteDay(UUID dayId, String username) {
+        Day day = dayRepository.findById(dayId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Day not found"));
+        findTripForUser(day.getTrip().getId(), username);
+        if (day.getDate() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A dated day cannot be removed — change the trip dates instead");
+        }
+        dayRepository.delete(day);
+    }
+
     public DayResponse updateDay(UUID dayId, DayRequest request, String username) {
         Day day = dayRepository.findById(dayId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Day not found"));
@@ -112,7 +139,12 @@ public class DayService {
         String city = a.getCity(); a.setCity(b.getCity()); b.setCity(city);
         String stay = a.getOvernightStay(); a.setOvernightStay(b.getOvernightStay()); b.setOvernightStay(stay);
         String notes = a.getNotes(); a.setNotes(b.getNotes()); b.setNotes(notes);
-        boolean buffer = a.isBuffer(); a.setBuffer(b.isBuffer()); b.setBuffer(buffer);
+        // Between a dated day and a reserve day the flag stays put: the reserve
+        // remains the reserve, the dated day remains part of the plan. Only the
+        // content moves. Between two dated days the flag travels with the plan.
+        if ((a.getDate() == null) == (b.getDate() == null)) {
+            boolean buffer = a.isBuffer(); a.setBuffer(b.isBuffer()); b.setBuffer(buffer);
+        }
 
         dayRepository.save(a);
         dayRepository.save(b);

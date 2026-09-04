@@ -25,7 +25,10 @@ public final class DayMapper {
     }
 
     public static List<DayResponse> toResponseList(List<Day> days) {
-        List<Day> sorted = days.stream().sorted(Comparator.comparing(Day::getDate)).toList();
+        // Reserve days have no date and belong after the dated ones.
+        List<Day> sorted = days.stream()
+                .sorted(Comparator.comparing(Day::getDate, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
         return IntStream.range(0, sorted.size())
                 .mapToObj(i -> toResponse(sorted.get(i), i + 1))
                 .toList();

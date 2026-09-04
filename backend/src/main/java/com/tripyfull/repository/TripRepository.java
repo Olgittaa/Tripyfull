@@ -9,5 +9,7 @@ import java.util.UUID;
 
 public interface TripRepository extends JpaRepository<Trip, UUID> {
     List<Trip> findByOwnerId(Long ownerId);
+    /** Trips whose own place list contains this place (join rows must go first). */
+    List<Trip> findByPlacesId(UUID placeId);
     Optional<Trip> findByIdAndOwnerId(UUID id, Long ownerId);
 }

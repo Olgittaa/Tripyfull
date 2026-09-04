@@ -18,6 +18,6 @@ public record ActivityRequest(
         UUID placeId,          // link to a library Place (inherits address when blank)
         Boolean clearPlace,    // true to unlink
         UUID dayId,            // on update: move the activity to this day (same trip only)
-        String travelModeToNext, // foot | car — travel mode to the day's next mapped stop
+        String travelModeToNext, // foot | taxi | bus | train | car | plane — to the next mapped stop
         Boolean needsBooking
 ) {}

@@ -4,6 +4,7 @@ import com.tripyfull.dto.PlaceGeocodeRequest;
 import com.tripyfull.dto.PlaceImportRequest;
 import com.tripyfull.dto.PlaceRequest;
 import com.tripyfull.dto.PlaceResponse;
+import com.tripyfull.model.Activity;
 import com.tripyfull.model.Place;
 import com.tripyfull.model.PlaceFolder;
 import com.tripyfull.model.PlaceAudience;
@@ -42,12 +43,14 @@ public class PlaceService {
     private final GooglePlacesService googlePlacesService;
     private final TripRepository tripRepository;
     private final PlacePhotoService placePhotoService;
+    private final com.tripyfull.repository.ActivityRepository activityRepository;
     private final OwnershipGuard guard;
 
     public PlaceService(PlaceRepository placeRepository, GeocodingService geocodingService,
                         PlaceFolderRepository folderRepository, MapLinkService mapLinkService,
                         OpenTripMapService openTripMapService, GooglePlacesService googlePlacesService,
                         TripRepository tripRepository, PlacePhotoService placePhotoService,
+                        com.tripyfull.repository.ActivityRepository activityRepository,
                         OwnershipGuard guard) {
         this.placeRepository = placeRepository;
         this.geocodingService = geocodingService;
@@ -57,6 +60,7 @@ public class PlaceService {
         this.googlePlacesService = googlePlacesService;
         this.tripRepository = tripRepository;
         this.placePhotoService = placePhotoService;
+        this.activityRepository = activityRepository;
         this.guard = guard;
     }
 
@@ -362,6 +366,18 @@ public class PlaceService {
             f.getPlaces().remove(place);
             folderRepository.save(f);
         }
+        // Same for trip shortlists: trip_places references the place, so deleting
+        // one that is planned into a trip failed on the foreign key.
+        for (Trip t : tripRepository.findByPlacesId(place.getId())) {
+            t.getPlaces().remove(place);
+            tripRepository.save(t);
+        }
+        // Itinerary entries keep their name, times and notes — they just stop
+        // pointing at a place that no longer exists.
+        List<Activity> planned = activityRepository.findByPlaceId(place.getId());
+        for (Activity a : planned) a.setPlace(null);
+        activityRepository.saveAll(planned);
+
         placeRepository.delete(place);
     }
 

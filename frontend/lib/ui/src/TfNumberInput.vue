@@ -19,7 +19,6 @@
         class="num-field"
         type="text"
         inputmode="decimal"
-        :size="fieldSize"
         :value="display"
         :disabled="disabled"
         @focus="onFocus"
@@ -102,7 +101,6 @@ const current = computed(() => props.modelValue ?? 0);
 const canDec = computed(() => props.min == null || current.value > props.min);
 const canInc = computed(() => props.max == null || current.value < props.max);
 const display = computed(() => (focused.value ? draft.value : format(props.modelValue)));
-const fieldSize = computed(() => Math.max((display.value || '0').length, 1));
 
 function nudge(dir) {
   emit('update:modelValue', clamp(round(current.value + dir * props.step)));

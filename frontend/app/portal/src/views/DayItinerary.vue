@@ -35,7 +35,12 @@
           </TfIconButton>
           <div>
             <div class="tf-eyebrow" style="margin-bottom: 4px">
-              Day {{ day?.dayNumber }} · {{ formatDateShort(day?.date) }}
+              <template v-if="day && !day.date"
+                >Reserve day {{ reserveIndex }} · outside the trip dates</template
+              >
+              <template v-else
+                >Day {{ day?.dayNumber }} · {{ formatDateShort(day?.date) }}</template
+              >
             </div>
             <h1
               style="
@@ -69,14 +74,16 @@
           >
             <i class="pi pi-sort-amount-down" style="font-size: 13px"></i> Sort by time
           </TfButton>
+          <!-- Buffer days are their own reserve days now (the "+ Buffer" chip in
+               the strip), so a dated day has nothing to toggle. -->
           <TfButton
+            v-if="!day?.date"
             variant="ghost"
             size="sm"
-            @click="toggleBuffer"
-            title="Buffer day: intentionally unplanned (weather, rest, spontaneous finds)"
+            @click="removeReserveDay(day)"
+            title="Remove this reserve day"
           >
-            <i class="pi pi-pause-circle" style="font-size: 13px"></i>
-            {{ day?.isBuffer ? 'Buffer ✓' : 'Buffer' }}
+            <i class="pi pi-trash" style="font-size: 13px"></i> Remove reserve
           </TfButton>
           <TfButton
             v-if="allDays.length > 1"
@@ -93,18 +100,81 @@
         </div>
       </div>
 
-      <!-- Day picker strip -->
+      <!-- Day picker strip: buffer days stand in line with the rest, marked but
+           not set apart, and can be flipped from here as the plan changes. -->
       <div class="day-picker" v-if="allDays.length > 1">
         <button
-          v-for="d in allDays"
+          v-for="d in datedDays"
           :key="d.id"
           class="day-picker-btn"
           :class="d.id === dayId ? 'day-picker-btn--on' : 'day-picker-btn--off'"
           @click="switchDay(d.id)"
         >
-          <div class="day-picker-label">D{{ d.dayNumber }}{{ d.isBuffer ? ' ☕' : '' }}</div>
+          <div class="day-picker-label">D{{ d.dayNumber }}</div>
           <div class="day-picker-date">{{ formatDateShort(d.date) }}</div>
+          <div class="day-picker-note">{{ d.city || '' }}</div>
         </button>
+
+        <!-- Reserve days: part of the trip, outside its dates. Nothing is planned
+             on them until you swap one into a real day. -->
+        <span v-if="reserveDays.length" class="day-picker-sep"></span>
+        <button
+          v-for="(d, i) in reserveDays"
+          :key="d.id"
+          class="day-picker-btn day-picker-btn--reserve"
+          :class="d.id === dayId ? 'day-picker-btn--on' : 'day-picker-btn--off'"
+          @click="switchDay(d.id)"
+        >
+          <span
+            class="day-picker-flag is-on"
+            v-tooltip="'Remove this reserve day'"
+            @click.stop="removeReserveDay(d)"
+          >
+            <i class="pi pi-times"></i>
+          </span>
+          <div class="day-picker-label">R{{ i + 1 }}</div>
+          <div class="day-picker-date">reserve</div>
+          <div class="day-picker-note">{{ d.city || 'no date' }}</div>
+        </button>
+        <button
+          class="day-picker-add"
+          v-tooltip="'Add a buffer day outside the trip dates'"
+          :disabled="addingBuffer"
+          @click="addBufferDay"
+        >
+          <i class="pi pi-plus"></i>
+          <span>Buffer</span>
+        </button>
+      </div>
+
+      <!-- How full the day already is: the question every "add this?" answers to. -->
+      <div class="day-budget">
+        <div class="day-budget-bar">
+          <span
+            class="day-budget-fill day-budget-fill--visit"
+            :style="{ width: dayBudget.visitPct + '%' }"
+          ></span>
+          <span
+            class="day-budget-fill day-budget-fill--travel"
+            :style="{ width: dayBudget.travelPct + '%' }"
+          ></span>
+        </div>
+        <div class="day-budget-legend">
+          <span
+            ><b>{{ dayBudget.stops }}</b> stop{{ dayBudget.stops === 1 ? '' : 's' }}</span
+          >
+          <span class="day-budget-dot day-budget-dot--visit"></span>
+          <span>{{ fmtMin(dayBudget.visitMin) }} at places</span>
+          <span class="day-budget-dot day-budget-dot--travel"></span>
+          <span>{{ fmtMin(dayBudget.travelMin) }} on the move</span>
+          <span class="day-budget-left" :class="{ 'is-over': dayBudget.leftMin < 0 }">
+            {{
+              dayBudget.leftMin < 0
+                ? `${fmtMin(-dayBudget.leftMin)} over a ${DAY_HOURS}h day`
+                : `${fmtMin(dayBudget.leftMin)} left of a ${DAY_HOURS}h day`
+            }}
+          </span>
+        </div>
       </div>
 
       <!-- Two-column: itinerary (left) + day route map (right) -->
@@ -434,28 +504,29 @@
                 </TfCard>
                 <!-- @dragstart guard: a press that drifts must not hijack the row drag -->
                 <div v-if="legInfoByActivity[a.id]" class="timeline-leg" @dragstart.prevent.stop>
-                  <div class="segmented-control segmented-control--xs">
+                  <!-- Not everyone rents a car: the whole set of ways to get to the
+                       next stop, with an honest note when the time is an estimate. -->
+                  <div class="leg-modes">
                     <button
-                      class="segmented-btn"
-                      :class="{ 'segmented-btn--on': legInfoByActivity[a.id].mode === 'foot' }"
-                      title="Walk to the next stop"
-                      @click="setLegMode(a, 'foot')"
+                      v-for="m in TRAVEL_MODES"
+                      :key="m.key"
+                      class="leg-mode"
+                      :class="{ 'is-on': legInfoByActivity[a.id].mode === m.key }"
+                      v-tooltip="m.hint"
+                      @click="setLegMode(a, m.key)"
                     >
-                      <i class="pi pi-directions"></i>
-                    </button>
-                    <button
-                      class="segmented-btn"
-                      :class="{ 'segmented-btn--on': legInfoByActivity[a.id].mode === 'car' }"
-                      title="Drive to the next stop"
-                      @click="setLegMode(a, 'car')"
-                    >
-                      <i class="pi pi-car"></i>
+                      {{ m.icon }}
                     </button>
                   </div>
-                  <span v-if="legInfoByActivity[a.id].data"
+                  <span v-if="legInfoByActivity[a.id].data">
+                    <template v-if="legInfoByActivity[a.id].data.estimated">~</template
                     >{{ fmtDur(legInfoByActivity[a.id].data.durationSec) }} ·
-                    {{ fmtDist(legInfoByActivity[a.id].data.distanceM) }} to next stop</span
-                  >
+                    {{ fmtDist(legInfoByActivity[a.id].data.distanceM) }}
+                    {{ modeLabel(legInfoByActivity[a.id].mode) }}
+                    <span v-if="legInfoByActivity[a.id].data.estimated" class="leg-estimate"
+                      >estimate</span
+                    >
+                  </span>
                   <span v-else-if="legInfoByActivity[a.id].data === null">no route found</span>
                   <span v-else>…</span>
                 </div>
@@ -471,43 +542,9 @@
               <p>Add an activity manually, or quickly from this city's saved places.</p>
             </div>
 
-            <div v-if="cityPlaces.length" style="margin-top: 18px">
-              <div class="addfrom-title">
-                <i class="pi pi-map-marker" style="color: var(--accent)"></i> Add from places ·
-                {{ day?.city }}
-              </div>
-              <div class="addfrom-grid">
-                <button
-                  v-for="p in cityPlaces"
-                  :key="p.id"
-                  type="button"
-                  class="addfrom-item"
-                  @click="openAddFromPlace(p)"
-                >
-                  <span
-                    v-if="p.photos && p.photos.length"
-                    class="addfrom-thumb"
-                    :style="{ backgroundImage: `url(${p.photos[0]})` }"
-                  ></span>
-                  <span v-else class="cat-icon cat-icon--lg" :style="placeTypeStyle(p.type)">{{
-                    placeTypeEmoji(p.type)
-                  }}</span>
-                  <span style="flex: 1; min-width: 0">
-                    <span class="addfrom-name">{{ p.name }}</span>
-                    <span class="addfrom-sub">{{
-                      [placeTypeLabel(p.type), p.city || p.address].filter(Boolean).join(' · ')
-                    }}</span>
-                  </span>
-                  <i class="pi pi-plus" style="color: var(--accent); font-size: 16px"></i>
-                </button>
-              </div>
-              <div style="text-align: center; margin-top: 16px">
-                <TfButton variant="ghost" @click="openAddDialog"
-                  ><i class="pi pi-plus" style="font-size: 13px"></i> Or add manually</TfButton
-                >
-              </div>
-            </div>
-            <div v-else style="text-align: center; margin-top: 16px">
+            <!-- Candidates now live beside the map, next to the geography
+                 they belong to; this stays as the manual way in. -->
+            <div style="text-align: center; margin-top: 16px">
               <TfButton variant="primary" @click="openAddDialog"
                 ><i class="pi pi-plus" style="font-size: 13px"></i> Add activity</TfButton
               >
@@ -570,12 +607,19 @@
             :legs="mapLegs"
             :dots="libraryDots"
             numbered
-            :height="520"
+            :height="mapHeight"
             @dot-add="onMapDotAdd"
+            @dot-hide="hidePlace"
           />
-          <div v-if="libraryDots.length" class="text-subtle text-xs" style="margin-top: 6px">
-            <i class="pi pi-circle-fill" style="font-size: 8px; opacity: 0.5"></i>
-            Grey dots — your saved places nearby; click one to add it to this day.
+          <div class="itin-map-legend">
+            <span v-if="libraryDots.length">
+              <i class="pi pi-circle-fill" style="font-size: 8px; color: var(--warning-500)"></i>
+              {{ libraryDots.length }} saved place{{ libraryDots.length === 1 ? '' : 's' }} on the
+              map — colour is the rating; click one for details, to add or to hide it.
+            </span>
+            <button v-if="hiddenIds.size" type="button" class="link-btn" @click="unhideAll">
+              show {{ hiddenIds.size }} hidden
+            </button>
           </div>
           <div v-if="routeTotal" class="itin-route-total">
             <i class="pi pi-directions"></i>
@@ -587,6 +631,84 @@
           <div v-if="!activityMarkers.length" class="itin-map-empty">
             <i class="pi pi-map" style="font-size: 22px"></i>
             <span>No places with coordinates yet</span>
+          </div>
+
+          <!-- Candidates for this day: best-rated first, nearest first among
+               equals, and never something already on the timeline. -->
+          <div class="itin-picks">
+            <div class="itin-picks-head">
+              <h3>Places to consider</h3>
+              <span class="text-subtle text-sm">{{ candidatePlaces.length }}</span>
+            </div>
+            <div class="itin-picks-controls">
+              <div class="itin-picks-scope">
+                <button
+                  v-for="s in PICK_SCOPES"
+                  :key="s.key"
+                  type="button"
+                  class="pick-scope-btn"
+                  :class="{ 'is-on': pickScope === s.key }"
+                  @click="pickScope = s.key"
+                >
+                  {{ s.label }}
+                </button>
+              </div>
+              <div class="itin-picks-scope">
+                <button
+                  v-for="o in PICK_SORTS"
+                  :key="o.key"
+                  type="button"
+                  class="pick-scope-btn"
+                  :class="{ 'is-on': pickSort === o.key }"
+                  v-tooltip="o.hint"
+                  @click="pickSort = o.key"
+                >
+                  {{ o.label }}
+                </button>
+              </div>
+            </div>
+            <div class="itin-picks-list">
+              <div v-for="p in candidatePlaces" :key="p.id" class="pick-row">
+                <span class="pick-rating" :class="`pick-rating--${p.rating || 3}`"
+                  >★ {{ p.rating || 3 }}</span
+                >
+                <span class="pick-main">
+                  <span class="pick-name">{{ p.name }}</span>
+                  <span class="pick-sub">{{ pickSub(p) }}</span>
+                </span>
+                <!-- One click puts it in the day, right after the stop it is
+                     closest to; the second opens the full form. -->
+                <button
+                  type="button"
+                  class="pick-add"
+                  :disabled="quickAddingId === p.id"
+                  v-tooltip="p.nearStop ? `Add after ${p.nearStop.name}` : 'Add to this day'"
+                  @click="quickAdd(p)"
+                >
+                  <i
+                    class="pi"
+                    :class="quickAddingId === p.id ? 'pi-spinner pi-spin' : 'pi-plus'"
+                  ></i>
+                </button>
+                <button
+                  type="button"
+                  class="pick-more"
+                  v-tooltip="'Add with times and notes'"
+                  @click="openAddFromPlace(p)"
+                >
+                  <i class="pi pi-sliders-h"></i>
+                </button>
+              </div>
+              <p v-if="!candidatePlaces.length" class="text-subtle text-sm" style="margin: 6px 0">
+                {{
+                  pickScope === 'city'
+                    ? 'Nothing from the trip list is in this city — try Trip list.'
+                    : pickScope === 'trip'
+                      ? 'The trip list is empty or already planned — try All places.'
+                      : 'Everything saved is already on a day.'
+                }}
+              </p>
+            </div>
           </div>
         </aside>
       </div>
@@ -835,7 +957,39 @@
               class="w-full"
             />
           </div>
-          <TfInput label="Notes" v-model="form.notes" placeholder="Any details" class="w-full" />
+          <TfTextarea
+            label="Notes"
+            v-model="form.notes"
+            :rows="4"
+            placeholder="What to see here, tickets, opening hours, what to watch out for"
+            class="w-full"
+          />
+          <!-- What you already wrote about this place in the library, so the day
+               can be planned without leaving for the place editor. -->
+          <div v-if="linkedPlace" class="linked-facts">
+            <div class="linked-facts-head">
+              <span>From your places</span>
+              <button type="button" class="link-edit" @click="goEditPlace">Edit place</button>
+            </div>
+            <div class="linked-facts-row">
+              <span>Rating</span>
+              <span class="linked-facts-val"
+                >★ {{ linkedPlace.rating || 3 }}
+                <span class="text-subtle">{{ RATING_HINTS[linkedPlace.rating || 3] }}</span></span
+              >
+            </div>
+            <div v-if="linkedPlace.visitMinutes" class="linked-facts-row">
+              <span>Time to visit</span>
+              <span class="linked-facts-val">{{ linkedPlace.visitMinutes }} min</span>
+            </div>
+            <div v-if="linkedPlace.ratingComment" class="linked-facts-row">
+              <span>Why this rating</span>
+              <span class="linked-facts-val">{{ linkedPlace.ratingComment }}</span>
+            </div>
+            <p v-if="linkedPlace.description" class="linked-facts-desc">
+              {{ linkedPlace.description }}
+            </p>
+          </div>
           <label class="save-place-toggle">
             <input type="checkbox" v-model="form.needsBooking" />
             <span
@@ -879,7 +1033,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   TfButton,
@@ -895,6 +1049,7 @@ import {
   TfNumberInput,
   TfModal,
   TfTooltip,
+  TfTextarea,
   toast,
   confirm,
 } from '@tripyfull/ui';
@@ -1223,18 +1378,24 @@ const dayTotal = computed(() =>
 
 // Saved places near the route: grey context dots on the map. Places already
 // planned today are hidden — they're route pins.
-const libraryDots = computed(() => {
-  const planned = new Set(activities.value.map((a) => a.placeId).filter(Boolean));
-  return placesLib.value
-    .filter((p) => p.latitude != null && p.longitude != null && !planned.has(p.id))
+/**
+ * Every saved place in the current scope that is not planned yet — the map and
+ * the candidate list show the same set, so whatever you spot on one you can act
+ * on in the other.
+ */
+const libraryDots = computed(() =>
+  candidatePlaces.value
+    .filter((p) => p.latitude != null && p.longitude != null)
     .map((p) => ({
       id: p.id,
       lat: Number(p.latitude),
       lon: Number(p.longitude),
-      label: (p.rating === 5 ? '⭐ ' : '') + p.name,
-      sub: placeTypeLabel(p.type) + (p.needsBooking ? ' · book ahead' : ''),
-    }));
-});
+      label: p.name,
+      rating: p.rating || 3,
+      sub: pickSub(p),
+      note: p.ratingComment || null,
+    })),
+);
 const onMapDotAdd = (id) => {
   const p = placesLib.value.find((x) => x.id === id);
   if (p) openAddFromPlace(p);
@@ -1271,7 +1432,42 @@ const legsInFlight = new Set();
 let legTimer = null;
 let legRetryTimer = null;
 
-const legMode = (a) => (a.travelModeToNext === 'car' ? 'car' : 'foot');
+/**
+ * How you get to the next stop. Walking and driving are routed for real; taxi,
+ * bus, train and plane are estimates (no open timetables here) — the row says so.
+ */
+const TRAVEL_MODES = [
+  { key: 'foot', icon: '🚶', label: 'on foot', hint: 'Walk to the next stop' },
+  {
+    key: 'taxi',
+    icon: '🚕',
+    label: 'by taxi',
+    hint: 'Taxi / ride-hailing — road time plus hailing',
+  },
+  {
+    key: 'bus',
+    icon: '🚌',
+    label: 'by bus',
+    hint: 'Bus — road time plus stops and waiting (estimate)',
+  },
+  {
+    key: 'train',
+    icon: '🚆',
+    label: 'by train',
+    hint: 'Train — own track, plus station time (estimate)',
+  },
+  { key: 'car', icon: '🚗', label: 'by car', hint: 'Drive yourself to the next stop' },
+  {
+    key: 'plane',
+    icon: '✈️',
+    label: 'by plane',
+    hint: 'Flight — straight line plus airport time (estimate)',
+  },
+];
+const MODE_KEYS = TRAVEL_MODES.map((m) => m.key);
+const modeLabel = (key) => TRAVEL_MODES.find((m) => m.key === key)?.label || '';
+
+const legMode = (a) => (MODE_KEYS.includes(a.travelModeToNext) ? a.travelModeToNext : 'foot');
 
 // One leg per consecutive pair of mapped stops, owned by the departing activity.
 const dayLegs = computed(() => {
@@ -1304,6 +1500,7 @@ const fetchMissingLegs = () => {
         durationSec: res.data.durationSec,
         distanceM: res.data.distanceM,
         geometry: res.data.geometry,
+        estimated: !!res.data.estimated,
       });
     } catch (err) {
       if (err.response?.status === 404) {
@@ -1405,16 +1602,276 @@ const fmtDur = (sec) => {
 };
 const fmtDist = (m) => (m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`);
 // Saved places in this day's city, for quick-add in the empty state.
-const cityPlaces = computed(() => {
-  const c = (day.value?.city || '').trim().toLowerCase();
-  if (!c) return [];
-  return placesLib.value
-    .filter((p) => {
-      const pc = (p.city || '').toLowerCase();
-      return pc && (pc === c || pc.includes(c) || c.includes(pc));
-    })
-    .slice(0, 6);
+/** The map is the widest thing here, so it follows the window's height. */
+const mapHeight = ref(560);
+const measureMap = () => {
+  mapHeight.value = Math.max(420, Math.min(760, window.innerHeight - 320));
+};
+
+/** km between two points — good enough to sort candidates by "how far off route". */
+const distanceKm = (aLat, aLon, bLat, bLon) => {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLon = ((bLon - aLon) * Math.PI) / 180;
+  const la1 = (aLat * Math.PI) / 180;
+  const la2 = (bLat * Math.PI) / 180;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+};
+
+/** Rating wording shared with the places library. */
+const RATING_HINTS = {
+  5: 'worth the whole trip',
+  4: 'big detour OK',
+  3: 'small detour',
+  2: 'only if on the way',
+  1: 'maybe skip',
+};
+
+/** The library place this activity points at, if any. */
+const linkedPlace = computed(() =>
+  form.value.placeId ? placesLib.value.find((p) => p.id === form.value.placeId) || null : null,
+);
+
+/** "Not today" — hiding declutters both the map and the list. It is a view
+ *  choice, so it lives in the browser per trip, not in the trip's data. */
+const HIDDEN_KEY = `tf.hiddenPlaces.${tripId}`;
+const hiddenIds = ref(new Set());
+
+const loadHidden = () => {
+  try {
+    hiddenIds.value = new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'));
+  } catch {
+    hiddenIds.value = new Set();
+  }
+};
+const persistHidden = () => {
+  try {
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hiddenIds.value]));
+  } catch {
+    /* private mode — hiding just won't survive a reload */
+  }
+};
+const hidePlace = (id) => {
+  const next = new Set(hiddenIds.value);
+  next.add(id);
+  hiddenIds.value = next;
+  persistHidden();
+  const name = placesLib.value.find((p) => p.id === id)?.name || 'Place';
+  toast.success('Hidden', `${name} — "show hidden" brings it back`);
+};
+const unhideAll = () => {
+  hiddenIds.value = new Set();
+  persistHidden();
+};
+
+const PICK_SCOPES = [
+  { key: 'city', label: 'This city' },
+  { key: 'trip', label: 'Trip list' },
+  { key: 'all', label: 'All places' },
+];
+const PICK_SORTS = [
+  { key: 'rating', label: 'Best first', hint: 'Must-sees first, nearest among equals' },
+  { key: 'near', label: 'Nearest', hint: 'Closest to what is already planned today' },
+];
+const pickScope = ref('trip');
+const pickSort = ref('rating');
+
+/** A usable sightseeing day, the yardstick the budget bar measures against. */
+const DAY_HOURS = 10;
+const fmtMin = (min) => {
+  const m = Math.max(0, Math.round(min));
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60 ? (m % 60) + ' min' : ''}`.trim();
+};
+
+/**
+ * Time at places (the activity's own window, else the linked place's estimate)
+ * plus time on the move (real routed legs), against a DAY_HOURS day.
+ */
+const dayBudget = computed(() => {
+  let visitMin = 0;
+  for (const a of activities.value) {
+    if (a.startTime && a.endTime) {
+      const [h1, m1] = a.startTime.split(':').map(Number);
+      const [h2, m2] = a.endTime.split(':').map(Number);
+      const span = h2 * 60 + m2 - (h1 * 60 + m1);
+      if (span > 0) {
+        visitMin += span;
+        continue;
+      }
+    }
+    const place = placesLib.value.find((x) => x.id === a.placeId);
+    visitMin += place?.visitMinutes || 60; // an hour is the honest default
+  }
+  const travelMin = routeTotal.value ? Math.round(routeTotal.value.durationSec / 60) : 0;
+  const total = DAY_HOURS * 60;
+  const visitPct = Math.min(100, (visitMin / total) * 100);
+  return {
+    stops: activities.value.length,
+    visitMin,
+    travelMin,
+    leftMin: total - visitMin - travelMin,
+    visitPct,
+    travelPct: Math.min(100 - visitPct, (travelMin / total) * 100),
+  };
 });
+
+/** Places attached to this trip — the shortlist the day should be built from. */
+const inThisTrip = (p) => (p.tripIds || []).includes(tripId);
+
+/** The day's stops, so a candidate can be measured against the nearest one. */
+const dayStops = computed(() =>
+  activityMarkers.value.map((m, i) => ({ n: i + 1, name: m.label, lat: m.lat, lon: m.lon })),
+);
+
+/** Fallback anchor for an empty day: something saved in the day's own city. */
+const cityAnchor = computed(() => {
+  const withCity = placesLib.value.find(
+    (p) => p.latitude != null && p.longitude != null && matchesDayCity(p),
+  );
+  return withCity ? { lat: Number(withCity.latitude), lon: Number(withCity.longitude) } : null;
+});
+
+/** Nearest planned stop to a place — the answer to "what is this next to?". */
+const nearestStop = (p) => {
+  if (p.latitude == null || p.longitude == null || !dayStops.value.length) return null;
+  let best = null;
+  for (const st of dayStops.value) {
+    const km = distanceKm(st.lat, st.lon, Number(p.latitude), Number(p.longitude));
+    if (!best || km < best.km) best = { ...st, km };
+  }
+  return best;
+};
+
+const matchesDayCity = (p) => {
+  const c = (day.value?.city || '').trim().toLowerCase();
+  if (!c) return true;
+  const pc = (p.city || '').toLowerCase();
+  return !!pc && (pc === c || pc.includes(c) || c.includes(pc));
+};
+
+/** Rating first (the strategy's whole point), then nearest among equals. */
+const candidatePlaces = computed(() => {
+  const planned = new Set(activities.value.map((a) => a.placeId).filter(Boolean));
+  const fallback = cityAnchor.value;
+  const byKm = (a, b) => (a.km == null ? 1e9 : a.km) - (b.km == null ? 1e9 : b.km);
+  return (
+    placesLib.value
+      .filter((p) => !planned.has(p.id) && !hiddenIds.value.has(p.id))
+      // city subset of trip subset of all
+      .filter((p) => (pickScope.value === 'all' ? true : inThisTrip(p)))
+      .filter((p) => (pickScope.value === 'city' ? matchesDayCity(p) : true))
+      .map((p) => {
+        const near = nearestStop(p);
+        const km =
+          near?.km ??
+          (fallback && p.latitude != null && p.longitude != null
+            ? distanceKm(fallback.lat, fallback.lon, Number(p.latitude), Number(p.longitude))
+            : null);
+        return { ...p, nearStop: near, km };
+      })
+      .sort((a, b) =>
+        pickSort.value === 'near'
+          ? byKm(a, b) || (b.rating || 3) - (a.rating || 3)
+          : (b.rating || 3) - (a.rating || 3) || byKm(a, b) || a.name.localeCompare(b.name),
+      )
+      .slice(0, 40)
+  );
+});
+
+const fmtKm = (km) => (km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`);
+
+/** Type, how long it takes, and what it sits next to today. */
+const pickSub = (p) =>
+  [
+    placeTypeLabel(p.type),
+    p.visitMinutes ? `${p.visitMinutes} min` : null,
+    p.nearStop
+      ? `${fmtKm(p.nearStop.km)} from ${p.nearStop.n}. ${p.nearStop.name}`
+      : p.km != null
+        ? `${fmtKm(p.km)} away`
+        : null,
+    p.needsBooking ? 'book ahead' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+/**
+ * Add straight to the day and drop it in after the stop it is nearest to —
+ * geography decides the order, which is the point of planning on a map.
+ */
+const quickAddingId = ref(null);
+const quickAdd = async (p) => {
+  quickAddingId.value = p.id;
+  const near = p.nearStop;
+  try {
+    const res = await api.post(`/api/days/${dayId.value}/activities`, {
+      name: p.name,
+      type: placeToActivityType(p.type),
+      address: p.address || null,
+      placeId: p.id,
+      needsBooking: !!p.needsBooking,
+    });
+    activities.value = [...activities.value, res.data];
+    if (!placesLib.value.some((x) => x.id === p.id)) placesLib.value.unshift(p);
+
+    if (near) {
+      const ids = activities.value.map((a) => a.id).filter((id) => id !== res.data.id);
+      const anchorId = activities.value.find((a) => a.name === near.name)?.id;
+      const at = anchorId ? ids.indexOf(anchorId) + 1 : ids.length;
+      ids.splice(at, 0, res.data.id);
+      const ordered = await api.patch(`/api/days/${dayId.value}/activities/reorder`, {
+        orderedIds: ids,
+      });
+      activities.value = ordered.data;
+    }
+    toast.success('Added', near ? `After ${near.n}. ${near.name}` : `${p.name} is in the day`);
+  } catch {
+    toast.danger('Error', 'Failed to add the place');
+  } finally {
+    quickAddingId.value = null;
+  }
+};
+
+/** Flip any day between planned and buffer straight from the strip. */
+/** Dated days are the trip; reserve days sit beside it, without a date. */
+const datedDays = computed(() => allDays.value.filter((d) => d.date));
+const reserveDays = computed(() => allDays.value.filter((d) => !d.date));
+const reserveIndex = computed(() => reserveDays.value.findIndex((d) => d.id === dayId.value) + 1);
+
+const addingBuffer = ref(false);
+const addBufferDay = async () => {
+  addingBuffer.value = true;
+  try {
+    const res = await api.post(`/api/trips/${tripId}/days/buffer`);
+    allDays.value = res.data || [];
+    toast.success('Buffer day added', 'It sits outside the trip dates until you swap it in');
+  } catch {
+    toast.danger('Error', 'Failed to add a buffer day');
+  } finally {
+    addingBuffer.value = false;
+  }
+};
+
+const removeReserveDay = async (d) => {
+  const ok = await confirm({
+    title: 'Remove reserve day',
+    message: 'Anything planned on it is removed too. Continue?',
+    tone: 'danger',
+    confirmLabel: 'Remove',
+    cancelLabel: 'Cancel',
+  });
+  if (!ok) return;
+  try {
+    await api.delete(`/api/days/${d.id}`);
+    allDays.value = allDays.value.filter((x) => x.id !== d.id);
+    // Standing on the day that just went away: fall back to the first real one.
+    if (d.id === dayId.value && datedDays.value.length) switchDay(datedDays.value[0].id);
+    toast.success('Removed');
+  } catch {
+    toast.danger('Error', 'Failed to remove the day');
+  }
+};
 
 const costByType = computed(() => {
   const map = {};
@@ -1514,17 +1971,6 @@ const switchDay = (id) => {
   router.replace(`/trips/${tripId}/days/${id}`);
   dayId.value = id;
   loadDay(id);
-};
-
-// Buffer flag: this day is deliberately left unplanned (auto-plan skips it too).
-const toggleBuffer = async () => {
-  try {
-    const res = await api.patch(`/api/days/${dayId.value}`, { isBuffer: !day.value?.isBuffer });
-    updateDayLocal(res.data);
-    toast.success('Saved', res.data.isBuffer ? 'Marked as buffer day' : 'Buffer flag removed');
-  } catch {
-    toast.danger('Error', 'Failed to update the day');
-  }
 };
 
 // Swap this day's plan with another day of the trip.
@@ -1702,6 +2148,13 @@ const confirmDelete = (a) => {
   });
 };
 
+onMounted(() => {
+  loadHidden();
+  measureMap();
+  window.addEventListener('resize', measureMap);
+});
+onBeforeUnmount(() => window.removeEventListener('resize', measureMap));
+
 onMounted(async () => {
   loading.value = true;
   loadPlacesLib();
@@ -1727,14 +2180,368 @@ onMounted(async () => {
 <style scoped>
 .itin-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  /* The map earns the wider half it needs to be read at a glance. */
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 34%);
   gap: 24px;
   align-items: start;
+}
+@media (max-width: 1100px) {
+  .itin-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .itin-map {
   position: sticky;
   top: 0;
 }
+/* Travel modes on a leg: small, always all of them, current one filled. */
+.leg-modes {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  flex: none;
+}
+.leg-mode {
+  width: 24px;
+  height: 22px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.leg-mode:hover {
+  opacity: 0.8;
+  filter: none;
+}
+.leg-mode.is-on {
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  opacity: 1;
+  filter: none;
+}
+.leg-estimate {
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font: var(--fw-medium) 10px/1.4 var(--font-sans);
+  color: var(--text-disabled);
+}
+
+.itin-map-legend {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: 6px;
+  font: var(--fw-regular) 11px/1.4 var(--font-sans);
+  color: var(--text-secondary);
+}
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* How full the day is: two stacked shares of a 10h day. */
+.day-budget {
+  margin: 14px 0 4px;
+}
+.day-budget-bar {
+  display: flex;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  overflow: hidden;
+}
+.day-budget-fill {
+  height: 100%;
+}
+.day-budget-fill--visit {
+  background: var(--primary);
+}
+.day-budget-fill--travel {
+  background: var(--warning-500);
+}
+.day-budget-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+.day-budget-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-left: 6px;
+}
+.day-budget-dot--visit {
+  background: var(--primary);
+}
+.day-budget-dot--travel {
+  background: var(--warning-500);
+}
+.day-budget-left {
+  margin-left: auto;
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+}
+.day-budget-left.is-over {
+  color: var(--danger-700);
+}
+
+.itin-picks-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.pick-add,
+.pick-more {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+}
+.pick-add {
+  color: var(--accent);
+}
+.pick-more {
+  color: var(--text-disabled);
+}
+.pick-add:hover,
+.pick-more:hover {
+  background: var(--card);
+  color: var(--text-primary);
+}
+.pick-add:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Candidates: a dense, scannable list — rating badge, name, the facts that
+   decide whether it fits today. */
+.itin-picks {
+  margin-top: 18px;
+  background: var(--card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-3) var(--space-4);
+}
+.itin-picks-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.itin-picks-head h3 {
+  margin: 0;
+  font: var(--fw-bold) 15px/1.2 var(--font-display);
+}
+.itin-picks-scope {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+.pick-scope-btn {
+  border: none;
+  background: none;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font: var(--fw-medium) 12px/1 var(--font-sans);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.pick-scope-btn.is-on {
+  background: var(--card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+.itin-picks-list {
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0 calc(-1 * var(--space-2));
+}
+.pick-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px var(--space-2);
+  border: none;
+  background: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+}
+.pick-row:hover {
+  background: var(--surface);
+}
+.pick-rating {
+  flex: none;
+  font: var(--fw-semibold) 12px/1 var(--font-sans);
+  color: var(--text-secondary);
+  width: 30px;
+}
+.pick-rating--5 {
+  color: var(--warning-700);
+  font-weight: var(--fw-bold);
+}
+.pick-rating--4 {
+  color: var(--text-primary);
+}
+.pick-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pick-name {
+  font: var(--fw-semibold) 13px/1.3 var(--font-sans);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pick-sub {
+  font: var(--fw-regular) 11px/1.3 var(--font-sans);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pick-row .pi-plus {
+  color: var(--accent);
+  font-size: 13px;
+  flex: none;
+}
+
+/* Reserve days live after a divider: same strip, outside the dates. */
+.day-picker-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 6px;
+  background: var(--border-default);
+  flex: none;
+}
+.day-picker-btn--reserve .day-picker-date {
+  font-style: italic;
+}
+.day-picker-add {
+  flex: none;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 58px;
+  padding: 8px 10px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-secondary);
+  font: var(--fw-medium) 11px/1.2 var(--font-sans);
+  cursor: pointer;
+}
+.day-picker-add:hover {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+.day-picker-add:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Buffer days: same row, same size, just visibly held in reserve. */
+.day-picker-btn {
+  position: relative;
+}
+.day-picker-note {
+  font: var(--fw-regular) 10px/1.2 var(--font-sans);
+  color: var(--text-disabled);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 68px;
+}
+.day-picker-flag {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-disabled);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.day-picker-flag.is-on {
+  opacity: 1;
+}
+.day-picker-flag.is-on {
+  color: var(--warning-700);
+}
+
+/* The linked place's own words, read-only inside the activity drawer. */
+.linked-facts {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--surface);
+}
+.linked-facts-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font: var(--type-code);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+.linked-facts-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 3px 0;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+.linked-facts-val {
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  text-align: right;
+}
+.linked-facts-desc {
+  margin: var(--space-2) 0 0;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+
 .itin-map-head {
   display: flex;
   align-items: center;
@@ -1742,7 +2549,7 @@ onMounted(async () => {
   margin-bottom: 10px;
 }
 .itin-map-empty {
-  height: 520px;
+  height: 420px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
   background: var(--surface);

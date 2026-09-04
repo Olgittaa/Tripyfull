@@ -1,5 +1,8 @@
 <template>
-  <div class="tf-segmented" :class="{ 'tf-segmented--sm': size === 'sm' }">
+  <div
+    class="tf-segmented"
+    :class="{ 'tf-segmented--sm': size === 'sm', 'tf-segmented--fill': fill }"
+  >
     <button
       v-for="opt in options"
       :key="opt"
@@ -18,6 +21,8 @@ defineProps({
   options: { type: Array, required: true },
   modelValue: String,
   size: { type: String, default: 'md' },
+  // Fill the row and split it evenly — for a form's main choice.
+  fill: Boolean,
 });
 defineEmits(['update:modelValue']);
 </script>
@@ -48,6 +53,15 @@ defineEmits(['update:modelValue']);
   color: var(--text-primary);
   font-weight: var(--fw-semibold);
   box-shadow: var(--shadow-sm);
+}
+.tf-segmented--fill {
+  display: flex;
+  width: 100%;
+}
+.tf-segmented--fill .tf-seg-btn {
+  flex: 1;
+  padding-left: 0;
+  padding-right: 0;
 }
 .tf-segmented--sm .tf-seg-btn {
   padding: 6px 14px;

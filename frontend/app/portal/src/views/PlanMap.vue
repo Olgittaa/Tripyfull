@@ -2,7 +2,6 @@
   <div class="page-content page-content--full map-page">
     <div class="page-head">
       <div>
-        <div class="tf-eyebrow" style="margin-bottom: 8px">{{ tripTitle }}</div>
         <h1>Plan map</h1>
         <p>The skeleton of the trip: 5★ anchors first, lower ratings only along the route.</p>
       </div>

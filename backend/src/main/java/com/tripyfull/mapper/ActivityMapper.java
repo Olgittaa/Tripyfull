@@ -11,7 +11,7 @@ import java.util.Set;
 
 public final class ActivityMapper {
 
-    private static final Set<String> TRAVEL_MODES = Set.of("foot", "car");
+    private static final Set<String> TRAVEL_MODES = Set.of("foot", "taxi", "bus", "train", "car", "plane");
 
     private ActivityMapper() {}
 

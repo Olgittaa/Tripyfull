@@ -189,10 +189,14 @@
 /* A control standing in for a value reads at the value's size, but sits in a
    shorter box than a standalone form field — the rows are the layout here. */
 .drawer-section .input,
-.drawer-section .select-trigger {
+.drawer-section .select-trigger,
+.drawer-section .num-control {
   font-size: var(--text-base);
   padding-top: var(--space-2);
   padding-bottom: var(--space-2);
+}
+.drawer-section .num-field {
+  font-size: var(--text-base);
 }
 /* Prose field: same reading size, but it keeps its own comfortable padding. */
 .drawer-section .textarea {

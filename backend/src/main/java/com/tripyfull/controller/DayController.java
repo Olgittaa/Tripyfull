@@ -33,6 +33,20 @@ public class DayController {
         return dayService.generateDays(tripId, user.getUsername());
     }
 
+    @PostMapping("/api/trips/{tripId}/days/buffer")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<DayResponse> addBufferDay(@PathVariable UUID tripId,
+                                          @AuthenticationPrincipal UserDetails user) {
+        return dayService.addBufferDay(tripId, user.getUsername());
+    }
+
+    @DeleteMapping("/api/days/{dayId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDay(@PathVariable UUID dayId,
+                          @AuthenticationPrincipal UserDetails user) {
+        dayService.deleteDay(dayId, user.getUsername());
+    }
+
     @PatchMapping("/api/days/{dayId}")
     public DayResponse updateDay(@PathVariable UUID dayId,
                                  @RequestBody DayRequest request,

@@ -37,6 +37,25 @@ public class RoutingService {
             "car", "routed-car",
             "bike", "routed-bike");
 
+    /**
+     * Ways of getting around without a rental car. There is no open timetable for
+     * buses and trains here, so these are routed on the road network and then
+     * adjusted: the driving time is scaled and the fixed cost of using the service
+     * (hailing, waiting, getting to the platform) is added. Results are marked
+     * estimated so the UI can show them as approximations, not promises.
+     */
+    private record Derived(String via, double factor, int overheadSec) {}
+
+    private static final Map<String, Derived> DERIVED = Map.of(
+            "taxi", new Derived("car", 1.0, 300),      // same roads, plus hailing
+            "bus", new Derived("car", 1.45, 600),      // stops on the way, plus the wait
+            "train", new Derived("car", 0.85, 900));   // its own track, plus the station
+
+    /** Air travel: a straight line at cruise speed plus door-to-door overhead. */
+    private static final double PLANE_KMH = 750;
+    private static final int PLANE_OVERHEAD_SEC = 150 * 60;
+    private static final double EARTH_R_KM = 6371;
+
     private final RestClient restClient = buildClient();
     private final GoogleRoutesService googleRoutes;
 
@@ -70,19 +89,36 @@ public class RoutingService {
 
     /** {@code geometry} is [lat, lon] pairs (already flipped from GeoJSON), ready for Leaflet. */
     public record RouteResult(String mode, double durationSec, double distanceM,
-                              List<RouteLeg> legs, List<List<Double>> geometry) {}
+                              List<RouteLeg> legs, List<List<Double>> geometry,
+                              boolean estimated) {
+        public RouteResult(String mode, double durationSec, double distanceM,
+                           List<RouteLeg> legs, List<List<Double>> geometry) {
+            this(mode, durationSec, distanceM, legs, geometry, false);
+        }
+    }
 
     /** Waypoints are valid but unroutable (or beyond {@link #MAX_DISTANCE_M}). Cached like a hit. */
     public static final RouteResult NO_ROUTE = new RouteResult("none", 0, 0, List.of(), List.of());
 
     public boolean supportsMode(String mode) {
-        return mode != null && PROFILES.containsKey(mode);
+        return mode != null
+                && (PROFILES.containsKey(mode) || DERIVED.containsKey(mode) || "plane".equals(mode));
     }
 
     /** points are [lat, lon]; returns null when the route can't be computed. */
     public RouteResult route(List<double[]> points, String mode) {
+        if (points == null || points.size() < 2) return null;
+        if ("plane".equals(mode)) return flightEstimate(points);
+
+        Derived derived = DERIVED.get(mode);
+        if (derived != null) {
+            RouteResult road = route(points, derived.via());
+            if (road == null || road == NO_ROUTE) return road;
+            return adjust(road, mode, derived);
+        }
+
         String profile = PROFILES.get(mode);
-        if (profile == null || points == null || points.size() < 2) return null;
+        if (profile == null) return null;
 
         // OSRM wants lon,lat; 6 decimals (~0.1 m) keeps cache keys stable
         String coords = points.stream()
@@ -103,6 +139,45 @@ public class RoutingService {
             cache.put(key, new CachedRoute(result, System.currentTimeMillis()));
         }
         return result;
+    }
+
+    /** Scales a driving route into a taxi / bus / train estimate. */
+    private RouteResult adjust(RouteResult road, String mode, Derived d) {
+        List<RouteLeg> legs = road.legs().stream()
+                .map(l -> new RouteLeg(l.durationSec() * d.factor() + d.overheadSec(), l.distanceM()))
+                .toList();
+        double total = legs.isEmpty()
+                ? road.durationSec() * d.factor() + d.overheadSec()
+                : legs.stream().mapToDouble(RouteLeg::durationSec).sum();
+        return new RouteResult(mode, total, road.distanceM(), legs, road.geometry(), true);
+    }
+
+    /** Straight-line flight estimate — no route service knows about air corridors. */
+    private RouteResult flightEstimate(List<double[]> points) {
+        List<RouteLeg> legs = new ArrayList<>();
+        List<List<Double>> geometry = new ArrayList<>();
+        double totalM = 0;
+        double totalSec = 0;
+        for (int i = 0; i < points.size(); i++) {
+            geometry.add(List.of(points.get(i)[1], points.get(i)[0]));
+            if (i == 0) continue;
+            double m = haversineM(points.get(i - 1), points.get(i));
+            double sec = (m / 1000.0) / PLANE_KMH * 3600 + PLANE_OVERHEAD_SEC;
+            legs.add(new RouteLeg(sec, m));
+            totalM += m;
+            totalSec += sec;
+        }
+        return new RouteResult("plane", totalSec, totalM, legs, geometry, true);
+    }
+
+    private static double haversineM(double[] a, double[] b) {
+        double dLat = Math.toRadians(b[0] - a[0]);
+        double dLon = Math.toRadians(b[1] - a[1]);
+        double la1 = Math.toRadians(a[0]);
+        double la2 = Math.toRadians(b[0]);
+        double h = Math.pow(Math.sin(dLat / 2), 2)
+                + Math.cos(la1) * Math.cos(la2) * Math.pow(Math.sin(dLon / 2), 2);
+        return 2 * EARTH_R_KM * Math.asin(Math.sqrt(h)) * 1000;
     }
 
     @SuppressWarnings("unchecked")

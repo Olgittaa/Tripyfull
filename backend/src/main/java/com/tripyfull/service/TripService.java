@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -133,22 +134,25 @@ public class TripService {
         // earliest existing day if the trip never had a start date.
         LocalDate anchor = trip.getStartDate();
         if (anchor == null && !days.isEmpty()) {
-            anchor = days.stream().map(Day::getDate).min(LocalDate::compareTo).orElse(null);
+            anchor = days.stream().map(Day::getDate).filter(Objects::nonNull)
+                    .min(LocalDate::compareTo).orElse(null);
         }
 
         if (anchor != null && !days.isEmpty()) {
             long delta = ChronoUnit.DAYS.between(anchor, newStart);
             if (delta != 0) {
+                // Reserve days have no date to shift and outlive any reschedule.
                 for (Day day : days) {
-                    day.setDate(day.getDate().plusDays(delta));
+                    if (day.getDate() != null) day.setDate(day.getDate().plusDays(delta));
                 }
             }
             // Drop days that no longer fit the new range (orphanRemoval deletes them + their activities).
-            days.removeIf(day -> day.getDate().isBefore(newStart) || day.getDate().isAfter(newEnd));
+            days.removeIf(day -> day.getDate() != null
+                    && (day.getDate().isBefore(newStart) || day.getDate().isAfter(newEnd)));
 
             // Fill any uncovered dates inside the new range with empty days.
             Set<LocalDate> covered = new HashSet<>();
-            for (Day day : days) covered.add(day.getDate());
+            for (Day day : days) if (day.getDate() != null) covered.add(day.getDate());
             LocalDate current = newStart;
             while (!current.isAfter(newEnd)) {
                 if (!covered.contains(current)) {

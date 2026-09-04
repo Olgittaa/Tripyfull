@@ -91,6 +91,8 @@ public class GeoController {
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("mode", r.mode());
+        // Bus, train, taxi and plane are adjusted road/air estimates, not timetables.
+        out.put("estimated", r.estimated());
         out.put("durationSec", r.durationSec());
         out.put("distanceM", r.distanceM());
         out.put("legs", r.legs().stream()

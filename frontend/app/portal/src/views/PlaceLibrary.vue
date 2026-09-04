@@ -2428,9 +2428,10 @@ onMounted(async () => {
 }
 
 /* ---- Editable detail rows: the .info-row grid with a control on the right ---- */
-/* TfPlaceSearch styles its own input (42px, 14px text) — match the rows. */
+/* TfPlaceSearch styles its own input (42px, 14px text) — match the other
+   fields in the panel, which sit at 41px. */
 .edit-control :deep(.tf-place-input) {
-  height: 34px;
+  height: 41px;
   font-size: var(--text-base);
 }
 .edit-row {

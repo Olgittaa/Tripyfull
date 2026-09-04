@@ -358,11 +358,14 @@ input:focus {
    ============================================================ */
 
 .num-control {
-  align-self: flex-start;
-  display: inline-flex;
+  /* Fills its parent like every other field: a number box sized by its own
+     text made every grid cell and drawer row ragged. */
+  display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 7px 12px;
+  /* Same padding and border as .input, so a number box lines up with the text
+     fields beside it instead of sitting a few pixels shorter. */
+  padding: 11px 14px;
   border: 1.5px solid var(--input-text-border);
   border-radius: var(--radius-md);
   background: var(--input-text-bg);
@@ -392,13 +395,20 @@ input:focus {
   font: var(--fw-regular) var(--text-sm)/1 var(--font-sans);
 }
 .num-field {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
   border: none;
   outline: none;
   background: transparent;
   color: inherit;
   font: var(--fw-regular) var(--text-sm)/1.4 var(--font-sans);
-  text-align: center;
   padding: 0;
+}
+/* Centred only between the -/+ buttons, where it reads as a stepper value. */
+.num-control--split .num-field,
+.num-control--stacked .num-field {
+  text-align: center;
 }
 .num-field:disabled {
   cursor: not-allowed;
@@ -408,6 +418,8 @@ input:focus {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  /* Buttons ride inside the field's height; they never define it. */
+  margin: -4px 0;
   width: 24px;
   height: 24px;
   padding: 0;

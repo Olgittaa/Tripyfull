@@ -47,7 +47,7 @@ public class Activity {
     @Column(nullable = false)
     private int orderIndex;
 
-    /** How to travel from this stop to the day's next mapped stop: foot | car (null = foot). */
+    /** How to travel to the day's next mapped stop: foot | taxi | bus | train | car | plane. */
     @Column(length = 8)
     private String travelModeToNext;
 
