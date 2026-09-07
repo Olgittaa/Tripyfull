@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,7 +45,15 @@ public class GlobalExceptionHandler {
      * in the log.
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleUnexpected(Exception ex) {
+    public ResponseEntity<?> handleUnexpected(Exception ex) {
+        // Spring's own "no such route" / "method not allowed" carry their status; keep it.
+        if (ex instanceof ErrorResponse er) {
+            return ResponseEntity.status(er.getStatusCode()).body(Map.of("error", ex.getMessage()));
+        }
+        // "/api/places/not-a-uuid": the caller's mistake, not ours.
+        if (ex instanceof MethodArgumentTypeMismatchException) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Malformed request path or parameter"));
+        }
         log.error("Unhandled exception while serving a request", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Something went wrong on the server: " + ex.getClass().getSimpleName()));

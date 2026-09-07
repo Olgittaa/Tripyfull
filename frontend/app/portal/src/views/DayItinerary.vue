@@ -822,19 +822,16 @@
               class="w-full"
             />
             <div v-if="FEATURES.geoPlaceSearch" class="field">
-              <label class="label"
-                >Not saved yet? Search a place or an address
-                <span v-if="findingPlace" class="text-muted" style="font-weight: 400"
-                  >· saving…</span
-                ></label
-              >
+              <label class="label">Not saved yet? Search a place or an address</label>
               <TfPlaceSearch
                 placeholder="A landmark, a café… or a street address"
                 @select="onActivityGeoPicked"
               />
-              <span class="hint"
-                >A place is saved to your library and linked; an address only pins this stop.</span
-              >
+              <span class="hint">Pins this stop on the map. Nothing is added to your places.</span>
+              <!-- A venue (not a street or a town) can also go to the library, but only if asked. -->
+              <TfCheckbox v-if="pickedVenue" v-model="saveVenueToPlaces" style="margin-top: 8px">
+                Also save “{{ pickedVenue.name || pickedVenue.displayName }}” to my places
+              </TfCheckbox>
             </div>
             <!-- When the map search draws a blank: a pin can still be placed by hand. -->
             <TfInput
@@ -1048,6 +1045,7 @@ import {
   TfTooltip,
   TfTextarea,
   TfTimePicker,
+  TfCheckbox,
   toast,
   confirm,
 } from '@tripyfull/ui';
@@ -1241,14 +1239,18 @@ const openAddFromPlace = (p) => {
   if (!placesLib.value.some((x) => x.id === p.id)) placesLib.value.unshift(p);
   attempted.value = false;
   coordsText.value = '';
+  pickedVenue.value = null;
   moveTargetDayId.value = null;
   showDrawer.value = true;
 };
 
-// Find & save a brand-new place from geocoding, then link it to this activity.
-const findingPlace = ref(false);
-// Result types that describe a location rather than a venue: these do not
-// belong in the place library, they just say where the stop is.
+/* A search result pins the stop; it does not touch the place library. When
+   the result is a venue, the drawer offers to save it as a place too — that
+   happens on Save, so an unticked box costs nothing. */
+const pickedVenue = ref(null);
+const saveVenueToPlaces = ref(false);
+// Result types that describe a location rather than a venue: for these the
+// offer makes no sense, a street is not a place to visit.
 const ADDRESS_TYPES = new Set([
   'address',
   'street',
@@ -1261,30 +1263,42 @@ const ADDRESS_TYPES = new Set([
   'country',
   'postcode',
 ]);
-const onActivityGeoPicked = async (geo) => {
+const onActivityGeoPicked = (geo) => {
   if (!geo) return;
+  // 6 decimals ≈ 10 cm; also hides float noise like 13.743865200000002
+  coordsText.value = `${Number(geo.lat).toFixed(6)}, ${Number(geo.lon).toFixed(6)}`;
   if (ADDRESS_TYPES.has(String(geo.placeType || '').toLowerCase())) {
     form.value.address = geo.displayName || geo.name || '';
-    coordsText.value = `${geo.lat}, ${geo.lon}`;
+    pickedVenue.value = null;
     return;
   }
-  findingPlace.value = true;
+  if (!form.value.name && geo.name) form.value.name = geo.name;
+  if (!form.value.address) form.value.address = shortAddress(geo);
+  pickedVenue.value = geo;
+  saveVenueToPlaces.value = false;
+};
+// "Wat Arun, Arun Amarin Road, Bangkok, Thailand" → the part after the venue itself.
+const shortAddress = (geo) => {
+  const full = geo.displayName || '';
+  const parts = full.split(',').map((x) => x.trim());
+  return parts[0] === geo.name ? parts.slice(1).join(', ') : full;
+};
+
+/** Save the picked venue as a place when asked. The stop keeps its pin either
+    way; returns the place id or null. */
+const savePickedVenue = async () => {
+  if (!pickedVenue.value || !saveVenueToPlaces.value) return null;
   try {
     const res = await api.post('/api/places/geocode', {
-      text: geo.displayName || geo.name,
+      text: pickedVenue.value.displayName || pickedVenue.value.name,
       country: null,
     });
     const place = res.data;
     if (!placesLib.value.some((p) => p.id === place.id)) placesLib.value.unshift(place);
-    form.value.placeId = place.id;
-    if (!form.value.name && place.name) form.value.name = place.name;
-    if (!form.value.address && place.address) form.value.address = place.address;
-    if (!form.value.type && place.type) form.value.type = placeToActivityType(place.type);
-    toast.success('Place linked', place.name);
+    return place.id;
   } catch {
-    toast.danger('Error', 'Could not save place');
-  } finally {
-    findingPlace.value = false;
+    toast.warning('Place not saved', 'The stop is saved with its pin only');
+    return null;
   }
 };
 
@@ -2208,6 +2222,7 @@ const openAddDialog = () => {
   form.value = { ...emptyForm, costCurrency: accountCurrency.value };
   attempted.value = false;
   coordsText.value = '';
+  pickedVenue.value = null;
   moveTargetDayId.value = null;
   showDrawer.value = true;
 };
@@ -2230,6 +2245,7 @@ const startEdit = (a) => {
   };
   coordsText.value =
     a.latitude != null && a.longitude != null ? `${a.latitude}, ${a.longitude}` : '';
+  pickedVenue.value = null;
   attempted.value = false;
   moveTargetDayId.value = dayId.value; // preselect the current day in the move select
   showDrawer.value = true;
@@ -2240,6 +2256,10 @@ const saveActivity = async () => {
   if (!String(form.value.name || '').trim()) return;
   saving.value = true;
   try {
+    if (!form.value.placeId) {
+      const placeId = await savePickedVenue();
+      if (placeId) form.value.placeId = placeId;
+    }
     const payload = {
       ...form.value,
       startTime: form.value.startTime || null,
