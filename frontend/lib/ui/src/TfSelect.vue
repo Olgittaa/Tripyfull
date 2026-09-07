@@ -1,6 +1,8 @@
 <template>
   <div class="field" ref="root">
-    <label v-if="label" class="label">{{ label }}</label>
+    <label v-if="label" class="label"
+      >{{ label }}<span v-if="required" class="label-req" aria-hidden="true">*</span></label
+    >
     <div class="select" :class="[{ 'is-open': open }, size === 'sm' && 'select--sm']">
       <button
         ref="triggerEl"
@@ -64,6 +66,7 @@ const props = defineProps({
   modelValue: String,
   helper: String,
   error: String,
+  required: Boolean,
   disabled: Boolean,
   // 'sm' matches the small button height for toolbar rows.
   size: { type: String, default: '' },

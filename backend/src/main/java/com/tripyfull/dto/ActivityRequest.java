@@ -19,5 +19,10 @@ public record ActivityRequest(
         Boolean clearPlace,    // true to unlink
         UUID dayId,            // on update: move the activity to this day (same trip only)
         String travelModeToNext, // foot | taxi | bus | train | car | plane — to the next mapped stop
-        Boolean needsBooking
+        Boolean needsBooking,
+        // Where the stop is when it is not a saved place: an address found on the
+        // map or coordinates typed in. Ignored while a place is linked.
+        Double latitude,
+        Double longitude,
+        Boolean clearCoords
 ) {}

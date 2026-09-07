@@ -76,6 +76,12 @@ input:focus {
   font: var(--fw-semibold) var(--text-sm)/1.3 var(--font-sans);
   color: var(--text-primary);
 }
+/* The asterisk after a required field's label — the one convention everyone
+   already reads, so the form needs no legend. */
+.label-req {
+  color: var(--accent);
+  margin-left: 3px;
+}
 
 .input,
 .textarea {
@@ -141,6 +147,53 @@ input:focus {
   border-color: var(--border-default);
   color: var(--text-disabled);
   cursor: not-allowed;
+}
+
+/* ---- A form shown as values --------------------------------------------
+   A details panel renders the editor's own template inside disabled fieldsets,
+   so every field keeps its place between viewing and editing. The disabled
+   look (grey text, "not-allowed" cursor) is wrong there: nothing is refused,
+   the values are simply being read. So they read as text on a quiet box, and
+   the parts that only make sense while typing — steppers, carets, clear
+   buttons, placeholders — step out of the way. */
+.form-part {
+  display: contents; /* the fieldset groups for disabling only, never for layout */
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.form-readonly .input:disabled,
+.form-readonly .textarea:disabled,
+.form-readonly .select-trigger:disabled,
+.form-readonly .num-control:has(.num-field:disabled),
+.form-readonly .num-field:disabled {
+  background: var(--surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  cursor: default;
+}
+.form-readonly .form-part:disabled input::placeholder,
+.form-readonly .form-part:disabled textarea::placeholder {
+  color: transparent;
+}
+.form-readonly .num-control:has(.num-field:disabled) .num-btn,
+.form-readonly .select-trigger:disabled .select-chevron,
+.form-readonly .dp-clear:disabled {
+  display: none;
+}
+.form-readonly .tf-seg-btn:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.form-readonly .tf-seg-btn:disabled:not(.tf-seg-btn--active) {
+  color: var(--text-disabled);
+}
+/* The chosen segment keeps its raised look: it is the value being shown. */
+.form-readonly .tf-seg-btn--active:disabled {
+  background: var(--white);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Hint / helper text */
@@ -380,6 +433,15 @@ input:focus {
 .num-control:focus-within {
   border-color: var(--input-text-focus-border);
   box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
+.num-control.is-error {
+  border-color: var(--input-text-danger-border);
+}
+/* Focused while wrong: one ring, in the colour of the message under it. Before,
+   the red border kept its own colour (it is declared last and wins) while the
+   focus ring stayed teal — a box inside a differently coloured box. */
+.num-control.is-error:focus-within {
+  box-shadow: 0 0 0 3px var(--danger-100);
 }
 .num-control.is-disabled {
   background: var(--input-text-disabled-bg);

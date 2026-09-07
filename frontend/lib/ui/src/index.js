@@ -5,6 +5,7 @@ export { default as TfBadge } from './TfBadge.vue';
 export { default as TfChip } from './TfChip.vue';
 export { default as TfProgress } from './TfProgress.vue';
 export { default as TfDatePicker } from './TfDatePicker.vue';
+export { default as TfTimePicker } from './TfTimePicker.vue';
 export { default as TfCard } from './TfCard.vue';
 export { default as TfAvatar } from './TfAvatar.vue';
 export { default as TfInput } from './TfInput.vue';

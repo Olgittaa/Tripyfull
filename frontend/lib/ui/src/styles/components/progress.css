@@ -55,16 +55,3 @@
 .progress--over .progress-fill {
   background: var(--progress-over-bar);
 }
-
-/* simple inline bar (fill colour set inline by the consumer) */
-.tf-progress {
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--progress-bar);
-  overflow: hidden;
-}
-.tf-progress-fill {
-  height: 100%;
-  border-radius: var(--radius-pill);
-  transition: width var(--dur-slow) var(--ease-out);
-}

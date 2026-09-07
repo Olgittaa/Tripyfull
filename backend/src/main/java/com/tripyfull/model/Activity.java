@@ -55,7 +55,28 @@ public class Activity {
     @Column(name = "needs_booking", nullable = false)
     private boolean needsBooking = false;
 
+    /**
+     * Set when the stop was generated from a booking, which then owns it: the
+     * next sync rewrites its stops and leaves hand-made ones alone.
+     */
+    @Column(name = "source_booking_id")
+    private UUID sourceBookingId;
+
+    /** Own coordinates, for a stop that is on the map without being a saved place. */
+    private Double latitude;
+    private Double longitude;
+
     public UUID getId() { return id; }
+
+    public UUID getSourceBookingId() { return sourceBookingId; }
+    public void setSourceBookingId(UUID sourceBookingId) { this.sourceBookingId = sourceBookingId; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+
     public Day getDay() { return day; }
     public void setDay(Day day) { this.day = day; }
     public String getName() { return name; }

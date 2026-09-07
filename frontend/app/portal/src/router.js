@@ -50,6 +50,11 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/trips/:tripId/todos',
+    component: () => import('@/views/TodoView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/trips/:tripId/budget',
     component: () => import('@/views/BudgetView.vue'),
     meta: { requiresAuth: true },

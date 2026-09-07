@@ -12,4 +12,12 @@ public interface ActivityRepository extends JpaRepository<Activity, UUID> {
 
     /** Itinerary entries pointing at a place, so deleting it can unlink them. */
     List<Activity> findByPlaceId(UUID placeId);
+
+    /** Every planned place of a trip, across all its days. */
+    List<Activity> findByDayTripIdAndPlaceIsNotNull(UUID tripId);
+
+    /** Stops a booking sync generated, so the next sync can replace them. */
+    List<Activity> findByDayTripIdAndSourceBookingIdIsNotNull(UUID tripId);
+
+    long countByDayTripIdAndSourceBookingIdIsNotNull(UUID tripId);
 }

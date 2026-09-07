@@ -14,7 +14,8 @@ public record PlanResponse(
             int dayNumber,
             LocalDate date,
             List<PlanPlace> places,   // in visiting order
-            double totalKm            // base -> stops, Haversine
+            double totalKm,           // anchor -> stops, Haversine
+            String baseName           // the hotel the day was planned from; null = centre of places
     ) {}
 
     public record PlanPlace(UUID placeId, String name, String type, int rating, boolean needsBooking) {}

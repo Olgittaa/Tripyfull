@@ -324,6 +324,7 @@
         <div class="bc-demo">
           <div class="bc-dates">
             <TfDatePicker v-model="dateVal" mode="date" label="Date" />
+            <TfTimePicker v-model="timeVal" label="Time" placeholder="14:00" clearable />
             <TfDatePicker v-model="dateTimeVal" mode="datetime" label="Date time" />
             <TfDatePicker v-model="dateRangeVal" mode="range" label="Date range" />
             <TfDatePicker
@@ -797,6 +798,7 @@ import {
   TfChip,
   TfProgress,
   TfDatePicker,
+  TfTimePicker,
   TfAlert,
   TfToast,
   TfTooltip,
@@ -891,6 +893,7 @@ const switchStates = reactive([
 ]);
 
 const dateVal = ref(new Date(2026, 7, 17));
+const timeVal = ref('09:30');
 const dateTimeVal = ref(new Date(2026, 6, 15, 14, 15));
 const dateRangeVal = ref([new Date(2026, 7, 17), new Date(2026, 7, 25)]);
 const dateTimeRangeVal = ref([new Date(2026, 7, 17, 14, 15), new Date(2026, 7, 25, 14, 15)]);

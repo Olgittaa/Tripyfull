@@ -55,6 +55,10 @@ public final class BookingMapper {
         b.setAddress(req.address());
         b.setLatitude(req.latitude());
         b.setLongitude(req.longitude());
+        b.setFromLatitude(req.fromLatitude());
+        b.setFromLongitude(req.fromLongitude());
+        b.setToLatitude(req.toLatitude());
+        b.setToLongitude(req.toLongitude());
         if (req.paidSimple() != null) b.setPaidSimple(req.paidSimple());
         return b;
     }
@@ -95,6 +99,10 @@ public final class BookingMapper {
         if (req.address() != null) b.setAddress(req.address());
         if (req.latitude() != null) b.setLatitude(req.latitude());
         if (req.longitude() != null) b.setLongitude(req.longitude());
+        if (req.fromLatitude() != null) b.setFromLatitude(req.fromLatitude());
+        if (req.fromLongitude() != null) b.setFromLongitude(req.fromLongitude());
+        if (req.toLatitude() != null) b.setToLatitude(req.toLatitude());
+        if (req.toLongitude() != null) b.setToLongitude(req.toLongitude());
         if (req.paidSimple() != null) b.setPaidSimple(req.paidSimple());
     }
 
@@ -150,7 +158,10 @@ public final class BookingMapper {
                 b.getCheckIn(), b.getCheckOut(),
                 b.getCheckInTime(), b.getCheckOutTime(),
                 b.getRoomType(), b.getGuests(),
-                b.getAddress(), b.getLatitude(), b.getLongitude(),
+                b.getAddress(),
+                b.getFromLatitude(), b.getFromLongitude(),
+                b.getToLatitude(), b.getToLongitude(),
+                b.getLatitude(), b.getLongitude(),
                 b.isPaidSimple(),
                 payments, attachments, paidTotal, remainingTotal,
                 nights, pricePerNight, durationMinutes

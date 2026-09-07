@@ -31,6 +31,8 @@
   align-items: flex-end;
   gap: 18px;
   flex-wrap: wrap;
+  /* Room between the subtitle and whatever comes first on the page. */
+  margin-bottom: var(--space-5);
 }
 
 .page-head h1 {

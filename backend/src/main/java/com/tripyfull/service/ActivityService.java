@@ -2,15 +2,18 @@ package com.tripyfull.service;
 
 import com.tripyfull.dto.ActivityRequest;
 import com.tripyfull.dto.ActivityResponse;
+import com.tripyfull.dto.PlannedPlaceResponse;
 import com.tripyfull.dto.ReorderRequest;
 import com.tripyfull.mapper.ActivityMapper;
 import com.tripyfull.model.Activity;
+import com.tripyfull.model.Booking;
 import com.tripyfull.model.Day;
 import com.tripyfull.model.Place;
 import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.ActivityRepository;
+import com.tripyfull.repository.BookingRepository;
 import com.tripyfull.repository.PlaceRepository;
 import com.tripyfull.repository.TripRepository;
 import com.tripyfull.security.OwnershipGuard;
@@ -19,8 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,20 +38,65 @@ public class ActivityService {
     private final ActivityRepository activityRepository;
     private final PlaceRepository placeRepository;
     private final TripRepository tripRepository;
+    private final BookingRepository bookingRepository;
     private final OwnershipGuard guard;
 
     public ActivityService(ActivityRepository activityRepository, PlaceRepository placeRepository,
-                           TripRepository tripRepository, OwnershipGuard guard) {
+                           TripRepository tripRepository, BookingRepository bookingRepository,
+                           OwnershipGuard guard) {
         this.activityRepository = activityRepository;
         this.placeRepository = placeRepository;
         this.tripRepository = tripRepository;
+        this.bookingRepository = bookingRepository;
         this.guard = guard;
+    }
+
+    /** Responses with their source bookings attached — one query for the whole list. */
+    private List<ActivityResponse> toResponses(List<Activity> activities) {
+        Set<UUID> ids = activities.stream()
+                .map(Activity::getSourceBookingId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<UUID, Booking> bookings = ids.isEmpty() ? Map.of()
+                : bookingRepository.findAllById(ids).stream().collect(Collectors.toMap(Booking::getId, b -> b));
+        return activities.stream()
+                .map(a -> ActivityMapper.toResponse(a, a.getSourceBookingId() != null ? bookings.get(a.getSourceBookingId()) : null))
+                .toList();
+    }
+
+    private ActivityResponse toResponse(Activity a) {
+        Booking source = a.getSourceBookingId() != null
+                ? bookingRepository.findById(a.getSourceBookingId()).orElse(null) : null;
+        return ActivityMapper.toResponse(a, source);
     }
 
     public List<ActivityResponse> getActivities(UUID dayId, String username) {
         Day day = findDayForUser(dayId, username);
-        return activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(day.getId()).stream()
-                .map(ActivityMapper::toResponse)
+        return toResponses(activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(day.getId()));
+    }
+
+    /**
+     * Which places of the trip are already planned, and on which day. Day numbers
+     * follow the itinerary's own numbering (dated days first, reserve days last),
+     * so "Day 3" on the map is the same "Day 3" as in the plan.
+     */
+    public List<PlannedPlaceResponse> getPlannedPlaces(UUID tripId, String username) {
+        Trip trip = guard.requireTrip(tripId, username);
+        List<Day> days = trip.getDays().stream()
+                .sorted(Comparator.comparing(Day::getDate, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        Map<UUID, Integer> numberOf = new HashMap<>();
+        for (int i = 0; i < days.size(); i++) numberOf.put(days.get(i).getId(), i + 1);
+
+        return activityRepository.findByDayTripIdAndPlaceIsNotNull(tripId).stream()
+                .sorted(Comparator.comparing((Activity a) -> numberOf.getOrDefault(a.getDay().getId(), 0))
+                        .thenComparing(Activity::getOrderIndex))
+                .map(a -> new PlannedPlaceResponse(
+                        a.getPlace().getId(),
+                        a.getDay().getId(),
+                        numberOf.getOrDefault(a.getDay().getId(), 0),
+                        a.getDay().getDate(),
+                        a.getDay().isBuffer(),
+                        a.getName(),
+                        a.getStartTime()))
                 .toList();
     }
 
@@ -52,7 +106,7 @@ public class ActivityService {
         activity.setDay(day);
         activity.setOrderIndex(nextOrderIndex(dayId));
         applyPlace(activity, request, guard.requireUser(username));
-        return ActivityMapper.toResponse(activityRepository.save(activity));
+        return toResponse(activityRepository.save(activity));
     }
 
     public ActivityResponse update(UUID activityId, ActivityRequest request, String username) {
@@ -70,7 +124,7 @@ public class ActivityService {
         }
         ActivityMapper.updateEntity(activity, request);
         applyPlace(activity, request, guard.requireUser(username));
-        return ActivityMapper.toResponse(activityRepository.save(activity));
+        return toResponse(activityRepository.save(activity));
     }
 
     /** Append position: one past the day's current highest orderIndex (count would collide after deletes). */
@@ -119,9 +173,7 @@ public class ActivityService {
             activity.setOrderIndex(i);
             activityRepository.save(activity);
         }
-        return activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(dayId).stream()
-                .map(ActivityMapper::toResponse)
-                .toList();
+        return toResponses(activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(dayId));
     }
 
     private Day findDayForUser(UUID dayId, String username) {

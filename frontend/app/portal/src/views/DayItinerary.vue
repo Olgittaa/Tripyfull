@@ -66,6 +66,14 @@
         </div>
         <div style="display: flex; gap: 8px; align-items: center">
           <TfButton
+            variant="secondary"
+            size="sm"
+            @click="showAutoPlan = true"
+            title="Fill the days from your saved places, following the hotels"
+          >
+            <i class="pi pi-sparkles" style="font-size: 12px"></i> Auto-plan
+          </TfButton>
+          <TfButton
             v-if="activities.length > 1"
             variant="ghost"
             size="sm"
@@ -148,35 +156,6 @@
       </div>
 
       <!-- How full the day already is: the question every "add this?" answers to. -->
-      <div class="day-budget">
-        <div class="day-budget-bar">
-          <span
-            class="day-budget-fill day-budget-fill--visit"
-            :style="{ width: dayBudget.visitPct + '%' }"
-          ></span>
-          <span
-            class="day-budget-fill day-budget-fill--travel"
-            :style="{ width: dayBudget.travelPct + '%' }"
-          ></span>
-        </div>
-        <div class="day-budget-legend">
-          <span
-            ><b>{{ dayBudget.stops }}</b> stop{{ dayBudget.stops === 1 ? '' : 's' }}</span
-          >
-          <span class="day-budget-dot day-budget-dot--visit"></span>
-          <span>{{ fmtMin(dayBudget.visitMin) }} at places</span>
-          <span class="day-budget-dot day-budget-dot--travel"></span>
-          <span>{{ fmtMin(dayBudget.travelMin) }} on the move</span>
-          <span class="day-budget-left" :class="{ 'is-over': dayBudget.leftMin < 0 }">
-            {{
-              dayBudget.leftMin < 0
-                ? `${fmtMin(-dayBudget.leftMin)} over a ${DAY_HOURS}h day`
-                : `${fmtMin(dayBudget.leftMin)} left of a ${DAY_HOURS}h day`
-            }}
-          </span>
-        </div>
-      </div>
-
       <!-- Two-column: itinerary (left) + day route map (right) -->
       <div class="itin-layout">
         <div class="itin-main">
@@ -234,6 +213,38 @@
                 <TfIconButton variant="ghost" size="sm" @click="editingCity = false"
                   ><i class="pi pi-times"></i
                 ></TfIconButton>
+              </div>
+            </div>
+
+            <!-- How full the day is: places you go to, and time spent getting there -->
+            <div v-if="activities.length" style="flex: 1; min-width: 200px">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
+                <i class="pi pi-clock" style="color: var(--accent); font-size: 16px"></i>
+                <span
+                  style="
+                    font: var(--fw-semibold) 14px/1 var(--font-sans);
+                    color: var(--text-primary);
+                  "
+                  >Day</span
+                >
+              </div>
+              <div class="day-load">
+                <span
+                  ><b>{{ dayBudget.stops }}</b> stop{{ dayBudget.stops === 1 ? '' : 's' }}</span
+                >
+                <span
+                  ><span class="day-load-dot day-load-dot--visit"></span
+                  >{{ fmtMin(dayBudget.visitMin) }} at places<span
+                    v-if="dayBudget.untimed"
+                    class="text-subtle"
+                  >
+                    · {{ dayBudget.untimed }} without a time</span
+                  ></span
+                >
+                <span
+                  ><span class="day-load-dot day-load-dot--travel"></span
+                  >{{ fmtMin(dayBudget.travelMin) }} on the move</span
+                >
               </div>
             </div>
 
@@ -419,14 +430,29 @@
             >
               <div class="timeline-gutter">
                 <i class="pi pi-bars drag-grip" title="Drag to reorder"></i>
-                <span class="timeline-time">{{ a.startTime?.slice(0, 5) || '--:--' }}</span>
+                <span
+                  class="timeline-time"
+                  :class="{ 'timeline-time--derived': !a.startTime && derivedTimes[a.id] }"
+                  :title="
+                    !a.startTime && derivedTimes[a.id]
+                      ? 'Worked out from the previous stop and the way there — set a time to fix it'
+                      : ''
+                  "
+                  >{{
+                    a.startTime
+                      ? a.startTime.slice(0, 5)
+                      : derivedTimes[a.id]
+                        ? '≈ ' + derivedTimes[a.id]
+                        : ''
+                  }}</span
+                >
                 <span v-if="i < activities.length - 1" class="timeline-line"></span>
               </div>
               <div class="timeline-content">
                 <TfCard interactive @click="startEdit(a)" style="cursor: pointer">
                   <div style="display: flex; align-items: center; gap: 12px">
                     <div class="cat-icon cat-icon--lg" :style="catStyle(a.type)">
-                      {{ typeIcon(a.type) }}
+                      {{ stopIcon(a) }}
                     </div>
                     <div style="flex: 1; min-width: 0">
                       <div style="display: flex; align-items: center; gap: 8px">
@@ -443,6 +469,15 @@
                         <TfBadge v-if="a.needsBooking" tone="gold" variant="soft" dot
                           >Book ahead</TfBadge
                         >
+                        <!-- Written by the booking sync, which owns it: the next
+                             run rewrites it, so edits here do not survive. -->
+                        <TfBadge
+                          v-if="a.fromBooking"
+                          tone="success"
+                          variant="soft"
+                          v-tooltip="'From a booking — rewritten when you update the plan'"
+                          >Booked</TfBadge
+                        >
                       </div>
                       <div
                         style="
@@ -455,12 +490,11 @@
                         "
                       >
                         <span
-                          v-if="a.startTime"
+                          v-if="a.startTime && a.endTime"
                           style="display: inline-flex; align-items: center; gap: 4px"
                         >
                           <i class="pi pi-clock" style="font-size: 12px"></i>
-                          {{ a.startTime?.slice(0, 5)
-                          }}{{ a.endTime ? ' – ' + a.endTime.slice(0, 5) : '' }}
+                          {{ a.startTime.slice(0, 5) }} – {{ a.endTime.slice(0, 5) }}
                         </span>
                         <span
                           v-if="a.address"
@@ -497,8 +531,15 @@
                         {{ a.notes }}
                       </div>
                     </div>
-                    <span v-if="a.costEstimate" class="money money--md" style="flex: none">
+                    <span
+                      v-if="a.costEstimate"
+                      class="money money--md"
+                      style="flex: none; text-align: right"
+                    >
                       {{ a.costEstimate }} {{ a.costCurrency || currency }}
+                      <span v-if="isForeign(a)" class="money-approx"
+                        >≈ {{ toBase(a).toFixed(2) }} {{ currency }}</span
+                      >
                     </span>
                   </div>
                 </TfCard>
@@ -703,9 +744,7 @@
                 {{
                   pickScope === 'city'
                     ? 'Nothing from the trip list is in this city — try Trip list.'
-                    : pickScope === 'trip'
-                      ? 'The trip list is empty or already planned — try All places.'
-                      : 'Everything saved is already on a day.'
+                    : 'Everything on the trip list is already planned — add places to the trip on the Places page.'
                 }}
               </p>
             </div>
@@ -718,244 +757,190 @@
     <!-- Activity Drawer -->
     <TfDrawer
       v-model="showDrawer"
-      :title="editingActivity ? 'Edit activity' : 'New activity'"
+      :title="isBookingStop ? 'From a booking' : editingActivity ? 'Edit stop' : 'New stop'"
       :eyebrow="day ? `Day ${day.dayNumber} · ${day.city || ''}` : ''"
     >
-      <form @submit.prevent="saveActivity">
-        <!-- Where the place comes from: saved / imported / manual -->
-        <TfDrawerSection label="Place">
-          <div class="field" style="gap: 8px">
-            <label>How do you want to add it?</label>
-            <div class="src-choice">
-              <button
-                type="button"
-                class="src-btn"
-                :class="{ 'src-btn--on': actSource === 'search' }"
-                @click="setActSource('search')"
+      <!-- A stop written by the booking sync belongs to its booking: the next
+           "Update plan" rewrites it, so there is nothing to edit here. -->
+      <template v-if="isBookingStop">
+        <TfDrawerSection label="Stop">
+          <div class="booking-stop">
+            <div class="booking-stop-name">{{ editingActivity.name }}</div>
+            <div v-if="editingActivity.startTime" class="booking-stop-line">
+              🕘 {{ editingActivity.startTime.slice(0, 5)
+              }}<template v-if="editingActivity.endTime">
+                – {{ editingActivity.endTime.slice(0, 5) }}</template
               >
-                <i class="pi pi-search"></i><span>Search</span>
-              </button>
-              <button
-                type="button"
-                class="src-btn"
-                :class="{ 'src-btn--on': actSource === 'import' }"
-                @click="setActSource('import')"
-              >
-                <i class="pi pi-download"></i><span>Import</span>
-              </button>
-              <button
-                type="button"
-                class="src-btn"
-                :class="{ 'src-btn--on': actSource === 'manual' }"
-                @click="setActSource('manual')"
-              >
-                <i class="pi pi-pencil"></i><span>Manually</span>
-              </button>
+            </div>
+            <div v-if="editingActivity.address" class="booking-stop-line">
+              {{ editingActivity.address }}
+            </div>
+            <div v-if="editingActivity.notes" class="booking-stop-line">
+              {{ editingActivity.notes }}
             </div>
           </div>
-
-          <!-- Search a place (library + geocoding) -->
-          <div v-if="actSource === 'search'" class="src-panel">
-            <template v-if="!form.placeId">
-              <TfSelect
-                label="From your places"
-                :modelValue="selectedPlaceLabel"
-                @update:modelValue="onPlaceLabelPicked"
-                :options="placeLabelOptions"
-                placeholder="Pick a saved place…"
-                class="w-full"
-              />
-              <div v-if="FEATURES.geoPlaceSearch" class="field">
-                <label
-                  >…or find a new place
-                  <span
-                    v-if="findingPlace"
-                    class="text-muted"
-                    style="font-weight: 400; font-size: 12px"
-                    >· saving…</span
-                  ></label
-                >
-                <TfPlaceSearch
-                  placeholder="Search a beach, restaurant, landmark…"
-                  @select="onActivityGeoPicked"
-                />
-              </div>
-              <small v-else class="text-muted text-sm" style="margin: 0">
-                Don't see it here? Import it from a Google Maps / Tripadvisor link or add it
-                manually.
-              </small>
-            </template>
-            <div v-else class="linked-place">
-              <i class="pi pi-bookmark" style="color: var(--accent)"></i>
-              <span class="linked-name">{{ linkedPlaceName }}</span>
-              <button type="button" class="link-edit" @click="goEditPlace">
-                Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
-              </button>
-              <TfTooltip text="Unlink">
-                <button type="button" class="del-btn" @click="unlinkPlace">
-                  <i class="pi pi-times"></i>
-                </button>
-              </TfTooltip>
-            </div>
-          </div>
-
-          <!-- Import from a Google Maps link -->
-          <div v-else-if="actSource === 'import'" class="src-panel">
-            <template v-if="!form.placeId">
-              <div class="field">
-                <label>Google Maps or Tripadvisor link</label>
-                <div style="display: flex; gap: 8px">
-                  <TfInput
-                    v-model="activityImportUrl"
-                    placeholder="https://maps.app.goo.gl/… or tripadvisor.com/…"
-                    class="w-full"
-                    @keyup.enter="runActivityImport"
-                  />
-                  <TfButton
-                    variant="soft"
-                    @click="runActivityImport"
-                    :disabled="findingPlace || !activityImportUrl"
-                  >
-                    <i
-                      class="pi pi-download"
-                      :style="findingPlace ? 'animation:spin 1s linear infinite' : ''"
-                    ></i>
-                  </TfButton>
-                </div>
-                <small class="text-muted text-sm">Paste a link to a single place.</small>
-              </div>
-            </template>
-            <div v-else class="linked-place">
-              <i class="pi pi-bookmark" style="color: var(--accent)"></i>
-              <span class="linked-name">{{ linkedPlaceName }}</span>
-              <button type="button" class="link-edit" @click="goEditPlace">
-                Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
-              </button>
-              <TfTooltip text="Unlink">
-                <button type="button" class="del-btn" @click="unlinkPlace">
-                  <i class="pi pi-times"></i>
-                </button>
-              </TfTooltip>
-            </div>
-          </div>
-
-          <!-- Fill in manually (type, address, coordinates here only) -->
-          <div v-else-if="actSource === 'manual'" class="src-panel">
-            <TfInput
-              label="Name *"
-              v-model="form.name"
-              placeholder="What's planned?"
-              class="w-full"
-            />
-            <TfSelect
-              label="Type"
-              :modelValue="selectedTypeLabel"
-              @update:modelValue="onTypeLabelPicked"
-              :options="typeLabelOptions"
-              placeholder="Select type"
-              class="w-full"
-            />
-            <TfInput
-              label="Address"
-              v-model="form.address"
-              placeholder="Street, area…"
-              class="w-full"
-            />
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-              <div class="field">
-                <label
-                  >Latitude
-                  <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
-                    >(optional)</span
-                  ></label
-                >
-                <TfNumberInput v-model="form.latitude" type="plain" :precision="7" class="w-full" />
-              </div>
-              <div class="field">
-                <label
-                  >Longitude
-                  <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
-                    >(optional)</span
-                  ></label
-                >
-                <TfNumberInput
-                  v-model="form.longitude"
-                  type="plain"
-                  :precision="7"
-                  class="w-full"
-                />
-              </div>
-            </div>
-            <label class="save-place-toggle">
-              <input type="checkbox" v-model="saveToPlaces" />
-              <span
-                ><i class="pi pi-bookmark" style="font-size: 13px"></i> Save as a place (so it shows
-                on the map)</span
-              >
-            </label>
-          </div>
+          <p class="hint" style="margin: 4px 0 0">
+            This stop comes from a booking. Times, names and places are taken from there — change
+            the booking and press <strong>Update plan</strong> on the Bookings page; editing it here
+            would be undone by the next update.
+          </p>
         </TfDrawerSection>
+      </template>
 
-        <!-- Details (once a source has set the activity base) -->
-        <TfDrawerSection v-if="showCommon" label="Details">
+      <form v-else @submit.prevent="saveActivity">
+        <!-- What: a name is enough; a place adds the map pin and the library's facts -->
+        <TfDrawerSection label="What">
           <TfInput
-            v-if="actSource !== 'manual'"
-            label="Name *"
             v-model="form.name"
-            placeholder="What's planned?"
+            label="Name"
+            required
+            :error="attempted && !form.name.trim() ? 'Say what the stop is' : ''"
+            placeholder="e.g. White Temple, lunch at the market, beach afternoon"
             class="w-full"
           />
 
+          <div v-if="linkedPlace" class="linked-place">
+            <i class="pi pi-bookmark" style="color: var(--accent)"></i>
+            <span class="linked-name">{{ linkedPlaceName }}</span>
+            <button type="button" class="link-edit" @click="goEditPlace">
+              Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
+            </button>
+            <TfTooltip text="Unlink the place (the stop stays)">
+              <button type="button" class="del-btn" @click="unlinkPlace">
+                <i class="pi pi-times"></i>
+              </button>
+            </TfTooltip>
+          </div>
+          <template v-else>
+            <TfSelect
+              label="Place"
+              :modelValue="selectedPlaceLabel"
+              @update:modelValue="onPlaceLabelPicked"
+              :options="placeLabelOptions"
+              placeholder="Pick one of your places…"
+              helper="Optional. Links the stop to a place: it gets a pin on the map and its rating, time and notes."
+              class="w-full"
+            />
+            <div v-if="FEATURES.geoPlaceSearch" class="field">
+              <label class="label"
+                >Not saved yet? Search a place or an address
+                <span v-if="findingPlace" class="text-muted" style="font-weight: 400"
+                  >· saving…</span
+                ></label
+              >
+              <TfPlaceSearch
+                placeholder="A landmark, a café… or a street address"
+                @select="onActivityGeoPicked"
+              />
+              <span class="hint"
+                >A place is saved to your library and linked; an address only pins this stop.</span
+              >
+            </div>
+            <!-- When the map search draws a blank: a pin can still be placed by hand. -->
+            <TfInput
+              v-model="coordsText"
+              label="Coordinates"
+              placeholder="19.906, 99.835 — if the search can't find it"
+              :error="coordsText.trim() && !parsedCoords ? 'Two numbers: latitude, longitude' : ''"
+              :helper="
+                parsedCoords
+                  ? `Pinned at ${parsedCoords.lat.toFixed(5)}, ${parsedCoords.lon.toFixed(5)}`
+                  : 'Right-click a spot in Google Maps and copy what it shows.'
+              "
+              class="w-full"
+            />
+          </template>
+          <!-- Where the pin lands, whatever put it there. -->
+          <BookingMap
+            v-if="stopPreviewMarkers.length"
+            :markers="stopPreviewMarkers"
+            :height="160"
+          />
+
+          <TfSelect
+            label="Type"
+            :modelValue="selectedTypeLabel"
+            @update:modelValue="onTypeLabelPicked"
+            :options="typeLabelOptions"
+            placeholder="Select type"
+            class="w-full"
+          />
+          <p v-if="!linkedPlace && form.address" class="stop-address">
+            <i class="pi pi-map-marker"></i> {{ form.address }}
+            <button type="button" class="link-btn" @click="form.address = ''">clear</button>
+          </p>
+        </TfDrawerSection>
+
+        <!-- When -->
+        <TfDrawerSection label="When">
           <TfSelect
             v-if="editingActivity && moveDayLabels.length > 1"
             label="Day"
             v-model="moveDayLabel"
             :options="moveDayLabels"
             class="w-full"
-            helper="Pick another day to move this activity there"
+            helper="Pick another day to move this stop there"
           />
-
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-            <div class="field">
-              <label
-                >Start time
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
-                  >(optional)</span
-                ></label
-              >
-              <TfInput v-model="form.startTime" placeholder="09:00" class="w-full" />
-            </div>
-            <div class="field">
-              <label
-                >End time
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
-                  >(optional)</span
-                ></label
-              >
-              <TfInput v-model="form.endTime" placeholder="11:00" class="w-full" />
-            </div>
+            <TfTimePicker
+              v-model="form.startTime"
+              label="Start"
+              :placeholder="
+                editingActivity && derivedTimes[editingActivity.id]
+                  ? `≈ ${derivedTimes[editingActivity.id]}`
+                  : '09:00'
+              "
+              clearable
+            />
+            <TfTimePicker v-model="form.endTime" label="End" placeholder="11:00" clearable />
           </div>
+        </TfDrawerSection>
+
+        <!-- Details -->
+        <TfDrawerSection label="Details">
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
-            <div class="field">
-              <label
-                >Cost
-                <span style="font-weight: 400; font-size: 12px; color: var(--text-secondary)"
-                  >(optional)</span
-                ></label
-              >
-              <TfNumberInput
-                v-model="form.costEstimate"
-                type="plain"
-                :precision="2"
-                class="w-full"
-              />
-            </div>
+            <TfNumberInput
+              v-model="form.costEstimate"
+              type="plain"
+              :precision="2"
+              label="Cost estimate"
+              class="w-full"
+            />
             <TfSelect
               label="Currency"
               v-model="form.costCurrency"
               :options="currencyOptions"
               class="w-full"
             />
+          </div>
+          <!-- Same box as on a booking: the rate into the home currency and what
+               the estimate comes to. Live rate — an estimate is not a receipt. -->
+          <div v-if="showCostRate" class="rate-box">
+            <div style="flex: 1">
+              <div class="rate-label">1 {{ form.costCurrency }} = ? {{ accountCurrency }}</div>
+              <div class="rate-value">
+                {{ costRate ? Number(costRate).toFixed(4) : '—' }}
+                <span class="rate-unit">{{ accountCurrency }}</span>
+              </div>
+              <div v-if="form.costEstimate && costRate" class="hint">
+                {{ Number(form.costEstimate).toFixed(2) }} {{ form.costCurrency }} ≈
+                {{ (Number(form.costEstimate) * Number(costRate)).toFixed(2) }}
+                {{ accountCurrency }}
+              </div>
+            </div>
+            <TfButton
+              size="sm"
+              variant="secondary"
+              @click="fetchCostRate"
+              :disabled="fetchingCostRate"
+            >
+              <i
+                class="pi pi-sync"
+                :style="fetchingCostRate ? 'animation:spin 1s linear infinite' : ''"
+                style="font-size: 13px"
+              ></i>
+              {{ fetchingCostRate ? '' : 'Update rate' }}
+            </TfButton>
           </div>
           <TfTextarea
             label="Notes"
@@ -964,6 +949,13 @@
             placeholder="What to see here, tickets, opening hours, what to watch out for"
             class="w-full"
           />
+          <label class="save-place-toggle">
+            <input type="checkbox" v-model="form.needsBooking" />
+            <span
+              ><i class="pi pi-ticket" style="font-size: 13px"></i> Needs advance booking (tour,
+              show, popular spot)</span
+            >
+          </label>
           <!-- What you already wrote about this place in the library, so the day
                can be planned without leaving for the place editor. -->
           <div v-if="linkedPlace" class="linked-facts">
@@ -990,22 +982,26 @@
               {{ linkedPlace.description }}
             </p>
           </div>
-          <label class="save-place-toggle">
-            <input type="checkbox" v-model="form.needsBooking" />
-            <span
-              ><i class="pi pi-ticket" style="font-size: 13px"></i> Needs advance booking (tour,
-              show, popular spot)</span
-            >
-          </label>
         </TfDrawerSection>
       </form>
       <template #footer>
-        <TfButton variant="primary" style="flex: 1" @click="saveActivity" :disabled="saving">
-          {{ saving ? 'Saving...' : 'Save' }}
-        </TfButton>
-        <TfButton v-if="editingActivity" variant="ghost" @click="confirmDelete(editingActivity)"
-          >Delete</TfButton
-        >
+        <template v-if="isBookingStop">
+          <TfButton variant="secondary" @click="$router.push(`/trips/${tripId}/bookings`)">
+            <i class="pi pi-ticket" style="font-size: 13px"></i> Open bookings
+          </TfButton>
+          <span style="flex: 1"></span>
+          <TfButton variant="ghost" @click="confirmDelete(editingActivity)"
+            >Remove from this day</TfButton
+          >
+        </template>
+        <template v-else>
+          <TfButton variant="primary" style="flex: 1" @click="saveActivity" :disabled="saving">
+            {{ saving ? 'Saving...' : editingActivity ? 'Save' : 'Add stop' }}
+          </TfButton>
+          <TfButton v-if="editingActivity" variant="ghost" @click="confirmDelete(editingActivity)"
+            >Delete</TfButton
+          >
+        </template>
       </template>
     </TfDrawer>
 
@@ -1029,6 +1025,7 @@
         </TfButton>
       </div>
     </TfModal>
+    <AutoPlanModal v-model="showAutoPlan" :trip-id="tripId" @applied="loadDay(dayId)" />
   </div>
 </template>
 
@@ -1050,10 +1047,12 @@ import {
   TfModal,
   TfTooltip,
   TfTextarea,
+  TfTimePicker,
   toast,
   confirm,
 } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
+import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import { CURRENCIES, formatDateShort, placeTypeMeta, PLACE_TYPE_META } from '@tripyfull/core';
@@ -1098,6 +1097,71 @@ const emptyForm = {
 };
 const form = ref({ ...emptyForm });
 
+/* Coordinates typed by hand, as one field: "lat, lon". Parsed live; the form
+   only ever holds numbers or nothing. */
+const coordsText = ref('');
+const parsedCoords = computed(() => {
+  const m = coordsText.value.trim().match(/^(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const lat = Number(m[1]),
+    lon = Number(m[2]);
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  return { lat, lon };
+});
+watch(parsedCoords, (c) => {
+  form.value.latitude = c ? c.lat : null;
+  form.value.longitude = c ? c.lon : null;
+});
+/* Cost in another currency: show the rate and the converted amount, like the
+   booking editor does. Activities store no rate of their own — the budget
+   converts estimates live — so this is a live lookup too. */
+const costRate = ref(null);
+const fetchingCostRate = ref(false);
+const showCostRate = computed(
+  () => !!form.value.costCurrency && form.value.costCurrency !== accountCurrency.value,
+);
+const fetchCostRate = async () => {
+  if (!showCostRate.value) return;
+  fetchingCostRate.value = true;
+  try {
+    const res = await api.get('/api/exchange-rate', {
+      params: { from: form.value.costCurrency, to: accountCurrency.value },
+    });
+    costRate.value = res.data.rate;
+  } catch {
+    costRate.value = null;
+    toast.warning('Rate unavailable', `Could not fetch a rate for ${form.value.costCurrency}`);
+  } finally {
+    fetchingCostRate.value = false;
+  }
+};
+watch(
+  () => form.value.costCurrency,
+  (cur) => {
+    costRate.value = null;
+    if (cur && cur !== accountCurrency.value && showDrawer.value) fetchCostRate();
+  },
+);
+// The form is filled before the drawer opens, so an existing foreign-currency
+// estimate needs its rate looked up on open as well.
+watch(showDrawer, (open) => {
+  if (open && showCostRate.value && costRate.value == null) fetchCostRate();
+});
+
+/** The pin this stop will get: the linked place's, else its own. */
+const stopPreviewMarkers = computed(() => {
+  const p = linkedPlace.value;
+  const lat = p?.latitude ?? form.value.latitude;
+  const lon = p?.longitude ?? form.value.longitude;
+  return lat != null && lon != null
+    ? [{ lat: Number(lat), lon: Number(lon), label: form.value.name || p?.name || '' }]
+    : [];
+});
+// Field errors appear only after a save attempt, as in the booking editor.
+const attempted = ref(false);
+/** A stop the booking sync wrote; it is shown, not edited. */
+const isBookingStop = computed(() => !!editingActivity.value?.fromBooking);
+
 const linkedPlaceName = computed(() => {
   const p = placesLib.value.find((x) => x.id === form.value.placeId);
   return p?.name || form.value.name || 'Linked place';
@@ -1109,19 +1173,6 @@ const goEditPlace = () => {
   if (!form.value.placeId) return;
   showDrawer.value = false;
   router.push({ path: '/places', query: { edit: form.value.placeId } });
-};
-
-// Activity drawer: data source ('search' | 'import' | 'manual'), chosen then expanded.
-const actSource = ref(null);
-const activityImportUrl = ref('');
-const showCommon = computed(
-  () =>
-    actSource.value === 'manual' ||
-    !!form.value.placeId ||
-    !!(form.value.name && String(form.value.name).trim()),
-);
-const setActSource = (s) => {
-  actSource.value = s;
 };
 
 // Library places for linking activities
@@ -1152,8 +1203,6 @@ const onPlacePicked = (id) => {
   if (p && !form.value.address && p.address) form.value.address = p.address;
   if (p && !form.value.type && p.type) form.value.type = placeToActivityType(p.type);
 };
-
-const saveToPlaces = ref(false);
 
 // Place-type meta for the "Add from places" cards (shared via @tripyfull/core).
 const placeTypeEmoji = (t) => placeTypeMeta(t).emoji;
@@ -1190,31 +1239,35 @@ const openAddFromPlace = (p) => {
     costCurrency: accountCurrency.value,
   };
   if (!placesLib.value.some((x) => x.id === p.id)) placesLib.value.unshift(p);
-  saveToPlaces.value = false;
-  actSource.value = 'search';
-  activityImportUrl.value = '';
+  attempted.value = false;
+  coordsText.value = '';
   moveTargetDayId.value = null;
   showDrawer.value = true;
 };
 
-// Activity type -> Place type for "save to my places".
-const ACT_TO_PLACE_TYPE = {
-  SIGHTSEEING: 'SIGHTSEEING',
-  BEACH: 'BEACH',
-  NATURE: 'NATURE',
-  NEIGHBORHOOD: 'NEIGHBORHOOD',
-  RESTAURANT: 'RESTAURANT',
-  MEAL_STOP: 'RESTAURANT',
-  SHOPPING: 'SHOP',
-  TRANSPORT: 'OTHER',
-  OTHER: 'OTHER',
-};
-const activityToPlaceType = (t) => ACT_TO_PLACE_TYPE[t] || 'OTHER';
-
 // Find & save a brand-new place from geocoding, then link it to this activity.
 const findingPlace = ref(false);
+// Result types that describe a location rather than a venue: these do not
+// belong in the place library, they just say where the stop is.
+const ADDRESS_TYPES = new Set([
+  'address',
+  'street',
+  'road',
+  'city',
+  'town',
+  'village',
+  'locality',
+  'region',
+  'country',
+  'postcode',
+]);
 const onActivityGeoPicked = async (geo) => {
   if (!geo) return;
+  if (ADDRESS_TYPES.has(String(geo.placeType || '').toLowerCase())) {
+    form.value.address = geo.displayName || geo.name || '';
+    coordsText.value = `${geo.lat}, ${geo.lon}`;
+    return;
+  }
   findingPlace.value = true;
   try {
     const res = await api.post('/api/places/geocode', {
@@ -1235,28 +1288,6 @@ const onActivityGeoPicked = async (geo) => {
   }
 };
 
-// Import a place from a Google Maps link, then link it to this activity.
-const runActivityImport = async () => {
-  if (!activityImportUrl.value.trim()) return;
-  findingPlace.value = true;
-  try {
-    const res = await api.post('/api/places/import', { url: activityImportUrl.value.trim() });
-    const place = res.data;
-    if (!placesLib.value.some((p) => p.id === place.id)) placesLib.value.unshift(place);
-    form.value.placeId = place.id;
-    if (!form.value.name && place.name) form.value.name = place.name;
-    if (!form.value.address && place.address) form.value.address = place.address;
-    if (!form.value.type && place.type) form.value.type = placeToActivityType(place.type);
-    activityImportUrl.value = '';
-    toast.success('Imported', place.name);
-  } catch (e) {
-    const msg = e.response?.status === 400 ? "Couldn't read that link" : 'Import failed';
-    toast.warning('Import', msg);
-  } finally {
-    findingPlace.value = false;
-  }
-};
-
 const typeOptions = [
   { label: 'Sightseeing', value: 'SIGHTSEEING' },
   { label: 'Beach', value: 'BEACH' },
@@ -1266,6 +1297,7 @@ const typeOptions = [
   { label: 'Meal stop', value: 'MEAL_STOP' },
   { label: 'Shopping', value: 'SHOPPING' },
   { label: 'Transport', value: 'TRANSPORT' },
+  { label: 'Hotel', value: 'ACCOMMODATION' },
   { label: 'Other', value: 'OTHER' },
 ];
 
@@ -1288,10 +1320,24 @@ const typeIcon = (t) =>
     MEAL_STOP: '\u2615',
     SHOPPING: '\u{1F6CD}',
     TRANSPORT: '\u{1F68C}',
+    ACCOMMODATION: '\u{1F3E8}',
     OTHER: '\u{1F4CC}',
   })[t] ?? '\u{1F4CC}';
 
 const typeLabel = (t) => typeOptions.find((o) => o.value === t)?.label ?? t ?? '';
+
+// A journey written from a booking shows what it travels by, not a generic bus.
+const MODE_ICON = {
+  FLIGHT: '\u2708\uFE0F',
+  TRAIN: '\u{1F686}',
+  BUS: '\u{1F68C}',
+  FERRY: '\u26F4\uFE0F',
+  TAXI: '\u{1F695}',
+  CAR_RENTAL: '\u{1F697}',
+  METRO: '\u{1F687}',
+  WALK: '\u{1F6B6}',
+};
+const stopIcon = (a) => (a.fromBooking && MODE_ICON[a.bookingTransportMode]) || typeIcon(a.type);
 
 const catStyle = (type) => {
   const styles = {
@@ -1303,6 +1349,7 @@ const catStyle = (type) => {
     MEAL_STOP: { background: 'var(--warning-100)', color: 'var(--warning-500)' },
     SHOPPING: { background: 'var(--danger-100)', color: 'var(--danger-500)' },
     TRANSPORT: { background: 'var(--success-100)', color: 'var(--accent)' },
+    ACCOMMODATION: { background: 'var(--success-100)', color: 'var(--primary)' },
     OTHER: { background: 'var(--surface)', color: 'var(--ink-500)' },
   };
   return styles[type] || styles.OTHER;
@@ -1346,15 +1393,70 @@ const persistOrder = async () => {
   }
 };
 
-const sortByTime = () => {
-  activities.value = [...activities.value].sort((a, b) => {
-    if (!a.startTime && !b.startTime) return 0;
-    if (!a.startTime) return 1; // untimed go last
-    if (!b.startTime) return -1;
-    return a.startTime.localeCompare(b.startTime);
+/**
+ * The day in time order. Timed stops sort by their time; a stop without one
+ * stays right after the stop it follows; the hotel rows the booking sync wrote
+ * keep their place at the ends of the day (where you wake up, where you sleep).
+ */
+const inTimeOrder = (list) => {
+  const isHotel = (a) => a.fromBooking && a.type === 'ACCOMMODATION';
+  let head = 0;
+  while (head < list.length && isHotel(list[head])) head++;
+  let tail = list.length;
+  while (tail > head && isHotel(list[tail - 1])) tail--;
+  const middle = list.slice(head, tail);
+  // Effective time: own, else the last timed stop before it (so it trails it).
+  let last = '';
+  const keyed = middle.map((a, i) => {
+    if (a.startTime) last = a.startTime;
+    return { a, i, t: a.startTime || last };
   });
+  keyed.sort((x, y) => x.t.localeCompare(y.t) || x.i - y.i);
+  return [...list.slice(0, head), ...keyed.map((k) => k.a), ...list.slice(tail)];
+};
+const sortByTime = () => {
+  activities.value = inTimeOrder(activities.value);
   persistOrder();
 };
+/** After a save: if the day is no longer in time order, put it back. */
+const autoSortByTime = () => {
+  const ordered = inTimeOrder(activities.value);
+  if (ordered.some((a, i) => a.id !== activities.value[i].id)) {
+    activities.value = ordered;
+    persistOrder();
+  }
+};
+
+/**
+ * Times the chain works out for stops that have none: the previous stop's time
+ * (its own or worked out) plus how long it takes there — its own span, else the
+ * place's visit time, else nothing (a departure point) — plus the way over.
+ */
+const derivedTimes = computed(() => {
+  const out = {};
+  let clock = null; // minutes since midnight at the end of the previous stop
+  for (const a of activities.value) {
+    const own = a.startTime ? toMinutes(a.startTime) : null;
+    const start = own ?? clock;
+    if (own == null && start != null) out[a.id] = fromMinutes(start);
+    if (start == null) continue;
+    let stay = minutesBetween(a);
+    if (!stay && !a.fromBooking) {
+      const place = placesLib.value.find((x) => x.id === a.placeId);
+      stay = place?.visitMinutes || 0;
+    }
+    const leg = legInfoByActivity.value[a.id]?.data?.durationSec;
+    clock = start + stay + (leg ? Math.round(leg / 60) : 0);
+    if (clock >= 24 * 60) clock = null; // past midnight: stop guessing
+  }
+  return out;
+});
+const toMinutes = (t) => {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+};
+const fromMinutes = (min) =>
+  `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 
 /* ---- Move an activity to another day (edit drawer) ---- */
 const moveTargetDayId = ref(null);
@@ -1372,9 +1474,35 @@ const moveDayLabel = computed({
   },
 });
 
-const dayTotal = computed(() =>
-  activities.value.reduce((s, a) => s + (Number(a.costEstimate) || 0), 0),
-);
+/* Costs in other currencies are converted at the live rate, the way the budget
+   page does it — a THB estimate must not be added up as if it were euros. */
+const costRates = ref({});
+const isForeign = (a) => !!a.costCurrency && a.costCurrency !== currency.value;
+const toBase = (a) => {
+  const amt = Number(a.costEstimate) || 0;
+  if (!isForeign(a)) return amt;
+  const rate = costRates.value[a.costCurrency];
+  return rate ? amt * rate : 0; // unknown rate: left out rather than counted as base currency
+};
+const loadCostRates = async () => {
+  const wanted = [...new Set(activities.value.filter(isForeign).map((a) => a.costCurrency))].filter(
+    (c) => !costRates.value[c],
+  );
+  await Promise.all(
+    wanted.map(async (c) => {
+      try {
+        const res = await api.get('/api/exchange-rate', {
+          params: { from: c, to: currency.value },
+        });
+        costRates.value = { ...costRates.value, [c]: Number(res.data.rate) };
+      } catch {
+        /* no rate: the amount stays visible in its own currency, out of the total */
+      }
+    }),
+  );
+};
+watch(activities, loadCostRates, { deep: true });
+const dayTotal = computed(() => activities.value.reduce((s, a) => s + toBase(a), 0));
 
 // Saved places near the route: grey context dots on the map. Places already
 // planned today are hidden — they're route pins.
@@ -1401,22 +1529,26 @@ const onMapDotAdd = (id) => {
   if (p) openAddFromPlace(p);
 };
 
-// Pins for activities whose linked place has coordinates (ordered = numbered).
+// A stop is on the map either through its linked place or, for one written from
+// a booking (a hotel, an airport), through coordinates of its own.
+const stopLat = (a) => a.placeLatitude ?? a.latitude;
+const stopLon = (a) => a.placeLongitude ?? a.longitude;
+const hasCoords = (a) => stopLat(a) != null && stopLon(a) != null;
+
+// Pins for activities that have coordinates (ordered = numbered).
 const activityMarkers = computed(() =>
-  activities.value
-    .filter((a) => a.placeLatitude != null && a.placeLongitude != null)
-    .map((a) => ({
-      lat: Number(a.placeLatitude),
-      lon: Number(a.placeLongitude),
-      label: a.placeName || a.name,
-    })),
+  activities.value.filter(hasCoords).map((a) => ({
+    lat: Number(stopLat(a)),
+    lon: Number(stopLon(a)),
+    label: a.placeName || a.name,
+  })),
 );
 // activity id -> its number on the map (same order as the markers)
 const stopNumbers = computed(() => {
   const map = {};
   let n = 0;
   activities.value.forEach((a) => {
-    if (a.placeLatitude != null && a.placeLongitude != null) map[a.id] = ++n;
+    if (hasCoords(a)) map[a.id] = ++n;
   });
   return map;
 });
@@ -1471,13 +1603,13 @@ const legMode = (a) => (MODE_KEYS.includes(a.travelModeToNext) ? a.travelModeToN
 
 // One leg per consecutive pair of mapped stops, owned by the departing activity.
 const dayLegs = computed(() => {
-  const stops = activities.value.filter((a) => a.placeLatitude != null && a.placeLongitude != null);
+  const stops = activities.value.filter(hasCoords);
   const legs = [];
   for (let i = 0; i < stops.length - 1; i++) {
     const from = stops[i];
     const to = stops[i + 1];
     const mode = legMode(from);
-    const points = `${Number(from.placeLatitude)},${Number(from.placeLongitude)};${Number(to.placeLatitude)},${Number(to.placeLongitude)}`;
+    const points = `${Number(stopLat(from))},${Number(stopLon(from))};${Number(stopLat(to))},${Number(stopLon(to))}`;
     legs.push({ fromId: from.id, mode, key: `${mode}|${points}` });
   }
   return legs;
@@ -1665,10 +1797,11 @@ const unhideAll = () => {
   persistHidden();
 };
 
+// The candidates are the trip's own shortlist — the whole library is what the
+// Places page is for.
 const PICK_SCOPES = [
   { key: 'city', label: 'This city' },
   { key: 'trip', label: 'Trip list' },
-  { key: 'all', label: 'All places' },
 ];
 const PICK_SORTS = [
   { key: 'rating', label: 'Best first', hint: 'Must-sees first, nearest among equals' },
@@ -1678,42 +1811,70 @@ const pickScope = ref('trip');
 const pickSort = ref('rating');
 
 /** A usable sightseeing day, the yardstick the budget bar measures against. */
-const DAY_HOURS = 10;
+/** "1 h 30 min" from minutes. */
 const fmtMin = (min) => {
   const m = Math.max(0, Math.round(min));
   return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60 ? (m % 60) + ' min' : ''}`.trim();
 };
 
 /**
- * Time at places (the activity's own window, else the linked place's estimate)
- * plus time on the move (real routed legs), against a DAY_HOURS day.
+ * How full the day is. Stops are the places you go to — the hotel rows and the
+ * flights, trains and ferries written from bookings are not stops, they frame the
+ * day. Time at places: a stop's own start–end, else the place's visit time; a stop
+ * with neither is counted as unknown, not guessed at. Time on the move: the routed legs between mapped stops plus the
+ * booked journeys with a departure and an arrival on this day (the flight itself).
+ * A rental-car pickup is an errand — half an hour at a counter, not five days of
+ * driving.
  */
+const minutesBetween = (a) => {
+  if (!a.startTime || !a.endTime) return 0;
+  const [h1, m1] = a.startTime.split(':').map(Number);
+  const [h2, m2] = a.endTime.split(':').map(Number);
+  const span = h2 * 60 + m2 - (h1 * 60 + m1);
+  return span > 0 ? span : 0;
+};
+const isHotelRow = (a) => a.type === 'ACCOMMODATION';
+const isJourneyRow = (a) => a.fromBooking && a.type === 'TRANSPORT';
+
+/**
+ * Minutes of a booked journey that fall on this day: an overnight flight leaving
+ * at 20:55 is three hours of this day and seven of the next. Without the
+ * booking's real times, the stop's own start–end has to do.
+ */
+const journeyMinutesToday = (a) => {
+  if (!day.value?.date || !a.bookingDepartureAt || !a.bookingArrivalAt) return minutesBetween(a);
+  const dayStart = new Date(`${day.value.date}T00:00:00`);
+  const dayEnd = new Date(dayStart.getTime() + 86400000);
+  const from = Math.max(new Date(a.bookingDepartureAt).getTime(), dayStart.getTime());
+  const to = Math.min(new Date(a.bookingArrivalAt).getTime(), dayEnd.getTime());
+  return to > from ? Math.round((to - from) / 60000) : 0;
+};
+
 const dayBudget = computed(() => {
   let visitMin = 0;
+  let travelMin = routeTotal.value ? Math.round(routeTotal.value.durationSec / 60) : 0;
+  let stops = 0;
+  let untimed = 0;
+  const seenJourneys = new Set();
   for (const a of activities.value) {
-    if (a.startTime && a.endTime) {
-      const [h1, m1] = a.startTime.split(':').map(Number);
-      const [h2, m2] = a.endTime.split(':').map(Number);
-      const span = h2 * 60 + m2 - (h1 * 60 + m1);
-      if (span > 0) {
-        visitMin += span;
-        continue;
+    if (isHotelRow(a)) continue;
+    if (isJourneyRow(a)) {
+      // A departure and its "Arrive" row are one journey; count it once.
+      const key = a.bookingDepartureAt ? `${a.bookingDepartureAt}|${a.bookingArrivalAt}` : a.id;
+      if (!seenJourneys.has(key)) {
+        seenJourneys.add(key);
+        travelMin += journeyMinutesToday(a);
       }
+      continue;
     }
-    const place = placesLib.value.find((x) => x.id === a.placeId);
-    visitMin += place?.visitMinutes || 60; // an hour is the honest default
+    stops += 1;
+    const span = minutesBetween(a);
+    const place = a.fromBooking ? null : placesLib.value.find((x) => x.id === a.placeId);
+    if (span) visitMin += span;
+    else if (place?.visitMinutes) visitMin += place.visitMinutes;
+    else untimed += 1; // no time, no estimate: say so instead of inventing an hour
   }
-  const travelMin = routeTotal.value ? Math.round(routeTotal.value.durationSec / 60) : 0;
-  const total = DAY_HOURS * 60;
-  const visitPct = Math.min(100, (visitMin / total) * 100);
-  return {
-    stops: activities.value.length,
-    visitMin,
-    travelMin,
-    leftMin: total - visitMin - travelMin,
-    visitPct,
-    travelPct: Math.min(100 - visitPct, (travelMin / total) * 100),
-  };
+  return { stops, visitMin, travelMin, untimed };
 });
 
 /** Places attached to this trip — the shortlist the day should be built from. */
@@ -1759,7 +1920,7 @@ const candidatePlaces = computed(() => {
     placesLib.value
       .filter((p) => !planned.has(p.id) && !hiddenIds.value.has(p.id))
       // city subset of trip subset of all
-      .filter((p) => (pickScope.value === 'all' ? true : inThisTrip(p)))
+      .filter(inThisTrip)
       .filter((p) => (pickScope.value === 'city' ? matchesDayCity(p) : true))
       .map((p) => {
         const near = nearestStop(p);
@@ -1877,7 +2038,7 @@ const costByType = computed(() => {
   const map = {};
   activities.value.forEach((a) => {
     if (a.costEstimate && a.type) {
-      map[a.type] = (map[a.type] || 0) + Number(a.costEstimate);
+      map[a.type] = (map[a.type] || 0) + toBase(a);
     }
   });
   return map;
@@ -2021,6 +2182,8 @@ const goToDay = (idx) => {
   }
 };
 
+const showAutoPlan = ref(false);
+
 const loadDay = async (id) => {
   editingCity.value = false;
   editingOvernight.value = false;
@@ -2033,6 +2196,7 @@ const loadDay = async (id) => {
     allDays.value = daysRes.data;
     day.value = daysRes.data.find((d) => d.id === id) || null;
     activities.value = activitiesRes.data;
+    autoSortByTime(); // stops appended out of time order (bookings first, hand-made after) fall into place
   } catch {
     day.value = allDays.value.find((d) => d.id === id) || null;
     activities.value = [];
@@ -2042,9 +2206,8 @@ const loadDay = async (id) => {
 const openAddDialog = () => {
   editingActivity.value = null;
   form.value = { ...emptyForm, costCurrency: accountCurrency.value };
-  saveToPlaces.value = false;
-  actSource.value = null;
-  activityImportUrl.value = '';
+  attempted.value = false;
+  coordsText.value = '';
   moveTargetDayId.value = null;
   showDrawer.value = true;
 };
@@ -2062,36 +2225,21 @@ const startEdit = (a) => {
     placeId: a.placeId || null,
     costCurrency: a.costCurrency || accountCurrency.value,
     needsBooking: !!a.needsBooking,
+    latitude: a.latitude ?? null,
+    longitude: a.longitude ?? null,
   };
-  saveToPlaces.value = false;
-  actSource.value = a.placeId ? 'search' : 'manual';
-  activityImportUrl.value = '';
+  coordsText.value =
+    a.latitude != null && a.longitude != null ? `${a.latitude}, ${a.longitude}` : '';
+  attempted.value = false;
   moveTargetDayId.value = dayId.value; // preselect the current day in the move select
   showDrawer.value = true;
 };
 
 const saveActivity = async () => {
+  attempted.value = true;
+  if (!String(form.value.name || '').trim()) return;
   saving.value = true;
   try {
-    // Optionally save a standalone activity into the places library, then link it.
-    if (saveToPlaces.value && !form.value.placeId && form.value.name) {
-      try {
-        const res = await api.post('/api/places', {
-          name: form.value.name,
-          address: form.value.address || null,
-          type: activityToPlaceType(form.value.type),
-          latitude: form.value.latitude || null,
-          longitude: form.value.longitude || null,
-          visibility: 'PRIVATE',
-        });
-        if (!placesLib.value.some((p) => p.id === res.data.id)) placesLib.value.unshift(res.data);
-        form.value.placeId = res.data.id;
-        if (!form.value.address && res.data.address) form.value.address = res.data.address;
-      } catch {
-        toast.warning('Note', 'Activity saved, but adding to places failed');
-      }
-    }
-
     const payload = {
       ...form.value,
       startTime: form.value.startTime || null,
@@ -2100,6 +2248,9 @@ const saveActivity = async () => {
       costCurrency: form.value.costCurrency || accountCurrency.value,
       placeId: form.value.placeId || null,
       clearPlace: !form.value.placeId,
+      latitude: form.value.placeId ? null : form.value.latitude,
+      longitude: form.value.placeId ? null : form.value.longitude,
+      clearCoords: !!form.value.placeId || form.value.latitude == null,
       // On edit: a different day here moves the activity (appended at its end).
       dayId: editingActivity.value ? moveTargetDayId.value || undefined : undefined,
     };
@@ -2112,11 +2263,13 @@ const saveActivity = async () => {
       } else {
         const idx = activities.value.findIndex((a) => a.id === editingActivity.value.id);
         if (idx !== -1) activities.value[idx] = res.data;
+        if (res.data.startTime) autoSortByTime();
         toast.success('Updated', 'Activity updated');
       }
     } else {
       const res = await api.post(`/api/days/${dayId.value}/activities`, payload);
       activities.value.push(res.data);
+      if (res.data.startTime) autoSortByTime();
       toast.success('Added', `"${res.data.name}" added`);
     }
     showDrawer.value = false;
@@ -2168,6 +2321,7 @@ onMounted(async () => {
     allDays.value = daysRes.data;
     day.value = daysRes.data.find((d) => d.id === dayId.value);
     activities.value = activitiesRes.data;
+    autoSortByTime(); // stops appended out of time order (bookings first, hand-made after) fall into place
     bookings.value = bookingsRes.data;
   } catch {
     toast.danger('Error', 'Failed to load day');
@@ -2243,66 +2397,8 @@ onMounted(async () => {
   font: var(--fw-regular) 11px/1.4 var(--font-sans);
   color: var(--text-secondary);
 }
-.link-btn {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--primary);
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-  white-space: nowrap;
-}
 
 /* How full the day is: two stacked shares of a 10h day. */
-.day-budget {
-  margin: 14px 0 4px;
-}
-.day-budget-bar {
-  display: flex;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  overflow: hidden;
-}
-.day-budget-fill {
-  height: 100%;
-}
-.day-budget-fill--visit {
-  background: var(--primary);
-}
-.day-budget-fill--travel {
-  background: var(--warning-500);
-}
-.day-budget-legend {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 7px;
-  font: var(--type-small);
-  color: var(--text-secondary);
-}
-.day-budget-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  margin-left: 6px;
-}
-.day-budget-dot--visit {
-  background: var(--primary);
-}
-.day-budget-dot--travel {
-  background: var(--warning-500);
-}
-.day-budget-left {
-  margin-left: auto;
-  font-weight: var(--fw-semibold);
-  color: var(--text-primary);
-}
-.day-budget-left.is-over {
-  color: var(--danger-700);
-}
 
 .itin-picks-controls {
   display: flex;
@@ -2689,45 +2785,94 @@ onMounted(async () => {
   }
 }
 
-.src-choice {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-.src-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border: 1.5px solid var(--border-default);
-  background: var(--card);
-  border-radius: var(--radius-md);
-  cursor: pointer;
+.money-approx {
+  display: block;
+  font: var(--fw-medium) 11px/1.3 var(--font-mono);
   color: var(--text-secondary);
-  font: var(--fw-semibold) 13px/1 var(--font-sans);
-  transition: all var(--dur-fast) var(--ease-out);
-}
-.src-btn i {
-  font-size: 18px;
-}
-.src-btn:hover {
-  border-color: var(--border-default);
-  color: var(--text-primary);
-}
-.src-btn--on {
-  border-color: var(--accent);
-  background: var(--danger-100);
-  color: var(--danger-900);
 }
 
-.src-panel {
+.timeline-time--derived {
+  color: var(--text-disabled);
+  font-style: italic;
+}
+
+.day-load {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px;
+  gap: 4px;
+  font: var(--fw-medium) 14px/1.3 var(--font-sans);
+  color: var(--text-secondary);
+}
+.day-load b {
+  color: var(--text-primary);
+}
+.day-load-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 1px;
+}
+.day-load-dot--visit {
+  background: var(--primary);
+}
+.day-load-dot--travel {
+  background: var(--warning-500);
+}
+
+.stop-address {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+.stop-address .pi {
+  color: var(--accent);
+  font-size: 12px;
+}
+.rate-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px 14px;
   background: var(--surface);
   border-radius: var(--radius-md);
+}
+.rate-label {
+  font: var(--fw-medium) 12px/1 var(--font-mono);
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.rate-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--fw-bold) 20px/1 var(--font-display);
+  color: var(--text-primary);
+}
+.rate-unit {
+  font: var(--fw-medium) 13px/1 var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.booking-stop {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.booking-stop-name {
+  font: var(--fw-semibold) 15px/1.3 var(--font-sans);
+  color: var(--text-primary);
+}
+.booking-stop-line {
+  font: var(--type-small);
+  color: var(--text-secondary);
 }
 
 .linked-place {

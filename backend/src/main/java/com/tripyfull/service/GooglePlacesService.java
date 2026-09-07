@@ -239,6 +239,13 @@ public class GooglePlacesService {
                 || t.contains("park") || t.contains("natural_feature")) return "tourism";
         if (t.contains("locality") || t.contains("administrative_area_level_1")) return "city";
         if (t.contains("train_station") || t.contains("transit_station")) return "station";
+        // A street, a house, a postcode: somewhere, not something. The planner pins
+        // these on the stop itself instead of saving them as places.
+        if (t.contains("street_address") || t.contains("route") || t.contains("premise")
+                || t.contains("subpremise") || t.contains("intersection") || t.contains("postal_code")
+                || t.contains("plus_code") || t.contains("neighborhood") || t.contains("sublocality")) {
+            return "address";
+        }
         return "place";
     }
 

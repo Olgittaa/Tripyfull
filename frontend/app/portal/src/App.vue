@@ -99,6 +99,13 @@
               <TfIcon name="confirmation_number" style="font-size: 20px" /> Bookings
             </router-link>
             <router-link
+              :to="`/trips/${currentTrip.id}/todos`"
+              class="sidebar-nav-btn"
+              :class="{ 'active-filled': $route.path.includes('/todos') }"
+            >
+              <TfIcon name="checklist" style="font-size: 20px" /> To-do
+            </router-link>
+            <router-link
               :to="`/trips/${currentTrip.id}/budget`"
               class="sidebar-nav-btn"
               :class="{ 'active-filled': $route.path.includes('/budget') }"

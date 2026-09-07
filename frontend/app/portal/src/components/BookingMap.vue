@@ -44,22 +44,30 @@ function pinIcon(color) {
   });
 }
 
-/** Saved-place dot, sized and coloured by rating so must-sees read first. */
+/** Saved-place dot, sized and coloured by rating so must-sees read first.
+    The two lowest ratings used to be near-white and vanished on the map; they
+    are now muted stone rather than pale grey. */
 const DOT_BY_RATING = {
-  5: { size: 15, color: '#dc2626' },
-  4: { size: 13, color: '#f97316' },
-  3: { size: 11, color: '#eab308' },
-  2: { size: 10, color: '#9ca3af' },
-  1: { size: 9, color: '#d1d5db' },
+  5: { size: 16, color: '#dc2626' },
+  4: { size: 14, color: '#f97316' },
+  3: { size: 12, color: '#eab308' },
+  2: { size: 11, color: '#78716c' },
+  1: { size: 10, color: '#a8a29e' },
 };
 
+/**
+ * A dot the street map cannot swallow: white ring, dark hairline outside it, and
+ * a size that grows as you zoom in — at street level a 12 px dot disappears
+ * among the shop icons. The marker is anchored at a zero-size point and centred
+ * by transform, so CSS may scale it without moving it off its coordinate.
+ */
 function dotIcon(rating) {
   const { size, color } = DOT_BY_RATING[rating] || DOT_BY_RATING[3];
   return L.divIcon({
     className: '',
-    html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<div class="place-dot" style="--dot-size:${size}px;--dot-color:${color}"></div>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
     popupAnchor: [0, -size / 2 - 2],
   });
 }
@@ -92,15 +100,27 @@ async function initMap() {
   map = L.map(el.value, { zoomControl: false, attributionControl: true });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   // Same keyless basemap as the plan map: local labels, calmer under markers.
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // OSM's own tiles: free and keyless. CARTO began stamping "API KEY REQUIRED"
+  // over its keyless basemaps.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution:
-      '© <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank">CARTO</a>',
-    maxZoom: 20,
+      '© <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+    maxZoom: 19,
   }).addTo(map);
   renderMarkers();
   // The map can be born inside a panel that is still animating open (width ~0),
   // and Leaflet caches that size — so follow the container.
   if (!resizeObserver && typeof ResizeObserver !== 'undefined') {
+    // Dots grow with the zoom: the closer the view, the more detail competes.
+    const applyDotScale = () => {
+      const z = map.getZoom();
+      el.value?.style.setProperty('--dot-scale', z >= 16 ? '1.6' : z >= 14 ? '1.3' : '1');
+    };
+    applyDotScale();
+    // Both events: 'zoom' keeps the size honest during the animation, 'zoomend'
+    // catches the case where the animation is skipped.
+    map.on('zoom zoomend', applyDotScale);
+
     resizeObserver = new ResizeObserver(() => map?.invalidateSize());
     resizeObserver.observe(el.value);
   }
@@ -231,6 +251,10 @@ watch(
 
 <style scoped>
 .booking-map {
+  /* Leaflet stacks its panes at z-index 400+; kept inside their own context they
+     can no longer climb over a search dropdown (z-index 200) opened above the map. */
+  position: relative;
+  z-index: 0;
   height: 210px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
@@ -240,5 +264,31 @@ watch(
 }
 .booking-map--hidden {
   display: none;
+}
+
+/* OSM's own tiles carry every shop and clinic in colour; muted, they stay
+   readable as streets while the rating dots own the colour on top. Only the
+   tile pane is filtered — markers and popups sit in panes of their own. */
+.booking-map :deep(.leaflet-tile-pane) {
+  filter: saturate(0.5) contrast(0.9) brightness(1.06);
+}
+
+.booking-map :deep(.place-dot) {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--dot-size) * var(--dot-scale, 1));
+  height: calc(var(--dot-size) * var(--dot-scale, 1));
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--dot-color);
+  border: 2px solid #fff;
+  box-sizing: border-box;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.3),
+    0 1px 4px rgba(0, 0, 0, 0.35);
+  transition:
+    width 0.12s ease-out,
+    height 0.12s ease-out;
 }
 </style>

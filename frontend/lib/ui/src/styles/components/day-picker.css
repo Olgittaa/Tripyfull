@@ -6,8 +6,15 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   padding-bottom: 4px;
+  /* The strip scrolls sideways, which clips anything drawn outside a button —
+     so the buttons carry no shadows (see below) and the scrollbar stays hidden;
+     trackpad, wheel and the header arrows still move through the days. */
+  scrollbar-width: none;
+}
+.day-picker::-webkit-scrollbar {
+  display: none;
 }
 
 .day-picker-btn {
@@ -24,13 +31,11 @@
 .day-picker-btn--off {
   background: var(--card);
   color: var(--text-secondary);
-  box-shadow: var(--shadow-xs);
 }
 
 .day-picker-btn--on {
   background: var(--accent);
   color: #fff;
-  box-shadow: var(--shadow-brand);
 }
 
 .day-picker-label {

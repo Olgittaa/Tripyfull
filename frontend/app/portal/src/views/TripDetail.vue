@@ -2,14 +2,14 @@
   <div class="page-content page-content--full">
     <div v-if="store.loading" style="display: flex; flex-direction: column; gap: 20px">
       <div class="skeleton" style="height: 40px; width: 280px"></div>
-      <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px">
-        <div class="skeleton" style="height: 200px"></div>
-        <div class="skeleton" style="height: 200px"></div>
+      <div class="dash-tiles">
+        <div v-for="i in 4" :key="i" class="skeleton" style="height: 120px"></div>
       </div>
+      <div class="skeleton" style="height: 260px"></div>
     </div>
 
     <template v-else-if="trip">
-      <!-- Page head -->
+      <!-- Head: what trip, when, and how far away it is -->
       <div class="page-head">
         <div>
           <div class="tf-eyebrow" style="margin-bottom: 8px">{{ statusLabel(trip.status) }}</div>
@@ -20,6 +20,10 @@
           </p>
         </div>
         <div class="page-head-actions">
+          <div v-if="countdown" class="dash-countdown" :class="`dash-countdown--${phase}`">
+            <span class="dash-countdown-num">{{ countdown.num }}</span>
+            <span class="dash-countdown-text">{{ countdown.text }}</span>
+          </div>
           <TfButton variant="secondary" @click="startEdit">
             <i class="pi pi-pencil" style="font-size: 14px"></i> Edit
           </TfButton>
@@ -29,364 +33,284 @@
         </div>
       </div>
 
-      <!-- Budget + Upcoming payments -->
-      <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; margin-bottom: 20px">
-        <!-- Budget summary -->
-        <div class="card">
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 18px;
-            "
-          >
-            <h3 style="font: var(--type-h3); margin: 0">Budget</h3>
-            <TfButton size="sm" variant="ghost" @click="$router.push(`/trips/${tripId}/budget`)">
-              Details <i class="pi pi-chevron-right" style="font-size: 12px"></i>
-            </TfButton>
-          </div>
-          <div v-if="budgetData" style="display: flex; gap: 26px; margin-bottom: 18px">
-            <div>
-              <div
-                style="
-                  font: 400 12px/1 var(--font-sans);
-                  color: var(--text-secondary);
-                  margin-bottom: 6px;
-                "
-              >
-                Planned
-              </div>
-              <span class="money money--lg">{{ fmtMoney(budgetData.totalPlanned) }}</span>
-            </div>
-            <div>
-              <div
-                style="
-                  font: 400 12px/1 var(--font-sans);
-                  color: var(--text-secondary);
-                  margin-bottom: 6px;
-                "
-              >
-                Paid
-              </div>
-              <span class="money money--lg" style="color: var(--success-500)">{{
-                fmtMoney(
-                  Number(budgetData.bookingsPaid || 0) + Number(budgetData.expensesTotal || 0),
-                )
-              }}</span>
-            </div>
-            <div>
-              <div
-                style="
-                  font: 400 12px/1 var(--font-sans);
-                  color: var(--text-secondary);
-                  margin-bottom: 6px;
-                "
-              >
-                Remaining
-              </div>
-              <span class="money money--lg" style="color: var(--danger-700)">{{
-                fmtMoney(budgetData.bookingsRemaining)
-              }}</span>
-            </div>
-          </div>
-          <template v-if="budgetData && Number(budgetData.totalPlanned) > 0">
-            <div class="tf-progress">
-              <div
-                class="tf-progress-fill"
-                :style="{
-                  width:
-                    Math.min(
-                      100,
-                      Math.round(
-                        ((Number(budgetData.bookingsPaid || 0) +
-                          Number(budgetData.expensesTotal || 0)) /
-                          Number(budgetData.totalPlanned)) *
-                          100,
-                      ),
-                    ) + '%',
-                }"
-              ></div>
-            </div>
-            <div
-              style="
-                font: var(--fw-medium) 12px/1 var(--font-mono);
-                color: var(--text-secondary);
-                margin-top: 8px;
-              "
-            >
-              {{
-                Math.round(
-                  ((Number(budgetData.bookingsPaid || 0) + Number(budgetData.expensesTotal || 0)) /
-                    Number(budgetData.totalPlanned)) *
-                    100,
-                )
-              }}% paid
-            </div>
-          </template>
-          <div
-            v-else-if="!budgetData"
-            style="font: var(--type-small); color: var(--text-secondary)"
-          >
-            <TfBadge :tone="statusTone(trip.status)" variant="solid">{{
-              statusLabel(trip.status)
-            }}</TfBadge>
-          </div>
-        </div>
-
-        <!-- Upcoming payments -->
-        <div class="card">
-          <h3 style="font: var(--type-h3); margin: 0 0 14px">Upcoming payments</h3>
-          <div
-            v-if="upcomingPayments.length"
-            style="display: flex; flex-direction: column; gap: 10px"
-          >
-            <div
-              v-for="p in upcomingPayments"
-              :key="p.paymentId"
-              style="display: flex; align-items: center; gap: 11px"
-            >
-              <div class="cat-icon cat-icon--sm" :style="catIconStyle(p.category)">
-                {{ catIcon(p.category) }}
-              </div>
-              <div style="flex: 1; min-width: 0">
-                <div
-                  style="
-                    font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                    color: var(--text-primary);
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                  "
-                >
-                  {{ p.bookingName }}
-                </div>
-                <div
-                  style="
-                    font: var(--fw-medium) 11px/1 var(--font-mono);
-                    color: var(--text-secondary);
-                    margin-top: 2px;
-                  "
-                >
-                  {{ formatDateShort(p.dueDate) }}
-                </div>
-              </div>
-              <span class="money money--sm"
-                >{{ Number(p.amount).toFixed(2) }}
-                {{ budgetData?.baseCurrency || accountCurrency.value }}</span
-              >
-            </div>
-          </div>
-          <div v-else style="font: var(--type-small); color: var(--text-secondary)">
-            No upcoming payments
-          </div>
-        </div>
-      </div>
-
-      <!-- Trip info -->
-      <div class="card" style="margin-bottom: 20px">
-        <h3 style="font: var(--type-h3); margin: 0 0 14px">Trip info</h3>
-        <div style="display: flex; gap: 24px; flex-wrap: wrap">
-          <div style="display: flex; align-items: center; gap: 11px">
-            <i class="pi pi-map-marker" style="color: var(--accent); font-size: 16px"></i>
-            <div>
-              <div
-                style="
-                  font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                  color: var(--text-primary);
-                "
-              >
-                {{ trip.destination || 'Not set' }}
-              </div>
-              <div
-                style="
-                  font: var(--fw-medium) 11px/1 var(--font-mono);
-                  color: var(--text-secondary);
-                  margin-top: 2px;
-                "
-              >
-                Destination
-              </div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: center; gap: 11px">
-            <i class="pi pi-calendar" style="color: var(--accent); font-size: 16px"></i>
-            <div>
-              <div
-                style="
-                  font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                  color: var(--text-primary);
-                "
-              >
-                {{ formatDate(trip.startDate) }} – {{ formatDate(trip.endDate) }}
-              </div>
-              <div
-                style="
-                  font: var(--fw-medium) 11px/1 var(--font-mono);
-                  color: var(--text-secondary);
-                  margin-top: 2px;
-                "
-              >
-                Dates
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Days section -->
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 14px;
-        "
-      >
-        <h3 style="font: var(--type-h3); margin: 0">Trip days</h3>
-        <div style="display: flex; gap: 8px; align-items: center">
-          <TfButton v-if="days.length" size="sm" variant="secondary" @click="showAutoPlan = true">
-            <i class="pi pi-sparkles" style="font-size: 12px"></i> Auto-plan
-          </TfButton>
-          <TfButton v-if="days.length" size="sm" variant="ghost" @click="goToFirstDay">
-            Open itinerary <i class="pi pi-chevron-right" style="font-size: 12px"></i>
-          </TfButton>
-        </div>
-      </div>
-      <AutoPlanModal v-model="showAutoPlan" :trip-id="tripId" @applied="fetchDays" />
-
-      <div
-        v-if="daysLoading"
-        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px"
-      >
-        <div v-for="i in 4" :key="i" class="skeleton" style="height: 100px"></div>
-      </div>
-
-      <div
-        v-else-if="days.length"
-        class="dashboard-grid dashboard-grid--4col"
-        style="margin-bottom: 24px"
-      >
-        <TfCard
-          v-for="day in days"
-          :key="day.id"
-          interactive
-          @click="$router.push(`/trips/${tripId}/days/${day.id}`)"
-          style="cursor: pointer"
-        >
-          <div style="display: flex; justify-content: space-between; align-items: baseline">
-            <span
-              style="font: var(--fw-bold) 15px/1 var(--font-display); color: var(--text-primary)"
-              >Day {{ day.dayNumber }}</span
-            >
-            <span
-              style="font: var(--fw-medium) 11px/1 var(--font-mono); color: var(--text-secondary)"
-              >{{ formatDateShort(day.date) }}</span
-            >
-          </div>
-          <div
-            v-if="editingDayId === day.id"
-            style="margin-top: 8px; display: flex; gap: 6px; align-items: center"
-            @click.stop
-          >
-            <TfInput
-              v-model="dayEditCity"
-              placeholder="City"
-              style="flex: 1"
-              @keyup.enter="saveDayCity(day.id)"
-              @keyup.escape="editingDayId = null"
-            />
-            <TfIconButton variant="ghost" size="sm" @click="saveDayCity(day.id)"
-              ><i class="pi pi-check"></i
-            ></TfIconButton>
-          </div>
-          <div
-            v-else
-            style="
-              font: var(--fw-medium) 13px/1.2 var(--font-sans);
-              color: var(--accent);
-              margin: 8px 0 0;
-              cursor: pointer;
-            "
-            @click.stop="startDayEdit(day)"
-          >
-            {{ day.city || 'Set city...' }}
-          </div>
-        </TfCard>
-      </div>
-
-      <div
-        v-else-if="!daysLoading && !(trip.startDate && trip.endDate)"
-        class="empty-state"
-        style="margin-bottom: 24px"
-      >
+      <!-- No dates: nothing below can be computed, so say the one thing that matters -->
+      <div v-if="!(trip.startDate && trip.endDate)" class="empty-state" style="margin-bottom: 24px">
         <div class="empty-state-icon"><i class="pi pi-calendar"></i></div>
-        <h3>No days yet</h3>
-        <p>Set the trip dates — the days will appear automatically.</p>
+        <h3>Set the dates first</h3>
+        <p>Days, nights, due dates and the countdown all hang off them.</p>
         <TfButton variant="primary" @click="startEdit">
           <i class="pi pi-calendar-plus" style="font-size: 14px"></i> Set dates
         </TfButton>
       </div>
 
-      <!-- Quick links -->
-      <div class="dashboard-grid dashboard-grid--2col">
-        <TfCard
-          interactive
-          @click="$router.push(`/trips/${tripId}/bookings`)"
-          style="cursor: pointer"
-        >
-          <div style="display: flex; align-items: center; gap: 12px">
-            <div
-              class="cat-icon cat-icon--lg"
-              style="background: var(--success-100); color: var(--accent)"
-            >
-              <i class="pi pi-ticket"></i>
+      <template v-else>
+        <!-- Readiness: four things a trip needs, each with how far along it is -->
+        <div class="dash-tiles">
+          <button type="button" class="dash-tile" @click="goToFirstDay">
+            <div class="dash-tile-head">
+              <span class="dash-tile-label"><TfIcon name="route" /> Itinerary</span>
+              <i class="pi pi-chevron-right"></i>
             </div>
-            <div style="flex: 1">
+            <div class="dash-tile-value">
+              {{ plannedDays.length
+              }}<span class="dash-tile-of">/ {{ datedDays.length }} days</span>
+            </div>
+            <div class="progress-track">
               <div
-                style="
-                  font: var(--fw-bold) 17px/1.15 var(--font-display);
-                  color: var(--text-primary);
-                "
-              >
-                Bookings
-              </div>
-              <div style="font: var(--type-small); color: var(--text-secondary); margin-top: 2px">
-                Flights, hotels, activities
-              </div>
+                class="progress-fill"
+                :style="{
+                  width: pct(plannedDays.length, datedDays.length) + '%',
+                  background: 'var(--primary)',
+                }"
+              ></div>
             </div>
-            <i class="pi pi-chevron-right" style="color: var(--text-secondary)"></i>
-          </div>
-        </TfCard>
-        <TfCard
-          interactive
-          @click="$router.push(`/trips/${tripId}/budget`)"
-          style="cursor: pointer"
-        >
-          <div style="display: flex; align-items: center; gap: 12px">
-            <div
-              class="cat-icon cat-icon--lg"
-              style="background: var(--warning-100); color: var(--warning-500)"
-            >
-              <i class="pi pi-dollar"></i>
+            <div class="dash-tile-sub">
+              {{
+                emptyDays.length
+                  ? `${emptyDays.length} day${emptyDays.length === 1 ? '' : 's'} still empty`
+                  : 'every day has a plan'
+              }}<template v-if="reserveDays.length"> · {{ reserveDays.length }} reserve</template>
             </div>
-            <div style="flex: 1">
+          </button>
+
+          <button
+            type="button"
+            class="dash-tile"
+            @click="$router.push(`/trips/${tripId}/bookings`)"
+          >
+            <div class="dash-tile-head">
+              <span class="dash-tile-label"><TfIcon name="confirmation_number" /> Bookings</span>
+              <i class="pi pi-chevron-right"></i>
+            </div>
+            <div class="dash-tile-value">
+              {{ coveredNights }}<span class="dash-tile-of">/ {{ nightsTotal }} nights</span>
+            </div>
+            <div class="progress-track">
               <div
-                style="
-                  font: var(--fw-bold) 17px/1.15 var(--font-display);
-                  color: var(--text-primary);
-                "
-              >
-                Budget
-              </div>
-              <div style="font: var(--type-small); color: var(--text-secondary); margin-top: 2px">
-                Plan vs actual spending
-              </div>
+                class="progress-fill"
+                :style="{
+                  width: pct(coveredNights, nightsTotal) + '%',
+                  background: 'var(--primary)',
+                }"
+              ></div>
             </div>
-            <i class="pi pi-chevron-right" style="color: var(--text-secondary)"></i>
+            <div class="dash-tile-sub">
+              {{
+                bookings.length
+                  ? `${bookings.length} booking${bookings.length === 1 ? '' : 's'}`
+                  : 'nothing booked yet'
+              }}<template v-if="gaps.length">
+                · {{ gaps.length }} gap{{ gaps.length === 1 ? '' : 's' }} without a hotel</template
+              >
+            </div>
+          </button>
+
+          <button type="button" class="dash-tile" @click="$router.push(`/trips/${tripId}/budget`)">
+            <div class="dash-tile-head">
+              <span class="dash-tile-label"><TfIcon name="account_balance_wallet" /> Budget</span>
+              <i class="pi pi-chevron-right"></i>
+            </div>
+            <div class="dash-tile-value dash-tile-value--money">
+              {{ fmtMoney(tripCost) }}<span class="dash-tile-of">{{ currency }}</span>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                :style="{ width: paidPct + '%', background: 'var(--success-500)' }"
+              ></div>
+            </div>
+            <div class="dash-tile-sub">
+              <template v-if="!budgetData || !Number(budgetData.bookingsTotal)"
+                >no costs yet</template
+              >
+              <template v-else-if="remaining > 0"
+                >{{ paidPct }}% paid · {{ fmtMoney(remaining) }} {{ currency }} to go</template
+              >
+              <template v-else>everything paid</template>
+            </div>
+          </button>
+
+          <button type="button" class="dash-tile" @click="$router.push(`/trips/${tripId}/todos`)">
+            <div class="dash-tile-head">
+              <span class="dash-tile-label"><TfIcon name="checklist" /> To-do</span>
+              <i class="pi pi-chevron-right"></i>
+            </div>
+            <div class="dash-tile-value">
+              {{ todosDone }}<span class="dash-tile-of">/ {{ todos.length }} done</span>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                :style="{
+                  width: pct(todosDone, todos.length) + '%',
+                  background: todosOverdue ? 'var(--danger-500)' : 'var(--primary)',
+                }"
+              ></div>
+            </div>
+            <div class="dash-tile-sub" :class="{ 'is-warn': todosOverdue }">
+              <template v-if="!todos.length">start from our suggestions</template>
+              <template v-else-if="todosOverdue">{{ todosOverdue }} overdue</template>
+              <template v-else-if="todosSoon">{{ todosSoon }} due this week</template>
+              <template v-else>nothing pressing</template>
+            </div>
+          </button>
+        </div>
+
+        <div class="dash-cols">
+          <!-- Left: what happens next, across everything -->
+          <div class="card">
+            <div class="dash-card-head">
+              <h3>Coming up</h3>
+              <span class="text-subtle text-sm">{{
+                phase === 'before'
+                  ? 'before you leave'
+                  : phase === 'during'
+                    ? 'on the trip'
+                    : 'after the trip'
+              }}</span>
+            </div>
+            <div v-if="!agenda.length" class="dash-empty">
+              <i class="pi pi-check-circle"></i> Nothing due — the plan is quiet.
+            </div>
+            <div v-else class="dash-list">
+              <button
+                v-for="item in agenda"
+                :key="item.key"
+                type="button"
+                class="dash-row"
+                @click="$router.push(item.to)"
+              >
+                <div
+                  class="dash-row-date"
+                  :class="{ 'is-late': item.late, 'is-today': item.today }"
+                >
+                  <span class="dash-row-day">{{ item.dayNum }}</span>
+                  <span class="dash-row-mon">{{ item.mon }}</span>
+                </div>
+                <div class="cat-icon cat-icon--sm" :style="item.style">{{ item.icon }}</div>
+                <div style="flex: 1; min-width: 0">
+                  <div class="dash-row-title">{{ item.title }}</div>
+                  <div class="dash-row-sub">{{ item.sub }}</div>
+                </div>
+                <span v-if="item.amount" class="money money--sm">{{ item.amount }}</span>
+                <TfBadge v-else-if="item.late" size="sm" tone="danger" variant="soft">late</TfBadge>
+              </button>
+            </div>
           </div>
-        </TfCard>
-      </div>
+
+          <div class="dash-side">
+            <!-- The shortlist against the strategy -->
+            <div class="card">
+              <div class="dash-card-head">
+                <h3>Places</h3>
+                <button
+                  type="button"
+                  class="link-btn"
+                  @click="$router.push(`/trips/${tripId}/map`)"
+                >
+                  Plan map
+                </button>
+              </div>
+              <div v-if="!places.length" class="dash-empty">
+                <i class="pi pi-map-marker"></i>
+                <span
+                  >No places on the shortlist yet —
+                  <router-link :to="`/trips/${tripId}/places`">add some</router-link>.</span
+                >
+              </div>
+              <template v-else>
+                <div class="dash-ratings">
+                  <div
+                    v-for="r in [5, 4, 3, 2, 1]"
+                    :key="r"
+                    class="dash-rating"
+                    :class="{ 'is-empty': !ratingCount(r) }"
+                  >
+                    <span class="dash-rating-dot" :style="{ background: ratingColor(r) }"></span>
+                    <span class="dash-rating-n">{{ ratingCount(r) }}</span>
+                    <span class="dash-rating-lbl">{{ r }}★</span>
+                  </div>
+                </div>
+                <div class="dash-kv">
+                  <span>In the plan</span>
+                  <strong>{{ plannedPlaceIds.size }} of {{ places.length }}</strong>
+                </div>
+                <div class="dash-kv" :class="{ 'is-warn': mustSeesLeft.length }">
+                  <span>Must-sees not planned yet</span>
+                  <strong>{{ mustSeesLeft.length }}</strong>
+                </div>
+                <div v-if="mustSeesLeft.length" class="dash-chips">
+                  <span v-for="p in mustSeesLeft.slice(0, 4)" :key="p.id" class="chip">{{
+                    p.name
+                  }}</span>
+                  <span v-if="mustSeesLeft.length > 4" class="text-subtle text-xs"
+                    >+{{ mustSeesLeft.length - 4 }}</span
+                  >
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Days: the whole trip at a glance, still one click from each day -->
+        <div class="dash-card-head" style="margin: 24px 0 12px">
+          <h3>Trip days</h3>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <TfButton v-if="days.length" size="sm" variant="ghost" @click="goToFirstDay">
+              Open itinerary <i class="pi pi-chevron-right" style="font-size: 12px"></i>
+            </TfButton>
+          </div>
+        </div>
+
+        <div v-if="daysLoading" class="dash-days">
+          <div v-for="i in 6" :key="i" class="skeleton" style="height: 92px"></div>
+        </div>
+        <div v-else-if="days.length" class="dash-days">
+          <button
+            v-for="day in days"
+            :key="day.id"
+            type="button"
+            class="dash-day"
+            :class="{
+              'is-empty': !day.activityCount && !day.isBuffer,
+              'is-today': isToday(day.date),
+            }"
+            @click="$router.push(`/trips/${tripId}/days/${day.id}`)"
+          >
+            <div class="dash-day-head">
+              <span class="dash-day-num">{{
+                day.isBuffer ? 'Reserve' : 'Day ' + day.dayNumber
+              }}</span>
+              <span class="dash-day-date">{{ day.date ? formatDateShort(day.date) : '—' }}</span>
+            </div>
+            <div v-if="editingDayId === day.id" class="dash-day-edit" @click.stop>
+              <TfInput
+                v-model="dayEditCity"
+                placeholder="City"
+                style="flex: 1"
+                @keyup.enter="saveDayCity(day.id)"
+                @keyup.escape="editingDayId = null"
+              />
+              <TfIconButton variant="ghost" size="sm" @click="saveDayCity(day.id)"
+                ><i class="pi pi-check"></i
+              ></TfIconButton>
+            </div>
+            <div v-else class="dash-day-city" @click.stop="startDayEdit(day)">
+              {{ day.city || 'Set city…' }}
+            </div>
+            <div class="dash-day-foot">
+              <span>{{
+                day.activityCount
+                  ? `${day.activityCount} stop${day.activityCount === 1 ? '' : 's'}`
+                  : 'nothing planned'
+              }}</span>
+              <span v-if="day.overnightStay" class="dash-day-night" v-tooltip="day.overnightStay"
+                >🏨</span
+              >
+            </div>
+          </button>
+        </div>
+      </template>
     </template>
 
     <!-- Edit Drawer -->
@@ -480,11 +404,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTripStore } from '@/stores/tripStore.js';
-import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import {
   TfButton,
   TfBadge,
-  TfCard,
+  TfIcon,
   TfIconButton,
   TfDrawer,
   TfCitySearch,
@@ -495,6 +418,13 @@ import {
   toast,
 } from '@tripyfull/ui';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
+import {
+  buildTripDocument,
+  collectMapPoints,
+  collectPhotoUrls,
+  probeImages,
+} from '@/print/tripDocument.js';
+import { buildRouteMap } from '@/print/routeMap.js';
 import { api } from '@tripyfull/core';
 import {
   toDateStr,
@@ -519,7 +449,6 @@ const saving = ref(false);
 const editForm = ref({});
 const editDateRange = ref(null);
 const daysLoading = ref(false);
-const showAutoPlan = ref(false);
 const rescheduleConfirm = ref(false);
 const pendingEdit = ref(null);
 const editingDayId = ref(null);
@@ -540,17 +469,163 @@ const editStatusLabel = computed({
   },
 });
 
-const upcomingPayments = computed(() => (budgetData.value?.upcomingPayments || []).slice(0, 3));
 const fmtMoney = (v) => Number(v || 0).toFixed(2);
-const catIcon = (c) =>
-  ({ TRANSPORTATION: '\u{1F68C}', ACCOMMODATION: '\u{1F3E8}', ACTIVITY: '\u{1F3AB}' })[c] ??
-  '\u{1F4CC}';
-const catIconStyle = (c) =>
-  ({
-    TRANSPORTATION: { background: 'var(--success-100)', color: 'var(--accent)' },
-    ACCOMMODATION: { background: 'var(--danger-100)', color: 'var(--accent)' },
-    ACTIVITY: { background: 'var(--success-100)', color: 'var(--success-300)' },
-  })[c] || { background: 'var(--surface)', color: 'var(--ink-500)' };
+
+/* ---- the rest of the trip, loaded alongside the days ---- */
+const bookings = ref([]);
+const todos = ref([]);
+const places = ref([]);
+const plannedPlaceIds = ref(new Set());
+const currency = computed(() => budgetData.value?.baseCurrency || accountCurrency.value);
+
+const todayStr = () => toDateStr(new Date());
+const isToday = (d) => d === todayStr();
+
+/* ---- where in time the trip is ---- */
+const phase = computed(() => {
+  if (!trip.value?.startDate) return 'before';
+  const t = todayStr();
+  if (t < trip.value.startDate) return 'before';
+  if (t > trip.value.endDate) return 'after';
+  return 'during';
+});
+const countdown = computed(() => {
+  if (!trip.value?.startDate || !trip.value?.endDate) return null;
+  const t = todayStr();
+  if (phase.value === 'before') {
+    const n = diffInDays(t, trip.value.startDate);
+    return { num: n, text: n === 1 ? 'day to go' : 'days to go' };
+  }
+  if (phase.value === 'during') {
+    return {
+      num: diffInDays(trip.value.startDate, t) + 1,
+      text: `of ${datedDays.value.length} days`,
+    };
+  }
+  const n = diffInDays(trip.value.endDate, t);
+  return { num: n, text: n === 1 ? 'day since' : 'days since' };
+});
+
+/* ---- itinerary ---- */
+const datedDays = computed(() => days.value.filter((d) => d.date));
+const reserveDays = computed(() => days.value.filter((d) => !d.date));
+const plannedDays = computed(() => datedDays.value.filter((d) => d.activityCount > 0));
+const emptyDays = computed(() => datedDays.value.filter((d) => !d.activityCount));
+const pct = (a, b) => (b ? Math.min(100, Math.round((a / b) * 100)) : 0);
+
+/* ---- nights: every dated day but the last is a night somewhere ---- */
+const nightDays = computed(() => datedDays.value.slice(0, -1));
+const nightsTotal = computed(() => nightDays.value.length);
+const coveredNights = computed(() => nightDays.value.filter((d) => d.overnightStay).length);
+// Consecutive nights at the same place fold into one row; nights with nothing
+// booked fold into one gap, so the list reads like the trip does.
+const stays = computed(() => {
+  const out = [];
+  for (const d of nightDays.value) {
+    const name = d.overnightStay || null;
+    const last = out[out.length - 1];
+    if (last && last.name === name) {
+      last.nights += 1;
+      last.toDate = d.date;
+    } else {
+      out.push({ key: d.id, name, gap: !name, nights: 1, fromDate: d.date, toDate: d.date });
+    }
+  }
+  return out.map((s) => ({
+    ...s,
+    range:
+      s.nights === 1
+        ? formatDateShort(s.fromDate)
+        : `${formatDateShort(s.fromDate)} – ${formatDateShort(s.toDate)}`,
+  }));
+});
+const gaps = computed(() => stays.value.filter((s) => s.gap));
+
+/* ---- money (the budget endpoint does the converting) ---- */
+const tripCost = computed(
+  () => Number(budgetData.value?.bookingsTotal || 0) + Number(budgetData.value?.expensesTotal || 0),
+);
+const remaining = computed(() => Number(budgetData.value?.bookingsRemaining || 0));
+const paidPct = computed(() =>
+  pct(Number(budgetData.value?.bookingsPaid || 0), Number(budgetData.value?.bookingsTotal || 0)),
+);
+
+/* ---- to-dos ---- */
+const todosDone = computed(() => todos.value.filter((t) => t.done).length);
+const todoDays = (t) => diffInDays(todayStr(), t.dueDate);
+const todosOverdue = computed(
+  () => todos.value.filter((t) => !t.done && t.dueDate && todoDays(t) < 0).length,
+);
+const todosSoon = computed(
+  () =>
+    todos.value.filter((t) => !t.done && t.dueDate && todoDays(t) >= 0 && todoDays(t) <= 7).length,
+);
+
+/* ---- places against the rating strategy ---- */
+const ratingCount = (r) => places.value.filter((p) => (p.rating || 3) === r).length;
+const ratingColor = (r) =>
+  ({ 5: '#dc2626', 4: '#f97316', 3: '#eab308', 2: '#78716c', 1: '#a8a29e' })[r];
+const mustSeesLeft = computed(() =>
+  places.value.filter((p) => p.rating === 5 && !plannedPlaceIds.value.has(p.id)),
+);
+
+/* ---- coming up: to-dos, payments and the departure on one line of time ---- */
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const dateParts = (iso) => {
+  const d = parseDate(iso);
+  return { dayNum: d.getDate(), mon: MON[d.getMonth()] };
+};
+const agenda = computed(() => {
+  const t = todayStr();
+  const items = [];
+  for (const td of todos.value) {
+    if (td.done || !td.dueDate) continue;
+    const n = diffInDays(t, td.dueDate);
+    if (n > 45) continue;
+    items.push({
+      key: 'todo-' + td.id,
+      date: td.dueDate,
+      title: td.title,
+      sub: td.groupName ? `To-do · ${td.groupName}` : 'To-do',
+      icon: '\u2611\uFE0F',
+      style: { background: 'var(--success-100)', color: 'var(--primary)' },
+      late: n < 0,
+      today: n === 0,
+      to: `/trips/${tripId}/todos`,
+    });
+  }
+  for (const p of budgetData.value?.upcomingPayments || []) {
+    if (!p.dueDate) continue;
+    const n = diffInDays(t, p.dueDate);
+    items.push({
+      key: 'pay-' + p.paymentId,
+      date: p.dueDate,
+      title: p.bookingName,
+      sub: 'Payment due',
+      icon: '\u{1F4B3}',
+      style: { background: 'var(--warning-100)', color: 'var(--warning-500)' },
+      amount: `${fmtMoney(p.amount)} ${currency.value}`,
+      late: n < 0,
+      today: n === 0,
+      to: `/trips/${tripId}/bookings`,
+    });
+  }
+  if (phase.value === 'before' && trip.value?.startDate) {
+    items.push({
+      key: 'departure',
+      date: trip.value.startDate,
+      title: 'Departure',
+      sub: trip.value.destination ? `Off to ${trip.value.destination}` : 'The trip begins',
+      icon: '\u2708\uFE0F',
+      style: { background: 'var(--success-100)', color: 'var(--accent)' },
+      to: `/trips/${tripId}/itinerary`,
+    });
+  }
+  return items
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 7)
+    .map((i) => ({ ...i, ...dateParts(i.date) }));
+});
 
 // What will happen to the itinerary if the edited dates are applied.
 const rescheduleImpact = computed(() => {
@@ -621,51 +696,38 @@ const confirmReschedule = () => persistEdit(pendingEdit.value, true);
 
 const printTrip = async () => {
   try {
-    const res = await api.get(`/api/trips/${tripId}/export`);
-    const d = res.data;
-    const fmtDate = (s) => (s ? new Date(s).toLocaleDateString('en-GB') : '');
-    // User-entered text (incl. names of public places adopted from other users)
-    // goes into a same-origin document — escape it.
-    const esc = (s) =>
-      String(s ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;');
-    let html = `<html><head><title>${esc(d.title)}</title><style>body{font-family:'Hanken Grotesk',sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#322a24}h1{margin-bottom:4px;font-family:'Bricolage Grotesque',sans-serif}h2{margin-top:24px;border-bottom:2px solid #e4ddd2;padding-bottom:4px;font-family:'Bricolage Grotesque',sans-serif}.activity{padding:4px 0;border-bottom:1px solid #efe9de}.booking{padding:6px 0;border-bottom:1px solid #efe9de}.muted{color:#6b5f56;font-size:0.85em}</style></head><body>`;
-    html += `<h1>${esc(d.title)}</h1><p class="muted">${esc(d.destination || '')} &middot; ${fmtDate(d.startDate)} – ${fmtDate(d.endDate)} &middot; ${accountCurrency.value}</p>`;
-    d.days.forEach((day) => {
-      html += `<h2>Day ${day.dayNumber} — ${fmtDate(day.date)}${day.city ? ' — ' + esc(day.city) : ''}</h2>`;
-      if (day.activities.length) {
-        day.activities.forEach((a) => {
-          html += `<div class="activity"><strong>${esc(a.name)}</strong>`;
-          if (a.startTime)
-            html += ` <span class="muted">${a.startTime.slice(0, 5)}${a.endTime ? '–' + a.endTime.slice(0, 5) : ''}</span>`;
-          if (a.address) html += ` <span class="muted">@ ${esc(a.address)}</span>`;
-          if (a.costEstimate)
-            html += ` <span class="muted">${a.costEstimate} ${accountCurrency.value}</span>`;
-          if (a.notes) html += `<br><span class="muted">${esc(a.notes)}</span>`;
-          html += `</div>`;
-        });
-      } else {
-        html += `<p class="muted">No activities</p>`;
-      }
-    });
-    if (d.bookings.length) {
-      html += `<h2>Bookings</h2>`;
-      d.bookings.forEach((b) => {
-        html += `<div class="booking"><strong>${esc(b.name)}</strong>`;
-        if (b.category) html += ` <span class="muted">[${b.category}]</span>`;
-        if (b.vendor) html += ` — ${esc(b.vendor)}`;
-        if (b.fullPrice) html += ` <strong>${b.fullPrice} ${accountCurrency.value}</strong>`;
-        html += `</div>`;
-      });
-    }
-    html += `</body></html>`;
+    // Open the window first: browsers only allow it in the click's own turn,
+    // and the photo check below takes a moment.
     const w = window.open('', '_blank');
-    w.document.write(html);
+    if (!w) {
+      toast.danger('Blocked', 'The browser blocked the new window — allow pop-ups for this site');
+      return;
+    }
+    w.document.write('<p style="font:14px sans-serif;padding:24px">Preparing the document…</p>');
+    const apiBase = import.meta.env.VITE_API_URL || '';
+    const res = await api.get(`/api/trips/${tripId}/export`);
+    const [liveUrls, mapImage] = await Promise.all([
+      probeImages(collectPhotoUrls(res.data, apiBase)),
+      buildRouteMap(collectMapPoints(res.data)).catch(() => null),
+    ]);
+    const doc = buildTripDocument(res.data, {
+      apiBase,
+      currency: accountCurrency.value,
+      liveUrls,
+      mapImage,
+    });
+    w.document.open();
+    w.document.write(doc.html(true));
     w.document.close();
-    w.print();
+    // Word opens an HTML file saved as .doc as a normal document, styles and all.
+    w.__saveDoc = () => {
+      const blob = new Blob(['\ufeff', doc.html(false)], { type: 'application/msword' });
+      const a = w.document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${(res.data.title || 'trip').replace(/[\\/:*?"<>|]+/g, ' ').trim()}.doc`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    };
   } catch {
     toast.danger('Error', 'Failed to export');
   }
@@ -721,11 +783,21 @@ onMounted(async () => {
   try {
     trip.value = await store.fetchById(tripId);
     await fetchDays();
-    try {
-      budgetData.value = (await api.get(`/api/trips/${tripId}/budget`)).data;
-    } catch {
-      /* no budget yet */
-    }
+    // Each block of the dashboard fails on its own; one missing piece must not
+    // blank the page.
+    const quiet = (p, fallback) => p.then((r) => r.data).catch(() => fallback);
+    const [budget, bk, td, pl, planned] = await Promise.all([
+      quiet(api.get(`/api/trips/${tripId}/budget`), null),
+      quiet(api.get(`/api/trips/${tripId}/bookings`), []),
+      quiet(api.get(`/api/trips/${tripId}/todos`), []),
+      quiet(api.get('/api/places', { params: { tripId } }), []),
+      quiet(api.get(`/api/trips/${tripId}/planned-places`), []),
+    ]);
+    budgetData.value = budget;
+    bookings.value = bk;
+    todos.value = td;
+    places.value = pl;
+    plannedPlaceIds.value = new Set(planned.map((p) => p.placeId));
   } catch {
     toast.danger('Error', 'Failed to load trip');
   }

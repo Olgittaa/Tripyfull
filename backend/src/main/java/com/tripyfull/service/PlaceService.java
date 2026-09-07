@@ -378,6 +378,9 @@ public class PlaceService {
         for (Activity a : planned) a.setPlace(null);
         activityRepository.saveAll(planned);
 
+        // Uploaded photos live on disk under the place's id; without this the
+        // files outlived the row and quietly piled up.
+        for (String url : place.getPhotos()) placePhotoService.deleteFile(url);
         placeRepository.delete(place);
     }
 

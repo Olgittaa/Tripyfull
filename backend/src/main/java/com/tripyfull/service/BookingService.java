@@ -211,8 +211,30 @@ public class BookingService {
         }
     }
 
-    /** For accommodation, geocode name + city into coordinates/address when not already set. */
+    /**
+     * Coordinates for whatever the booking is about, when the form did not
+     * already supply them: name + city for a stay, the two endpoint names for a
+     * journey. Without this a booking typed in by hand — or imported — had no
+     * pin, and the map beside it stayed empty.
+     */
     private void autoFillLocation(Booking booking) {
+        if (booking.getCategory() == BookingCategory.TRANSPORTATION) {
+            autoFillRoute(booking);
+            return;
+        }
+        if (booking.getCategory() == BookingCategory.ACTIVITY) {
+            // Where the activity happens is typed into the location field; a name
+            // typed rather than picked deserves a pin too.
+            if (booking.getLatitude() == null && notBlank(booking.getFromPlace())) {
+                GeoSearchService.PlaceResult place = geocodeQuietly(booking.getFromPlace());
+                if (place != null) {
+                    booking.setLatitude(place.lat());
+                    booking.setLongitude(place.lon());
+                    if (!notBlank(booking.getAddress())) booking.setAddress(place.displayName());
+                }
+            }
+            return;
+        }
         if (booking.getCategory() != BookingCategory.ACCOMMODATION) return;
         if (booking.getLatitude() != null && booking.getLongitude() != null) return; // coords already supplied
         String name = booking.getName();
@@ -230,6 +252,36 @@ public class BookingService {
             }
         } catch (Exception ignored) {
             // geocoding is best-effort; never block a save on it
+        }
+    }
+
+    /** Both ends of a journey, each geocoded once and then kept. */
+    private void autoFillRoute(Booking booking) {
+        if (booking.getFromLatitude() == null && notBlank(booking.getFromPlace())) {
+            GeoSearchService.PlaceResult from = geocodeQuietly(booking.getFromPlace());
+            if (from != null) {
+                booking.setFromLatitude(from.lat());
+                booking.setFromLongitude(from.lon());
+            }
+        }
+        if (booking.getToLatitude() == null && notBlank(booking.getToPlace())) {
+            GeoSearchService.PlaceResult to = geocodeQuietly(booking.getToPlace());
+            if (to != null) {
+                booking.setToLatitude(to.lat());
+                booking.setToLongitude(to.lon());
+            }
+        }
+    }
+
+    private boolean notBlank(String s) {
+        return s != null && !s.isBlank();
+    }
+
+    private GeoSearchService.PlaceResult geocodeQuietly(String query) {
+        try {
+            return geoSearchService.geocodeOne(query);
+        } catch (Exception ignored) {
+            return null; // best-effort; never block a save on geocoding
         }
     }
 

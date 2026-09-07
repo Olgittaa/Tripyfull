@@ -3,6 +3,7 @@
     <button
       v-for="item in items"
       :key="item.id"
+      type="button"
       class="tf-tab"
       :class="{ 'tf-tab--active': modelValue === item.id }"
       @click="$emit('update:modelValue', item.id)"

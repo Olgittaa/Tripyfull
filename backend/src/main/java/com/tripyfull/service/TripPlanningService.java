@@ -6,6 +6,7 @@ import com.tripyfull.dto.PlanResponse;
 import com.tripyfull.dto.DayResponse;
 import com.tripyfull.mapper.DayMapper;
 import com.tripyfull.model.Activity;
+import com.tripyfull.model.Booking;
 import com.tripyfull.model.ActivityType;
 import com.tripyfull.model.Day;
 import com.tripyfull.model.Place;
@@ -14,6 +15,7 @@ import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.ActivityRepository;
+import com.tripyfull.repository.BookingRepository;
 import com.tripyfull.repository.DayRepository;
 import com.tripyfull.repository.PlaceRepository;
 import com.tripyfull.repository.TripRepository;
@@ -32,10 +34,18 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Auto-plans a trip: clusters saved places into days by geography (greedy Haversine
- * k-clustering anchored at a base point), balances activity types within a day, and
- * orders each day's stops as a route (nearest-neighbor + 2-opt). No external APIs —
- * straight-line distances are good enough for grouping and ordering.
+ * Auto-plans a trip from the saved places.
+ *
+ * The plan follows the hotels. Every day is anchored to where you sleep that night
+ * (the booking the day is linked to — "Update plan" on the bookings page sets it);
+ * each place goes to the day whose hotel is nearest, within a day-trip radius,
+ * must-sees seated first, no more than a few of one type per day, and each day is
+ * ordered as a route from its hotel. A day without a hotel borrows the nearest
+ * one in time. Only when no day has a hotel does the planner fall back to grouping
+ * the places by geography around their own centre.
+ *
+ * No external APIs — straight-line distances are good enough for grouping and
+ * ordering.
  */
 @Service
 @Transactional
@@ -43,20 +53,24 @@ public class TripPlanningService {
 
     /** More of one place type than this per day gets rebalanced to another day. */
     private static final int MAX_SAME_TYPE_PER_DAY = 3;
+    /** How far from the night's hotel a place may be and still count as that day's trip. */
+    private static final double DAY_TRIP_KM = 100;
 
     private final PlaceRepository placeRepository;
     private final DayRepository dayRepository;
     private final ActivityRepository activityRepository;
     private final TripRepository tripRepository;
+    private final BookingRepository bookingRepository;
     private final OwnershipGuard guard;
 
     public TripPlanningService(PlaceRepository placeRepository, DayRepository dayRepository,
                                ActivityRepository activityRepository, TripRepository tripRepository,
-                               OwnershipGuard guard) {
+                               BookingRepository bookingRepository, OwnershipGuard guard) {
         this.placeRepository = placeRepository;
         this.dayRepository = dayRepository;
         this.activityRepository = activityRepository;
         this.tripRepository = tripRepository;
+        this.bookingRepository = bookingRepository;
         this.guard = guard;
     }
 
@@ -88,31 +102,146 @@ public class TripPlanningService {
                 .filter(p -> p.getLatitude() != null && p.getLongitude() != null)
                 .toList());
 
-        double[] base = basePoint(request, candidates);
         int dayCount = planDays.size();
         int capacity = request.maxPerDay() != null && request.maxPerDay() > 0
                 ? request.maxPerDay()
                 : Math.max(1, (int) Math.ceil((double) candidates.size() / dayCount));
+        List<Day> allDays = dayRepository.findByTripIdOrderByDateAsc(trip.getId());
 
-        List<Cluster> clusters = cluster(candidates, dayCount, capacity, base, unassigned);
-        balanceTypes(clusters, capacity, unassigned);
-        clusters = orderClustersFromBase(clusters, base);
+        List<Anchor> anchors = anchorsFor(planDays);
+        boolean anchored = anchors.stream().anyMatch(a -> a != null);
+        if (!anchored && request.baseLatitude() == null && candidates.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "None of the selected places have coordinates");
+        }
 
         List<PlanResponse.PlanDay> days = new ArrayList<>();
-        // Day numbers must reflect ALL trip days (buffers included), so recount.
-        List<Day> allDays = dayRepository.findByTripIdOrderByDateAsc(trip.getId());
-        for (int i = 0; i < planDays.size(); i++) {
-            Day day = planDays.get(i);
-            List<Place> route = i < clusters.size() ? routeOrder(clusters.get(i).places, base) : List.of();
-            days.add(new PlanResponse.PlanDay(
-                    day.getId(),
-                    allDays.indexOf(day) + 1,
-                    day.getDate(),
-                    route.stream().map(TripPlanningService::toPlanPlace).toList(),
-                    round1(routeKm(route, base))
-            ));
+        if (anchored) {
+            // Days already know where they end: send each place to the nearest hotel.
+            List<Bucket> buckets = new ArrayList<>();
+            for (int i = 0; i < planDays.size(); i++) buckets.add(new Bucket(planDays.get(i), anchors.get(i)));
+            assignToAnchors(candidates, buckets, capacity, unassigned);
+            balanceTypesAnchored(buckets, capacity, unassigned);
+            for (Bucket b : buckets) {
+                List<Place> route = routeOrder(b.places, b.anchor.point);
+                days.add(new PlanResponse.PlanDay(
+                        b.day.getId(), allDays.indexOf(b.day) + 1, b.day.getDate(),
+                        route.stream().map(TripPlanningService::toPlanPlace).toList(),
+                        round1(routeKm(route, b.anchor.point)),
+                        b.anchor.name));
+            }
+        } else {
+            // No hotels linked yet: group by geography around one centre, as before.
+            double[] base = basePoint(request, candidates);
+            List<Cluster> clusters = cluster(candidates, dayCount, capacity, base, unassigned);
+            balanceTypes(clusters, capacity, unassigned);
+            clusters = orderClustersFromBase(clusters, base);
+            for (int i = 0; i < planDays.size(); i++) {
+                Day day = planDays.get(i);
+                List<Place> route = i < clusters.size() ? routeOrder(clusters.get(i).places, base) : List.of();
+                days.add(new PlanResponse.PlanDay(
+                        day.getId(), allDays.indexOf(day) + 1, day.getDate(),
+                        route.stream().map(TripPlanningService::toPlanPlace).toList(),
+                        round1(routeKm(route, base)),
+                        null));
+            }
         }
+        unassigned.sort(Comparator.comparingInt(Place::getRating));
         return new PlanResponse(days, unassigned.stream().map(TripPlanningService::toPlanPlace).toList());
+    }
+
+    // ---- anchoring: where each day ends ----
+    private record Anchor(double[] point, String name) {}
+
+    private static final class Bucket {
+        final Day day;
+        final Anchor anchor;
+        final List<Place> places = new ArrayList<>();
+        Bucket(Day day, Anchor anchor) { this.day = day; this.anchor = anchor; }
+    }
+
+    /**
+     * One anchor per plannable day: the hotel of that night when the day is linked
+     * to one with coordinates; otherwise the nearest linked day's hotel (looking
+     * back first — that is where the morning starts). All null when no day has one.
+     */
+    private List<Anchor> anchorsFor(List<Day> planDays) {
+        List<Anchor> own = new ArrayList<>();
+        for (Day d : planDays) {
+            Anchor a = null;
+            if (d.getLinkedBookingId() != null) {
+                Booking b = bookingRepository.findById(d.getLinkedBookingId()).orElse(null);
+                if (b != null && b.getLatitude() != null && b.getLongitude() != null) {
+                    a = new Anchor(new double[]{b.getLatitude(), b.getLongitude()}, b.getName());
+                }
+            }
+            own.add(a);
+        }
+        List<Anchor> out = new ArrayList<>();
+        for (int i = 0; i < own.size(); i++) {
+            Anchor a = own.get(i);
+            for (int step = 1; a == null && step < own.size(); step++) {
+                if (i - step >= 0 && own.get(i - step) != null) a = own.get(i - step);
+                else if (i + step < own.size() && own.get(i + step) != null) a = own.get(i + step);
+            }
+            out.add(a);
+        }
+        return out;
+    }
+
+    private static double toAnchorKm(Bucket b, Place p) {
+        return haversine(b.anchor.point[0], b.anchor.point[1], lat(p), lng(p));
+    }
+
+    /** Must-sees first; each place joins the nearest day with room, within reach of its hotel. */
+    private void assignToAnchors(List<Place> places, List<Bucket> buckets, int capacity, List<Place> unassigned) {
+        List<Place> ordered = places.stream()
+                .sorted(Comparator.comparingInt(Place::getRating).reversed())
+                .toList();
+        for (Place p : ordered) {
+            // Several days share one hotel; between them the emptier day wins, so
+            // a three-night stay is not all packed into its first day.
+            Bucket best = buckets.stream()
+                    .filter(b -> b.places.size() < capacity && toAnchorKm(b, p) <= DAY_TRIP_KM)
+                    .min(Comparator.comparingDouble((Bucket b) -> Math.round(toAnchorKm(b, p)))
+                            .thenComparingInt(b -> b.places.size()))
+                    .orElse(null);
+            if (best != null) best.places.add(p);
+            else unassigned.add(p);   // every day in reach is full, or nothing is in reach
+        }
+    }
+
+    /** Same rule as {@link #balanceTypes}, but a surplus place may only move to a day whose hotel is in reach. */
+    private void balanceTypesAnchored(List<Bucket> buckets, int capacity, List<Place> unassigned) {
+        for (Bucket bucket : buckets) {
+            Map<PlaceType, List<Place>> byType = new HashMap<>();
+            for (Place p : bucket.places) {
+                byType.computeIfAbsent(p.getType() != null ? p.getType() : PlaceType.OTHER,
+                        t -> new ArrayList<>()).add(p);
+            }
+            for (List<Place> group : byType.values()) {
+                if (group.size() <= MAX_SAME_TYPE_PER_DAY) continue;
+                List<Place> surplus = group.stream()
+                        .sorted(Comparator.comparingInt(Place::getRating))
+                        .limit(group.size() - MAX_SAME_TYPE_PER_DAY)
+                        .filter(p -> p.getRating() < 5)
+                        .toList();
+                for (Place p : surplus) {
+                    PlaceType type = p.getType() != null ? p.getType() : PlaceType.OTHER;
+                    Bucket target = buckets.stream()
+                            .filter(b -> b != bucket && b.places.size() < capacity && toAnchorKm(b, p) <= DAY_TRIP_KM)
+                            .filter(b -> b.places.stream()
+                                    .filter(x -> (x.getType() != null ? x.getType() : PlaceType.OTHER) == type)
+                                    .count() < MAX_SAME_TYPE_PER_DAY)
+                            .min(Comparator.comparingDouble((Bucket b) -> Math.round(toAnchorKm(b, p)))
+                                    .thenComparingInt(b -> b.places.size()))
+                            .orElse(null);
+                    bucket.places.remove(p);
+                    if (target != null) target.places.add(p);
+                    else unassigned.add(p);
+                }
+            }
+        }
     }
 
     // ---- apply (materialize a plan as activities) ----

@@ -11,5 +11,7 @@ public record DayResponse(
         String overnightStay,
         UUID linkedBookingId,
         String notes,
-        boolean isBuffer
+        boolean isBuffer,
+        /** How much is planned: lets an overview show which days are still empty. */
+        int activityCount
 ) {}

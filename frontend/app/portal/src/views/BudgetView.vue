@@ -1,13 +1,11 @@
 <template>
   <div class="page-content page-content--full">
-    <!-- Page head -->
     <div class="page-head">
       <div>
-        <div class="tf-eyebrow" style="margin-bottom: 8px">
-          {{ tripTitle }}{{ tripDates ? ' · ' + tripDates : '' }}
-        </div>
         <h1>Budget</h1>
-        <p>Am I within budget, what payments are due, and where the money goes.</p>
+        <p>
+          What the trip costs, what is paid, what is still to pay — and what you spend on the way.
+        </p>
       </div>
       <div class="page-head-actions">
         <TfButton variant="secondary" @click="openExpenseDialog(null)">
@@ -25,477 +23,258 @@
     </div>
 
     <template v-else-if="budget">
-      <!-- Missing exchange rate warning -->
-      <div
-        v-if="missingRateCount > 0"
-        style="
-          margin-bottom: 18px;
-          padding: 14px 18px;
-          background: var(--warning-100);
-          border: 1px solid var(--warning-500);
-          border-radius: var(--radius-md);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-        "
-      >
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--warning-500);
-            font: var(--type-body);
-          "
-        >
-          <i class="pi pi-exclamation-triangle" style="font-size: 16px; flex: none"></i>
-          <span
-            ><strong
-              >{{ missingRateCount }} booking{{ missingRateCount > 1 ? 's' : '' }} missing exchange
-              rate</strong
-            >
-            — amounts shown in original currency, not {{ currency }}. Go to Bookings and press
-            "Update rates".</span
+      <!-- The one warning worth a banner: figures that could not be converted. -->
+      <div v-if="budget.missingRates" class="budget-alert">
+        <i class="pi pi-exclamation-triangle" style="font-size: 16px; flex: none"></i>
+        <span
+          ><strong
+            >{{ budget.missingRates }} booking{{ budget.missingRates > 1 ? 's' : '' }} without an
+            exchange rate</strong
           >
-        </div>
+          — shown in its own currency, not {{ currency }}.</span
+        >
         <TfButton
           size="sm"
           variant="secondary"
-          style="flex: none"
+          style="flex: none; margin-left: auto"
           @click="$router.push(`/trips/${tripId}/bookings`)"
         >
           Update rates
         </TfButton>
       </div>
 
-      <!-- Overspend alert -->
-      <div
-        v-if="overCategories.length"
-        style="
-          margin-bottom: 18px;
-          padding: 14px 18px;
-          background: var(--warning-100);
-          border: 1px solid var(--warning-500);
-          border-radius: var(--radius-md);
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: var(--warning-500);
-          font: var(--type-body);
-        "
-      >
-        <i class="pi pi-exclamation-triangle" style="font-size: 16px"></i>
-        <span
-          ><strong>Overspend:</strong> {{ overCategories.map((c) => catLabel(c.cat)).join(', ') }}.
-          Actual exceeded plan.</span
-        >
-      </div>
-
-      <!-- 4 Metric tiles -->
-      <div
-        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px"
-      >
+      <!-- Four figures, each answering one question -->
+      <div class="metric-grid">
         <div class="metric-tile">
-          <div class="metric-label">Planned</div>
+          <div class="metric-label">Trip cost so far</div>
           <span class="money money--xl"
-            >{{ fmt(totalPlanned) }} <span class="money-cur">{{ currency }}</span></span
+            >{{ fmt(tripCost) }} <span class="money-cur">{{ currency }}</span></span
           >
-          <div class="metric-sub">bookings + activity estimates</div>
+          <div class="metric-sub">
+            {{ fmt(budget.bookingsTotal) }} booked · {{ fmt(budget.expensesTotal) }} spent
+          </div>
         </div>
         <div class="metric-tile">
           <div class="metric-label">Paid</div>
           <span class="money money--xl" style="color: var(--success-500)"
-            >{{ fmt(paidTotal) }} <span class="money-cur">{{ currency }}</span></span
+            >{{ fmt(budget.bookingsPaid) }} <span class="money-cur">{{ currency }}</span></span
           >
-          <div class="metric-sub">{{ paidPct }}% of plan</div>
-        </div>
-        <div
-          class="metric-tile"
-          :class="{ 'metric-tile--active': activeMetric === 'remaining' }"
-          @click="toggleMetric('remaining')"
-          style="cursor: pointer"
-        >
-          <div class="metric-label">
-            Remaining to pay <i class="pi pi-chevron-right" style="font-size: 11px"></i>
-          </div>
-          <span class="money money--xl" style="color: var(--danger-700)"
-            >{{ fmt(bookingsRemaining) }} <span class="money-cur">{{ currency }}</span></span
-          >
-          <div class="metric-sub">{{ upcomingPayments.length }} payments ahead</div>
+          <div class="metric-sub">{{ paidPct }}% of bookings</div>
         </div>
         <div class="metric-tile">
-          <div class="metric-label">Spent in trip</div>
+          <div class="metric-label">Left to pay</div>
+          <span
+            class="money money--xl"
+            :style="{ color: remaining > 0 ? 'var(--danger-700)' : 'var(--text-primary)' }"
+            >{{ fmt(remaining) }} <span class="money-cur">{{ currency }}</span></span
+          >
+          <div class="metric-sub">{{ remainingSub }}</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-label">Estimated on the way</div>
+          <span class="money money--xl"
+            >{{ fmt(budget.estimatesTotal) }} <span class="money-cur">{{ currency }}</span></span
+          >
+          <div class="metric-sub">{{ estimateSub }}</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-label">Spent on the way</div>
           <span class="money money--xl"
             >{{ fmt(budget.expensesTotal) }} <span class="money-cur">{{ currency }}</span></span
           >
-          <div class="metric-sub">{{ expenseCount }} expenses recorded</div>
+          <div class="metric-sub">{{ spentSub }}</div>
         </div>
       </div>
 
-      <!-- Main progress bar -->
-      <div class="card" style="margin-bottom: 24px">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-          "
-        >
+      <div v-if="Number(budget.bookingsTotal) > 0" class="card" style="margin-bottom: 24px">
+        <TfProgress label="Bookings paid" :value="paidPct" />
+        <div class="budget-progress-foot">
           <span
-            style="font: var(--fw-semibold) 15px/1 var(--font-display); color: var(--text-primary)"
-            >Overall progress</span
+            >{{ fmt(budget.bookingsPaid) }} of {{ fmt(budget.bookingsTotal) }} {{ currency }}</span
           >
-          <TfBadge :tone="paidTotal > totalPlanned ? 'danger' : 'accent'" variant="soft">
-            {{ paidTotal > totalPlanned ? 'over budget' : fmt(totalPlanned) + ' ' + currency }}
-          </TfBadge>
-        </div>
-        <div class="tf-progress" style="height: 10px">
-          <div
-            class="tf-progress-fill"
-            :style="{
-              width: progressPct(paidTotal, totalPlanned) + '%',
-              background: paidTotal > totalPlanned ? 'var(--danger-500)' : 'var(--accent)',
-            }"
-          ></div>
-        </div>
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-            font: var(--fw-medium) 12px/1 var(--font-mono);
-            color: var(--text-secondary);
-          "
-        >
-          <span>paid {{ fmt(paidTotal) }} {{ currency }} · {{ paidPct }}%</span>
-          <span
-            :style="{
-              color: paidTotal > totalPlanned ? 'var(--danger-500)' : 'var(--success-500)',
-            }"
+          <span v-if="remaining > 0" style="color: var(--danger-700)"
+            >{{ fmt(remaining) }} {{ currency }} to go</span
           >
-            {{
-              paidTotal > totalPlanned
-                ? 'overspend ' + fmt(paidTotal - totalPlanned)
-                : 'remaining ' + fmt(totalPlanned - paidTotal)
-            }}
-            {{ currency }}
-          </span>
+          <span v-else style="color: var(--success-700)">Everything is paid</span>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start">
-        <!-- Due payments -->
-        <div
-          class="card"
-          :style="
-            activeMetric === 'remaining'
-              ? 'border:1.5px solid var(--accent);box-shadow:var(--shadow-md)'
-              : ''
-          "
-        >
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 14px;
-            "
-          >
-            <h3 style="font: var(--type-h3); margin: 0">Due payments</h3>
-            <TfBadge v-if="activeMetric === 'remaining'" tone="brand" variant="soft"
-              >unpaid only</TfBadge
-            >
+      <div class="budget-columns">
+        <!-- What still has to be paid, and when -->
+        <div class="card">
+          <h3 class="card-title">Payments</h3>
+
+          <div v-if="!upcoming.length && !unscheduled.length" class="budget-settled">
+            <i class="pi pi-check-circle" style="font-size: 16px"></i> Nothing left to pay
           </div>
-          <div
-            v-if="!upcomingPayments.length"
-            style="
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              padding: 14px 0;
-              color: var(--success-500);
-              font: var(--type-body);
-            "
-          >
-            <i class="pi pi-check-circle" style="font-size: 16px"></i> All payments settled
+
+          <template v-if="upcoming.length">
+            <div class="budget-list-label">Scheduled</div>
+            <div class="budget-list">
+              <div v-for="p in upcoming" :key="p.paymentId" class="budget-pay-row">
+                <div class="cat-icon cat-icon--sm" :style="catStyle(p.category)">
+                  {{ catEmoji(p.category) }}
+                </div>
+                <div style="flex: 1; min-width: 0">
+                  <div class="budget-pay-name">{{ p.bookingName }}</div>
+                  <div class="budget-pay-due" :class="{ 'is-late': isLate(p.dueDate) }">
+                    {{ p.dueDate ? 'due ' + formatDateShort(p.dueDate) : 'no date' }}
+                  </div>
+                </div>
+                <span class="money money--sm">{{ fmt(p.amount) }} {{ currency }}</span>
+                <TfButton size="sm" variant="secondary" @click="markPaymentPaid(p)">
+                  <i class="pi pi-check" style="font-size: 12px"></i> Paid
+                </TfButton>
+              </div>
+            </div>
+          </template>
+
+          <template v-if="unscheduled.length">
+            <div class="budget-list-label" style="margin-top: 14px">
+              Owed, no date yet
+              <span class="text-subtle" style="text-transform: none; letter-spacing: 0"
+                >— schedule instalments or tick «Paid in full» on the booking</span
+              >
+            </div>
+            <div class="budget-list">
+              <div
+                v-for="u in unscheduled"
+                :key="u.bookingId"
+                class="budget-pay-row budget-pay-row--link"
+                @click="$router.push(`/trips/${tripId}/bookings`)"
+              >
+                <div class="cat-icon cat-icon--sm" :style="catStyle(u.category)">
+                  {{ catEmoji(u.category) }}
+                </div>
+                <div class="budget-pay-name" style="flex: 1; min-width: 0">{{ u.bookingName }}</div>
+                <span class="money money--sm">{{ fmt(u.remaining) }} {{ currency }}</span>
+                <i class="pi pi-chevron-right text-subtle" style="font-size: 12px"></i>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Where the money goes, in the same categories for booked and spent -->
+        <div class="card">
+          <h3 class="card-title">By category</h3>
+          <div v-if="!budget.byCategory.length" class="text-muted text-sm">
+            Nothing booked or spent yet.
           </div>
-          <div v-else style="display: flex; flex-direction: column; gap: 10px">
-            <div
-              v-for="p in upcomingPayments"
-              :key="p.paymentId"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 11px 12px;
-                background: var(--bg);
-                border: 1px solid var(--border-default);
-                border-radius: var(--radius-md);
-              "
-            >
-              <div class="cat-icon cat-icon--sm" :style="catStyle(p.category)">
-                {{ catEmoji(p.category) }}
-              </div>
-              <div style="flex: 1; min-width: 0">
-                <div
-                  style="
-                    font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                    color: var(--text-primary);
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                  "
-                >
-                  {{ p.bookingName }}
+          <div v-else class="budget-cats">
+            <div class="budget-cat-head">
+              <span style="flex: 1"></span>
+              <span class="budget-cat-col">Planned</span>
+              <span class="budget-cat-col">Spent</span>
+            </div>
+            <div v-for="c in budget.byCategory" :key="c.category" class="budget-cat">
+              <div class="budget-cat-row">
+                <div class="cat-icon cat-icon--sm" :style="catStyle(c.category)">
+                  {{ catEmoji(c.category) }}
                 </div>
-                <div
-                  style="
-                    font: var(--fw-medium) 11px/1 var(--font-mono);
-                    color: var(--danger-700);
-                    margin-top: 3px;
-                  "
-                >
-                  due {{ formatDateShort(p.dueDate) }}
-                </div>
+                <span class="budget-cat-name">{{ catLabel(c.category) }}</span>
+                <span class="budget-cat-col">{{ planned(c) ? fmt(planned(c)) : '—' }}</span>
+                <span class="budget-cat-col">{{ fmt(spentAll(c)) }}</span>
               </div>
-              <span class="money money--sm">{{ Number(p.amount).toFixed(2) }} {{ currency }}</span>
-              <TfButton size="sm" variant="secondary" @click="markPaymentPaid(p)">
-                <i class="pi pi-check" style="font-size: 12px"></i> Mark paid
+              <!-- Plan against reality. Planned is everything this category is
+                   expected to cost: the bookings' prices plus the estimates in the
+                   day plans. Spent is what is gone: the paid part of the bookings
+                   plus the expenses. An unpaid booking is a plan until it is paid. -->
+              <div v-if="planned(c)" class="budget-cat-plan">
+                <div class="progress-track" style="height: 6px; flex: 1">
+                  <div
+                    class="progress-fill"
+                    :style="{
+                      width: planPct(c) + '%',
+                      background: over(c) ? 'var(--danger-500)' : 'var(--primary)',
+                    }"
+                  ></div>
+                </div>
+                <span class="budget-cat-plan-label" :class="{ 'is-over': over(c) }">
+                  {{ planLabel(c) }}
+                </span>
+              </div>
+              <div v-else class="budget-cat-plan budget-cat-plan--none">
+                nothing planned to compare with
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per day: what the bookings cost for that day, what the plan estimates, what was spent -->
+      <div class="card" style="margin-top: 20px">
+        <div class="card-head-row">
+          <h3 class="card-title" style="margin: 0">Day by day</h3>
+          <span v-if="!daysWithMoney.length" class="text-subtle text-sm"
+            >Amounts appear here once bookings have dates or expenses are recorded.</span
+          >
+          <span v-else class="text-subtle text-sm"
+            >{{ daysWithMoney.length }} of {{ budget.days.length }} days carry an amount</span
+          >
+        </div>
+
+        <template v-if="daysWithMoney.length">
+          <div class="budget-day-header">
+            <span style="flex: 1">Day</span>
+            <span class="budget-day-col">Booked</span>
+            <span class="budget-day-col">Estimated</span>
+            <span class="budget-day-col">Spent</span>
+            <span style="width: 28px"></span>
+          </div>
+          <div v-for="d in daysWithMoney" :key="d.dayId" class="budget-day">
+            <button class="budget-day-row-btn" @click="toggleDay(d.dayId)">
+              <span class="budget-day-label">
+                Day {{ d.dayNumber }}
+                <span class="text-subtle"> · {{ formatDateShort(d.date) }}</span>
+                <span v-if="d.city" class="text-subtle"> · {{ d.city }}</span>
+              </span>
+              <span class="budget-day-col text-subtle">{{ dash(d.booked) }}</span>
+              <span class="budget-day-col text-subtle">{{ dash(d.estimated) }}</span>
+              <span class="budget-day-col" style="font-weight: 600">{{ dash(d.spent) }}</span>
+              <span
+                class="budget-day-chevron"
+                :style="{ transform: expandedDay === d.dayId ? 'rotate(90deg)' : 'none' }"
+              >
+                <i class="pi pi-chevron-right" style="font-size: 13px"></i>
+              </span>
+            </button>
+            <div v-if="expandedDay === d.dayId" class="budget-day-detail">
+              <template v-if="(dayExpenses[d.dayId] || []).length">
+                <div class="budget-list-label">Expenses</div>
+                <div class="budget-list">
+                  <div v-for="e in dayExpenses[d.dayId]" :key="e.id" class="budget-exp-row">
+                    <div class="cat-icon cat-icon--sm" :style="catStyle(e.category)">
+                      {{ catEmoji(e.category) }}
+                    </div>
+                    <span style="flex: 1; min-width: 0">{{
+                      e.description || catLabel(e.category) || 'Expense'
+                    }}</span>
+                    <span class="money money--sm text-subtle">
+                      {{ Number(e.amount).toFixed(2) }} {{ e.currency || currency }}
+                    </span>
+                    <TfTooltip text="Delete">
+                      <button class="del-btn" @click.stop="deleteExpense(d.dayId, e.id)">
+                        <i class="pi pi-times" style="font-size: 10px"></i>
+                      </button>
+                    </TfTooltip>
+                  </div>
+                </div>
+              </template>
+              <div v-else class="text-subtle text-sm">
+                No expenses recorded for this day
+                {{ Number(d.booked) ? '— the booked amount comes from your bookings' : '' }}.
+              </div>
+              <TfButton
+                size="sm"
+                variant="ghost"
+                style="margin-top: 10px"
+                @click.stop="openExpenseDialog(d.dayId)"
+              >
+                <i class="pi pi-plus" style="font-size: 14px"></i> Expense for this day
               </TfButton>
             </div>
           </div>
-        </div>
-
-        <!-- By category -->
-        <div class="card">
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 16px;
-              gap: 12px;
-              flex-wrap: wrap;
-            "
-          >
-            <h3 style="font: var(--type-h3); margin: 0">Where money goes</h3>
-            <div class="segmented-control">
-              <button
-                v-for="m in ['Actual', 'Plan', 'Both']"
-                :key="m"
-                class="segmented-btn"
-                :class="catMode === m ? 'segmented-btn--on' : ''"
-                @click="catMode = m"
-              >
-                {{ m }}
-              </button>
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 14px">
-            <div v-for="c in categoryBreakdown" :key="c.cat">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px">
-                <div class="cat-icon cat-icon--sm" :style="catStyle(c.cat)">
-                  {{ catEmoji(c.cat) }}
-                </div>
-                <span
-                  style="
-                    font: var(--fw-medium) 14px/1 var(--font-sans);
-                    color: var(--text-primary);
-                    flex: 1;
-                  "
-                  >{{ catLabel(c.cat) }}</span
-                >
-                <span
-                  style="font: var(--fw-medium) 12px/1 var(--font-mono)"
-                  :style="{ color: c.over ? 'var(--danger-500)' : 'var(--text-secondary)' }"
-                >
-                  {{
-                    catMode === 'Actual'
-                      ? fmt(c.fact)
-                      : catMode === 'Plan'
-                        ? fmt(c.plan)
-                        : fmt(c.fact) + ' / ' + fmt(c.plan)
-                  }}
-                  {{ currency }}
-                </span>
-              </div>
-              <div class="tf-progress" style="height: 7px">
-                <div
-                  class="tf-progress-fill"
-                  :style="{
-                    width: progressPct(c.fact, c.plan || 1) + '%',
-                    background: c.over ? 'var(--danger-500)' : catColor(c.cat),
-                  }"
-                ></div>
-              </div>
-              <div
-                v-if="c.over"
-                style="
-                  font: var(--fw-medium) 11px/1 var(--font-mono);
-                  color: var(--danger-500);
-                  margin-top: 4px;
-                "
-              >
-                overspend {{ fmt(Number(c.fact) - Number(c.plan)) }} {{ currency }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- By-day detail (expandable) -->
-      <div class="card" style="margin-top: 20px">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            gap: 12px;
-            flex-wrap: wrap;
-          "
-        >
-          <h3 style="font: var(--type-h3); margin: 0">Day-by-day detail</h3>
-          <div class="segmented-control">
-            <button
-              v-for="f in ['All', 'Food', 'Transport', 'Activity']"
-              :key="f"
-              class="segmented-btn"
-              :class="filterCat === f ? 'segmented-btn--on' : ''"
-              @click="filterCat = f"
-            >
-              {{ f }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Table header -->
-        <div class="budget-day-header">
-          <span style="flex: 1">Day</span>
-          <span class="budget-day-col">Plan</span>
-          <span class="budget-day-col">Actual</span>
-          <span class="budget-day-col">&Delta;</span>
-          <span style="width: 28px"></span>
-        </div>
-
-        <!-- Day rows (accordion) -->
-        <div
-          v-for="d in budget.days"
-          :key="d.dayId"
-          style="border-bottom: 1px dashed var(--border-default)"
-        >
-          <button
-            class="budget-day-row-btn"
-            :style="expandedDay === d.dayId ? 'background:var(--bg)' : ''"
-            @click="toggleDay(d.dayId)"
-          >
-            <span class="budget-day-label">Day {{ d.dayNumber }} · {{ d.city || '' }}</span>
-            <span class="budget-day-col" style="color: var(--text-secondary)">{{
-              fmt(d.planned)
-            }}</span>
-            <span class="budget-day-col" style="color: var(--text-primary); font-weight: 600">{{
-              fmt(d.actual)
-            }}</span>
-            <span
-              class="budget-day-col"
-              :style="{
-                color:
-                  Number(d.actual) > Number(d.planned) && Number(d.planned) > 0
-                    ? 'var(--danger-500)'
-                    : 'var(--success-500)',
-              }"
-            >
-              {{ delta(d.actual, d.planned) }}
-            </span>
-            <span
-              style="
-                width: 28px;
-                display: inline-flex;
-                justify-content: flex-end;
-                color: var(--text-secondary);
-                transition: transform var(--dur-fast) var(--ease-out);
-              "
-              :style="{ transform: expandedDay === d.dayId ? 'rotate(90deg)' : 'none' }"
-            >
-              <i class="pi pi-chevron-right" style="font-size: 13px"></i>
-            </span>
-          </button>
-
-          <!-- Expanded content -->
-          <div v-if="expandedDay === d.dayId" style="padding: 4px 6px 16px">
-            <template v-if="filteredDayExpenses(d.dayId).length">
-              <div
-                style="
-                  font: var(--fw-medium) 11px/1 var(--font-mono);
-                  letter-spacing: 0.08em;
-                  text-transform: uppercase;
-                  color: var(--text-secondary);
-                  margin: 8px 0;
-                "
-              >
-                Expenses
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 6px">
-                <div
-                  v-for="e in filteredDayExpenses(d.dayId)"
-                  :key="e.id"
-                  style="display: flex; align-items: center; gap: 10px"
-                >
-                  <div class="cat-icon cat-icon--sm" :style="catStyle(e.category)">
-                    {{ catEmoji(e.category) }}
-                  </div>
-                  <span
-                    style="flex: 1; font: 400 13px/1.3 var(--font-sans); color: var(--text-primary)"
-                    >{{ e.description || e.category || 'Expense' }}</span
-                  >
-                  <span class="money money--sm" style="color: var(--text-secondary)">
-                    {{ Number(e.amount).toFixed(2) }}
-                    {{ e.currency && e.currency !== currency ? e.currency : currency }}
-                  </span>
-                  <TfTooltip text="Delete">
-                    <button class="del-btn" @click.stop="deleteExpense(d.dayId, e.id)">
-                      <i class="pi pi-times" style="font-size: 10px"></i>
-                    </button>
-                  </TfTooltip>
-                </div>
-              </div>
-            </template>
-
-            <div
-              v-if="!filteredDayExpenses(d.dayId).length"
-              style="font: var(--type-small); color: var(--text-secondary); padding: 8px 0"
-            >
-              No expenses for this day{{ filterCat !== 'All' ? ' in this category' : '' }}.
-            </div>
-
-            <TfButton
-              size="sm"
-              variant="ghost"
-              style="margin-top: 12px"
-              @click.stop="openExpenseDialog(d.dayId)"
-            >
-              <i class="pi pi-plus" style="font-size: 14px"></i> Expense for this day
-            </TfButton>
-          </div>
-        </div>
-      </div>
-
-      <!-- Multi-currency note -->
-      <div
-        style="
-          font: var(--type-small);
-          color: var(--text-secondary);
-          margin-top: 14px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        "
-      >
-        <i class="pi pi-info-circle" style="font-size: 13px"></i>
-        Multi-currency: all amounts are shown in {{ currency }} — bookings use the rate saved on
-        each booking, activity estimates and expenses are converted at live rates.
+        </template>
       </div>
     </template>
 
@@ -543,42 +322,145 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { api, formatDateShort, toDateStr } from '@tripyfull/core';
+import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import {
   TfButton,
-  TfBadge,
-  TfModal,
-  TfSelect,
   TfInput,
+  TfSelect,
   TfNumberInput,
+  TfModal,
+  TfProgress,
   TfTooltip,
   toast,
 } from '@tripyfull/ui';
-import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { api, formatDateShort } from '@tripyfull/core';
 
 const route = useRoute();
-
 const tripId = route.params.tripId;
+
 const tripTitle = ref('');
 const tripDates = ref('');
-// Use the currency returned by the backend (= user's baseCurrency at time of calculation)
-// Falls back to accountCurrency while budget is loading
-const currency = computed(() => budget.value?.baseCurrency || accountCurrency.value);
+const loading = ref(false);
 const budget = ref(null);
 const dayExpenses = ref({});
-const loading = ref(false);
+const expandedDay = ref(null);
+
+// The backend converts everything into the owner's base currency; this is it.
+const currency = computed(() => budget.value?.baseCurrency || accountCurrency.value);
+
+/* ---- headline figures ---- */
+const tripCost = computed(
+  () => Number(budget.value?.bookingsTotal || 0) + Number(budget.value?.expensesTotal || 0),
+);
+const remaining = computed(() => Number(budget.value?.bookingsRemaining || 0));
+const paidPct = computed(() => {
+  const total = Number(budget.value?.bookingsTotal || 0);
+  return total ? Math.round((Number(budget.value.bookingsPaid) / total) * 100) : 0;
+});
+const upcoming = computed(() => budget.value?.upcomingPayments || []);
+const unscheduled = computed(() => budget.value?.unscheduled || []);
+const remainingSub = computed(() => {
+  if (!(remaining.value > 0)) return 'all bookings settled';
+  const parts = [];
+  if (upcoming.value.length)
+    parts.push(
+      `${upcoming.value.length} scheduled payment${upcoming.value.length === 1 ? '' : 's'}`,
+    );
+  if (unscheduled.value.length) parts.push(`${unscheduled.value.length} without a date`);
+  return parts.join(' · ');
+});
+const expenseCount = computed(() =>
+  Object.values(dayExpenses.value).reduce((s, arr) => s + arr.length, 0),
+);
+// Estimates are the cost fields on the day plans' stops — what the days are
+// expected to cost before anything is spent.
+const estimateSub = computed(() => {
+  const days = (budget.value?.days || []).filter((d) => Number(d.estimated)).length;
+  if (!days) return 'no stop in the plan carries a cost yet';
+  return `stops with a cost on ${days} day${days === 1 ? '' : 's'}`;
+});
+const spentSub = computed(() => {
+  const est = Number(budget.value?.estimatesTotal || 0);
+  const spent = Number(budget.value?.expensesTotal || 0);
+  if (!expenseCount.value) return 'add expenses as you go';
+  const parts = [`${expenseCount.value} expense${expenseCount.value === 1 ? '' : 's'}`];
+  if (est)
+    parts.push(
+      spent > est
+        ? `${fmt(spent - est)} over the estimate`
+        : `${Math.round((spent / est) * 100)}% of the estimate`,
+    );
+  return parts.join(' · ');
+});
+
+/* ---- categories ---- */
+const catEmoji = (c) =>
+  ({
+    FOOD: '\u{1F37D}',
+    TRANSPORT: '\u{1F68C}',
+    ACTIVITY: '\u{1F3AB}',
+    ACCOMMODATION: '\u{1F3E8}',
+    OTHER: '\u{1F4CC}',
+  })[c] ?? '\u{1F4CC}';
+const catLabel = (c) =>
+  ({
+    FOOD: 'Food',
+    TRANSPORT: 'Transport',
+    ACTIVITY: 'Activities',
+    ACCOMMODATION: 'Accommodation',
+    OTHER: 'Other',
+  })[c] ?? c;
+const catColor = (c) =>
+  ({
+    FOOD: 'var(--warning-300)',
+    TRANSPORT: 'var(--accent)',
+    ACTIVITY: 'var(--success-300)',
+    ACCOMMODATION: 'var(--primary)',
+    OTHER: 'var(--ink-400)',
+  })[c] || 'var(--accent)';
+const catStyle = (c) =>
+  ({
+    FOOD: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
+    TRANSPORT: { background: 'var(--success-100)', color: 'var(--accent)' },
+    ACTIVITY: { background: 'var(--success-100)', color: 'var(--success-300)' },
+    ACCOMMODATION: { background: 'var(--danger-100)', color: 'var(--accent)' },
+    OTHER: { background: 'var(--surface)', color: 'var(--ink-500)' },
+  })[c] || { background: 'var(--surface)', color: 'var(--ink-500)' };
+
+/* Plan against reality, per category. A booking's price is part of the plan;
+   the paid part of it is money gone, same as an expense on the way. */
+const planned = (c) => Number(c.booked) + Number(c.estimated);
+const spentAll = (c) => Number(c.paid) + Number(c.spent);
+const planPct = (c) =>
+  planned(c) ? Math.min(100, Math.round((spentAll(c) / planned(c)) * 100)) : 0;
+const over = (c) => planned(c) > 0 && spentAll(c) > planned(c);
+const planLabel = (c) => {
+  const plan = planned(c),
+    done = spentAll(c);
+  if (done > plan) return `${fmt(done - plan)} ${currency.value} over`;
+  return `${Math.round((done / plan) * 100)}%`;
+};
+
+/* ---- days ---- */
+const daysWithMoney = computed(() =>
+  (budget.value?.days || []).filter(
+    (d) => Number(d.booked) || Number(d.estimated) || Number(d.spent),
+  ),
+);
+const toggleDay = (dayId) => {
+  expandedDay.value = expandedDay.value === dayId ? null : dayId;
+};
+
+const fmt = (v) => Number(v || 0).toFixed(2);
+const dash = (v) => (Number(v) ? fmt(v) : '—');
+const isLate = (d) => d && d < toDateStr(new Date());
+
+/* ---- expenses ---- */
 const showExpenseDialog = ref(false);
 const savingExpense = ref(false);
 const expenseDayId = ref(null);
 const expenseDayIdSelect = ref(null);
 const expenseForm = ref({ category: null, amount: null, currency: '', description: '' });
-
-const catMode = ref('Both');
-const activeMetric = ref(null);
-const filterCat = ref('All');
-const expandedDay = ref(null);
-const bookings = ref([]);
-
 const expCategoryOptions = [
   { label: 'Food', value: 'FOOD' },
   { label: 'Transport', value: 'TRANSPORT' },
@@ -586,7 +468,6 @@ const expCategoryOptions = [
   { label: 'Accommodation', value: 'ACCOMMODATION' },
   { label: 'Other', value: 'OTHER' },
 ];
-
 // TfSelect works with string arrays; bridge label<->value while preserving stored values
 const dayOptions = computed(
   () =>
@@ -595,132 +476,18 @@ const dayOptions = computed(
       value: d.dayId,
     })) || [],
 );
-
 const expenseDaySelectLabel = computed({
   get: () => dayOptions.value.find((o) => o.value === expenseDayIdSelect.value)?.label || null,
   set: (label) => {
     expenseDayIdSelect.value = dayOptions.value.find((o) => o.label === label)?.value ?? null;
   },
 });
-
 const expenseCategoryLabel = computed({
   get: () => expCategoryOptions.find((o) => o.value === expenseForm.value.category)?.label || null,
   set: (label) => {
     expenseForm.value.category = expCategoryOptions.find((o) => o.label === label)?.value ?? null;
   },
 });
-
-const catEmoji = (c) =>
-  ({
-    FOOD: '\u{1F37D}',
-    TRANSPORT: '\u{1F68C}',
-    ACTIVITY: '\u{1F3AB}',
-    ACCOMMODATION: '\u{1F3E8}',
-    TRANSPORTATION: '\u{1F68C}',
-    OTHER: '\u{1F4CC}',
-  })[c] ?? '\u{1F4CC}';
-const catLabel = (c) =>
-  ({
-    FOOD: 'Food',
-    TRANSPORT: 'Transport',
-    TRANSPORTATION: 'Transportation',
-    ACTIVITY: 'Activity',
-    ACCOMMODATION: 'Accommodation',
-    OTHER: 'Other',
-  })[c] ?? c;
-const catColor = (c) =>
-  ({
-    FOOD: 'var(--warning-300)',
-    TRANSPORT: 'var(--accent)',
-    TRANSPORTATION: 'var(--accent)',
-    ACTIVITY: 'var(--success-300)',
-    ACCOMMODATION: 'var(--accent)',
-    OTHER: 'var(--ink-400)',
-  })[c] || 'var(--accent)';
-const catStyle = (c) =>
-  ({
-    FOOD: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
-    TRANSPORT: { background: 'var(--success-100)', color: 'var(--accent)' },
-    TRANSPORTATION: { background: 'var(--success-100)', color: 'var(--accent)' },
-    ACTIVITY: { background: 'var(--success-100)', color: 'var(--success-300)' },
-    ACCOMMODATION: { background: 'var(--danger-100)', color: 'var(--accent)' },
-    OTHER: { background: 'var(--surface)', color: 'var(--ink-500)' },
-  })[c] || { background: 'var(--surface)', color: 'var(--ink-500)' };
-
-// Bookings where priceCurrency differs from base but exchangeRate is missing
-const missingRateCount = computed(
-  () =>
-    bookings.value.filter(
-      (b) =>
-        b.priceCurrency &&
-        b.priceCurrency !== (budget.value?.baseCurrency || accountCurrency.value) &&
-        !b.exchangeRate,
-    ).length,
-);
-
-// Server-computed budget: the backend converts everything to the base currency
-// (stored booking rates → live rates → raw pass-through, incl. activity estimates
-// and expense currencies), so the Overview card and this screen always agree.
-const totalPlanned = computed(() => Number(budget.value?.totalPlanned || 0));
-const bookingsRemaining = computed(() => Number(budget.value?.bookingsRemaining || 0));
-const upcomingPayments = computed(() => budget.value?.upcomingPayments || []);
-
-const paidTotal = computed(
-  () => Number(budget.value?.bookingsPaid || 0) + Number(budget.value?.expensesTotal || 0),
-);
-
-const paidPct = computed(() => {
-  if (!totalPlanned.value) return 0;
-  return Math.round((paidTotal.value / totalPlanned.value) * 100);
-});
-
-const expenseCount = computed(() => {
-  return Object.values(dayExpenses.value).reduce((s, arr) => s + arr.length, 0);
-});
-
-const allCategories = computed(() => {
-  const cats = new Set([
-    ...Object.keys(budget.value?.actualByCategory || {}),
-    ...Object.keys(budget.value?.plannedByCategory || {}),
-  ]);
-  return [...cats];
-});
-
-const categoryBreakdown = computed(() => {
-  return allCategories.value
-    .map((cat) => {
-      const plan = Number(budget.value?.plannedByCategory?.[cat] || 0);
-      const actualCat = Number(budget.value?.actualByCategory?.[cat] || 0);
-      return { cat, plan, fact: actualCat, over: actualCat > plan && plan > 0 };
-    })
-    .filter((c) => c.plan > 0 || c.fact > 0);
-});
-
-const overCategories = computed(() => categoryBreakdown.value.filter((c) => c.over));
-
-const filterCatMap = { Food: 'FOOD', Transport: 'TRANSPORT', Activity: 'ACTIVITY' };
-
-const filteredDayExpenses = (dayId) => {
-  const exps = dayExpenses.value[dayId] || [];
-  const catKey = filterCatMap[filterCat.value];
-  if (!catKey) return exps;
-  return exps.filter((e) => e.category === catKey);
-};
-
-const progressPct = (value, max) =>
-  max > 0 ? Math.min(100, Math.round((Number(value) / Number(max)) * 100)) : 0;
-const fmt = (v) => `${Number(v || 0).toFixed(2)}`;
-const delta = (actual, planned) => {
-  const d = Number(actual) - Number(planned);
-  return (d > 0 ? '+' : '') + d.toFixed(2);
-};
-
-const toggleMetric = (m) => {
-  activeMetric.value = activeMetric.value === m ? null : m;
-};
-const toggleDay = (dayId) => {
-  expandedDay.value = expandedDay.value === dayId ? null : dayId;
-};
 
 const openExpenseDialog = (dayId) => {
   expenseDayId.value = dayId;
@@ -775,21 +542,15 @@ const markPaymentPaid = async (p) => {
 };
 
 const refreshBudget = async () => {
-  const [budgetRes, bookingsRes] = await Promise.all([
-    api.get(`/api/trips/${tripId}/budget`),
-    api.get(`/api/trips/${tripId}/bookings`),
-  ]);
-  budget.value = budgetRes.data;
-  bookings.value = bookingsRes.data;
+  budget.value = (await api.get(`/api/trips/${tripId}/budget`)).data;
 };
 
 onMounted(async () => {
   loading.value = true;
   try {
-    const [tripRes, budgetRes, bookingsRes] = await Promise.all([
+    const [tripRes, budgetRes] = await Promise.all([
       api.get(`/api/trips/${tripId}`),
       api.get(`/api/trips/${tripId}/budget`),
-      api.get(`/api/trips/${tripId}/bookings`),
     ]);
     tripTitle.value = tripRes.data.title;
     if (tripRes.data.startDate && tripRes.data.endDate) {
@@ -797,26 +558,17 @@ onMounted(async () => {
         formatDateShort(tripRes.data.startDate) + ' – ' + formatDateShort(tripRes.data.endDate);
     }
     budget.value = budgetRes.data;
-    bookings.value = bookingsRes.data;
-
-    const dayIds = budgetRes.data.days.map((d) => d.dayId);
     const results = await Promise.all(
-      dayIds.map((id) =>
+      budgetRes.data.days.map((d) =>
         api
-          .get(`/api/days/${id}/expenses`)
-          .then((r) => ({ id, data: r.data }))
-          .catch(() => ({ id, data: [] })),
+          .get(`/api/days/${d.dayId}/expenses`)
+          .then((r) => ({ id: d.dayId, data: r.data }))
+          .catch(() => ({ id: d.dayId, data: [] })),
       ),
     );
     const map = {};
-    results.forEach((r) => {
-      map[r.id] = r.data;
-    });
+    results.forEach((r) => (map[r.id] = r.data));
     dayExpenses.value = map;
-
-    if (budgetRes.data.days.length) {
-      expandedDay.value = budgetRes.data.days[0].dayId;
-    }
   } catch {
     toast.danger('Error', 'Failed to load budget');
   } finally {

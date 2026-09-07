@@ -3,6 +3,7 @@ package com.tripyfull.mapper;
 import com.tripyfull.dto.ActivityRequest;
 import com.tripyfull.dto.ActivityResponse;
 import com.tripyfull.model.Activity;
+import com.tripyfull.model.Booking;
 import com.tripyfull.model.ActivityType;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,6 +23,8 @@ public final class ActivityMapper {
         a.setStartTime(req.startTime());
         a.setEndTime(req.endTime());
         a.setAddress(req.address());
+        a.setLatitude(req.latitude());
+        a.setLongitude(req.longitude());
         a.setCostEstimate(req.costEstimate());
         a.setCostCurrency(req.costCurrency());
         a.setNotes(req.notes());
@@ -36,6 +39,13 @@ public final class ActivityMapper {
         if (req.startTime() != null) a.setStartTime(req.startTime());
         if (req.endTime() != null) a.setEndTime(req.endTime());
         if (req.address() != null) a.setAddress(req.address());
+        if (Boolean.TRUE.equals(req.clearCoords())) {
+            a.setLatitude(null);
+            a.setLongitude(null);
+        } else {
+            if (req.latitude() != null) a.setLatitude(req.latitude());
+            if (req.longitude() != null) a.setLongitude(req.longitude());
+        }
         if (req.costEstimate() != null) a.setCostEstimate(req.costEstimate());
         if (req.costCurrency() != null) a.setCostCurrency(req.costCurrency());
         if (req.notes() != null) a.setNotes(req.notes());
@@ -52,6 +62,11 @@ public final class ActivityMapper {
     }
 
     public static ActivityResponse toResponse(Activity a) {
+        return toResponse(a, null);
+    }
+
+    /** With the booking the stop was written from, when the caller has it at hand. */
+    public static ActivityResponse toResponse(Activity a, Booking source) {
         return new ActivityResponse(
                 a.getId(),
                 a.getName(),
@@ -68,7 +83,13 @@ public final class ActivityMapper {
                 a.getPlace() != null ? a.getPlace().getLatitude() : null,
                 a.getPlace() != null ? a.getPlace().getLongitude() : null,
                 a.getTravelModeToNext(),
-                a.isNeedsBooking()
+                a.isNeedsBooking(),
+                a.getLatitude(),
+                a.getLongitude(),
+                a.getSourceBookingId() != null,
+                source != null && source.getTransportMode() != null ? source.getTransportMode().name() : null,
+                source != null ? source.getDepartureAt() : null,
+                source != null ? source.getArrivalAt() : null
         );
     }
 }

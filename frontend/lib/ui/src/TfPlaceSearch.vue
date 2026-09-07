@@ -21,6 +21,7 @@
         :placeholder="placeholder"
         autocomplete="off"
         class="tf-place-input"
+        :class="{ 'is-error': error }"
         style="padding-left: 34px"
       />
       <i
@@ -48,7 +49,12 @@
     <div v-if="open && (results.length || noResults || searching)" class="tf-place-dropdown">
       <div
         v-if="searching && !results.length"
-        style="padding: 14px; text-align: center; font: var(--type-small); color: var(--text-secondary)"
+        style="
+          padding: 14px;
+          text-align: center;
+          font: var(--type-small);
+          color: var(--text-secondary);
+        "
       >
         Searching...
       </div>
@@ -87,6 +93,7 @@ import { api } from '@tripyfull/core';
 const props = defineProps({
   modelValue: { type: String, default: '' },
   placeholder: { type: String, default: 'Search place, hotel, airport...' },
+  error: String,
 });
 
 const emit = defineEmits(['update:modelValue', 'select']);
@@ -216,6 +223,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   position: relative;
 }
 
+.tf-place-input.is-error {
+  border-color: var(--input-text-danger-border);
+}
 .tf-place-input {
   width: 100%;
   height: 42px;

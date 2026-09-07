@@ -70,9 +70,18 @@ public class FileStorageService {
 
     public void delete(String storageKey) {
         try {
-            Files.deleteIfExists(resolve(storageKey));
+            Path file = resolve(storageKey);
+            Files.deleteIfExists(file);
+            // A place keeps its photos in a directory of its own; once the last
+            // file is gone the directory is only clutter.
+            Path dir = file.getParent();
+            if (dir != null && !dir.equals(root) && Files.isDirectory(dir)) {
+                try (var entries = Files.list(dir)) {
+                    if (entries.findAny().isEmpty()) Files.deleteIfExists(dir);
+                }
+            }
         } catch (IOException ignored) {
-            // best-effort: leave orphan file rather than fail the request
+            // best-effort: leave an orphan rather than fail the request
         }
     }
 

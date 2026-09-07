@@ -20,7 +20,8 @@ public final class DayMapper {
                 day.getOvernightStay(),
                 day.getLinkedBookingId(),
                 day.getNotes(),
-                day.isBuffer()
+                day.isBuffer(),
+                day.getActivities() != null ? day.getActivities().size() : 0
         );
     }
 

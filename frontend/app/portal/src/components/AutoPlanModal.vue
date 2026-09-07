@@ -2,10 +2,28 @@
   <TfModal :modelValue="modelValue" @update:modelValue="close" title="Auto-plan the trip" size="lg">
     <!-- Step 1: what to plan and from where -->
     <div class="dialog-form">
-      <p class="text-muted text-sm" style="margin: 0">
-        Places are grouped by geography into days (buffer days are skipped), types are balanced so
-        you don't get five temples in a row, and each day is ordered as a walkable route from your
-        base point. Must-see places are seated first.
+      <!-- What the planner does, in the order it does it -->
+      <ol class="autoplan-how">
+        <li>
+          <strong>Each day is anchored to where you sleep that night</strong> — the hotel booking
+          the day is linked to. A day without one borrows the nearest hotel in time. Nothing to
+          pick: it follows your bookings.
+        </li>
+        <li>
+          <strong>Places go to the nearest hotel's day</strong>, within a day-trip radius (~100 km).
+          Must-sees (5★) are seated first; anything out of reach of every hotel stays unassigned.
+        </li>
+        <li>
+          <strong>No more than three of one type per day</strong> — a fourth temple moves to the
+          nearest day with room.
+        </li>
+        <li><strong>Each day is ordered as a route</strong> from the hotel, nearest stop first.</li>
+      </ol>
+      <p v-if="!anyHotel" class="autoplan-note">
+        <i class="pi pi-info-circle"></i>
+        No hotel with coordinates on this trip yet, so days are grouped by geography around the
+        centre of your places instead. Add the hotels as bookings and press
+        <strong>Update plan</strong> there to anchor the days.
       </p>
       <div class="form-row">
         <div style="flex: 1">
@@ -15,9 +33,6 @@
             :options="sourceLabels"
             placeholder="All my places"
           />
-        </div>
-        <div style="flex: 1">
-          <TfSelect label="Base point (hotel)" v-model="baseLabel" :options="baseLabels" />
         </div>
         <div style="width: 120px">
           <div class="field">
@@ -38,7 +53,10 @@
         <div v-for="d in plan.days" :key="d.dayId" class="card" style="padding: 12px 14px">
           <div style="display: flex; justify-content: space-between; align-items: baseline">
             <span style="font: var(--fw-bold) 14px/1 var(--font-display)"
-              >Day {{ d.dayNumber }} · {{ formatDateShort(d.date) }}</span
+              >Day {{ d.dayNumber }} · {{ formatDateShort(d.date)
+              }}<span v-if="d.baseName" class="text-subtle" style="font-weight: 400">
+                · from {{ d.baseName }}</span
+              ></span
             >
             <span class="text-subtle text-xs" v-if="d.places.length"
               >{{ d.places.length }} stops · ~{{ d.totalKm }} km</span
@@ -61,8 +79,9 @@
           </div>
         </div>
         <div v-if="plan.unassigned.length" class="card" style="padding: 12px 14px">
-          <div style="font: var(--fw-bold) 14px/1 var(--font-display)">
-            Didn't fit / no coordinates
+          <div style="font: var(--fw-bold) 14px/1 var(--font-display)">Left out</div>
+          <div class="text-subtle text-xs" style="margin-top: 2px">
+            No coordinates, out of reach of every hotel, or the days in reach were full.
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px">
             <TfBadge v-for="p in plan.unassigned" :key="p.placeId" tone="neutral" variant="soft">
@@ -104,8 +123,9 @@ const folders = ref([]);
 const places = ref([]);
 const bookings = ref([]);
 const sourceLabel = ref('All my places');
-const baseLabel = ref('Center of selected places');
 const maxPerDay = ref(4);
+// Only tells the text which mode the planner will be in; the server decides.
+const anyHotel = computed(() => bookings.value.some((b) => b.category === 'ACCOMMODATION'));
 const plan = ref(null);
 const planning = ref(false);
 const applying = ref(false);
@@ -129,9 +149,6 @@ watch(
       folders.value = f.data || [];
       places.value = (p.data || []).filter((x) => x.owned);
       bookings.value = (b.data || []).filter((x) => x.latitude != null && x.longitude != null);
-      baseLabel.value = bookings.value.length
-        ? `${bookings.value[0].name}`
-        : 'Center of selected places';
     } catch {
       toast.danger('Error', 'Failed to load places');
     }
@@ -139,10 +156,6 @@ watch(
 );
 
 const sourceLabels = computed(() => ['All my places', ...folders.value.map((f) => f.name)]);
-const baseLabels = computed(() => [
-  ...bookings.value.map((b) => b.name),
-  'Center of selected places',
-]);
 
 const selectedPlaces = computed(() => {
   if (sourceLabel.value === 'All my places') return places.value;
@@ -156,11 +169,8 @@ const noCoordsCount = computed(
 const runPlan = async () => {
   planning.value = true;
   try {
-    const baseBooking = bookings.value.find((b) => b.name === baseLabel.value);
     const res = await api.post(`/api/trips/${props.tripId}/plan`, {
       placeIds: selectedPlaces.value.map((p) => p.id),
-      baseLatitude: baseBooking ? baseBooking.latitude : null,
-      baseLongitude: baseBooking ? baseBooking.longitude : null,
       maxPerDay: maxPerDay.value || null,
     });
     plan.value = res.data;
@@ -191,3 +201,34 @@ const applyPlan = async () => {
   }
 };
 </script>
+
+<style scoped>
+.autoplan-how {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+.autoplan-how strong {
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+}
+.autoplan-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--warning-100);
+  color: var(--text-primary);
+  font: var(--type-small);
+}
+.autoplan-note .pi {
+  color: var(--warning-500);
+  margin-top: 2px;
+}
+</style>

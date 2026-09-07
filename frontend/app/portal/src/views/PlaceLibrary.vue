@@ -149,11 +149,7 @@
           </div>
         </div>
 
-        <div
-          v-if="loading"
-          class="skeleton"
-          style="height: 120px; border-radius: 14px; margin-top: 16px"
-        ></div>
+        <div v-if="loading" class="skeleton" style="height: 120px; border-radius: 14px"></div>
 
         <template v-else-if="places.length">
           <div class="places-toolbar">
@@ -315,7 +311,7 @@
               <div class="place-card-cover">
                 <img
                   v-if="hasPhoto(p)"
-                  :src="photoSrc(p.photos[photoIndex(p)])"
+                  :src="photoSrc(cardPhoto(p))"
                   alt=""
                   loading="lazy"
                   @error="onPhotoError(p)"
@@ -342,7 +338,7 @@
                   <i class="pi pi-star-fill"></i>{{ p.rating || 3 }}
                 </span>
 
-                <template v-if="hasPhoto(p) && p.photos.length > 1">
+                <template v-if="livePhotos(p).length > 1">
                   <button
                     class="cover-nav cover-nav--prev"
                     @click.stop="shiftPhoto(p, -1)"
@@ -357,7 +353,7 @@
                   >
                     <i class="pi pi-chevron-right"></i>
                   </button>
-                  <span class="cover-dots">{{ photoIndex(p) + 1 }}/{{ p.photos.length }}</span>
+                  <span class="cover-dots">{{ photoIndex(p) + 1 }}/{{ livePhotos(p).length }}</span>
                 </template>
               </div>
 
@@ -407,11 +403,14 @@
                    and frees the width a separate Location column was eating. -->
               <template #name="{ row: p }">
                 <div class="cell-name">
-                  <span
-                    v-if="p.photos && p.photos.length"
-                    class="place-thumb place-thumb--sm"
-                    :style="{ backgroundImage: `url(${photoSrc(p.photos[0])})` }"
-                  ></span>
+                  <span v-if="hasPhoto(p)" class="place-thumb place-thumb--sm">
+                    <img
+                      :src="photoSrc(livePhotos(p)[0])"
+                      alt=""
+                      loading="lazy"
+                      @error="onThumbError(livePhotos(p)[0])"
+                    />
+                  </span>
                   <span v-else class="cat-icon cat-icon--sm" :style="typeStyle(p.type)">{{
                     typeEmoji(p.type)
                   }}</span>
@@ -1123,7 +1122,7 @@ import { useTripStore } from '@/stores/tripStore.js';
 import { FEATURES } from '@/config.js';
 import BookingMap from '@/components/BookingMap.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api, photoSrc, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
+import { api, isDeadPhotoUrl, photoSrc, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
 
 const tripStore = useTripStore();
 const route = useRoute();
@@ -1376,12 +1375,18 @@ const removeFromCurrentTrip = async (place) => {
   }
 };
 
-// Photos that failed to load (expired/blocked URLs) fall back to the type placeholder
-// instead of leaving an empty box that looks like a stuck skeleton.
+// Photos that failed to load are skipped, not shown as a hole. Google's place
+// photo links expire after a while and then answer 403, so a place whose first
+// photo is one of those must still show the ones that work — typically the
+// owner's own uploads, which sit after it. Only when nothing loads does the
+// card fall back to the type placeholder.
 const brokenPhotos = ref(new Set());
-const hasPhoto = (p) => !!p.photos?.length && !brokenPhotos.value.has(p.photos[photoIndex(p)]);
+const livePhotos = (p) =>
+  (p.photos || []).filter((url) => !isDeadPhotoUrl(url) && !brokenPhotos.value.has(url));
+const hasPhoto = (p) => livePhotos(p).length > 0;
+const cardPhoto = (p) => livePhotos(p)[photoIndex(p)];
 const onPhotoError = (p) => {
-  const url = p.photos?.[photoIndex(p)];
+  const url = cardPhoto(p);
   if (!url) return;
   brokenPhotos.value = new Set(brokenPhotos.value).add(url);
 };
@@ -1398,7 +1403,7 @@ const placeLocation = (p) =>
 // Photo carousel state per place (id -> index), so cards keep their own position.
 const photoCursor = ref({});
 const photoIndex = (p) => {
-  const n = p.photos?.length || 0;
+  const n = livePhotos(p).length;
   if (!n) return 0;
   return (((photoCursor.value[p.id] || 0) % n) + n) % n;
 };
@@ -1615,7 +1620,7 @@ const photoInput = ref(null);
 // The grid renders from this same list, so a viewer index always matches.
 const shownPhotos = computed(() =>
   (drawerMode.value === 'edit' ? form.value.photoList : viewing.value?.photos || []).filter(
-    (url) => !brokenPhotos.value.has(url),
+    (url) => !isDeadPhotoUrl(url) && !brokenPhotos.value.has(url),
   ),
 );
 const viewerPhotos = computed(() => shownPhotos.value.map(photoSrc));
@@ -2227,6 +2232,9 @@ onMounted(async () => {
   flex-wrap: wrap;
   align-items: center;
   margin-top: 14px;
+  /* One gap below the filters, whatever follows: the toolbar, the loading
+     skeleton or the empty state — the latter used to sit flush against them. */
+  margin-bottom: 16px;
 }
 
 .rating-filter {
@@ -2345,7 +2353,6 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  margin-top: 16px;
 }
 
 .place-grid {
@@ -2415,16 +2422,6 @@ onMounted(async () => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.link-btn {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--primary);
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 /* ---- Editable detail rows: the .info-row grid with a control on the right ---- */
@@ -2517,9 +2514,14 @@ onMounted(async () => {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  background-size: cover;
-  background-position: center;
   border: 1px solid var(--border-default);
+  overflow: hidden;
+}
+.place-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 /* Must follow the base rule — declared before it, the smaller size lost and
    table rows were 69px tall because of a 44px thumbnail. */

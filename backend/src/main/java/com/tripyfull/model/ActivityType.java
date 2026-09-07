@@ -9,5 +9,6 @@ public enum ActivityType {
     MEAL_STOP,
     SHOPPING,
     TRANSPORT,
+    ACCOMMODATION,
     OTHER
 }

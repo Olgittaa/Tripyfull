@@ -55,6 +55,12 @@ public class Booking {
     private String flightNumber;
     private String fromPlace;
     private String toPlace;
+
+    /** Where the two ends are, so a reopened journey still draws on the map. */
+    private Double fromLatitude;
+    private Double fromLongitude;
+    private Double toLatitude;
+    private Double toLongitude;
     private LocalDateTime departureAt;
     private LocalDateTime arrivalAt;
 
@@ -169,6 +175,18 @@ public class Booking {
     public void setGuests(Integer guests) { this.guests = guests; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+    public Double getFromLatitude() { return fromLatitude; }
+    public void setFromLatitude(Double fromLatitude) { this.fromLatitude = fromLatitude; }
+
+    public Double getFromLongitude() { return fromLongitude; }
+    public void setFromLongitude(Double fromLongitude) { this.fromLongitude = fromLongitude; }
+
+    public Double getToLatitude() { return toLatitude; }
+    public void setToLatitude(Double toLatitude) { this.toLatitude = toLatitude; }
+
+    public Double getToLongitude() { return toLongitude; }
+    public void setToLongitude(Double toLongitude) { this.toLongitude = toLongitude; }
+
     public Double getLatitude() { return latitude; }
     public void setLatitude(Double latitude) { this.latitude = latitude; }
     public Double getLongitude() { return longitude; }

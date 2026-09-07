@@ -199,6 +199,14 @@
   padding-left: var(--space-4);
   border-left: 1px solid var(--border-default);
 }
+
+/* Time on its own: no calendar beside it, so no divider and less air. */
+.dp-pop--time {
+  padding: var(--space-2) var(--space-3);
+}
+.dp-pop--time .dp-wheel {
+  height: 150px;
+}
 .dp-time-group + .dp-time-group {
   margin-top: var(--space-3);
   padding-top: var(--space-3);
@@ -244,13 +252,7 @@
   cursor: grab;
   display: flex;
   flex-direction: column;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent,
-    #000 28%,
-    #000 72%,
-    transparent
-  );
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent);
   mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent);
 }
 .dp-wheel-col::-webkit-scrollbar {

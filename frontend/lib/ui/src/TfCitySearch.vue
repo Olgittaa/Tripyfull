@@ -3,6 +3,7 @@
     <div style="position: relative">
       <input
         class="input w-full"
+        :class="{ 'is-error': error }"
         :value="displayValue"
         @input="onInput($event.target.value)"
         @focus="onFocus"
@@ -26,7 +27,12 @@
     <div v-if="open && (results.length || searching || noResults)" class="tf-city-dropdown">
       <div
         v-if="searching && !results.length"
-        style="padding: 14px; text-align: center; font: var(--type-small); color: var(--text-secondary)"
+        style="
+          padding: 14px;
+          text-align: center;
+          font: var(--type-small);
+          color: var(--text-secondary);
+        "
       >
         Searching...
       </div>
@@ -70,6 +76,7 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   placeholder: { type: String, default: 'Search city...' },
   country: { type: String, default: '' },
+  error: String,
 });
 
 const emit = defineEmits(['update:modelValue', 'select']);

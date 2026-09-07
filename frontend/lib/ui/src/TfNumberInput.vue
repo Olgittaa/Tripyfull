@@ -1,7 +1,12 @@
 <template>
   <div class="field">
-    <label v-if="label" class="label">{{ label }}</label>
-    <div class="num-control" :class="[`num-control--${type}`, { 'is-disabled': disabled }]">
+    <label v-if="label" class="label"
+      >{{ label }}<span v-if="required" class="label-req" aria-hidden="true">*</span></label
+    >
+    <div
+      class="num-control"
+      :class="[`num-control--${type}`, { 'is-disabled': disabled, 'is-error': error }]"
+    >
       <button
         v-if="type === 'split'"
         type="button"
@@ -58,7 +63,8 @@
         <i class="pi pi-plus" />
       </button>
     </div>
-    <span v-if="hint" class="hint">{{ hint }}</span>
+    <span v-if="error" class="hint hint--error">{{ error }}</span>
+    <span v-else-if="hint" class="hint">{{ hint }}</span>
   </div>
 </template>
 
@@ -76,6 +82,8 @@ const props = defineProps({
   step: { type: Number, default: 1 },
   disabled: Boolean,
   hint: String,
+  error: String,
+  required: Boolean,
 });
 const emit = defineEmits(['update:modelValue']);
 

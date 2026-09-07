@@ -1,8 +1,16 @@
 <template>
   <div class="field" ref="root">
-    <label v-if="label" class="label">{{ label }}</label>
+    <label v-if="label" class="label"
+      >{{ label }}<span v-if="required" class="label-req" aria-hidden="true">*</span></label
+    >
     <div class="select" :class="{ 'is-open': open }">
-      <button type="button" class="select-trigger" :disabled="disabled" @click="open = !open">
+      <button
+        type="button"
+        class="select-trigger"
+        :class="{ 'is-error': error }"
+        :disabled="disabled"
+        @click="open = !open"
+      >
         <span class="select-prefix"><i class="pi pi-calendar" /></span>
         <span class="select-value" :class="{ 'is-placeholder': !hasValue }">{{ displayText }}</span>
         <i class="pi pi-chevron-down select-chevron" />
@@ -91,6 +99,7 @@
         </div>
       </div>
     </div>
+    <span v-if="error" class="hint hint--error">{{ error }}</span>
   </div>
 </template>
 
@@ -110,6 +119,10 @@ const props = defineProps({
   max: { type: Date, default: null },
   // Show an × in the trigger that resets the value to null.
   clearable: Boolean,
+  // Month to open on while empty — a trip in February should not open on today.
+  viewDate: { type: Date, default: null },
+  error: String,
+  required: Boolean,
 });
 const emit = defineEmits(['update:modelValue']);
 
@@ -149,7 +162,10 @@ const displayText = computed(() => {
 
 /* calendar view */
 const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
-const view = ref(startOfMonth(startDate.value || single.value || new Date()));
+const emptyView = () => startOfMonth(props.viewDate || props.min || new Date());
+const view = ref(
+  startDate.value || single.value ? startOfMonth(startDate.value || single.value) : emptyView(),
+);
 const title = computed(() => `${MONTHS[view.value.getMonth()]} ${view.value.getFullYear()}`);
 
 const grid = computed(() => {
@@ -272,7 +288,7 @@ watch(open, (v) => {
     // Re-sync the calendar month with the current value — it may have been
     // set (or changed) after mount, e.g. when an edit drawer fills the form.
     const anchor = startDate.value || single.value;
-    if (anchor) view.value = startOfMonth(anchor);
+    view.value = anchor ? startOfMonth(anchor) : emptyView();
   }
 });
 onMounted(() => document.addEventListener('click', onDoc));
