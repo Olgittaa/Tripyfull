@@ -84,68 +84,83 @@
               <template #prefix><i class="pi pi-search" /></template>
             </TfInput>
           </div>
-          <div style="flex: 0 1 170px">
-            <TfSelect
-              :modelValue="countryLabel(filterCountry)"
-              @update:modelValue="
-                (v) => {
-                  filterCountry = countryValue(v);
-                  loadPlaces();
-                }
-              "
-              :options="countryLabels"
-              placeholder="Country"
-            />
-          </div>
-          <div style="flex: 0 1 150px">
-            <TfSelect
-              :modelValue="typeLabelFromValue(filterType)"
-              @update:modelValue="
-                (v) => {
-                  filterType = typeValueFromLabel(v);
-                  loadPlaces();
-                }
-              "
-              :options="typeLabels"
-              placeholder="Type"
-            />
-          </div>
-          <div style="flex: 0 1 140px">
-            <TfSelect
-              :modelValue="visibilityLabelFromValue(filterVisibility)"
-              @update:modelValue="
-                (v) => {
-                  filterVisibility = visibilityValueFromLabel(v);
-                  loadPlaces();
-                }
-              "
-              :options="visibilityLabels"
-              placeholder="Public/private"
-            />
-          </div>
-          <!-- Rating filter: multi-select, any of the picked stars -->
-          <div class="rating-filter">
-            <span class="rating-filter-label">Rating</span>
-            <button
-              v-for="n in [5, 4, 3, 2, 1]"
-              :key="n"
-              type="button"
-              class="rating-chip"
-              :class="{ on: filterRatings.has(n) }"
-              @click="toggleRating(n)"
-              v-tooltip="RATING_HINTS[n]"
-            >
-              {{ n }}★
-            </button>
-            <button
-              v-if="filterRatings.size"
-              type="button"
-              class="rating-chip rating-chip--clear"
-              @click="filterRatings = new Set()"
-              v-tooltip="'Clear rating filter'"
-            >
-              <i class="pi pi-times" style="font-size: 10px"></i>
-            </button>
+
+          <!-- Phones only: four selects and five rating chips are 140px of
+               controls before the first place, so they wait behind a button. -->
+          <button
+            type="button"
+            class="filters-toggle"
+            :class="{ 'is-on': filtersOpen }"
+            @click="filtersOpen = !filtersOpen"
+          >
+            <i class="pi pi-filter" style="font-size: 12px"></i> Filters
+            <span v-if="activeFilterCount" class="filters-count">{{ activeFilterCount }}</span>
+          </button>
+
+          <div class="filters-extra" :class="{ 'is-open': filtersOpen }">
+            <div style="flex: 0 1 170px">
+              <TfSelect
+                :modelValue="countryLabel(filterCountry)"
+                @update:modelValue="
+                  (v) => {
+                    filterCountry = countryValue(v);
+                    loadPlaces();
+                  }
+                "
+                :options="countryLabels"
+                placeholder="Country"
+              />
+            </div>
+            <div style="flex: 0 1 150px">
+              <TfSelect
+                :modelValue="typeLabelFromValue(filterType)"
+                @update:modelValue="
+                  (v) => {
+                    filterType = typeValueFromLabel(v);
+                    loadPlaces();
+                  }
+                "
+                :options="typeLabels"
+                placeholder="Type"
+              />
+            </div>
+            <div style="flex: 0 1 140px">
+              <TfSelect
+                :modelValue="visibilityLabelFromValue(filterVisibility)"
+                @update:modelValue="
+                  (v) => {
+                    filterVisibility = visibilityValueFromLabel(v);
+                    loadPlaces();
+                  }
+                "
+                :options="visibilityLabels"
+                placeholder="Public/private"
+              />
+            </div>
+            <!-- Rating filter: multi-select, any of the picked stars -->
+            <div class="rating-filter">
+              <span class="rating-filter-label">Rating</span>
+              <button
+                v-for="n in [5, 4, 3, 2, 1]"
+                :key="n"
+                type="button"
+                class="rating-chip"
+                :class="{ on: filterRatings.has(n) }"
+                @click="toggleRating(n)"
+                v-tooltip="RATING_HINTS[n]"
+              >
+                {{ n }}★
+              </button>
+              <button
+                v-if="filterRatings.size"
+                type="button"
+                class="rating-chip rating-chip--clear"
+                @click="filterRatings = new Set()"
+                v-tooltip="'Clear rating filter'"
+              >
+                <i class="pi pi-times" style="font-size: 10px"></i>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -170,7 +185,7 @@
               Rating spread
               <span v-if="balanceWarning" class="balance-warn">{{ balanceWarning }}</span>
             </button>
-            <span style="flex: 1"></span>
+            <span class="toolbar-spacer"></span>
             <TfButton
               size="sm"
               :variant="selectMode ? 'primary' : 'secondary'"
@@ -189,7 +204,7 @@
               >Select all</TfButton
             >
             <span class="toolbar-label">Sort</span>
-            <div style="width: 140px; margin-right: 8px">
+            <div class="toolbar-sort">
               <TfSelect
                 size="sm"
                 :modelValue="sortLabelFromValue(sortBy)"
@@ -1169,6 +1184,8 @@ const showDialog = ref(false);
 const editing = ref(null);
 
 const filterQ = ref('');
+/* The filter fields fold away on a phone; the button says how many are on. */
+const filtersOpen = ref(false);
 const filterCountry = ref(null);
 const filterType = ref(null);
 const filterVisibility = ref(null);
@@ -1331,6 +1348,13 @@ const tableRowClass = (p) => ({
 
 // Rating filter: multi-select — show places matching ANY of the picked stars.
 const filterRatings = ref(new Set());
+const activeFilterCount = computed(
+  () =>
+    (filterCountry.value ? 1 : 0) +
+    (filterType.value ? 1 : 0) +
+    (filterVisibility.value ? 1 : 0) +
+    (filterRatings.value.size ? 1 : 0),
+);
 const toggleRating = (n) => {
   const next = new Set(filterRatings.value);
   next.has(n) ? next.delete(n) : next.add(n);
@@ -2226,6 +2250,15 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* The fields sit in the filter row as if the wrapper were not there — until a
+   phone folds them behind the button below. */
+.filters-extra {
+  display: contents;
+}
+.filters-toggle {
+  display: none;
+}
+
 .filters-row {
   display: flex;
   gap: 8px;
@@ -2355,6 +2388,14 @@ onMounted(async () => {
   gap: 14px;
   /* Count, sort and the view switch sit on one line while there is room. */
   flex-wrap: wrap;
+}
+/* Pushes the sort and view controls to the right edge on a wide screen. */
+.toolbar-spacer {
+  flex: 1;
+}
+.toolbar-sort {
+  width: 140px;
+  margin-right: 8px;
 }
 
 .place-grid {
@@ -2772,5 +2813,65 @@ onMounted(async () => {
 .place-link-chip:hover {
   text-decoration: none;
   filter: brightness(0.97);
+}
+
+/* ---- Phones: last in the file, so these win over the rules above ---- */
+@media (max-width: 700px) {
+  /* Search stays; the rest waits behind the button. */
+  .filters-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    height: 40px;
+    padding: 0 14px;
+    border: 1.5px solid var(--border-default);
+    border-radius: var(--radius-pill);
+    background: var(--card);
+    color: var(--text-primary);
+    font: var(--fw-medium) 13px/1 var(--font-sans);
+    cursor: pointer;
+  }
+  .filters-toggle.is-on {
+    border-color: var(--border-strong);
+    background: var(--surface);
+  }
+  .filters-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: #fff;
+    font: var(--fw-semibold) 11px/1 var(--font-mono);
+  }
+  .filters-extra {
+    display: none;
+  }
+  .filters-extra.is-open {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex-basis: 100%;
+  }
+  .filters-extra.is-open > div {
+    flex: 1 1 140px;
+  }
+  /* The toolbar: no word for "Sort" (the select says it), no spacer pushing
+     the controls apart, and a sort field that takes what is left. Four rows
+     become two. */
+  .toolbar-label,
+  .toolbar-spacer {
+    display: none;
+  }
+  .places-toolbar {
+    gap: 8px;
+  }
+  .toolbar-sort {
+    flex: 1 1 110px;
+  }
 }
 </style>
