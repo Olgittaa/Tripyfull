@@ -24,6 +24,50 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  transition: width var(--dur-base) var(--ease-out);
+}
+
+/* ---- Collapsed: icons only ----
+   The trip's facts and every label step out; each row keeps its name as a
+   tooltip. The top bar's logo block narrows with it so the two stay in line. */
+.app-sidebar--collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+.app-sidebar--collapsed .sidebar-trip-info,
+.app-sidebar--collapsed .sidebar-caption,
+.app-sidebar--collapsed .nav-label {
+  display: none;
+}
+.app-sidebar--collapsed .sidebar-trip-nav {
+  padding: 12px 10px;
+}
+.app-sidebar--collapsed .sidebar-nav-btn {
+  justify-content: center;
+  padding: 11px 0;
+}
+
+/* The button that folds it, at the foot of the column. */
+.sidebar-collapse-btn {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border: none;
+  border-top: 1px solid var(--border-default);
+  background: transparent;
+  cursor: pointer;
+  font: var(--fw-medium) 13px/1 var(--font-sans);
+  color: var(--text-secondary);
+}
+.sidebar-collapse-btn:hover,
+.sidebar-collapse-btn:focus-visible {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+.app-sidebar--collapsed .sidebar-collapse-btn {
+  justify-content: center;
+  padding: 12px 0;
 }
 
 .sidebar-logo {
@@ -184,6 +228,17 @@
 .topbar-menu-btn:hover,
 .topbar-menu-btn:focus-visible {
   background: var(--surface);
+}
+
+/* Logo block lines up with the sidebar below it — collapsed, it narrows too
+   and the wordmark goes with it. */
+.app-shell--nav-collapsed .topbar-logo {
+  width: var(--sidebar-collapsed-width);
+  padding: 0;
+  justify-content: center;
+}
+.app-shell--nav-collapsed .topbar-logo .sidebar-logo-text {
+  display: none;
 }
 
 /* Logo block lines up with the sidebar below it. */

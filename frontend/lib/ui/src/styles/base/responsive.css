@@ -55,9 +55,13 @@
     display: inline-flex;
     margin-left: var(--space-2);
   }
-  .topbar-logo {
+  /* The compound selector matches the collapsed-shell rule's weight, so the
+     phone keeps its own logo sizing whatever the sidebar was left at. */
+  .topbar-logo,
+  .app-shell--nav-collapsed .topbar-logo {
     width: auto;
     padding: 0 var(--space-2);
+    justify-content: flex-start;
   }
   .topbar-logo .sidebar-logo-text {
     display: none; /* the mark carries the brand; the width goes to the nav */

@@ -232,6 +232,7 @@
   --container-xl: 1320px;
   --gutter: clamp(1rem, 4vw, 3rem);
   --sidebar-width: 248px;
+  --sidebar-collapsed-width: 68px;
   --topbar-height: 60px;
   /* Padding of .page-content — inline panels cancel it to sit flush. */
   --page-pad: var(--space-7);

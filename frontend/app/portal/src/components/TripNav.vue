@@ -6,9 +6,11 @@
       :to="item.to"
       class="sidebar-nav-btn"
       :class="{ 'active-filled': item.active }"
+      :title="collapsed ? item.label : null"
       @click="$emit('navigate')"
     >
-      <TfIcon :name="item.icon" style="font-size: 20px" /> {{ item.label }}
+      <TfIcon :name="item.icon" style="font-size: 20px" />
+      <span class="nav-label">{{ item.label }}</span>
     </router-link>
   </nav>
 </template>
@@ -20,6 +22,8 @@ import { TfIcon } from '@tripyfull/ui';
 
 const props = defineProps({
   tripId: { type: String, required: true },
+  // Icons only: the label is hidden and becomes the row's tooltip.
+  collapsed: { type: Boolean, default: false },
 });
 defineEmits(['navigate']);
 

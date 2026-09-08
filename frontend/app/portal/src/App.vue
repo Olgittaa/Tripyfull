@@ -9,7 +9,7 @@
   </template>
 
   <!-- Main app with sidebar -->
-  <div v-else class="app-shell">
+  <div v-else class="app-shell" :class="{ 'app-shell--nav-collapsed': sidebarCollapsed }">
     <!-- Full-width top bar: logo + global nav -->
     <header class="app-topbar">
       <!-- Phones only (CSS): the trip's menu lives behind this button. -->
@@ -61,7 +61,7 @@
     </header>
 
     <div class="app-body">
-      <aside class="app-sidebar">
+      <aside class="app-sidebar" :class="{ 'app-sidebar--collapsed': sidebarCollapsed }">
         <!-- Trip context nav (global nav lives in the top bar) -->
         <template v-if="currentTrip">
           <div class="sidebar-trip-info">
@@ -74,12 +74,23 @@
               {{ formatDateRange(currentTrip.startDate, currentTrip.endDate) }}
             </div>
           </div>
-          <TripNav :tripId="currentTrip.id" />
+          <TripNav :tripId="currentTrip.id" :collapsed="sidebarCollapsed" />
         </template>
 
         <p v-else class="sidebar-caption" style="padding-top: 12px">
           Pick a trip to see its menu here.
         </p>
+
+        <!-- Sits at the bottom of the column, whatever is above it. -->
+        <button
+          type="button"
+          class="sidebar-collapse-btn"
+          :title="sidebarCollapsed ? 'Expand the menu' : 'Collapse the menu'"
+          @click="toggleSidebar"
+        >
+          <i :class="sidebarCollapsed ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'"></i>
+          <span class="nav-label">Collapse</span>
+        </button>
       </aside>
 
       <!-- Phone menu: the trip's own sections, opened from the top bar. -->
@@ -132,6 +143,14 @@ const sidebarTrip = ref(null);
 
 // Ask for a new sign-in the moment the token expires, not on the next request.
 onMounted(watchSessionExpiry);
+
+/* Icons-only sidebar, remembered per browser: someone who works in a narrow
+   window keeps the room they made. */
+const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === '1');
+const toggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value;
+  localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value ? '1' : '0');
+};
 
 /* The trip menu on a phone. Any navigation closes it — including a tap on the
    section you are already in. */
