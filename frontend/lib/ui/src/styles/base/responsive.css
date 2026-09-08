@@ -99,21 +99,29 @@
      on top of the list's own. */
   .drawer-panel--left {
     width: min(268px, 74vw);
-    /* Seven rows do not need a full-height sheet: the panel ends where the
-       list ends, and keeps a corner so it reads as a card over the page. */
-    bottom: auto;
-    max-height: 100dvh;
-    border-bottom-right-radius: var(--radius-lg);
   }
+  /* The header stands exactly as tall as the top bar it slides over, so its
+     rule continues the bar's and the menu starts where the page does. */
   .drawer-panel--left .drawer-header {
-    padding: 10px 12px 8px;
+    height: var(--topbar-height);
+    padding: 0 12px;
+    align-items: center;
+  }
+  .drawer-panel--left .drawer-header > div {
+    min-width: 0; /* lets the trip's name end in an ellipsis */
   }
   .drawer-panel--left .sidebar-trip-name {
     font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .drawer-panel--left .sidebar-trip-meta {
     font-size: 11px;
-    margin-top: 4px;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .drawer-panel--left .drawer-body {
     padding: 0;
