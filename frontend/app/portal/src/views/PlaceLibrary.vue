@@ -1,7 +1,9 @@
 <template>
   <div class="page-content page-content--full">
     <!-- Two columns: the list shrinks when the details panel opens beside it. -->
-    <div class="places-layout" :class="{ 'places-layout--split': showDialog }">
+    <!-- Beside the list on a laptop; over it on a phone, where a 320px column
+         would leave the list 50px. -->
+    <div class="places-layout" :class="{ 'places-layout--split': showDialog && !isNarrow }">
       <div class="places-col" :class="{ 'places-col--table': viewMode === 'list' }" ref="listEl">
         <div class="page-head">
           <div>
@@ -506,7 +508,7 @@
 
       <TfDrawer
         v-model="showDialog"
-        inline
+        :inline="!isNarrow"
         :title="
           drawerMode === 'view' ? viewing?.name : editing ? form.name || viewing?.name : 'New place'
         "
@@ -718,53 +720,113 @@
              label column — only the value turns into a control, so switching
              modes never reshuffles the panel. -->
         <template v-else>
+          <!-- Edit: plain fields, label over control, pairs where two short
+               answers belong together. Half the height of the label→value rows
+               the view uses, and they stack on their own on a phone. -->
           <form id="placeForm" @submit.prevent="save">
             <TfDrawerSection>
-              <div class="info-row edit-row edit-row--stack">
-                <span class="info-label">Name *</span>
-                <div class="edit-control">
-                  <TfInput v-model="form.name" required placeholder="e.g. Navagio Beach" />
-                </div>
-              </div>
-              <div class="info-row edit-row">
-                <span class="info-label">Type</span>
-                <div class="edit-control">
+              <div class="field-stack">
+                <TfInput
+                  v-model="form.name"
+                  label="Name"
+                  required
+                  placeholder="e.g. Navagio Beach"
+                />
+                <div class="field-pair">
                   <TfSelect
+                    label="Type"
                     :modelValue="typeLabelFromValue(form.type)"
                     @update:modelValue="(v) => (form.type = typeValueFromLabel(v))"
                     :options="typeLabels"
                   />
-                </div>
-              </div>
-              <div class="info-row edit-row">
-                <span class="info-label">Visibility</span>
-                <div class="edit-control">
                   <TfSelect
+                    label="Visibility"
                     :modelValue="visibilityLabelFromValue(form.visibility)"
                     @update:modelValue="(v) => (form.visibility = visibilityValueFromLabel(v))"
                     :options="visibilityLabels"
                   />
                 </div>
-              </div>
-              <div class="info-row edit-row">
-                <span class="info-label"
-                  ><i class="pi pi-ticket" style="font-size: 12px"></i> Book ahead</span
-                >
-                <label class="edit-control edit-control--check">
-                  <input type="checkbox" v-model="form.needsBooking" />
-                </label>
-              </div>
-              <div class="info-row edit-row">
-                <span class="info-label"
-                  ><i class="pi pi-compass" style="font-size: 12px"></i> Prep needed</span
-                >
-                <label class="edit-control edit-control--check">
-                  <input type="checkbox" v-model="form.needsPreparation" />
-                </label>
+                <div class="check-row">
+                  <TfCheckbox v-model="form.needsBooking">
+                    <i class="pi pi-ticket" style="font-size: 12px"></i> Book ahead
+                  </TfCheckbox>
+                  <TfCheckbox v-model="form.needsPreparation">
+                    <i class="pi pi-compass" style="font-size: 12px"></i> Prep needed
+                  </TfCheckbox>
+                </div>
               </div>
             </TfDrawerSection>
 
-            <TfDrawerSection label="Photos">
+            <TfDrawerSection label="Location">
+              <div class="field-stack">
+                <!-- The search fills city, country and the pin, so it comes first
+                     and there are no coordinates to type. -->
+                <div class="field">
+                  <label class="label">Address</label>
+                  <TfPlaceSearch
+                    v-if="FEATURES.geoPlaceSearch"
+                    v-model="form.address"
+                    placeholder="Search an address or place"
+                    @select="onAddressSelect"
+                  />
+                  <TfInput v-else v-model="form.address" aria-label="Address" />
+                  <span class="hint"
+                    >Picking a result fills the city, the country and the pin.</span
+                  >
+                </div>
+                <div class="field-pair">
+                  <TfInput v-model="form.city" label="City" />
+                  <TfSelect
+                    label="Country"
+                    :modelValue="countryLabel(form.country)"
+                    @update:modelValue="(v) => (form.country = countryValue(v))"
+                    :options="countryLabels"
+                    placeholder="Country"
+                  />
+                </div>
+                <BookingMap v-if="mapMarkers.length" :markers="mapMarkers" :height="130" />
+              </div>
+            </TfDrawerSection>
+
+            <TfDrawerSection label="Planning">
+              <div class="field-stack">
+                <div class="field">
+                  <label class="label">Rating</label>
+                  <div class="rating-row">
+                    <TfRating v-model="form.rating" />
+                    <span class="hint">{{ RATING_HINTS[form.rating] }}</span>
+                  </div>
+                </div>
+                <TfInput
+                  v-model="form.ratingComment"
+                  label="Why this rating"
+                  placeholder="e.g. iconic view, but 2h queue"
+                />
+                <div class="field-pair">
+                  <TfNumberInput
+                    v-model="form.visitMinutes"
+                    label="Time to visit (min)"
+                    type="plain"
+                    :min="0"
+                    :step="15"
+                  />
+                  <div class="field">
+                    <label class="label">For whom</label>
+                    <TfSegmentedControl
+                      :modelValue="AUDIENCE_LABELS[form.audience]"
+                      @update:modelValue="(v) => (form.audience = AUDIENCE_VALUES[v])"
+                      :options="Object.values(AUDIENCE_LABELS)"
+                      size="sm"
+                      fill
+                    />
+                  </div>
+                </div>
+              </div>
+            </TfDrawerSection>
+
+            <!-- Photos are uploaded to a saved place, so a new one shows no
+                 section that only says so. -->
+            <TfDrawerSection v-if="editing" label="Photos">
               <div v-if="shownPhotos.length" class="photo-grid">
                 <button
                   v-for="(url, i) in shownPhotos"
@@ -787,7 +849,6 @@
               </div>
               <p v-else class="text-subtle text-sm" style="margin: 0">No photos yet.</p>
               <TfFileUpload
-                v-if="editing"
                 :key="uploadKey"
                 variant="compact"
                 accept="image/jpeg,image/png"
@@ -795,160 +856,64 @@
                 :hint="`JPEG or PNG, up to 10 MB each \u00b7 stored at ${MAX_PHOTO_EDGE} px, ${MAX_PHOTOS} per place`"
                 @change="uploadPhotos"
               />
-              <p v-else class="text-subtle text-sm" style="margin: 0">
-                Save the place first, then you can upload photos.
-              </p>
-            </TfDrawerSection>
-
-            <TfDrawerSection label="Location">
-              <BookingMap v-if="mapMarkers.length" :markers="mapMarkers" :height="150" />
-              <p v-else class="text-subtle text-sm" style="margin: 0">
-                Search an address below to put this place on the map.
-              </p>
-              <div class="info-row edit-row">
-                <span class="info-label">City</span>
-                <div class="edit-control">
-                  <TfInput v-model="form.city" aria-label="City" />
-                </div>
-              </div>
-              <div class="info-row edit-row">
-                <span class="info-label">Country</span>
-                <div class="edit-control">
-                  <TfSelect
-                    :modelValue="countryLabel(form.country)"
-                    @update:modelValue="(v) => (form.country = countryValue(v))"
-                    :options="countryLabels"
-                    placeholder="Country"
-                  />
-                </div>
-              </div>
-              <!-- The search fills city, country and the coordinates, so there
-                   are no latitude/longitude fields to type into any more. -->
-              <div class="info-row edit-row edit-row--stack">
-                <span class="info-label">
-                  Address
-                  <span class="text-subtle text-xs">— search to fill the rest</span>
-                </span>
-                <div class="edit-control">
-                  <TfPlaceSearch
-                    v-if="FEATURES.geoPlaceSearch"
-                    v-model="form.address"
-                    placeholder="Search an address or place"
-                    @select="onAddressSelect"
-                  />
-                  <TfInput v-else v-model="form.address" aria-label="Address" />
-                </div>
-              </div>
-            </TfDrawerSection>
-
-            <TfDrawerSection label="Planning">
-              <div class="info-row edit-row">
-                <span class="info-label">
-                  Rating
-                  <span class="text-subtle text-xs">— {{ RATING_HINTS[form.rating] }}</span>
-                </span>
-                <div class="edit-control edit-control--auto">
-                  <TfRating v-model="form.rating" />
-                </div>
-              </div>
-              <div class="info-row edit-row edit-row--stack">
-                <span class="info-label">Why this rating</span>
-                <div class="edit-control">
-                  <TfInput
-                    v-model="form.ratingComment"
-                    aria-label="Why this rating"
-                    placeholder="e.g. iconic view, but 2h queue"
-                  />
-                </div>
-              </div>
-              <div class="info-row edit-row">
-                <span class="info-label">Time to visit (min)</span>
-                <div class="edit-control edit-control--narrow">
-                  <TfNumberInput
-                    v-model="form.visitMinutes"
-                    type="plain"
-                    :min="0"
-                    :step="15"
-                    aria-label="Time to visit in minutes"
-                  />
-                </div>
-              </div>
-              <div class="info-row edit-row">
-                <span class="info-label">For whom</span>
-                <div class="edit-control edit-control--auto">
-                  <TfSegmentedControl
-                    :modelValue="AUDIENCE_LABELS[form.audience]"
-                    @update:modelValue="(v) => (form.audience = AUDIENCE_VALUES[v])"
-                    :options="Object.values(AUDIENCE_LABELS)"
-                    size="sm"
-                  />
-                </div>
-              </div>
             </TfDrawerSection>
 
             <!-- Folder and trip membership apply straight away (they are their own
                  endpoints, not part of the form) — the cards no longer carry them. -->
             <TfDrawerSection v-if="editing && viewing" label="Organisation">
-              <div v-if="tripMode" class="info-row edit-row">
-                <span class="info-label">Folder</span>
-                <div v-if="folders.length" class="edit-control">
+              <div class="field-stack">
+                <template v-if="tripMode">
                   <TfSelect
+                    v-if="folders.length"
+                    label="Folder"
                     :modelValue="folderLabel(viewing.folderId)"
                     @update:modelValue="(v) => assignFolder(viewing, folderValueFromLabel(v))"
                     :options="folderLabels"
                     placeholder="Unfiled"
                   />
-                </div>
-                <span v-else class="info-value">{{
-                  folderLabel(viewing.folderId) || 'No folders yet'
-                }}</span>
-              </div>
-              <div v-else class="info-row edit-row">
-                <span class="info-label">Trips</span>
-                <div v-if="trips.length" class="edit-control">
+                  <div v-else class="field">
+                    <label class="label">Folder</label>
+                    <span class="text-sm">{{
+                      folderLabel(viewing.folderId) || 'No folders yet'
+                    }}</span>
+                  </div>
+                </template>
+                <template v-else>
                   <!-- Picking a trip toggles membership; the placeholder lists the
                        trips the place is already in. -->
                   <TfSelect
+                    v-if="trips.length"
+                    label="Trips"
                     :modelValue="null"
                     @update:modelValue="(v) => toggleTripMembership(viewing, tripValueFromLabel(v))"
                     :options="tripLabels"
                     :placeholder="tripMembershipLabel(viewing)"
                   />
-                </div>
-                <span v-else class="info-value">No trips yet</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Source</span>
-                <span class="info-value">{{ (viewing.source || 'MANUAL').toLowerCase() }}</span>
+                  <div v-else class="field">
+                    <label class="label">Trips</label>
+                    <span class="text-sm">No trips yet</span>
+                  </div>
+                </template>
+                <span class="hint">Source: {{ (viewing.source || 'MANUAL').toLowerCase() }}</span>
               </div>
             </TfDrawerSection>
 
             <TfDrawerSection label="Description">
-              <div class="info-row edit-row edit-row--stack">
-                <div class="edit-control">
-                  <TfTextarea
-                    v-model="form.description"
-                    aria-label="Description"
-                    :rows="4"
-                    placeholder="What is it, why go, what to watch out for"
-                  />
-                </div>
-              </div>
+              <TfTextarea
+                v-model="form.description"
+                aria-label="Description"
+                :rows="3"
+                placeholder="What is it, why go, what to watch out for"
+              />
             </TfDrawerSection>
 
             <TfDrawerSection label="Links">
-              <div class="info-row edit-row edit-row--stack">
-                <span class="info-label">
-                  Links <span class="text-subtle text-xs">— comma-separated</span>
-                </span>
-                <div class="edit-control">
-                  <TfInput
-                    v-model="linksText"
-                    aria-label="Links"
-                    placeholder="https://… , https://…"
-                  />
-                </div>
-              </div>
+              <TfInput
+                v-model="linksText"
+                aria-label="Links"
+                placeholder="https://… , https://…"
+                helper="Comma-separated"
+              />
             </TfDrawerSection>
           </form>
         </template>
@@ -1128,6 +1093,7 @@ import {
   TfSegmentedControl,
   TfNumberInput,
   TfRating,
+  TfCheckbox,
   TfTable,
   TfDrawer,
   TfDrawerSection,
@@ -1187,6 +1153,13 @@ const places = ref([]);
 const loading = ref(false);
 const saving = ref(false);
 const showDialog = ref(false);
+/* Below 900px the details panel covers the list instead of standing beside it;
+   the split layout is only for screens with room for both. */
+const narrowQuery = window.matchMedia('(max-width: 900px)');
+const isNarrow = ref(narrowQuery.matches);
+const onNarrowChange = (e) => (isNarrow.value = e.matches);
+onMounted(() => narrowQuery.addEventListener('change', onNarrowChange));
+onBeforeUnmount(() => narrowQuery.removeEventListener('change', onNarrowChange));
 const editing = ref(null);
 
 const filterQ = ref('');
@@ -2473,58 +2446,24 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-/* ---- Editable detail rows: the .info-row grid with a control on the right ---- */
+/* ---- The edit form ---- */
 /* TfPlaceSearch styles its own input (42px, 14px text) — match the other
-   fields in the panel, which sit at 41px. */
-.edit-control :deep(.tf-place-input) {
+   fields in the form, which sit at 41px. */
+#placeForm :deep(.tf-place-input) {
   height: 41px;
   font-size: var(--text-base);
 }
-.edit-row {
-  gap: var(--space-4);
-}
-.edit-row .info-label {
-  flex: none;
-}
-.edit-control {
-  width: 250px;
-  flex: none;
-}
-/* Full-width value under the label — for long text (address, links, notes). */
-.edit-row--stack {
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-1);
-}
-.edit-row--stack .edit-control {
-  width: auto;
-}
-/* Controls that carry their own natural width (stars, segmented control). */
-.edit-control--auto {
-  width: auto;
-}
-.edit-control--narrow {
-  width: 96px;
-}
-.edit-control--pair {
+.check-row {
   display: flex;
-  gap: var(--space-2);
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  padding-top: 2px;
 }
-.edit-control--pair > * {
-  flex: 1;
-  min-width: 0;
-}
-.edit-control--check {
+.rating-row {
   display: flex;
-  justify-content: flex-end;
-  width: auto;
-  cursor: pointer;
-}
-.edit-control--check input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--primary);
-  cursor: pointer;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
 }
 .cell-name-main {
   display: flex;
