@@ -19,14 +19,15 @@
 
       <nav class="topbar-nav">
         <router-link to="/trips" class="topbar-link" :class="{ active: $route.path === '/trips' }">
-          <TfIcon name="map" style="font-size: 18px" /> All trips
+          <TfIcon name="map" style="font-size: 18px" /> <span class="topbar-label">All trips</span>
         </router-link>
         <router-link
           to="/places"
           class="topbar-link"
           :class="{ active: $route.path === '/places' }"
         >
-          <TfIcon name="place" style="font-size: 18px" /> All places
+          <TfIcon name="place" style="font-size: 18px" />
+          <span class="topbar-label">All places</span>
         </router-link>
 
         <TfPopover position="bottom-end">

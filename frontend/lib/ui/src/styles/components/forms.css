@@ -25,6 +25,23 @@
   gap: var(--space-3);
 }
 
+/* Two fields side by side (dates, times, amount + currency) that stack when
+   the form is narrower than they are. */
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-pair--wide {
+  grid-template-columns: 2fr 1fr;
+}
+@media (max-width: 560px) {
+  .field-pair,
+  .field-pair--wide {
+    grid-template-columns: 1fr;
+  }
+}
+
 .field label {
   font-size: var(--text-sm);
   font-weight: var(--fw-semibold);

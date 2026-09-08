@@ -51,4 +51,6 @@
 .page-head-actions {
   display: flex;
   gap: 10px;
+  /* Two or three buttons don't fit next to a title on a phone. */
+  flex-wrap: wrap;
 }

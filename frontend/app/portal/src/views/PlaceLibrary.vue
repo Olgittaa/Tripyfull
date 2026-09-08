@@ -2353,6 +2353,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
+  /* Count, sort and the view switch sit on one line while there is room. */
+  flex-wrap: wrap;
 }
 
 .place-grid {

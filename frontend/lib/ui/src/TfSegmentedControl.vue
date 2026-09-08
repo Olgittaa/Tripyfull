@@ -34,8 +34,18 @@ defineEmits(['update:modelValue']);
   border-radius: var(--radius-pill);
   padding: 4px;
   gap: 2px;
+  /* Five statuses don't fit a phone: the strip scrolls sideways instead of
+     pushing the page wider. Nothing changes while it fits. */
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tf-segmented::-webkit-scrollbar {
+  display: none;
 }
 .tf-seg-btn {
+  flex: none;
+  white-space: nowrap;
   padding: 8px 18px;
   border: none;
   background: none;

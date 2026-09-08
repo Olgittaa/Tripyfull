@@ -62,7 +62,7 @@
             <i class="pi pi-chevron-right"></i>
           </TfIconButton>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center">
+        <div class="day-head-actions">
           <TfButton
             variant="secondary"
             size="sm"
@@ -158,16 +158,7 @@
       <div class="itin-layout">
         <div class="itin-main">
           <!-- Day info: city + overnight -->
-          <div
-            class="card"
-            style="
-              margin-bottom: 24px;
-              display: flex;
-              gap: 20px;
-              flex-wrap: wrap;
-              align-items: flex-start;
-            "
-          >
+          <div class="card day-facts">
             <!-- Cities / places -->
             <div style="flex: 1; min-width: 200px">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
@@ -453,14 +444,8 @@
                       {{ stopIcon(a) }}
                     </div>
                     <div style="flex: 1; min-width: 0">
-                      <div style="display: flex; align-items: center; gap: 8px">
-                        <span
-                          style="
-                            font: var(--fw-semibold) 16px/1.2 var(--font-sans);
-                            color: var(--text-primary);
-                          "
-                          >{{ a.name }}</span
-                        >
+                      <div class="stop-title-row">
+                        <span class="stop-name">{{ a.name }}</span>
                         <TfBadge v-if="a.type" tone="neutral" variant="soft">{{
                           typeLabel(a.type)
                         }}</TfBadge>
@@ -876,7 +861,7 @@
             class="w-full"
             helper="Pick another day to move this stop there"
           />
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+          <div class="field-pair">
             <TfTimePicker
               v-model="form.startTime"
               label="Start"
@@ -893,7 +878,7 @@
 
         <!-- Details -->
         <TfDrawerSection label="Details">
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
+          <div class="field-pair field-pair--wide">
             <TfNumberInput
               v-model="form.costEstimate"
               type="plain"
@@ -2386,6 +2371,35 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* A stop's name and its badges: the badges drop to the next line on a phone
+   instead of dragging the card past the screen. */
+.stop-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stop-name {
+  font: var(--fw-semibold) 16px/1.2 var(--font-sans);
+  color: var(--text-primary);
+}
+
+/* City, day load and overnight stay, side by side while they fit. */
+.day-facts {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* The day's own buttons: they wrap under the title rather than push the page. */
+.day-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
 .itin-layout {
   display: grid;
   /* The map earns the wider half it needs to be read at a glance. */
@@ -2397,6 +2411,9 @@ onMounted(async () => {
   .itin-layout {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+.itin-main {
+  min-width: 0;
 }
 .itin-map {
   position: sticky;
@@ -2414,6 +2431,7 @@ onMounted(async () => {
 .leg-mode {
   width: 24px;
   height: 22px;
+  /* see the phone override at the end of this block */
   border: none;
   background: none;
   border-radius: var(--radius-pill);
@@ -2828,9 +2846,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 1024px) {
-  .itin-layout {
-    grid-template-columns: 1fr;
-  }
   .itin-map {
     position: static;
   }
@@ -2982,5 +2997,29 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ---- Phones: last in the file, so these win over the rules above ---- */
+@media (max-width: 700px) {
+  /* The day's three facts (city, load, overnight) go one under the other —
+     at a 200px minimum they were forcing the whole page wider. */
+  .day-facts > div {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+  /* Five mode icons in a row need a finger's worth of space each. */
+  .leg-mode {
+    width: 34px;
+    height: 32px;
+    font-size: 15px;
+  }
+  /* A place's facts (type, minutes, distance) get two lines instead of an
+     ellipsis that hides the distance — the reason the row is read at all. */
+  .pick-sub {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
 }
 </style>

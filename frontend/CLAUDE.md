@@ -58,6 +58,37 @@ Utility classes exist too: `.type-*`, `.tf-eyebrow`, `.section-title`, `.text-mu
   checked / indeterminate). hover / focus / open happen live on interaction.
 - Demos are interactive: use `reactive`/`ref` + `v-model` so selection actually works.
 
+## Screen sizes
+
+The app is used on a laptop, on a tablet and on a phone. Layouts are built
+wide, then folded — every page must fit its viewport with no sideways drag.
+
+Breakpoints, widest first (max-width):
+
+- **1300 / 1100 / 900** — how many columns a grid of tiles or cards keeps.
+- **768** — the shell folds: the trip menu lies flat as a scrolling strip, the
+  top bar keeps icons only, the document scrolls instead of an inner pane
+  (`base/responsive.css`).
+- **700** — a page's own internals stack: side-by-side facts, tighter cards,
+  finger-sized controls.
+- **560 / 480 / 430** — narrow phones: field pairs become one column, tile
+  rows and card grids go single-file, the trip's name leaves the menu strip.
+
+Rules that keep this working:
+
+- A `1fr` grid track will not shrink below its content: write
+  `minmax(0, 1fr)` for anything that must fit a phone, and `min-width: 0` on
+  flex/grid children that hold long text.
+- No `style="display: grid; grid-template-columns: …"` in a template — an
+  inline style cannot be answered by a media query. Use `.field-pair`,
+  `.metric-grid`, `.trip-gallery`, or add a class.
+- Rows of buttons wrap (`flex-wrap: wrap`); strips of chips scroll
+  (`overflow-x: auto` + hidden scrollbar). Never let either push the page.
+- A `<style scoped>` rule outranks a global one, and a later rule beats an
+  earlier one of equal weight: put a component's phone overrides at the **end
+  of its own** style block, not in `responsive.css`.
+- Touch targets are at least ~38px; nothing that carries meaning is under 11px.
+
 ## Hygiene
 
 - No dead selectors, no undefined tokens. Delete unused CSS/props when you remove a feature.

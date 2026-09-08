@@ -15,7 +15,7 @@
     </div>
 
     <div v-if="loading" style="display: flex; flex-direction: column; gap: 20px">
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px">
+      <div class="metric-grid">
         <div v-for="i in 4" :key="i" class="skeleton" style="height: 120px"></div>
       </div>
       <div class="skeleton" style="height: 200px"></div>
@@ -294,7 +294,7 @@
           :options="expCategoryOptions.map((o) => o.label)"
           placeholder="Select"
         />
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px">
+        <div class="field-pair field-pair--wide">
           <TfNumberInput
             label="Amount *"
             v-model="expenseForm.amount"

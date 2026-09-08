@@ -57,7 +57,7 @@
       <!-- Date & Time -->
       <div class="card" style="margin-bottom: 20px">
         <h3 style="font: var(--type-h3); margin: 0 0 16px">Date & time</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+        <div class="field-pair">
           <div class="field">
             <label>Date format</label>
             <TfSelect v-model="dateFormatLabel" :options="dateFormatLabels" class="w-full" />

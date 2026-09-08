@@ -86,6 +86,13 @@ const classes = computed(() =>
   height: 32px;
   font-size: 14px;
 }
+/* A thumb needs more than 32px; on a phone the small variant grows. */
+@media (max-width: 768px) {
+  .tf-icon-btn--sm {
+    width: 38px;
+    height: 38px;
+  }
+}
 .tf-icon-btn--lg {
   width: 48px;
   height: 48px;

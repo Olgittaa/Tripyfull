@@ -18,10 +18,7 @@
     </div>
 
     <!-- Loading skeleton -->
-    <div
-      v-if="store.loading"
-      style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px"
-    >
+    <div v-if="store.loading" class="trip-gallery">
       <div
         v-for="i in 3"
         :key="i"
