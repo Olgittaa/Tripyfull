@@ -3,7 +3,10 @@
     <div class="page-head">
       <div>
         <h1>To-do</h1>
-        <p>What has to happen before you leave, on the way, and once you are back.</p>
+        <!-- Explanation, not data: on a phone the list gets the height. -->
+        <p class="phone-hide">
+          What has to happen before you leave, on the way, and once you are back.
+        </p>
       </div>
       <div class="page-head-actions">
         <TfButton variant="secondary" @click="openSuggestions" :disabled="loadingSuggestions">
@@ -670,5 +673,24 @@ onMounted(async () => {
   font: var(--fw-medium) var(--text-xs) / 1.4 var(--font-mono);
   color: var(--text-secondary);
   white-space: nowrap;
+}
+
+/* ---- Phones: last in the file, so these win over the rules above ---- */
+@media (max-width: 700px) {
+  /* The state line: progress on top, the count and the badge under it. */
+  .todo-summary {
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  /* A suggestion's date leaves the right column, which was squeezing the
+     reason into three lines, and sits under the text, in line with it. */
+  .sug-row {
+    flex-wrap: wrap;
+  }
+  .sug-due {
+    flex-basis: 100%;
+    padding-left: calc(20px + var(--space-3));
+  }
 }
 </style>

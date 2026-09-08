@@ -3,17 +3,21 @@
     <div class="page-head">
       <div>
         <h1>Plan map</h1>
-        <p>The skeleton of the trip: 5★ anchors first, lower ratings only along the route.</p>
+        <!-- Explanation, not data: on a phone its two lines go to the map. -->
+        <p class="phone-hide">
+          The skeleton of the trip: 5★ anchors first, lower ratings only along the route.
+        </p>
       </div>
     </div>
 
     <!-- Rating layers + counters -->
-    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px">
+    <div class="layer-row">
       <button
         v-for="l in RATING_LAYERS"
         :key="l.r"
         type="button"
-        :style="layerChipStyle(l)"
+        class="layer-chip"
+        :class="{ 'is-off': !layersOn[l.r] }"
         @click="toggleLayer(l.r)"
       >
         <span
@@ -29,7 +33,7 @@
         {{ l.r }}★ · {{ countByRating(l.r) }}
       </button>
       <!-- Planned places carry a day tag on the map; this narrows the map to them. -->
-      <label class="save-place-toggle" style="margin-left: 4px">
+      <label class="layer-chip layer-toggle">
         <input type="checkbox" v-model="onlyPlanned" />
         <span>Planned only · {{ plannedCount }}</span>
       </label>
@@ -45,19 +49,8 @@
           {{ cfg.label }}
         </button>
       </span>
-      <span class="text-subtle text-sm" style="margin-left: auto">
-        <span
-          style="
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-            background: #0e5c55;
-            margin-right: 4px;
-            vertical-align: -1px;
-          "
-        ></span
-        >hotels from bookings
+      <span class="map-legend text-subtle text-sm">
+        <span class="map-legend-swatch"></span>hotels from bookings
       </span>
     </div>
 
@@ -105,19 +98,6 @@ const RATING_LAYERS = [
 ];
 const layersOn = reactive({ 5: true, 4: true, 3: true, 2: true, 1: true });
 const toggleLayer = (r) => (layersOn[r] = !layersOn[r]);
-
-const layerChipStyle = (l) => ({
-  padding: '7px 12px',
-  borderRadius: '999px',
-  border: '1px solid var(--border-default)',
-  background: layersOn[l.r] ? 'var(--card)' : 'var(--surface)',
-  color: layersOn[l.r] ? 'var(--text-primary)' : 'var(--text-disabled)',
-  font: 'var(--fw-medium) 13px/1 var(--font-sans)',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '7px',
-  cursor: 'pointer',
-});
 
 /* ---- Planned places: which day each one is already in ---- */
 // The itinerary decides what is planned; the map only shows it. One place can be
@@ -349,6 +329,56 @@ onUnmounted(() => {
   flex-direction: column;
   height: calc(100vh - var(--topbar-height) - 2 * var(--page-pad));
 }
+/* Rating layers, the planned-only toggle, the basemap switch and the legend
+   share one wrapping row above the map. */
+.layer-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+}
+.layer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  /* The dot inside mirrors the marker's size on the map (22px for 5★, 10px for
+     1★); the pill keeps one height whichever dot it carries. */
+  min-height: 34px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  color: var(--text-primary);
+  font: var(--fw-medium) 13px/1 var(--font-sans);
+  cursor: pointer;
+}
+.layer-chip.is-off {
+  background: var(--surface);
+  color: var(--text-disabled);
+}
+.layer-toggle {
+  margin-left: 4px;
+}
+.layer-toggle input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.map-legend {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.map-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--primary);
+}
 .base-switch {
   display: inline-flex;
   gap: 2px;
@@ -431,5 +461,31 @@ onUnmounted(() => {
 }
 .map-canvas :deep(.popup-muted) {
   color: var(--text-secondary);
+}
+
+/* ---- Phones: last in the file, so these win over the rules above ----
+   Thumb-sized controls, and the legend falls in beside the switch instead of
+   hugging the far edge. */
+@media (max-width: 700px) {
+  .layer-row {
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .layer-chip {
+    min-height: 36px;
+    padding: 0 12px;
+  }
+  .layer-toggle {
+    margin-left: 0;
+  }
+  .base-switch-btn {
+    padding: 9px 12px;
+  }
+  .map-legend {
+    margin-left: 0;
+  }
+  .map-canvas {
+    margin-top: 10px;
+  }
 }
 </style>
