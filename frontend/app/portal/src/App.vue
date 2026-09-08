@@ -12,6 +12,16 @@
   <div v-else class="app-shell">
     <!-- Full-width top bar: logo + global nav -->
     <header class="app-topbar">
+      <!-- Phones only (CSS): the trip's menu lives behind this button. -->
+      <button
+        v-if="currentTrip"
+        type="button"
+        class="topbar-menu-btn"
+        aria-label="Trip menu"
+        @click="showTripMenu = true"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
       <div class="topbar-logo" @click="goHome">
         <img :src="logoMark" alt="" />
         <span class="sidebar-logo-text">Tripy<span>full</span></span>
@@ -64,63 +74,30 @@
               {{ formatDateRange(currentTrip.startDate, currentTrip.endDate) }}
             </div>
           </div>
-          <nav class="sidebar-trip-nav">
-            <router-link
-              :to="`/trips/${currentTrip.id}`"
-              class="sidebar-nav-btn"
-              :class="{ 'active-filled': isExactRoute(`/trips/${currentTrip.id}`) }"
-            >
-              <TfIcon name="dashboard" style="font-size: 20px" /> Overview
-            </router-link>
-            <router-link
-              :to="`/trips/${currentTrip.id}/itinerary`"
-              class="sidebar-nav-btn"
-              :class="{ 'active-filled': $route.path.includes('/days/') }"
-            >
-              <TfIcon name="route" style="font-size: 20px" /> Itinerary
-            </router-link>
-            <router-link
-              :to="`/trips/${currentTrip.id}/map`"
-              class="sidebar-nav-btn"
-              :class="{ 'active-filled': $route.path.includes('/map') }"
-            >
-              <TfIcon name="map" style="font-size: 20px" /> Map
-            </router-link>
-            <router-link
-              :to="`/trips/${currentTrip.id}/places`"
-              class="sidebar-nav-btn"
-              :class="{ 'active-filled': isExactRoute(`/trips/${currentTrip.id}/places`) }"
-            >
-              <TfIcon name="location_on" style="font-size: 20px" /> Trip places
-            </router-link>
-            <router-link
-              :to="`/trips/${currentTrip.id}/bookings`"
-              class="sidebar-nav-btn"
-              :class="{ 'active-filled': $route.path.includes('/bookings') }"
-            >
-              <TfIcon name="confirmation_number" style="font-size: 20px" /> Bookings
-            </router-link>
-            <router-link
-              :to="`/trips/${currentTrip.id}/todos`"
-              class="sidebar-nav-btn"
-              :class="{ 'active-filled': $route.path.includes('/todos') }"
-            >
-              <TfIcon name="checklist" style="font-size: 20px" /> To-do
-            </router-link>
-            <router-link
-              :to="`/trips/${currentTrip.id}/budget`"
-              class="sidebar-nav-btn"
-              :class="{ 'active-filled': $route.path.includes('/budget') }"
-            >
-              <TfIcon name="account_balance_wallet" style="font-size: 20px" /> Budget
-            </router-link>
-          </nav>
+          <TripNav :tripId="currentTrip.id" />
         </template>
 
         <p v-else class="sidebar-caption" style="padding-top: 12px">
           Pick a trip to see its menu here.
         </p>
       </aside>
+
+      <!-- Phone menu: the trip's own sections, opened from the top bar. -->
+      <TfDrawer v-model="showTripMenu" position="left" width="narrow">
+        <template #header>
+          <div>
+            <div class="sidebar-trip-name">{{ currentTrip?.title }}</div>
+            <div v-if="currentTrip?.destination" class="sidebar-trip-meta">
+              <i class="pi pi-map-marker"></i> {{ currentTrip.destination }}
+            </div>
+            <div v-if="currentTrip?.startDate" class="sidebar-trip-meta">
+              <i class="pi pi-calendar"></i>
+              {{ formatDateRange(currentTrip.startDate, currentTrip.endDate) }}
+            </div>
+          </div>
+        </template>
+        <TripNav v-if="currentTrip" :tripId="currentTrip.id" @navigate="showTripMenu = false" />
+      </TfDrawer>
 
       <main class="app-main">
         <div class="app-content">
@@ -140,7 +117,8 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { username, baseCurrency, clearAuth, formatDateRange } from '@tripyfull/core';
 import { useTripStore } from '@/stores/tripStore.js';
-import { TfAvatar, TfIcon, TfPopover, TfToastHost, TfConfirmHost } from '@tripyfull/ui';
+import { TfAvatar, TfIcon, TfPopover, TfToastHost, TfConfirmHost, TfDrawer } from '@tripyfull/ui';
+import TripNav from '@/components/TripNav.vue';
 import SessionExpiredDialog from '@/components/SessionExpiredDialog.vue';
 import { watchSessionExpiry } from '@/session.js';
 import logoMark from '@/assets/logo-mark.svg';
@@ -154,6 +132,14 @@ const sidebarTrip = ref(null);
 
 // Ask for a new sign-in the moment the token expires, not on the next request.
 onMounted(watchSessionExpiry);
+
+/* The trip menu on a phone. Any navigation closes it — including a tap on the
+   section you are already in. */
+const showTripMenu = ref(false);
+watch(
+  () => route.fullPath,
+  () => (showTripMenu.value = false),
+);
 
 const logout = () => {
   clearAuth();

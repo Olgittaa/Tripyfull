@@ -19,20 +19,16 @@
 /* ------------------------------------------------------------
    Phones and small tablets: the shell folds into one column.
 
-   The desktop shell is a fixed-height frame (100vh) with its own
-   scrolling pane; on a phone that fights the browser's own scroll and
-   the address bar, so here the document scrolls instead. The trip menu
-   was hidden outright at this width, which left Itinerary, Bookings,
-   Budget and the rest unreachable — it now lies flat as a strip of
-   chips that scrolls sideways under the top bar.
+   The desktop shell is a fixed-height frame (100vh) with its own scrolling
+   pane; on a phone that fights the browser's own scroll and the address bar,
+   so here the document scrolls instead. The trip's seven sections don't fit
+   any strip at this width — a menu button in the top bar opens them as a
+   drawer (App.vue), and the sidebar column steps aside.
    ------------------------------------------------------------ */
 @media (max-width: 768px) {
   .app-shell {
     height: auto;
     min-height: 100dvh;
-  }
-  .app-body {
-    flex-direction: column;
   }
   .app-content {
     overflow-y: visible;
@@ -40,18 +36,31 @@
   .app-main {
     width: 100%;
   }
+  .app-sidebar {
+    display: none;
+  }
+  /* The document scrolls, and a closed drawer parked off-canvas must not let
+     the page be dragged sideways into that empty strip. */
   body {
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
-  /* Top bar: the wordmark, then icon-only links, currency and avatar. */
+  /* Top bar: menu button, the mark, then icon-only links, currency, avatar. */
   .app-topbar {
     padding-right: var(--space-3);
     gap: var(--space-1);
   }
+  .topbar-menu-btn {
+    display: inline-flex;
+    margin-left: var(--space-2);
+  }
   .topbar-logo {
     width: auto;
-    padding: 0 var(--space-3);
+    padding: 0 var(--space-2);
+  }
+  .topbar-logo .sidebar-logo-text {
+    display: none; /* the mark carries the brand; the width goes to the nav */
   }
   .topbar-label {
     display: none;
@@ -60,65 +69,18 @@
     padding: 11px;
   }
 
-  /* Trip menu: a horizontal strip, the trip's name leading it. */
-  .app-sidebar {
-    flex-direction: row;
-    align-items: center;
-    width: auto;
-    height: auto;
-    flex: none;
-    border-right: none;
-    border-bottom: 1px solid var(--border-default);
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
+  /* The trip menu as a drawer: narrower than the screen, so the page behind it
+     stays visible and tapping it closes the menu; rows sized for a thumb. */
+  .drawer-panel--left {
+    width: min(320px, 84vw);
   }
-  .app-sidebar::-webkit-scrollbar {
-    display: none;
+  .drawer-panel--left .sidebar-trip-nav {
+    padding: 4px 12px 12px;
+    gap: 4px;
   }
-  .sidebar-trip-info {
-    flex: none;
-    padding: 0 0 0 var(--space-4);
-  }
-  .sidebar-trip-name {
-    font-size: 14px;
-    white-space: nowrap;
-    /* The menu is what this row is for: a long trip title gives way to it. */
-    max-width: 38vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sidebar-trip-meta {
-    display: none; /* place and dates don't earn the width here */
-  }
-  .sidebar-trip-nav {
-    flex-direction: row;
-    padding: 8px var(--space-4);
-    gap: 6px;
-  }
-  .sidebar-nav-btn {
-    width: auto;
-    flex: none;
-    white-space: nowrap;
-    padding: 8px 12px;
-    font-size: 14px;
-  }
-  .sidebar-caption {
-    display: none; /* "Pick a trip…" — the trips list is one tap away */
-  }
-
-  /* Narrow phones: every pixel goes to the menu; the page's own title says
-     which trip this is. */
-  @media (max-width: 480px) {
-    .sidebar-trip-info {
-      display: none;
-    }
-  }
-
-  /* A closed drawer parks off-canvas; without this the page can be dragged
-     sideways into that empty strip. */
-  body {
-    overflow-x: hidden;
+  .drawer-panel--left .sidebar-nav-btn {
+    padding: 13px 14px;
+    font-size: 15px;
   }
 
   /* Display type set for a laptop is shouting on a phone. */

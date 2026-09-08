@@ -166,6 +166,26 @@
   border-bottom: 1px solid var(--border-default);
 }
 
+/* Phone-only button that opens the trip menu (shown by base/responsive.css). */
+.topbar-menu-btn {
+  display: none;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+}
+.topbar-menu-btn:hover,
+.topbar-menu-btn:focus-visible {
+  background: var(--surface);
+}
+
 /* Logo block lines up with the sidebar below it. */
 .topbar-logo {
   width: var(--sidebar-width);
