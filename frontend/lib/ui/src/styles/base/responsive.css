@@ -39,11 +39,18 @@
   .app-sidebar {
     display: none;
   }
-  /* The document scrolls, and a closed drawer parked off-canvas must not let
-     the page be dragged sideways into that empty strip. */
+  /* The desktop shell pins body to the viewport (base.css: height 100%,
+     overflow hidden) and scrolls an inner pane. On a phone the document itself
+     must scroll, or the address bar never retreats and `dvh` misbehaves — so
+     the frame is released and overflow left alone. Any overflow value here
+     (hidden or clip, on either element) propagates to the viewport and takes
+     the scroll away; a parked drawer is `position: fixed` and cannot widen the
+     document anyway. */
+  html,
   body {
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
   }
 
   /* Top bar: menu button, the mark, then icon-only links, currency, avatar. */
@@ -107,6 +114,12 @@
   }
   .day-picker-date {
     font-size: 11px;
+  }
+  /* Text links get a thumb-sized hit area; the padding is cancelled by the
+     margin, so nothing moves. */
+  .link-btn {
+    padding: 9px 4px;
+    margin: -9px -4px;
   }
   .tf-eyebrow {
     font-size: 12px;

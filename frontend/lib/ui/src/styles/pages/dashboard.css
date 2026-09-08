@@ -31,7 +31,9 @@
 /* Readiness tiles */
 .dash-tiles {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, …): with a plain 1fr the tile holding "2428.29 EUR" took more
+     width than the one beside it, and the row came out lopsided. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 20px;
 }
@@ -82,6 +84,7 @@
 .dash-tile-value {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap; /* "2428.29 EUR" puts its currency on the next line if it must */
   gap: 6px;
   font: var(--fw-bold) 28px/1 var(--font-display);
   color: var(--text-primary);
@@ -104,7 +107,7 @@
 /* Two columns: the agenda, then places and nights */
 .dash-cols {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -200,8 +203,12 @@
 /* Places against the rating strategy */
 .dash-ratings {
   display: flex;
+  flex-wrap: wrap; /* five rating groups don't fit a phone's card in one line */
   gap: 6px;
   margin-bottom: 12px;
+}
+.dash-rating {
+  min-width: 44px;
 }
 .dash-rating {
   flex: 1;
@@ -321,9 +328,24 @@
 
 @media (max-width: 1100px) {
   .dash-tiles {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .dash-cols {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Phones: six day cards in one column is a long scroll for a glance — two
+   across reads as a calendar again. */
+@media (max-width: 700px) {
+  .dash-days {
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  }
+  /* Half a tile's width is not enough for a four-figure sum at 28px. */
+  .dash-tile-value {
+    font-size: 24px;
+  }
+  .dash-tile-value--money {
+    font-size: 21px;
   }
 }

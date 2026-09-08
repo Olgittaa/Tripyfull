@@ -65,6 +65,13 @@
 }
 
 /* A button that reads as a link: inline actions inside text and card heads. */
+/* A label that steps out on a phone, leaving its button's icon to speak. */
+@media (max-width: 700px) {
+  .phone-hide {
+    display: none;
+  }
+}
+
 .link-btn {
   border: none;
   background: none;
