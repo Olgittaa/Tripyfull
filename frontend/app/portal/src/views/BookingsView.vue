@@ -1905,6 +1905,20 @@ onMounted(async () => {
   flex: 1;
   min-width: 0;
 }
+/* A booking is one line of facts and a price: 22px of card around it made a
+   list of twelve twice as long as it needs to be. */
+.bookings-main .tf-card {
+  padding: 12px 14px;
+}
+/* The icon anchors the row; it does not need to set the row's height. */
+.bookings-main .cat-icon--xl {
+  width: 36px;
+  height: 36px;
+  font-size: 17px;
+}
+.booking-card-content {
+  gap: 12px;
+}
 
 /* Phones: the icon, the name and the price shared one line, which left the
    name about 170px and the facts under it five lines deep. The price goes to
@@ -1920,7 +1934,7 @@ onMounted(async () => {
     flex-wrap: wrap;
   }
   .booking-card-info {
-    flex: 1 1 calc(100% - 62px);
+    flex: 1 1 calc(100% - 48px);
   }
   .booking-card-meta {
     display: -webkit-box;
@@ -1933,7 +1947,7 @@ onMounted(async () => {
     display: flex;
     align-items: baseline;
     gap: 8px;
-    padding-left: 62px;
+    padding-left: 48px;
     text-align: left;
   }
   .booking-card-price-label {

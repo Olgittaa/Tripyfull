@@ -11,7 +11,7 @@
   z-index: 20;
   display: flex;
   gap: 0;
-  padding: var(--space-4);
+  padding: var(--space-3);
   max-width: calc(100vw - 2 * var(--space-4));
   background: var(--input-select-bg);
   border: 1px solid var(--border-default);
@@ -20,8 +20,10 @@
 }
 
 /* Calendar */
+/* 7 columns of 32px: enough for a two-digit day with air around it, without
+   the calendar becoming a panel of its own. Phones get bigger cells below. */
 .dp-cal {
-  width: 280px;
+  width: 224px;
   max-width: 100%;
   display: flex;
   flex-direction: column;
@@ -54,7 +56,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 .dp-title {
   display: inline-flex;
@@ -79,7 +81,7 @@
   padding: var(--space-2) 0;
 }
 .dp-month {
-  padding: 12px 0;
+  padding: 9px 0;
   border: none;
   background: transparent;
   border-radius: var(--radius-md);
@@ -102,7 +104,7 @@
 }
 .dp-wd {
   text-align: center;
-  padding: 4px 0 8px;
+  padding: 2px 0 6px;
   font: var(--type-code);
   color: var(--text-secondary);
 }
@@ -112,7 +114,7 @@
 
 .dp-day {
   position: relative;
-  height: 38px;
+  height: 32px;
   padding: 0;
   border: none;
   background: transparent;
@@ -124,8 +126,8 @@
 .dp-day-inner {
   position: relative;
   z-index: 1;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -156,8 +158,8 @@
 .dp-day--end::before {
   content: '';
   position: absolute;
-  top: 3px;
-  bottom: 3px;
+  top: 2px;
+  bottom: 2px;
   z-index: 0;
   background: var(--success-100);
 }
@@ -303,4 +305,20 @@
 .dp-clear:hover {
   background: var(--surface);
   color: var(--text-primary);
+}
+
+/* ---- Phones: last in the file, so these win over the rules above ----
+   A finger needs a bigger cell than a pointer, and the popup has the width
+   to spare here. */
+@media (max-width: 700px) {
+  .dp-cal {
+    width: 252px;
+  }
+  .dp-day {
+    height: 36px;
+  }
+  .dp-day-inner {
+    width: 32px;
+    height: 32px;
+  }
 }
