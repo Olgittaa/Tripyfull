@@ -1,18 +1,7 @@
 <template>
   <div class="tf-place-search" ref="wrapper">
     <div style="position: relative">
-      <i
-        class="pi pi-map-marker"
-        style="
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: var(--text-secondary);
-          font-size: 13px;
-          pointer-events: none;
-        "
-      ></i>
+      <i class="pi pi-map-marker tf-place-pin"></i>
       <input
         :value="displayValue"
         @input="onInput"
@@ -239,12 +228,42 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside));
   outline: none;
   transition: border-color var(--dur-fast);
 }
+/* The one focus ring the design system uses, same as .input's. */
 .tf-place-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--input-text-focus-border);
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
 }
 .tf-place-input::placeholder {
   color: var(--text-secondary);
+}
+
+.tf-place-pin {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+/* Read-only, like every other field in a disabled form: the value stays
+   legible, the field stops looking like something to type in, and the clear
+   button and the empty-field placeholder step out. */
+.tf-place-input:disabled {
+  background: var(--surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  cursor: default;
+}
+.tf-place-input:disabled::placeholder {
+  color: transparent;
+}
+.tf-place-input:disabled ~ .tf-place-clear-btn {
+  display: none;
+}
+.tf-place-search div:has(> .tf-place-input:disabled) > .tf-place-pin {
+  color: var(--text-disabled);
 }
 
 .tf-place-clear-btn {
