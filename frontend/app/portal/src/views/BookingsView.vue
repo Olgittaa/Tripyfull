@@ -221,9 +221,10 @@
                fields still empty, so the form says where it is incomplete
                instead of failing on Save. -->
           <form :class="{ 'form-readonly': ro }" @submit.prevent="saveBooking">
-            <div class="booking-tabs">
-              <TfTabs v-model="tab" :items="tabItems" />
-            </div>
+            <!-- The class rides the tab strip itself: its 2px rule then spans the
+                 panel like the header's and the footer's, instead of floating
+                 16px short of both edges inside a wrapper. -->
+            <TfTabs v-model="tab" :items="tabItems" class="booking-tabs" />
 
             <!-- ============ 1. Booking: what and where ============ -->
             <template v-if="tab === 'booking'">
