@@ -301,6 +301,11 @@
   font: var(--fw-medium) 13px/1 var(--font-mono);
   color: var(--text-primary);
 }
+/* On a laptop the header row names the columns, so the per-value labels stay
+   out of the way. */
+.budget-day-col-label {
+  display: none;
+}
 .budget-day-chevron {
   width: 28px;
   display: inline-flex;
@@ -310,6 +315,66 @@
 }
 .budget-day-detail {
   padding: 4px 6px 16px;
+}
+
+/* Phones: three 92px columns left the day's own name about 24px, so
+   "Day 1 · Sun 13 Dec · Frankfurt" broke into four lines. The columns stop
+   being columns — the day takes the full width and the amounts sit under it,
+   each with its own label, and the ones with nothing in them stay away. */
+@media (max-width: 700px) {
+  /* Every card on this page holds lists and rows, so it keeps the lighter
+     frame — and the 8px it gives back are what the three amounts need to
+     stay on one line. */
+  .budget-columns .card,
+  .budget-days-card {
+    padding: var(--space-4);
+  }
+  .budget-day-header {
+    display: none;
+  }
+  .budget-day-row-btn {
+    position: relative;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 12px;
+    padding: 12px 30px 12px 4px;
+  }
+  .budget-day-label {
+    flex: 0 0 100%;
+  }
+  /* Out of the wrapping flow, or the column gap pushed it onto a line of its
+     own — a different one for every row. */
+  .budget-day-chevron {
+    position: absolute;
+    top: 12px;
+    right: 2px;
+    width: auto;
+  }
+  /* The city goes to its own line rather than wrapping mid-phrase. */
+  .budget-day-city {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+  }
+  .budget-day-sep {
+    display: none;
+  }
+  .budget-day-col {
+    width: auto;
+    text-align: left;
+    font-size: 12px;
+  }
+  .budget-day-col.is-empty {
+    display: none;
+  }
+  .budget-day-col-label {
+    display: inline;
+    margin-right: 5px;
+    font: var(--fw-medium) 10px/1 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
 }
 .budget-exp-row {
   display: flex;

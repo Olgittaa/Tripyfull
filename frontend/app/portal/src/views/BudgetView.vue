@@ -212,7 +212,7 @@
       </div>
 
       <!-- Per day: what the bookings cost for that day, what the plan estimates, what was spent -->
-      <div class="card" style="margin-top: 20px">
+      <div class="card budget-days-card" style="margin-top: 20px">
         <div class="card-head-row">
           <h3 class="card-title" style="margin: 0">Day by day</h3>
           <span v-if="!daysWithMoney.length" class="text-subtle text-sm"
@@ -236,11 +236,28 @@
               <span class="budget-day-label">
                 Day {{ d.dayNumber }}
                 <span class="text-subtle"> · {{ formatDayDate(d.date) }}</span>
-                <span v-if="d.city" class="text-subtle"> · {{ d.city }}</span>
+                <span v-if="d.city" class="budget-day-city text-subtle"
+                  ><span class="budget-day-sep"> · </span>{{ d.city }}</span
+                >
               </span>
-              <span class="budget-day-col text-subtle">{{ dash(d.booked) }}</span>
-              <span class="budget-day-col text-subtle">{{ dash(d.estimated) }}</span>
-              <span class="budget-day-col" style="font-weight: 600">{{ dash(d.spent) }}</span>
+              <!-- The label rides each amount; on a phone the header row is gone
+                   and these become the only thing that names them. -->
+              <span class="budget-day-col text-subtle" :class="{ 'is-empty': !Number(d.booked) }">
+                <span class="budget-day-col-label">Booked</span>{{ dash(d.booked) }}
+              </span>
+              <span
+                class="budget-day-col text-subtle"
+                :class="{ 'is-empty': !Number(d.estimated) }"
+              >
+                <span class="budget-day-col-label">Est.</span>{{ dash(d.estimated) }}
+              </span>
+              <span
+                class="budget-day-col"
+                :class="{ 'is-empty': !Number(d.spent) }"
+                style="font-weight: 600"
+              >
+                <span class="budget-day-col-label">Spent</span>{{ dash(d.spent) }}
+              </span>
               <span
                 class="budget-day-chevron"
                 :style="{ transform: expandedDay === d.dayId ? 'rotate(90deg)' : 'none' }"
