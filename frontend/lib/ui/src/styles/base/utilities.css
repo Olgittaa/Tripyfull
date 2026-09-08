@@ -65,10 +65,17 @@
 }
 
 /* A button that reads as a link: inline actions inside text and card heads. */
-/* A label that steps out on a phone, leaving its button's icon to speak. */
+/* A label that steps out on a phone, leaving its button's icon to speak —
+   and its short stand-in, which only appears there. */
+.phone-only {
+  display: none;
+}
 @media (max-width: 700px) {
   .phone-hide {
     display: none;
+  }
+  .phone-only {
+    display: inline;
   }
 }
 

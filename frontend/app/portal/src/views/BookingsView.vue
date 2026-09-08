@@ -27,18 +27,26 @@
             :style="syncingPlan ? 'animation:spin 1s linear infinite' : ''"
             style="font-size: 14px"
           ></i>
-          {{ syncingPlan ? 'Planning…' : plannedFromBookings ? 'Update plan' : 'Add to plan' }}
+          <!-- "Update plan" spelled out where there is room, "Plan" on a phone. -->
+          <span class="phone-hide">{{ planLabel }}</span>
+          <span class="phone-only">{{ syncingPlan ? 'Planning…' : 'Plan' }}</span>
         </TfButton>
-        <TfButton variant="secondary" @click="refreshAllRates" :disabled="refreshingRates">
+        <TfButton
+          class="phone-icon-btn"
+          variant="secondary"
+          @click="refreshAllRates"
+          :disabled="refreshingRates"
+        >
           <i
             class="pi pi-sync"
             :style="refreshingRates ? 'animation:spin 1s linear infinite' : ''"
             style="font-size: 14px"
           ></i>
-          {{ refreshingRates ? 'Updating...' : 'Update rates' }}
+          <span class="phone-hide">{{ refreshingRates ? 'Updating...' : 'Update rates' }}</span>
         </TfButton>
-        <TfButton variant="ghost" @click="$refs.csvInput.click()">
-          <i class="pi pi-upload" style="font-size: 14px"></i> CSV
+        <TfButton class="phone-icon-btn" variant="ghost" @click="$refs.csvInput.click()">
+          <i class="pi pi-upload" style="font-size: 14px"></i>
+          <span class="phone-hide">CSV</span>
         </TfButton>
         <input ref="csvInput" type="file" accept=".csv" style="display: none" @change="importCsv" />
       </div>
@@ -880,6 +888,9 @@ const saving = ref(false);
    change is the whole update story: it rewrites its own and leaves the rest. */
 const syncingPlan = ref(false);
 const plannedFromBookings = ref(0);
+const planLabel = computed(() =>
+  syncingPlan.value ? 'Planning…' : plannedFromBookings.value ? 'Update plan' : 'Add to plan',
+);
 
 const loadPlanCount = async () => {
   try {
@@ -1893,6 +1904,41 @@ onMounted(async () => {
 .bookings-main {
   flex: 1;
   min-width: 0;
+}
+
+/* Phones: the icon, the name and the price shared one line, which left the
+   name about 170px and the facts under it five lines deep. The price goes to
+   a line of its own, aligned with the text column, and the facts are clamped
+   — the card is a summary, the drawer has the detail. */
+@media (max-width: 700px) {
+  /* Icon-only actions lose the padding meant for a word beside the icon. */
+  .phone-icon-btn {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  .booking-card-content {
+    flex-wrap: wrap;
+  }
+  .booking-card-info {
+    flex: 1 1 calc(100% - 62px);
+  }
+  .booking-card-meta {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .booking-card-price {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-left: 62px;
+    text-align: left;
+  }
+  .booking-card-price-label {
+    margin-top: 0;
+  }
 }
 
 /* Drawer form: tabs stay in view while the section below scrolls. */
