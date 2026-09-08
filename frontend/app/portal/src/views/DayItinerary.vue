@@ -666,7 +666,7 @@
             <i class="pi pi-directions"></i>
             <span
               >{{ fmtDur(routeTotal.durationSec) }} · {{ fmtDist(routeTotal.distanceM) }} ·
-              {{ activityMarkers.length }} stops</span
+              {{ mappedStopCount }} stops</span
             >
           </div>
           <div v-if="!activityMarkers.length" class="itin-map-empty">
@@ -1549,14 +1549,43 @@ const stopLat = (a) => a.placeLatitude ?? a.latitude;
 const stopLon = (a) => a.placeLongitude ?? a.longitude;
 const hasCoords = (a) => stopLat(a) != null && stopLon(a) != null;
 
-// Pins for activities that have coordinates (ordered = numbered).
-const activityMarkers = computed(() =>
-  activities.value.filter(hasCoords).map((a) => ({
-    lat: Number(stopLat(a)),
-    lon: Number(stopLon(a)),
-    label: a.placeName || a.name,
-  })),
-);
+/* A journey row is pinned where it departs. When it lands the same day, the
+   day continues from the arrival airport or station — the next leg starts
+   there, and the map shows where that is. An overnight journey has its own
+   "Arrive" row the next morning instead. */
+const landsSameDay = (a) =>
+  isJourneyRow(a) &&
+  a.bookingToLatitude != null &&
+  a.bookingToLongitude != null &&
+  !!a.bookingDepartureAt &&
+  !!a.bookingArrivalAt &&
+  a.bookingDepartureAt.slice(0, 10) === a.bookingArrivalAt.slice(0, 10);
+const legStart = (a) =>
+  landsSameDay(a)
+    ? [Number(a.bookingToLatitude), Number(a.bookingToLongitude)]
+    : [Number(stopLat(a)), Number(stopLon(a))];
+
+const mappedStopCount = computed(() => activities.value.filter(hasCoords).length);
+
+// Pins for activities that have coordinates, numbered like the rows; a same-day
+// journey adds an unnumbered pin where it lands.
+const activityMarkers = computed(() => {
+  const out = [];
+  for (const a of activities.value) {
+    if (!hasCoords(a)) continue;
+    out.push({
+      lat: Number(stopLat(a)),
+      lon: Number(stopLon(a)),
+      label: a.placeName || a.name,
+      n: stopNumbers.value[a.id],
+    });
+    if (landsSameDay(a)) {
+      const [lat, lon] = legStart(a);
+      out.push({ lat, lon, label: `Arrive · ${a.name}`, n: '✈' });
+    }
+  }
+  return out;
+});
 // activity id -> its number on the map (same order as the markers)
 const stopNumbers = computed(() => {
   const map = {};
@@ -1623,7 +1652,7 @@ const dayLegs = computed(() => {
     const from = stops[i];
     const to = stops[i + 1];
     const mode = legMode(from);
-    const points = `${Number(stopLat(from))},${Number(stopLon(from))};${Number(stopLat(to))},${Number(stopLon(to))}`;
+    const points = `${legStart(from).join(',')};${Number(stopLat(to))},${Number(stopLon(to))}`;
     legs.push({ fromId: from.id, mode, key: `${mode}|${points}` });
   }
   return legs;
@@ -1714,8 +1743,8 @@ const setLegMode = async (a, mode) => {
 
 // Map geometry per leg: road points when routed, straight segment while
 // loading or when unroutable.
-const mapLegs = computed(() =>
-  dayLegs.value.map((l) => {
+const mapLegs = computed(() => {
+  const legs = dayLegs.value.map((l) => {
     const cached = legCache.value.get(l.key);
     const [from, to] = l.key
       .split('|')[1]
@@ -1725,8 +1754,15 @@ const mapLegs = computed(() =>
       mode: l.mode,
       points: cached?.geometry?.length >= 2 ? cached.geometry : [from, to],
     };
-  }),
-);
+  });
+  // The journey itself, as the crow flies, between its two pins.
+  for (const a of activities.value) {
+    if (landsSameDay(a) && hasCoords(a)) {
+      legs.push({ mode: 'plane', points: [[Number(stopLat(a)), Number(stopLon(a))], legStart(a)] });
+    }
+  }
+  return legs;
+});
 
 // Whole-day totals; hidden until every leg has real numbers.
 const routeTotal = computed(() => {

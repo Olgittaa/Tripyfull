@@ -89,7 +89,9 @@ public final class ActivityMapper {
                 a.getSourceBookingId() != null,
                 source != null && source.getTransportMode() != null ? source.getTransportMode().name() : null,
                 source != null ? source.getDepartureAt() : null,
-                source != null ? source.getArrivalAt() : null
+                source != null ? source.getArrivalAt() : null,
+                source != null ? source.getToLatitude() : null,
+                source != null ? source.getToLongitude() : null
         );
     }
 }

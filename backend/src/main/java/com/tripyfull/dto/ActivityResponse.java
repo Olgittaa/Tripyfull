@@ -31,5 +31,8 @@ public record ActivityResponse(
         // count an overnight flight's hours on the right day.
         String bookingTransportMode,
         LocalDateTime bookingDepartureAt,
-        LocalDateTime bookingArrivalAt
+        LocalDateTime bookingArrivalAt,
+        // Where a journey lands, so the leg to the next stop can start there.
+        Double bookingToLatitude,
+        Double bookingToLongitude
 ) {}

@@ -200,7 +200,9 @@ public class BookingPlanService {
         Activity a = base(b, day, rental ? ActivityType.OTHER : ActivityType.TRANSPORT,
                 rental ? "Pick up · " + b.getName() : b.getName());
         a.setStartTime(b.getDepartureAt().toLocalTime());
-        if (rental && b.getFromLatitude() != null && b.getFromLongitude() != null) {
+        // Where the day gets to it: the pick-up desk, the departure airport or station.
+        // With a pin of its own the leg from the previous stop is routed there directly.
+        if (b.getFromLatitude() != null && b.getFromLongitude() != null) {
             a.setLatitude(b.getFromLatitude());
             a.setLongitude(b.getFromLongitude());
         }
@@ -236,6 +238,10 @@ public class BookingPlanService {
                         "Arrive · " + (b.getToPlace() != null ? b.getToPlace() : b.getName()));
                 arrive.setStartTime(b.getArrivalAt().toLocalTime());
                 arrive.setAddress(route(b));
+                if (b.getToLatitude() != null && b.getToLongitude() != null) {
+                    arrive.setLatitude(b.getToLatitude());
+                    arrive.setLongitude(b.getToLongitude());
+                }
                 out.add(new Planned(arrivalDay, arrive, Slot.TIMED));
             }
         }
