@@ -17,6 +17,7 @@
     :class="{
       'app-shell--nav-collapsed': sidebarCollapsed,
       'app-shell--trip-title': sidebarCollapsed && !!currentTrip,
+      'app-shell--in-trip': !!currentTrip,
     }"
   >
     <!-- Full-width top bar: logo + global nav -->

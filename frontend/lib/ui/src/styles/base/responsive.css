@@ -70,8 +70,17 @@
     padding: 0 var(--space-2);
     justify-content: flex-start;
   }
-  .topbar-logo .sidebar-logo-text {
-    display: none; /* the mark carries the brand; the width goes to the nav */
+  /* Inside a trip the bar also carries the menu button, so the mark alone
+     stands for the brand there. On the trips list and the other global pages
+     there is room, and a bar with a lone mark reads like a loading state. */
+  .app-shell--in-trip .topbar-logo .sidebar-logo-text {
+    display: none;
+  }
+  /* Under ~340px the name and the icons stop fitting on one line at all. */
+  @media (max-width: 359px) {
+    .topbar-logo .sidebar-logo-text {
+      display: none;
+    }
   }
   .topbar-label {
     display: none;
