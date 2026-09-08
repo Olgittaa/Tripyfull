@@ -348,4 +348,12 @@
   .dash-tile-value--money {
     font-size: 21px;
   }
+  /* "Coming up" and "Places" hold rows of their own — 24px of card padding
+     plus the row's own inset left the text about 260px. */
+  .dash-cols .card {
+    padding: var(--space-4);
+  }
+  .dash-row {
+    padding: 8px 6px;
+  }
 }
