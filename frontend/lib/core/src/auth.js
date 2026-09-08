@@ -48,6 +48,25 @@ export function updateSettings(settings) {
   savePrefs();
 }
 
+/**
+ * When the stored token expires, in epoch milliseconds (null if there is no
+ * token, or it carries no expiry). The payload is read, never trusted: the
+ * server verifies the signature — this only lets the app ask for a new
+ * sign-in the moment the old session dies, instead of after a failed request.
+ */
+export function tokenExpiresAt(token = localStorage.getItem('token')) {
+  const payload = token?.split('.')[1];
+  if (!payload) return null;
+  try {
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    const { exp } = JSON.parse(atob(padded));
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function clearAuth() {
   localStorage.removeItem('token');
   localStorage.removeItem('username');

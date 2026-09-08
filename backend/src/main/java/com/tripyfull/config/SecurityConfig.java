@@ -1,6 +1,7 @@
 package com.tripyfull.config;
 
 import com.tripyfull.security.JwtAuthFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -61,9 +63,27 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/place-photos/**").permitAll()
                 .anyRequest().authenticated()
             )
+            .exceptionHandling(ex -> ex
+                // No token, or one that has expired: 401, so the app can ask for a
+                // fresh sign-in. Spring's default here is 403, which is
+                // indistinguishable from "signed in, but not yours" — the reason an
+                // expired session used to surface as random failing requests.
+                .authenticationEntryPoint((req, res, e) -> writeError(res,
+                        HttpServletResponse.SC_UNAUTHORIZED, "Sign in to continue"))
+                .accessDeniedHandler((req, res, e) -> writeError(res,
+                        HttpServletResponse.SC_FORBIDDEN, "You don't have access to this"))
+            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /** Same shape as every other error the API returns: {"error": "..."}. */
+    private static void writeError(HttpServletResponse res, int status, String message) throws IOException {
+        res.setStatus(status);
+        res.setContentType("application/json");
+        res.setCharacterEncoding("UTF-8");
+        res.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 
     @Bean

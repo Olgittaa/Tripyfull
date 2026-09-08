@@ -429,6 +429,23 @@
               <TfButton variant="danger" @click="modalOpen = false">Delete</TfButton>
             </template>
           </TfModal>
+
+          <TfButton variant="secondary" @click="mustAnswerOpen = true">Open · must answer</TfButton>
+          <TfModal
+            v-model="mustAnswerOpen"
+            title="Session expired"
+            subtitle="Sign in to carry on from the same page."
+            size="sm"
+            :dismissible="false"
+          >
+            <p style="margin: 0">
+              No ✕, no Escape, no backdrop click — for a question the app cannot continue without.
+            </p>
+            <template #footer>
+              <TfButton variant="ghost" @click="mustAnswerOpen = false">Sign out</TfButton>
+              <TfButton variant="primary" @click="mustAnswerOpen = false">Sign in</TfButton>
+            </template>
+          </TfModal>
         </div>
       </section>
 
@@ -900,6 +917,7 @@ const dateTimeRangeVal = ref([new Date(2026, 7, 17, 14, 15), new Date(2026, 7, 2
 const dateClearableVal = ref(new Date(2026, 7, 17));
 const dateBoundedVal = ref(null);
 const modalOpen = ref(false);
+const mustAnswerOpen = ref(false);
 const confirmOpen = ref(false);
 const lightboxOpen = ref(false);
 const lightboxIndex = ref(0);

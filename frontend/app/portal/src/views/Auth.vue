@@ -37,6 +37,7 @@ import { api } from '@tripyfull/core';
 import { useRouter, useRoute } from 'vue-router';
 import { setAuth } from '@tripyfull/core';
 import { TfInput, TfButton } from '@tripyfull/ui';
+import { armSessionExpiry } from '@/session.js';
 
 const router = useRouter();
 const route = useRoute();
@@ -53,6 +54,7 @@ const submit = async () => {
   try {
     const res = await api.post(endpoint, { username: username.value, password: password.value });
     setAuth(res.data.token, res.data.username, res.data);
+    armSessionExpiry();
     router.push(route.query.redirect || '/trips');
   } catch (err) {
     // The API returns errors as { error: "..." } (or occasionally plain text).

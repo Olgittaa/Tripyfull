@@ -8,7 +8,13 @@
               <h3 class="modal-title">{{ title }}</h3>
               <p v-if="subtitle" class="modal-subtitle">{{ subtitle }}</p>
             </div>
-            <button type="button" class="modal-close" aria-label="Close" @click="close">
+            <button
+              v-if="dismissible"
+              type="button"
+              class="modal-close"
+              aria-label="Close"
+              @click="close"
+            >
               <i class="pi pi-times" />
             </button>
           </div>
@@ -30,6 +36,9 @@ const props = defineProps({
   subtitle: String,
   size: { type: String, default: 'md' }, // sm | md | lg
   closeOnBackdrop: { type: Boolean, default: true },
+  /* false = the dialog has to be answered: no ✕, no Escape, no backdrop click.
+     For decisions the app cannot continue without (an expired session). */
+  dismissible: { type: Boolean, default: true },
 });
 const emit = defineEmits(['update:modelValue']);
 
@@ -41,10 +50,10 @@ function close() {
   emit('update:modelValue', false);
 }
 function onBackdrop() {
-  if (props.closeOnBackdrop) close();
+  if (props.dismissible && props.closeOnBackdrop) close();
 }
 function onKey(e) {
-  if (e.key === 'Escape' && isTopOverlay(token)) close();
+  if (e.key === 'Escape' && props.dismissible && isTopOverlay(token)) close();
 }
 
 watch(

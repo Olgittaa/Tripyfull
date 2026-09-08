@@ -19,6 +19,12 @@
   gap: 6px;
 }
 
+/* Fields stacked in one column — a modal body, a short form. */
+.field-stack {
+  display: grid;
+  gap: var(--space-3);
+}
+
 .field label {
   font-size: var(--text-sm);
   font-weight: var(--fw-semibold);

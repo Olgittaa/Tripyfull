@@ -1,6 +1,7 @@
 <template>
   <TfToastHost />
   <TfConfirmHost />
+  <SessionExpiredDialog />
 
   <!-- Auth page renders without sidebar -->
   <template v-if="!username">
@@ -134,11 +135,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { username, baseCurrency, clearAuth, formatDateRange } from '@tripyfull/core';
 import { useTripStore } from '@/stores/tripStore.js';
 import { TfAvatar, TfIcon, TfPopover, TfToastHost, TfConfirmHost } from '@tripyfull/ui';
+import SessionExpiredDialog from '@/components/SessionExpiredDialog.vue';
+import { watchSessionExpiry } from '@/session.js';
 import logoMark from '@/assets/logo-mark.svg';
 
 const router = useRouter();
@@ -147,6 +150,9 @@ const store = useTripStore();
 
 const lastTripId = ref(null);
 const sidebarTrip = ref(null);
+
+// Ask for a new sign-in the moment the token expires, not on the next request.
+onMounted(watchSessionExpiry);
 
 const logout = () => {
   clearAuth();

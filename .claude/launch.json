@@ -2,16 +2,34 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "styleguide",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:styleguide", "--prefix", "frontend"],
-      "port": 4001
+      "name": "backend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".claude/dev-backend.mjs"
+      ],
+      "port": 8080
     },
     {
       "name": "portal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "frontend"
+      ],
       "port": 5173
+    },
+    {
+      "name": "styleguide",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:styleguide",
+        "--prefix",
+        "frontend"
+      ],
+      "port": 4001
     }
   ]
 }
