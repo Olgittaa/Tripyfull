@@ -53,7 +53,7 @@
         <div v-for="d in plan.days" :key="d.dayId" class="card" style="padding: 12px 14px">
           <div style="display: flex; justify-content: space-between; align-items: baseline">
             <span style="font: var(--fw-bold) 14px/1 var(--font-display)"
-              >Day {{ d.dayNumber }} · {{ formatDateShort(d.date)
+              >Day {{ d.dayNumber }} · {{ formatDayDate(d.date)
               }}<span v-if="d.baseName" class="text-subtle" style="font-weight: 400">
                 · from {{ d.baseName }}</span
               ></span
@@ -111,7 +111,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { TfModal, TfSelect, TfNumberInput, TfButton, TfBadge, toast } from '@tripyfull/ui';
-import { api, formatDateShort } from '@tripyfull/core';
+import { api, formatDayDate } from '@tripyfull/core';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

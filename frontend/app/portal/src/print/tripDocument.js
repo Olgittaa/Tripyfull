@@ -29,6 +29,11 @@ const fmtDate = (iso) => {
   const d = parse(iso);
   return d ? `${d.getDate()} ${MONTHS[d.getMonth()]}` : '';
 };
+// The overview table is read by date: the weekday belongs with it.
+const fmtDayDate = (iso) => {
+  const d = parse(iso);
+  return d ? `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}` : '';
+};
 const fmtDateLong = (iso) => {
   const d = parse(iso);
   return d
@@ -264,7 +269,7 @@ export function buildTripDocument(
               const names = day.activities.filter((a) => !a.fromBooking).map((a) => esc(a.name));
               return `<tr>
                 <td class="num">${day.dayNumber}</td>
-                <td class="date">${fmtDate(day.date)}</td>
+                <td class="date">${fmtDayDate(day.date)}</td>
                 <td>${esc(day.city || '')}</td>
                 <td>${names.length ? names.join(' – ') : '<span class="muted">—</span>'}</td>
                 <td>${esc(day.overnightStay || '')}</td>

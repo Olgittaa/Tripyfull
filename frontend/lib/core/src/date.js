@@ -17,6 +17,8 @@ export const MONTHS_SHORT = [
   'Dec',
 ];
 
+export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 // Date -> 'YYYY-MM-DD' (local).
 export const toDateStr = (d) => {
   if (!d) return null;
@@ -41,6 +43,13 @@ export const formatDateShort = (d) => {
   if (!d) return '—';
   const dt = new Date(d);
   return `${dt.getDate()} ${MONTHS_SHORT[dt.getMonth()]}`;
+};
+
+// 'Sat 5 Aug' — for a day of the trip, where the weekday is what people plan by.
+export const formatDayDate = (d) => {
+  if (!d) return '—';
+  const dt = parseDate(d);
+  return `${WEEKDAYS_SHORT[dt.getDay()]} ${dt.getDate()} ${MONTHS_SHORT[dt.getMonth()]}`;
 };
 
 export const formatDateRange = (start, end) => {

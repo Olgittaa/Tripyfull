@@ -38,9 +38,7 @@
               <template v-if="day && !day.date"
                 >Reserve day {{ reserveIndex }} · outside the trip dates</template
               >
-              <template v-else
-                >Day {{ day?.dayNumber }} · {{ formatDateShort(day?.date) }}</template
-              >
+              <template v-else>Day {{ day?.dayNumber }} · {{ formatDayDate(day?.date) }}</template>
             </div>
             <h1
               style="
@@ -119,7 +117,7 @@
           @click="switchDay(d.id)"
         >
           <div class="day-picker-label">D{{ d.dayNumber }}</div>
-          <div class="day-picker-date">{{ formatDateShort(d.date) }}</div>
+          <div class="day-picker-date">{{ formatDayDate(d.date) }}</div>
           <div class="day-picker-note">{{ d.city || '' }}</div>
         </button>
 
@@ -1053,7 +1051,7 @@ import BookingMap from '@/components/BookingMap.vue';
 import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { CURRENCIES, formatDateShort, placeTypeMeta, PLACE_TYPE_META } from '@tripyfull/core';
+import { CURRENCIES, formatDayDate, placeTypeMeta, PLACE_TYPE_META } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 const currencyOptions = CURRENCIES;
 
@@ -1476,7 +1474,7 @@ const fromMinutes = (min) =>
 const moveTargetDayId = ref(null);
 const moveDayOptions = computed(() =>
   allDays.value.map((d) => ({
-    label: `Day ${d.dayNumber} · ${formatDateShort(d.date)}`,
+    label: `Day ${d.dayNumber} · ${formatDayDate(d.date)}`,
     value: d.id,
   })),
 );
@@ -2191,7 +2189,7 @@ const swapTargetLabel = ref(null);
 const swapDayOptions = computed(() =>
   allDays.value
     .filter((d) => d.id !== dayId.value)
-    .map((d) => ({ label: `Day ${d.dayNumber} · ${formatDateShort(d.date)}`, value: d.id })),
+    .map((d) => ({ label: `Day ${d.dayNumber} · ${formatDayDate(d.date)}`, value: d.id })),
 );
 const swapDayLabels = computed(() => swapDayOptions.value.map((o) => o.label));
 const openSwapModal = () => {

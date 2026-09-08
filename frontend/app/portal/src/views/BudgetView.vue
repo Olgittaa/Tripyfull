@@ -225,7 +225,7 @@
             <button class="budget-day-row-btn" @click="toggleDay(d.dayId)">
               <span class="budget-day-label">
                 Day {{ d.dayNumber }}
-                <span class="text-subtle"> · {{ formatDateShort(d.date) }}</span>
+                <span class="text-subtle"> · {{ formatDayDate(d.date) }}</span>
                 <span v-if="d.city" class="text-subtle"> · {{ d.city }}</span>
               </span>
               <span class="budget-day-col text-subtle">{{ dash(d.booked) }}</span>
@@ -322,7 +322,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { api, formatDateShort, toDateStr } from '@tripyfull/core';
+import { api, formatDateShort, formatDayDate, toDateStr } from '@tripyfull/core';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import {
   TfButton,
@@ -472,7 +472,7 @@ const expCategoryOptions = [
 const dayOptions = computed(
   () =>
     budget.value?.days?.map((d) => ({
-      label: `Day ${d.dayNumber}${d.city ? ' · ' + d.city : ''} (${formatDateShort(d.date)})`,
+      label: `Day ${d.dayNumber}${d.city ? ' · ' + d.city : ''} (${formatDayDate(d.date)})`,
       value: d.dayId,
     })) || [],
 );

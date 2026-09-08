@@ -82,7 +82,7 @@
 <script setup>
 import { ref, computed, reactive, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api, formatDateShort, placeTypeMeta } from '@tripyfull/core';
+import { api, formatDayDate, placeTypeMeta } from '@tripyfull/core';
 import { toast } from '@tripyfull/ui';
 
 const route = useRoute();
@@ -139,7 +139,7 @@ const dayTag = (p) =>
   [...new Set(plansFor(p).map((e) => (e.buffer ? 'R' : String(e.dayNumber))))].join(' · ');
 const dayLabel = (e) =>
   (e.buffer ? 'Reserve day' : `Day ${e.dayNumber}`) +
-  (e.date ? ` · ${formatDateShort(e.date)}` : '') +
+  (e.date ? ` · ${formatDayDate(e.date)}` : '') +
   (e.startTime ? ` · ${String(e.startTime).slice(0, 5)}` : '');
 
 const mapped = computed(() => places.value.filter((p) => p.latitude && p.longitude));

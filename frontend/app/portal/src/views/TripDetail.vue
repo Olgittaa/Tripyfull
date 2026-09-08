@@ -281,7 +281,7 @@
               <span class="dash-day-num">{{
                 day.isBuffer ? 'Reserve' : 'Day ' + day.dayNumber
               }}</span>
-              <span class="dash-day-date">{{ day.date ? formatDateShort(day.date) : '—' }}</span>
+              <span class="dash-day-date">{{ day.date ? formatDayDate(day.date) : '—' }}</span>
             </div>
             <div v-if="editingDayId === day.id" class="dash-day-edit" @click.stop>
               <TfInput
@@ -431,6 +431,7 @@ import {
   parseDate,
   diffInDays,
   formatDateShort,
+  formatDayDate,
   formatDateRange,
   tripStatusLabel as statusLabel,
   tripStatusTone as statusTone,
