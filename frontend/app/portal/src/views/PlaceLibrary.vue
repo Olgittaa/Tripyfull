@@ -8,8 +8,14 @@
             <h1>{{ tripMode ? 'Trip places' : 'Places' }}</h1>
           </div>
           <div class="page-head-actions">
-            <TfButton icon="pi-search" variant="secondary" @click="showFindDialog = true"
-              >Find & import</TfButton
+            <!-- The search icon carries this one on a phone, so the title and
+                 both buttons share a single line. -->
+            <TfButton
+              class="phone-icon-btn"
+              icon="pi-search"
+              variant="secondary"
+              @click="showFindDialog = true"
+              ><span class="phone-hide">Find &amp; import</span></TfButton
             >
             <TfButton icon="pi-plus" @click="openDialog()">Add place</TfButton>
           </div>
@@ -2817,6 +2823,29 @@ onMounted(async () => {
 
 /* ---- Phones: last in the file, so these win over the rules above ---- */
 @media (max-width: 700px) {
+  /* Icon-only actions lose the padding meant for a word beside the icon. */
+  .phone-icon-btn {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  /* The trip's folders scroll sideways instead of taking two rows. */
+  .scope-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-top: 12px;
+    padding-bottom: 2px;
+  }
+  .scope-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .scope-chips > * {
+    flex: none;
+  }
+  /* A shorter card: two of them share the screen, and the cover still leads. */
+  .place-card {
+    height: 220px;
+  }
   /* Search stays; the rest waits behind the button. */
   .filters-toggle {
     display: inline-flex;

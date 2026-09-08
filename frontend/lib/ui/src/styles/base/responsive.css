@@ -142,7 +142,14 @@
     font-size: 14px;
   }
 
-  /* Display type set for a laptop is shouting on a phone. */
+  /* Display type set for a laptop is shouting on a phone, and the gap under
+     the title can give a few pixels back to the content. */
+  .page-head {
+    margin-bottom: var(--space-4);
+    /* 18px between the title and the actions was the last pixel keeping them
+       on separate lines at 375px. */
+    gap: 10px;
+  }
   .page-head h1 {
     font-size: 26px;
   }
