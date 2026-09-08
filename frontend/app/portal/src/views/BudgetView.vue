@@ -258,11 +258,13 @@
               >
                 <span class="budget-day-col-label">Spent</span>{{ dash(d.spent) }}
               </span>
+              <!-- Down to open, up to close: a chevron pointing right reads as a
+                   link to somewhere else, and this row only opens in place. -->
               <span
                 class="budget-day-chevron"
-                :style="{ transform: expandedDay === d.dayId ? 'rotate(90deg)' : 'none' }"
+                :style="{ transform: expandedDay === d.dayId ? 'rotate(180deg)' : 'none' }"
               >
-                <i class="pi pi-chevron-right" style="font-size: 13px"></i>
+                <i class="pi pi-chevron-down" style="font-size: 13px"></i>
               </span>
             </button>
             <div v-if="expandedDay === d.dayId" class="budget-day-detail">

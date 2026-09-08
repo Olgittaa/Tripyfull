@@ -166,7 +166,7 @@
               @click="showBalance = !showBalance"
               v-tooltip="'How your ratings are spread vs the planning targets'"
             >
-              <i class="pi" :class="showBalance ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+              <i class="pi" :class="showBalance ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
               Rating spread
               <span v-if="balanceWarning" class="balance-warn">{{ balanceWarning }}</span>
             </button>
