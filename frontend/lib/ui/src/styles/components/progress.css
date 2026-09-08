@@ -39,6 +39,11 @@
 .progress--incomplete .progress-fill {
   background: var(--progress-incomplete-bar);
 }
+/* The empty part of the track is a light step of the fill's own ramp, so the
+   state reads across the whole bar rather than only in the filled part. */
+.progress--incomplete .progress-track {
+  background: var(--success-100);
+}
 .progress--full .progress-label {
   color: var(--text-secondary);
 }
@@ -48,10 +53,16 @@
 .progress--full .progress-fill {
   background: var(--progress-full-bar);
 }
+.progress--full .progress-track {
+  background: var(--success-100);
+}
 .progress--over .progress-label,
 .progress--over .progress-value {
   color: var(--progress-over-text);
 }
 .progress--over .progress-fill {
   background: var(--progress-over-bar);
+}
+.progress--over .progress-track {
+  background: var(--danger-100);
 }

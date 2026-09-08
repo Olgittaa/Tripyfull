@@ -134,8 +134,11 @@
   --progress-full-text: var(--ink-500);
   --progress-over-bar: var(--danger-500);
   --progress-over-text: var(--danger-700);
-  --progress-incomplete-bar: var(--warning-500);
-  --progress-incomplete-text: var(--warning-700);
+  /* A bar on its way to 100% is progress, not a problem: it wears the primary
+     colour. Gold and coral stay reserved for a state that wants attention —
+     over budget, overdue — so a bar that turns warm always means something. */
+  --progress-incomplete-bar: var(--primary);
+  --progress-incomplete-text: var(--text-secondary);
   --progress-bar: var(--ink-100);
 
   /* Decorative washes */

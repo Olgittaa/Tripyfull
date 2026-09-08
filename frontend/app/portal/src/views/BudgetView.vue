@@ -15,10 +15,10 @@
     </div>
 
     <div v-if="loading" style="display: flex; flex-direction: column; gap: 20px">
-      <div class="metric-grid">
-        <div v-for="i in 4" :key="i" class="skeleton" style="height: 120px"></div>
+      <div class="skeleton" style="height: 150px"></div>
+      <div class="metric-grid metric-grid--pair">
+        <div v-for="i in 2" :key="i" class="skeleton" style="height: 110px"></div>
       </div>
-      <div class="skeleton" style="height: 200px"></div>
       <div class="skeleton" style="height: 260px"></div>
     </div>
 
@@ -43,59 +43,58 @@
         </TfButton>
       </div>
 
-      <!-- Four figures, each answering one question -->
-      <div class="metric-grid">
-        <div class="metric-tile">
+      <!-- The figure the page leads with, and the payment story under it. The
+           bookings' own progress lives here rather than in a card of its own,
+           where it only repeated these numbers. -->
+      <div class="card budget-hero">
+        <div class="budget-hero-main">
           <div class="metric-label">Trip cost so far</div>
-          <span class="money money--xl"
+          <span class="money budget-hero-value"
             >{{ fmt(tripCost) }} <span class="money-cur">{{ currency }}</span></span
           >
           <div class="metric-sub">
             {{ fmt(budget.bookingsTotal) }} booked · {{ fmt(budget.expensesTotal) }} spent
           </div>
         </div>
-        <div class="metric-tile">
-          <div class="metric-label">Paid</div>
-          <span class="money money--xl" style="color: var(--success-500)"
-            >{{ fmt(budget.bookingsPaid) }} <span class="money-cur">{{ currency }}</span></span
-          >
-          <div class="metric-sub">{{ paidPct }}% of bookings</div>
+
+        <div v-if="Number(budget.bookingsTotal) > 0" class="budget-hero-pay">
+          <TfProgress label="Bookings paid" :value="paidPct" />
+          <div class="budget-hero-facts">
+            <div class="budget-fact">
+              <span class="budget-fact-label">Paid</span>
+              <span class="money money--md" style="color: var(--success-500)">{{
+                fmt(budget.bookingsPaid)
+              }}</span>
+              <span class="budget-fact-sub">{{ paidPct }}% of bookings</span>
+            </div>
+            <div class="budget-fact">
+              <span class="budget-fact-label">Left to pay</span>
+              <span
+                class="money money--md"
+                :style="{ color: remaining > 0 ? 'var(--danger-700)' : 'var(--text-primary)' }"
+                >{{ fmt(remaining) }}</span
+              >
+              <span class="budget-fact-sub">{{ remainingSub }}</span>
+            </div>
+          </div>
         </div>
-        <div class="metric-tile">
-          <div class="metric-label">Left to pay</div>
-          <span
-            class="money money--xl"
-            :style="{ color: remaining > 0 ? 'var(--danger-700)' : 'var(--text-primary)' }"
-            >{{ fmt(remaining) }} <span class="money-cur">{{ currency }}</span></span
-          >
-          <div class="metric-sub">{{ remainingSub }}</div>
-        </div>
+      </div>
+
+      <!-- Money spent while travelling: what the plan expects, what actually went -->
+      <div class="metric-grid metric-grid--pair">
         <div class="metric-tile">
           <div class="metric-label">Estimated on the way</div>
-          <span class="money money--xl"
+          <span class="money money--lg"
             >{{ fmt(budget.estimatesTotal) }} <span class="money-cur">{{ currency }}</span></span
           >
           <div class="metric-sub">{{ estimateSub }}</div>
         </div>
         <div class="metric-tile">
           <div class="metric-label">Spent on the way</div>
-          <span class="money money--xl"
+          <span class="money money--lg"
             >{{ fmt(budget.expensesTotal) }} <span class="money-cur">{{ currency }}</span></span
           >
           <div class="metric-sub">{{ spentSub }}</div>
-        </div>
-      </div>
-
-      <div v-if="Number(budget.bookingsTotal) > 0" class="card" style="margin-bottom: 24px">
-        <TfProgress label="Bookings paid" :value="paidPct" />
-        <div class="budget-progress-foot">
-          <span
-            >{{ fmt(budget.bookingsPaid) }} of {{ fmt(budget.bookingsTotal) }} {{ currency }}</span
-          >
-          <span v-if="remaining > 0" style="color: var(--danger-700)"
-            >{{ fmt(remaining) }} {{ currency }} to go</span
-          >
-          <span v-else style="color: var(--success-700)">Everything is paid</span>
         </div>
       </div>
 
@@ -180,7 +179,11 @@
                    day plans. Spent is what is gone: the paid part of the bookings
                    plus the expenses. An unpaid booking is a plan until it is paid. -->
               <div v-if="planned(c)" class="budget-cat-plan">
-                <div class="progress-track" style="height: 6px; flex: 1">
+                <div
+                  class="progress-track"
+                  :class="{ 'progress-track--over': over(c) }"
+                  style="height: 6px; flex: 1"
+                >
                   <div
                     class="progress-fill"
                     :style="{
@@ -190,7 +193,14 @@
                   ></div>
                 </div>
                 <span class="budget-cat-plan-label" :class="{ 'is-over': over(c) }">
-                  {{ planLabel(c) }}
+                  <!-- Over budget is a state, so it carries a mark and a word,
+                       never colour alone. -->
+                  <i
+                    v-if="over(c)"
+                    class="pi pi-exclamation-triangle"
+                    style="font-size: 11px; margin-right: 3px"
+                  ></i
+                  >{{ planLabel(c) }}
                 </span>
               </div>
               <div v-else class="budget-cat-plan budget-cat-plan--none">

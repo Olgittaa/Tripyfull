@@ -17,9 +17,6 @@
 .money--lg {
   font-size: 26px;
 }
-.money--xl {
-  font-size: 30px;
-}
 
 .money-cur {
   font: var(--fw-medium) 14px/1 var(--font-mono);
