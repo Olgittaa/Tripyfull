@@ -93,18 +93,38 @@
     padding: 11px;
   }
 
-  /* The trip menu as a drawer: narrower than the screen, so the page behind it
-     stays visible and tapping it closes the menu; rows sized for a thumb. */
+  /* The trip menu as a drawer: a panel beside the page, not a takeover — the
+     page stays visible behind it and tapping it closes the menu. It is a list
+     of seven short rows, so it needs neither a card's padding nor the body's
+     on top of the list's own. */
   .drawer-panel--left {
-    width: min(320px, 84vw);
+    width: min(268px, 74vw);
+    /* Seven rows do not need a full-height sheet: the panel ends where the
+       list ends, and keeps a corner so it reads as a card over the page. */
+    bottom: auto;
+    max-height: 100dvh;
+    border-bottom-right-radius: var(--radius-lg);
+  }
+  .drawer-panel--left .drawer-header {
+    padding: 10px 12px 8px;
+  }
+  .drawer-panel--left .sidebar-trip-name {
+    font-size: 15px;
+  }
+  .drawer-panel--left .sidebar-trip-meta {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .drawer-panel--left .drawer-body {
+    padding: 0;
   }
   .drawer-panel--left .sidebar-trip-nav {
-    padding: 4px 12px 12px;
-    gap: 4px;
+    padding: 8px;
+    gap: 2px;
   }
   .drawer-panel--left .sidebar-nav-btn {
-    padding: 13px 14px;
-    font-size: 15px;
+    padding: 10px 12px;
+    font-size: 14px;
   }
 
   /* Display type set for a laptop is shouting on a phone. */

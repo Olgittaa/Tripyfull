@@ -117,12 +117,13 @@
         <template #header>
           <div>
             <div class="sidebar-trip-name">{{ currentTrip?.title }}</div>
-            <div v-if="currentTrip?.destination" class="sidebar-trip-meta">
-              <i class="pi pi-map-marker"></i> {{ currentTrip.destination }}
-            </div>
-            <div v-if="currentTrip?.startDate" class="sidebar-trip-meta">
-              <i class="pi pi-calendar"></i>
-              {{ formatDateRange(currentTrip.startDate, currentTrip.endDate) }}
+            <!-- Where and when on one line: the panel is a menu, not a page. -->
+            <div class="sidebar-trip-meta">
+              {{ currentTrip?.destination }}
+              <template v-if="currentTrip?.destination && currentTrip?.startDate"> · </template>
+              <template v-if="currentTrip?.startDate">{{
+                formatDateRange(currentTrip.startDate, currentTrip.endDate)
+              }}</template>
             </div>
           </div>
         </template>
