@@ -53,8 +53,15 @@
     overflow: visible;
   }
 
-  /* Top bar: menu button, the mark, then icon-only links, currency, avatar. */
+  /* Top bar: menu button, the mark, then icon-only links, currency, avatar.
+     It stays put while the page scrolls — the trip's menu and the account are
+     one tap away from anywhere in a long day or a long list of bookings. The
+     z-index clears page content but stays under dropdowns (20) and menus (30),
+     which must be able to open over it. */
   .app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     padding-right: var(--space-3);
     gap: var(--space-1);
   }
