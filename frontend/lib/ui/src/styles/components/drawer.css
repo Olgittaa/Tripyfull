@@ -156,6 +156,36 @@
   gap: 12px;
 }
 
+/* A word about the form's state, left of the footer's buttons. */
+.footer-status {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--type-small);
+  color: var(--text-secondary);
+}
+.footer-status--ok {
+  color: var(--success-700);
+}
+
+/* Phones: a status line and two buttons do not share 350px — the line wrapped
+   into four words stacked beside its icon. It takes the top row, the buttons
+   the one below, and the one that saves takes the width that is left. */
+@media (max-width: 700px) {
+  .drawer-footer {
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-4);
+  }
+  .footer-status {
+    flex: 1 0 100%;
+    white-space: nowrap;
+  }
+  .drawer-footer .btn--primary {
+    flex: 1;
+  }
+}
+
 /* ---- Drawer section ---- */
 .drawer-section {
   display: flex;

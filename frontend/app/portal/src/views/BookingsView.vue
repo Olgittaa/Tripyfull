@@ -2084,17 +2084,6 @@ onMounted(async () => {
   color: var(--text-secondary);
   margin-top: 2px;
 }
-.footer-status {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font: var(--type-small);
-  color: var(--text-secondary);
-}
-.footer-status--ok {
-  color: var(--success-700);
-}
 .bookings-side {
   width: 320px;
   flex: none;
@@ -2163,6 +2152,19 @@ onMounted(async () => {
   .bookings-side {
     width: 100%;
     position: static;
+  }
+}
+
+/* ---- Phones: last in the file, so these win over the rules above ----
+   The form's own grids are sized for a 560px drawer; at 353px two fields
+   side by side cut their own labels and placeholders. */
+@media (max-width: 700px) {
+  .two-col,
+  .two-col--wide-left {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .three-col {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 </style>
