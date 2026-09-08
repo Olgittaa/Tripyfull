@@ -9,7 +9,16 @@
   </template>
 
   <!-- Main app with sidebar -->
-  <div v-else class="app-shell" :class="{ 'app-shell--nav-collapsed': sidebarCollapsed }">
+  <!-- app-shell--trip-title: the menu is folded and the trip's name has taken
+       the wordmark's place in the top bar. -->
+  <div
+    v-else
+    class="app-shell"
+    :class="{
+      'app-shell--nav-collapsed': sidebarCollapsed,
+      'app-shell--trip-title': sidebarCollapsed && !!currentTrip,
+    }"
+  >
     <!-- Full-width top bar: logo + global nav -->
     <header class="app-topbar">
       <!-- Phones only (CSS): the trip's menu lives behind this button. -->
@@ -26,6 +35,15 @@
         <img :src="logoMark" alt="" />
         <span class="sidebar-logo-text">Tripy<span>full</span></span>
       </div>
+
+      <!-- Folded menu: which trip you are in, since the column no longer says. -->
+      <router-link
+        v-if="sidebarCollapsed && currentTrip"
+        :to="`/trips/${currentTrip.id}`"
+        class="topbar-trip"
+        :title="currentTrip.title"
+        >{{ currentTrip.title }}</router-link
+      >
 
       <nav class="topbar-nav">
         <router-link to="/trips" class="topbar-link" :class="{ active: $route.path === '/trips' }">

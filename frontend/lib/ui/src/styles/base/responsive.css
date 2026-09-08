@@ -69,6 +69,10 @@
   .topbar-label {
     display: none;
   }
+  /* The stored "folded" flag means nothing here, and the bar has no room. */
+  .topbar-trip {
+    display: none;
+  }
   .topbar-nav .topbar-link {
     padding: 11px;
   }

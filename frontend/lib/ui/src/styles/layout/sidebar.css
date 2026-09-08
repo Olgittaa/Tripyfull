@@ -237,8 +237,26 @@
   padding: 0;
   justify-content: center;
 }
-.app-shell--nav-collapsed .topbar-logo .sidebar-logo-text {
+/* The wordmark steps aside only when the trip's name is there to replace it —
+   outside a trip the folded bar still says Tripyfull. */
+.app-shell--trip-title .topbar-logo .sidebar-logo-text {
   display: none;
+}
+
+.topbar-trip {
+  font: var(--fw-bold) var(--text-lg) / 1.1 var(--font-display);
+  letter-spacing: var(--ls-tight);
+  color: var(--text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 42vw;
+}
+.topbar-trip:hover,
+.topbar-trip:focus-visible {
+  color: var(--accent);
+  text-decoration: none;
 }
 
 /* Logo block lines up with the sidebar below it. */
