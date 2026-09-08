@@ -409,6 +409,10 @@ onUnmounted(() => {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
   overflow: hidden;
+  /* Leaflet stacks its panes at z-index 400+ and its controls at 1000. Kept
+     inside a stacking context of their own they stay under the drawer (81)
+     and the modal (90) — otherwise the map drew over the phone's trip menu. */
+  isolation: isolate;
 }
 
 /* Muted streets under coloured markers: the plain OSM style puts every shop in
