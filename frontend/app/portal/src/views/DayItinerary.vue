@@ -3127,6 +3127,11 @@ onMounted(async () => {
   .day-head-actions {
     flex-wrap: nowrap;
   }
+  /* The dock switches days on a phone; the strip would be the same days a
+     second time, 64px above the list. */
+  .day-picker {
+    display: none;
+  }
   /* Room under the list for the dock. */
   .itin-layout {
     padding-bottom: 72px;
