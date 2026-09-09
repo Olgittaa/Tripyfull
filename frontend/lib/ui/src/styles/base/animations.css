@@ -16,6 +16,15 @@
   opacity: 0;
   transform: translateY(-6px);
 }
+/* On a phone a page carries fixed children (the itinerary's dock and map
+   sheet); while a transform animates on the page they would be positioned
+   against it and jump. The page fades there, without the slide. */
+@media (max-width: 700px) {
+  .page-enter-from,
+  .page-leave-to {
+    transform: none;
+  }
+}
 
 .list-enter-active {
   transition: all 0.32s var(--ease-out);

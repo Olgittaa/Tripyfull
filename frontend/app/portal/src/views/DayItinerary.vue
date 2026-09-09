@@ -25,6 +25,7 @@
       >
         <div style="display: flex; align-items: center; gap: 14px">
           <TfIconButton
+            class="phone-hide"
             variant="outline"
             size="sm"
             label="Previous day"
@@ -53,6 +54,7 @@
             </h1>
           </div>
           <TfIconButton
+            class="phone-hide"
             variant="outline"
             size="sm"
             label="Next day"
@@ -69,7 +71,8 @@
             @click="showAutoPlan = true"
             title="Fill the days from your saved places, following the hotels"
           >
-            <i class="pi pi-sparkles" style="font-size: 12px"></i> Auto-plan
+            <i class="pi pi-sparkles" style="font-size: 12px"></i>
+            <span class="phone-hide">Auto-plan</span>
           </TfButton>
           <TfButton
             v-if="activities.length > 1"
@@ -78,7 +81,8 @@
             @click="sortByTime"
             title="Reorder activities by their start time"
           >
-            <i class="pi pi-sort-amount-down" style="font-size: 13px"></i> Sort by time
+            <i class="pi pi-sort-amount-down" style="font-size: 13px"></i>
+            <span class="phone-hide">Sort by time</span>
           </TfButton>
           <!-- Buffer days are their own reserve days now (the "+ Buffer" chip in
                the strip), so a dated day has nothing to toggle. -->
@@ -89,7 +93,8 @@
             @click="removeReserveDay(day)"
             title="Remove this reserve day"
           >
-            <i class="pi pi-trash" style="font-size: 13px"></i> Remove reserve
+            <i class="pi pi-trash" style="font-size: 13px"></i>
+            <span class="phone-hide">Remove reserve</span>
           </TfButton>
           <TfButton
             v-if="allDays.length > 1"
@@ -98,9 +103,10 @@
             @click="openSwapModal"
             title="Swap this day's plan with another day"
           >
-            <i class="pi pi-arrow-right-arrow-left" style="font-size: 13px"></i> Swap
+            <i class="pi pi-arrow-right-arrow-left" style="font-size: 13px"></i>
+            <span class="phone-hide">Swap</span>
           </TfButton>
-          <TfButton variant="primary" @click="openAddDialog">
+          <TfButton class="phone-hide" variant="primary" @click="openAddDialog">
             <i class="pi pi-plus" style="font-size: 14px"></i> Activity
           </TfButton>
         </div>
@@ -439,7 +445,7 @@
               </div>
               <div class="timeline-content">
                 <TfCard interactive @click="startEdit(a)" style="cursor: pointer">
-                  <div style="display: flex; align-items: center; gap: 12px">
+                  <div class="stop-card-row">
                     <div class="cat-icon cat-icon--lg" :style="catStyle(a.type)">
                       {{ stopIcon(a) }}
                     </div>
@@ -514,11 +520,7 @@
                         {{ a.notes }}
                       </div>
                     </div>
-                    <span
-                      v-if="a.costEstimate"
-                      class="money money--md"
-                      style="flex: none; text-align: right"
-                    >
+                    <span v-if="a.costEstimate" class="money money--md stop-cost">
                       {{ a.costEstimate }} {{ a.costCurrency || currency }}
                       <span v-if="isForeign(a)" class="money-approx"
                         >≈ {{ toBase(a).toFixed(2) }} {{ currency }}</span
@@ -619,12 +621,23 @@
         <!-- /itin-main -->
 
         <!-- Right: day route map -->
-        <aside class="itin-map">
+        <!-- Beside the list on a laptop. On a phone the same aside is a sheet the
+             dock slides up: a glance at the route, a tap on a saved place to add
+             it, and back to the list. -->
+        <aside class="itin-map" :class="{ 'is-open': mapOpen }">
           <div class="itin-map-head">
             <h3 style="font: var(--type-h3); margin: 0">Day route</h3>
             <span class="text-subtle text-sm"
               >{{ activityMarkers.length }} point{{ activityMarkers.length === 1 ? '' : 's' }}</span
             >
+            <button
+              type="button"
+              class="itin-map-close"
+              aria-label="Close the map"
+              @click="mapOpen = false"
+            >
+              <i class="pi pi-times"></i>
+            </button>
           </div>
           <BookingMap
             :markers="activityMarkers"
@@ -735,6 +748,53 @@
         </aside>
       </div>
       <!-- /itin-layout -->
+
+      <!-- Phones only (CSS): the day, the map and "add" within a thumb's reach. -->
+      <nav class="day-dock" aria-label="Day controls">
+        <button
+          type="button"
+          class="dock-btn"
+          aria-label="Previous day"
+          :disabled="currentDayIndex <= 0"
+          @click="goToDay(currentDayIndex - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <div class="dock-day">
+          <span class="dock-day-num">{{
+            day && !day.date ? `Reserve ${reserveIndex}` : `Day ${day?.dayNumber}`
+          }}</span>
+          <span class="dock-day-date">{{ day?.date ? formatDayDate(day.date) : 'no date' }}</span>
+        </div>
+        <button
+          type="button"
+          class="dock-btn"
+          aria-label="Next day"
+          :disabled="currentDayIndex >= allDays.length - 1"
+          @click="goToDay(currentDayIndex + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+        <span class="dock-sep"></span>
+        <button
+          type="button"
+          class="dock-btn"
+          :class="{ 'is-on': mapOpen }"
+          aria-label="Day route on the map"
+          @click="mapOpen = !mapOpen"
+        >
+          <i class="pi pi-map"></i>
+          <span v-if="activityMarkers.length" class="dock-badge">{{ activityMarkers.length }}</span>
+        </button>
+        <button
+          type="button"
+          class="dock-btn dock-btn--primary"
+          aria-label="Add a stop"
+          @click="openAddDialog"
+        >
+          <i class="pi pi-plus"></i>
+        </button>
+      </nav>
     </template>
 
     <!-- Activity Drawer -->
@@ -1770,8 +1830,14 @@ const fmtDist = (m) => (m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(
 /** The map is the widest thing here, so it follows the window's height. */
 const mapHeight = ref(560);
 const measureMap = () => {
-  mapHeight.value = Math.max(420, Math.min(760, window.innerHeight - 320));
+  // In the phone's sheet the map takes half the screen; the legend, the route
+  // total and the places to consider follow underneath.
+  mapHeight.value = window.matchMedia('(max-width: 700px)').matches
+    ? Math.round(window.innerHeight * 0.52)
+    : Math.max(420, Math.min(760, window.innerHeight - 320));
 };
+/* The route map as a sheet over the list (phones); the dock toggles it. */
+const mapOpen = ref(false);
 
 /** km between two points — good enough to sort candidates by "how far off route". */
 const distanceKm = (aLat, aLon, bLat, bLon) => {
@@ -2371,6 +2437,17 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Icon, facts and cost on one line; on a phone the cost steps under the facts. */
+.stop-card-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.stop-cost {
+  flex: none;
+  text-align: right;
+}
+
 /* A stop's name and its badges: the badges drop to the next line on a phone
    instead of dragging the card past the screen. */
 .stop-title-row {
@@ -2999,15 +3076,172 @@ onMounted(async () => {
   gap: 6px;
 }
 
+/* The dock and the sheet's close button exist for phones; see the block below. */
+.day-dock,
+.itin-map-close {
+  display: none;
+}
+
 /* ---- Phones: last in the file, so these win over the rules above ---- */
 @media (max-width: 700px) {
+  /* Room under the list for the dock. */
+  .itin-layout {
+    padding-bottom: 72px;
+  }
+  /* The list first; the day's facts (city, load, overnight) follow it. */
+  .itin-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .day-facts {
+    order: 2;
+    margin: 12px 0 0;
+  }
+
+  /* The map aside becomes a sheet, parked below the screen until the dock
+     slides it up. It keeps its real size while parked, so Leaflet measures a
+     true box on mount and fits the route correctly the first time it shows. */
+  .itin-map {
+    position: fixed;
+    inset: var(--topbar-height) 0 0 0;
+    z-index: 70;
+    overflow-y: auto;
+    padding: 12px var(--space-4) 84px;
+    background: var(--bg);
+    transform: translateY(100%);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .itin-map.is-open {
+    transform: none;
+  }
+  .itin-map-head {
+    position: relative;
+    padding-right: 44px;
+  }
+  .itin-map-close {
+    position: absolute;
+    right: 0;
+    top: -4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  .itin-picks-list {
+    max-height: none;
+  }
+
+  /* The dock: previous · day · next, then the map and "add". */
+  .day-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 75;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    background: var(--card);
+    border-top: 1px solid var(--border-default);
+  }
+  .dock-btn {
+    position: relative;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-default);
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .dock-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .dock-btn.is-on {
+    background: var(--surface);
+    border-color: var(--border-strong);
+  }
+  .dock-btn--primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .dock-day {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .dock-day-num {
+    font: var(--fw-semibold) 14px/1.15 var(--font-sans);
+    color: var(--text-primary);
+  }
+  .dock-day-date {
+    font: var(--fw-medium) 11px/1.3 var(--font-mono);
+    color: var(--text-secondary);
+  }
+  .dock-sep {
+    width: 1px;
+    height: 26px;
+    background: var(--border-default);
+    margin: 0 2px;
+  }
+  .dock-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: #fff;
+    font: var(--fw-semibold) 10px/18px var(--font-mono);
+  }
+
   /* The day's three facts (city, load, overnight) go one under the other —
      at a 200px minimum they were forcing the whole page wider. */
   .day-facts > div {
     min-width: 0;
     flex-basis: 100%;
   }
-  /* Five mode icons in a row need a finger's worth of space each. */
+  /* The cost was a right-hand column that left the name about 150px and wrapped
+     "Lunch at the riverside" over five lines; it takes a line of its own,
+     aligned with the text. */
+  .stop-card-row {
+    flex-wrap: wrap;
+  }
+  .stop-cost {
+    flex: 1 1 100%;
+    text-align: left;
+    padding-left: 52px;
+  }
+  /* 22px of card around a stop is a laptop's air; the facts column gets it. */
+  .timeline-content :deep(.tf-card) {
+    padding: 14px;
+  }
+  /* Five mode icons in a row need a finger's worth of space each; the leg's
+     time and distance go under them rather than beside. */
+  .timeline-leg {
+    display: flex;
+    flex-wrap: wrap;
+    line-height: 1.35;
+  }
   .leg-mode {
     width: 34px;
     height: 32px;

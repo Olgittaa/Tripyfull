@@ -88,6 +88,14 @@ Rules that keep this working:
   earlier one of equal weight: put a component's phone overrides at the **end
   of its own** style block, not in `responsive.css`.
 - Touch targets are at least ~38px; nothing that carries meaning is under 11px.
+- `.phone-hide` / `.phone-only` (utilities.css) fold a label or a whole button away
+  below 700px; `.phone-hide` is `!important` on purpose, so it beats a button's own
+  display. On a phone a page transition only fades — a transform on the page would
+  turn its `position: fixed` children (the itinerary's dock and map sheet) into
+  absolute ones for the duration and make them jump.
+- A page's secondary panel (the itinerary's route map) stays in the DOM at every
+  width: beside the list on a laptop, parked below the screen as a fixed sheet on a
+  phone and slid up on demand — so Leaflet measures a real box on mount.
 
 ## Hygiene
 

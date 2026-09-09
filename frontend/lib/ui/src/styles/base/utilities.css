@@ -71,8 +71,11 @@
   display: none;
 }
 @media (max-width: 700px) {
+  /* A utility has to win over the element's own display — a button's
+     inline-flex, an icon button's scoped flex — so it is the one place
+     !important is right. */
   .phone-hide {
-    display: none;
+    display: none !important;
   }
   .phone-only {
     display: inline;
