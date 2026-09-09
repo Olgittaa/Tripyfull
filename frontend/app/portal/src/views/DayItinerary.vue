@@ -15,15 +15,8 @@
 
     <template v-else>
       <!-- Day header with prev/next -->
-      <div
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 24px;
-        "
-      >
-        <div style="display: flex; align-items: center; gap: 14px">
+      <div class="day-head">
+        <div class="day-head-main">
           <TfIconButton
             class="phone-hide"
             variant="outline"
@@ -41,17 +34,7 @@
               >
               <template v-else>Day {{ day?.dayNumber }} · {{ formatDayDate(day?.date) }}</template>
             </div>
-            <h1
-              style="
-                font: var(--fw-bold) 30px/1 var(--font-display);
-                letter-spacing: -0.03em;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-              "
-            >
-              {{ day?.city || 'No city set' }}
-            </h1>
+            <h1 class="day-h1">{{ day?.city || 'No city set' }}</h1>
           </div>
           <TfIconButton
             class="phone-hide"
@@ -1070,7 +1053,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   TfButton,
@@ -2233,6 +2216,26 @@ const switchDay = (id) => {
   loadDay(id);
 };
 
+/* The strip scrolls sideways; whichever way the day changes (strip, arrows,
+   dock), the current chip is brought to the middle — horizontally only, so the
+   page itself never jumps. */
+let stripSettled = false; // the first positioning is a jump, later ones glide
+watch(
+  [dayId, allDays],
+  async () => {
+    await nextTick();
+    const strip = document.querySelector('.day-picker');
+    const on = strip?.querySelector('.day-picker-btn--on');
+    if (!strip || !on) return;
+    strip.scrollTo({
+      left: on.offsetLeft - strip.clientWidth / 2 + on.offsetWidth / 2,
+      behavior: stripSettled ? 'smooth' : 'auto',
+    });
+    stripSettled = true;
+  },
+  { immediate: true },
+);
+
 // Swap this day's plan with another day of the trip.
 const showSwapModal = ref(false);
 const swapping = ref(false);
@@ -2437,6 +2440,27 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* The day's head: arrows around the title on the left, the day's tools on the right. */
+.day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.day-head-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.day-h1 {
+  font: var(--fw-bold) 30px/1 var(--font-display);
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Icon, facts and cost on one line; on a phone the cost steps under the facts. */
 .stop-card-row {
   display: flex;
@@ -3084,6 +3108,23 @@ onMounted(async () => {
 
 /* ---- Phones: last in the file, so these win over the rules above ---- */
 @media (max-width: 700px) {
+  /* The head stacks: the title takes the width, and the day's three tools sit
+     in one short row under it instead of piling up beside a two-line city. */
+  .day-head {
+    flex-wrap: wrap;
+    gap: 8px 0;
+    margin-bottom: 16px;
+  }
+  .day-head-main {
+    flex: 1 1 100%;
+  }
+  .day-h1 {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+  .day-head-actions {
+    flex-wrap: nowrap;
+  }
   /* Room under the list for the dock. */
   .itin-layout {
     padding-bottom: 72px;
