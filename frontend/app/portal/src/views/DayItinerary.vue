@@ -28,7 +28,9 @@
             <i class="pi pi-chevron-left"></i>
           </TfIconButton>
           <div>
-            <div class="tf-eyebrow" style="margin-bottom: 4px">
+            <!-- The dock and the strip already name the day on a phone; the head
+                 keeps the city alone there. -->
+            <div class="tf-eyebrow phone-hide" style="margin-bottom: 4px">
               <template v-if="day && !day.date"
                 >Reserve day {{ reserveIndex }} · outside the trip dates</template
               >
