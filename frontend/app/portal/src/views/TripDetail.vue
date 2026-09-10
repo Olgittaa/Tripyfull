@@ -419,7 +419,7 @@ import {
   TfModal,
   toast,
 } from '@tripyfull/ui';
-import { baseCurrency as accountCurrency } from '@tripyfull/core';
+import { baseCurrency as accountCurrency, bookingEmoji, MODE_LABEL } from '@tripyfull/core';
 import {
   buildTripDocument,
   collectMapPoints,
@@ -572,35 +572,60 @@ const mustSeesLeft = computed(() =>
   places.value.filter((p) => p.rating === 5 && !plannedPlaceIds.value.has(p.id)),
 );
 
-/* ---- coming up: to-dos, payments and the departure on one line of time ---- */
+/* ---- coming up: the three nearest to-dos and the three nearest events ----
+   Events are what happens on a date: a payment falling due, the departure, a
+   booking — a flight leaving, a check-in, a booked activity. */
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const dateParts = (iso) => {
   const d = parseDate(iso);
   return { dayNum: d.getDate(), mon: MON[d.getMonth()] };
 };
+const byDate = (a, b) => a.date.localeCompare(b.date);
+const clock = (dt) => (dt ? ' ' + String(dt).slice(11, 16) : '');
+
+/** The day a booking happens on: check-in for a stay, departure otherwise. */
+const bookingDate = (b) =>
+  b.category === 'ACCOMMODATION' ? b.checkIn : b.departureAt ? b.departureAt.slice(0, 10) : null;
+
+const bookingSub = (b) => {
+  if (b.category === 'ACCOMMODATION') {
+    const time = b.checkInTime ? ' ' + String(b.checkInTime).slice(0, 5) : '';
+    return `Check-in${time}${b.accommodationCity ? ` · ${b.accommodationCity}` : ''}`;
+  }
+  if (b.category === 'TRANSPORTATION') {
+    const what = MODE_LABEL[b.transportMode] || 'Journey';
+    const route = b.fromPlace && b.toPlace ? ` · ${b.fromPlace} → ${b.toPlace}` : '';
+    return `${what}${clock(b.departureAt)}${route}`;
+  }
+  return `Activity${clock(b.departureAt)}${b.fromPlace ? ` · ${b.fromPlace}` : ''}`;
+};
+
 const agenda = computed(() => {
   const t = todayStr();
-  const items = [];
-  for (const td of todos.value) {
-    if (td.done || !td.dueDate) continue;
-    const n = diffInDays(t, td.dueDate);
-    if (n > 45) continue;
-    items.push({
-      key: 'todo-' + td.id,
-      date: td.dueDate,
-      title: td.title,
-      sub: td.groupName ? `To-do · ${td.groupName}` : 'To-do',
-      icon: '\u2611\uFE0F',
-      style: { background: 'var(--success-100)', color: 'var(--primary)' },
-      late: n < 0,
-      today: n === 0,
-      to: `/trips/${tripId}/todos`,
-    });
-  }
+  const todoItems = todos.value
+    .filter((td) => !td.done && td.dueDate)
+    .map((td) => {
+      const n = diffInDays(t, td.dueDate);
+      return {
+        key: 'todo-' + td.id,
+        date: td.dueDate,
+        title: td.title,
+        sub: td.groupName ? `To-do · ${td.groupName}` : 'To-do',
+        icon: '\u2611\uFE0F',
+        style: { background: 'var(--success-100)', color: 'var(--primary)' },
+        late: n < 0,
+        today: n === 0,
+        to: `/trips/${tripId}/todos`,
+      };
+    })
+    .sort(byDate)
+    .slice(0, 3);
+
+  const events = [];
   for (const p of budgetData.value?.upcomingPayments || []) {
     if (!p.dueDate) continue;
     const n = diffInDays(t, p.dueDate);
-    items.push({
+    events.push({
       key: 'pay-' + p.paymentId,
       date: p.dueDate,
       title: p.bookingName,
@@ -614,7 +639,7 @@ const agenda = computed(() => {
     });
   }
   if (phase.value === 'before' && trip.value?.startDate) {
-    items.push({
+    events.push({
       key: 'departure',
       date: trip.value.startDate,
       title: 'Departure',
@@ -624,10 +649,23 @@ const agenda = computed(() => {
       to: `/trips/${tripId}/itinerary`,
     });
   }
-  return items
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 7)
-    .map((i) => ({ ...i, ...dateParts(i.date) }));
+  for (const b of bookings.value) {
+    const date = bookingDate(b);
+    if (!date || date < t) continue; // a booking that has happened is not coming up
+    events.push({
+      key: 'booking-' + b.id,
+      date,
+      title: b.name,
+      sub: bookingSub(b),
+      icon: bookingEmoji(b),
+      style: { background: 'var(--success-100)', color: 'var(--accent)' },
+      today: date === t,
+      to: `/trips/${tripId}/bookings`,
+    });
+  }
+  const eventItems = events.sort(byDate).slice(0, 3);
+
+  return [...todoItems, ...eventItems].sort(byDate).map((i) => ({ ...i, ...dateParts(i.date) }));
 });
 
 // What will happen to the itinerary if the edited dates are applied.

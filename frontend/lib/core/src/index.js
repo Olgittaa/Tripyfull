@@ -6,3 +6,4 @@ export * from './currency.js';
 export * from './date.js';
 export * from './constants.js';
 export * from './media.js';
+export * from './bookingIcons.js';

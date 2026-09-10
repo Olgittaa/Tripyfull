@@ -863,7 +863,7 @@ import {
 } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
 import { FEATURES } from '@/config.js';
-import { baseCurrency as accountCurrency } from '@tripyfull/core';
+import { baseCurrency as accountCurrency, catEmoji, bookingEmoji } from '@tripyfull/core';
 import {
   formatDualPrice,
   toBaseCurrency,
@@ -1141,25 +1141,6 @@ const transportModeLabel = computed({
     form.value.transportMode = labelToValue(transportMap, label);
   },
 });
-
-const catEmoji = (c) =>
-  ({ TRANSPORTATION: '\u2708\uFE0F', ACCOMMODATION: '\u{1F3E8}', ACTIVITY: '\u{1F3AB}' })[c] ??
-  '\u{1F4CB}';
-
-// A journey shows what it travels by: a plane on the ferry row said nothing.
-const MODE_EMOJI = {
-  FLIGHT: '\u2708\uFE0F',
-  TRAIN: '\u{1F686}',
-  BUS: '\u{1F68C}',
-  FERRY: '\u26F4\uFE0F',
-  TAXI: '\u{1F695}',
-  CAR_RENTAL: '\u{1F697}',
-  METRO: '\u{1F687}',
-  WALK: '\u{1F6B6}',
-};
-/** The row's icon: the transport mode where there is one, else the category. */
-const bookingEmoji = (b) =>
-  (b.category === 'TRANSPORTATION' && MODE_EMOJI[b.transportMode]) || catEmoji(b.category);
 
 /** What that icon means, spelled out on hover. */
 const bookingIconTitle = (b) =>
