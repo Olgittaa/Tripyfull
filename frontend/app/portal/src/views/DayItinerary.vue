@@ -151,16 +151,10 @@
           <!-- Day info: city + overnight -->
           <div class="card day-facts">
             <!-- Cities / places -->
-            <div style="flex: 1; min-width: 200px">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
+            <div class="fact">
+              <div class="fact-head">
                 <i class="pi pi-map-marker" style="color: var(--accent); font-size: 16px"></i>
-                <span
-                  style="
-                    font: var(--fw-semibold) 14px/1 var(--font-sans);
-                    color: var(--text-primary);
-                  "
-                  >Visiting</span
-                >
+                <span class="fact-title">Visiting</span>
               </div>
               <div
                 v-if="!editingCity"
@@ -197,16 +191,10 @@
             </div>
 
             <!-- How full the day is: places you go to, and time spent getting there -->
-            <div v-if="activities.length" style="flex: 1; min-width: 200px">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
+            <div v-if="activities.length" class="fact">
+              <div class="fact-head">
                 <i class="pi pi-clock" style="color: var(--accent); font-size: 16px"></i>
-                <span
-                  style="
-                    font: var(--fw-semibold) 14px/1 var(--font-sans);
-                    color: var(--text-primary);
-                  "
-                  >Day</span
-                >
+                <span class="fact-title">Day</span>
               </div>
               <div class="day-load">
                 <span
@@ -229,16 +217,10 @@
             </div>
 
             <!-- Overnight stay -->
-            <div style="flex: 1; min-width: 200px">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
+            <div class="fact">
+              <div class="fact-head">
                 <i class="pi pi-moon" style="color: var(--accent); font-size: 16px"></i>
-                <span
-                  style="
-                    font: var(--fw-semibold) 14px/1 var(--font-sans);
-                    color: var(--text-primary);
-                  "
-                  >Overnight</span
-                >
+                <span class="fact-title">Overnight</span>
               </div>
 
               <!-- Not editing -->
@@ -2495,6 +2477,20 @@ onMounted(async () => {
   flex-wrap: wrap;
   align-items: flex-start;
 }
+.fact {
+  flex: 1;
+  min-width: 200px;
+}
+.fact-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.fact-title {
+  font: var(--fw-semibold) 14px/1 var(--font-sans);
+  color: var(--text-primary);
+}
 
 /* The day's own buttons: they wrap under the title rather than push the page. */
 .day-head-actions {
@@ -3141,9 +3137,35 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
   }
+  /* The day's facts come first, folded to one line each: the icon stands for
+     the title, the value sits beside it. */
   .day-facts {
-    order: 2;
-    margin: 12px 0 0;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    gap: 6px 16px;
+  }
+  .fact {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .fact-head {
+    flex: none;
+    margin: 0;
+    padding-top: 3px;
+  }
+  .fact-title {
+    display: none;
+  }
+  .fact > :not(.fact-head) {
+    flex: 1;
+    min-width: 0;
+  }
+  .day-load {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    font-size: 13px;
   }
 
   /* The map aside becomes a sheet, parked below the screen until the dock
@@ -3264,7 +3286,7 @@ onMounted(async () => {
 
   /* The day's three facts (city, load, overnight) go one under the other —
      at a 200px minimum they were forcing the whole page wider. */
-  .day-facts > div {
+  .fact {
     min-width: 0;
     flex-basis: 100%;
   }
