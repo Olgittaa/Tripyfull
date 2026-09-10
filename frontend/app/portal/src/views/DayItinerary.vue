@@ -57,7 +57,7 @@
             title="Fill the days from your saved places, following the hotels"
           >
             <i class="pi pi-sparkles" style="font-size: 12px"></i>
-            <span class="phone-hide">Auto-plan</span>
+            <span>Auto-plan</span>
           </TfButton>
           <TfButton
             v-if="activities.length > 1"
@@ -67,7 +67,7 @@
             title="Reorder activities by their start time"
           >
             <i class="pi pi-sort-amount-down" style="font-size: 13px"></i>
-            <span class="phone-hide">Sort by time</span>
+            <span>Sort by time</span>
           </TfButton>
           <!-- Buffer days are their own reserve days now (the "+ Buffer" chip in
                the strip), so a dated day has nothing to toggle. -->
@@ -79,7 +79,7 @@
             title="Remove this reserve day"
           >
             <i class="pi pi-trash" style="font-size: 13px"></i>
-            <span class="phone-hide">Remove reserve</span>
+            <span>Remove reserve</span>
           </TfButton>
           <TfButton
             v-if="allDays.length > 1"
@@ -89,7 +89,7 @@
             title="Swap this day's plan with another day"
           >
             <i class="pi pi-arrow-right-arrow-left" style="font-size: 13px"></i>
-            <span class="phone-hide">Swap</span>
+            <span>Swap</span>
           </TfButton>
           <TfButton class="phone-hide" variant="primary" @click="openAddDialog">
             <i class="pi pi-plus" style="font-size: 14px"></i> Activity
@@ -152,10 +152,7 @@
           <div class="card day-facts">
             <!-- Cities / places -->
             <div class="fact">
-              <div class="fact-head">
-                <i class="pi pi-map-marker" style="color: var(--accent); font-size: 16px"></i>
-                <span class="fact-title">Visiting</span>
-              </div>
+              <i class="pi pi-map-marker fact-icon" title="Visiting"></i>
               <div
                 v-if="!editingCity"
                 style="display: flex; align-items: center; gap: 8px; cursor: pointer"
@@ -166,7 +163,7 @@
               >
                 <span
                   style="
-                    font: var(--fw-medium) 15px/1.2 var(--font-display);
+                    font: var(--fw-medium) 14px/1.2 var(--font-display);
                     color: var(--text-primary);
                   "
                 >
@@ -192,10 +189,7 @@
 
             <!-- How full the day is: places you go to, and time spent getting there -->
             <div v-if="activities.length" class="fact">
-              <div class="fact-head">
-                <i class="pi pi-clock" style="color: var(--accent); font-size: 16px"></i>
-                <span class="fact-title">Day</span>
-              </div>
+              <i class="pi pi-clock fact-icon" title="Day"></i>
               <div class="day-load">
                 <span
                   ><b>{{ dayBudget.stops }}</b> stop{{ dayBudget.stops === 1 ? '' : 's' }}</span
@@ -218,10 +212,7 @@
 
             <!-- Overnight stay -->
             <div class="fact">
-              <div class="fact-head">
-                <i class="pi pi-moon" style="color: var(--accent); font-size: 16px"></i>
-                <span class="fact-title">Overnight</span>
-              </div>
+              <i class="pi pi-moon fact-icon" title="Overnight"></i>
 
               <!-- Not editing -->
               <div v-if="!editingOvernight">
@@ -230,7 +221,7 @@
                   <div style="display: flex; align-items: center; gap: 8px">
                     <span
                       style="
-                        font: var(--fw-medium) 15px/1.2 var(--font-display);
+                        font: var(--fw-medium) 14px/1.2 var(--font-display);
                         color: var(--text-primary);
                       "
                     >
@@ -2469,27 +2460,35 @@ onMounted(async () => {
   color: var(--text-primary);
 }
 
-/* City, day load and overnight stay, side by side while they fit. */
+/* City, day load and overnight stay: a slim strip, side by side while they
+   fit. Each fact is its icon and its value on one line; the icon stands for
+   the title ("Visiting", "Day", "Overnight" are its tooltip). */
 .day-facts {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
   display: flex;
-  gap: 20px;
+  gap: 6px 24px;
   flex-wrap: wrap;
   align-items: flex-start;
 }
 .fact {
-  flex: 1;
-  min-width: 200px;
-}
-.fact-head {
+  /* Natural widths: the city is short, the load is long, and the overnight
+     stay with its booking badge takes the next line rather than squeezing. */
+  flex: 0 1 auto;
+  min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  margin-bottom: 8px;
 }
-.fact-title {
-  font: var(--fw-semibold) 14px/1 var(--font-sans);
-  color: var(--text-primary);
+.fact-icon {
+  flex: none;
+  color: var(--accent);
+  font-size: 15px;
+  padding-top: 3px;
+}
+.fact > :not(.fact-icon) {
+  flex: 1;
+  min-width: 0;
 }
 
 /* The day's own buttons: they wrap under the title rather than push the page. */
@@ -2966,9 +2965,9 @@ onMounted(async () => {
 
 .day-load {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font: var(--fw-medium) 14px/1.3 var(--font-sans);
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font: var(--fw-medium) 13px/1.4 var(--font-sans);
   color: var(--text-secondary);
 }
 .day-load b {
@@ -3120,9 +3119,6 @@ onMounted(async () => {
     font-size: 24px;
     line-height: 1.1;
   }
-  .day-head-actions {
-    flex-wrap: nowrap;
-  }
   /* The dock switches days on a phone; the strip would be the same days a
      second time, 64px above the list. */
   .day-picker {
@@ -3132,40 +3128,24 @@ onMounted(async () => {
   .itin-layout {
     padding-bottom: 72px;
   }
-  /* The list first; the day's facts (city, load, overnight) follow it. */
   .itin-main {
     display: flex;
     flex-direction: column;
   }
-  /* The day's facts come first, folded to one line each: the icon stands for
-     the title, the value sits beside it. */
+  /* The three tools share one row: a little less air inside each button. */
+  .day-head-actions {
+    gap: 6px;
+  }
+  .day-head-actions .btn {
+    padding-inline: 10px;
+  }
+  /* One fact per line on a phone. */
   .day-facts {
     margin: 0 0 12px;
     padding: 10px 12px;
-    gap: 6px 16px;
   }
   .fact {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .fact-head {
-    flex: none;
-    margin: 0;
-    padding-top: 3px;
-  }
-  .fact-title {
-    display: none;
-  }
-  .fact > :not(.fact-head) {
-    flex: 1;
-    min-width: 0;
-  }
-  .day-load {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 2px 12px;
-    font-size: 13px;
+    flex-basis: 100%;
   }
 
   /* The map aside becomes a sheet, parked below the screen until the dock
@@ -3282,13 +3262,6 @@ onMounted(async () => {
     background: var(--accent);
     color: #fff;
     font: var(--fw-semibold) 10px/18px var(--font-mono);
-  }
-
-  /* The day's three facts (city, load, overnight) go one under the other —
-     at a 200px minimum they were forcing the whole page wider. */
-  .fact {
-    min-width: 0;
-    flex-basis: 100%;
   }
   /* The cost was a right-hand column that left the name about 150px and wrapped
      "Lunch at the riverside" over five lines; it takes a line of its own,
