@@ -1795,6 +1795,15 @@ const upsertPlace = (place) => {
   else places.value.unshift(place);
 };
 
+/** A place just saved from the finder: into the list, the finder closed, and
+    its card open — imported details are worth a look, and a wrong pick is
+    caught at once. */
+const showSaved = (place) => {
+  upsertPlace(place);
+  showFindDialog.value = false;
+  openDetails(place);
+};
+
 // Google result: geocode-create by its precise display name (dedupes by place id).
 const addGoogleResult = async (r, key) => {
   savingKey.value = key;
@@ -1803,7 +1812,7 @@ const addGoogleResult = async (r, key) => {
       text: r.displayName || r.name,
       country: null,
     });
-    upsertPlace(res.data);
+    showSaved(res.data);
     toast.success('Place saved', res.data.name);
   } catch {
     toast.warning('Not found', 'Could not save this place');
@@ -1826,7 +1835,7 @@ const addTaResult = async (r, key) => {
       latitude: r.latitude,
       longitude: r.longitude,
     });
-    upsertPlace(res.data);
+    showSaved(res.data);
     toast.success('Place saved', res.data.name);
   } catch {
     toast.warning('Error', 'Could not save this place');
@@ -1843,7 +1852,7 @@ const runImport = async () => {
   importing.value = true;
   try {
     const res = await api.post('/api/places/import', { url: importUrl.value.trim() });
-    upsertPlace(res.data);
+    showSaved(res.data);
     importUrl.value = '';
     toast.success('Imported', res.data.name);
   } catch (e) {
