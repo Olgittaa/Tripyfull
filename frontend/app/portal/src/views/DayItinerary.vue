@@ -36,7 +36,34 @@
               >
               <template v-else>Day {{ day?.dayNumber }} · {{ formatDayDate(day?.date) }}</template>
             </div>
-            <h1 class="day-h1">{{ day?.city || 'No city set' }}</h1>
+            <h1 v-if="!editingCity" class="day-h1">
+              <span class="day-h1-text">{{ day?.city || 'No city set' }}</span>
+              <button
+                type="button"
+                class="day-h1-edit"
+                aria-label="Change the city"
+                @click="
+                  editingCity = true;
+                  cityDraft = day?.city || '';
+                "
+              >
+                <i class="pi pi-pencil"></i>
+              </button>
+            </h1>
+            <div v-else class="day-h1-form">
+              <TfCitySearch
+                v-model="cityDraft"
+                placeholder="e.g. Tokyo, Kamakura"
+                style="flex: 1"
+                @select="onCitySelected"
+              />
+              <TfIconButton variant="ghost" size="sm" label="Save" @click="saveCity"
+                ><i class="pi pi-check"></i
+              ></TfIconButton>
+              <TfIconButton variant="ghost" size="sm" label="Cancel" @click="editingCity = false"
+                ><i class="pi pi-times"></i
+              ></TfIconButton>
+            </div>
           </div>
           <TfIconButton
             class="phone-hide"
@@ -148,45 +175,8 @@
       <!-- Two-column: itinerary (left) + day route map (right) -->
       <div class="itin-layout">
         <div class="itin-main">
-          <!-- Day info: city + overnight -->
+          <!-- The day in numbers, and the night when the plan does not show it -->
           <div class="card day-facts">
-            <!-- Cities / places -->
-            <div class="fact">
-              <i class="pi pi-map-marker fact-icon" title="Visiting"></i>
-              <div
-                v-if="!editingCity"
-                style="display: flex; align-items: center; gap: 8px; cursor: pointer"
-                @click="
-                  editingCity = true;
-                  cityDraft = day?.city || '';
-                "
-              >
-                <span
-                  style="
-                    font: var(--fw-medium) 14px/18px var(--font-display);
-                    color: var(--text-primary);
-                  "
-                >
-                  {{ day?.city || 'Set cities...' }}
-                </span>
-                <i class="pi pi-pencil" style="font-size: 11px; color: var(--text-secondary)"></i>
-              </div>
-              <div v-else style="display: flex; gap: 6px; align-items: center">
-                <TfCitySearch
-                  v-model="cityDraft"
-                  placeholder="e.g. Tokyo, Kamakura"
-                  style="flex: 1"
-                  @select="onCitySelected"
-                />
-                <TfIconButton variant="ghost" size="sm" @click="saveCity"
-                  ><i class="pi pi-check"></i
-                ></TfIconButton>
-                <TfIconButton variant="ghost" size="sm" @click="editingCity = false"
-                  ><i class="pi pi-times"></i
-                ></TfIconButton>
-              </div>
-            </div>
-
             <!-- How full the day is: places you go to, and time spent getting there -->
             <div v-if="activities.length" class="fact">
               <i class="pi pi-clock fact-icon" title="Day"></i>
@@ -210,8 +200,9 @@
               </div>
             </div>
 
-            <!-- Overnight stay -->
-            <div class="fact">
+            <!-- Overnight stay — only when the plan does not show it already: a
+                 hotel's own row or an overnight flight says where the night is. -->
+            <div v-if="!nightInPlan" class="fact">
               <i class="pi pi-moon fact-icon" title="Overnight"></i>
 
               <!-- Not editing -->
@@ -2117,6 +2108,21 @@ const overnightSuggestion = computed(() => {
   );
 });
 
+/* The night is already on the page when a stay has its evening row in the plan
+   ("Check in", "Overnight", or a hotel stop of your own) or a journey lands on
+   the next day; the overnight fact would say it twice. A "Check out" row is the
+   morning after — it says nothing about where this night is spent. */
+const nightInPlan = computed(() =>
+  activities.value.some(
+    (a) =>
+      (isHotelRow(a) && !(a.fromBooking && /^Check out · /.test(a.name || ''))) ||
+      (isJourneyRow(a) &&
+        day.value?.date &&
+        a.bookingArrivalAt &&
+        String(a.bookingArrivalAt).slice(0, 10) > day.value.date),
+  ),
+);
+
 // Find the linked booking (when day has linkedBookingId)
 const linkedBooking = computed(() => {
   if (!day.value?.linkedBookingId) return null;
@@ -2434,6 +2440,40 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+.day-h1-text {
+  min-width: 0;
+}
+/* The pencil that changes the city: quiet until the title is hovered. */
+.day-h1-edit {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-disabled);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.day-h1:hover .day-h1-edit,
+.day-h1-edit:focus-visible {
+  color: var(--text-secondary);
+}
+.day-h1-edit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
+}
+.day-h1-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 320px;
 }
 
 /* Icon, facts and cost on one line; on a phone the cost steps under the facts. */
@@ -3120,6 +3160,14 @@ onMounted(async () => {
   .day-h1 {
     font-size: 24px;
     line-height: 1.1;
+  }
+  .day-h1-edit {
+    width: 38px;
+    height: 38px;
+    color: var(--text-secondary);
+  }
+  .day-h1-form {
+    min-width: 0;
   }
   /* The dock switches days on a phone; the strip would be the same days a
      second time, 64px above the list. */
