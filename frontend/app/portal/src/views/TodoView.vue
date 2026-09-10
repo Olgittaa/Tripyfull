@@ -531,10 +531,11 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-/* Groups side by side where the width allows; each is one card. */
+/* Groups side by side where the width allows; each is one card. The 340px
+   minimum yields to the screen on a narrow phone. */
 .todo-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   gap: var(--space-4);
   align-items: start;
 }
