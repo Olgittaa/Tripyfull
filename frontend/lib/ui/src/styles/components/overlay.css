@@ -18,13 +18,19 @@
   font: var(--type-small);
   white-space: nowrap;
   box-shadow: var(--shadow-md);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--dur-fast) var(--ease-out);
+  /* Out of the layout while hidden: an invisible tooltip that pokes past the
+     screen's edge still widens the page — on a phone that let the whole
+     viewport stretch and carried the fixed dock off the screen. */
+  display: none;
 }
 .tooltip[data-show='true'] {
-  opacity: 1;
-  visibility: visible;
+  display: block;
+  animation: tooltip-in var(--dur-fast) var(--ease-out);
+}
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
 }
 .tooltip--top {
   bottom: calc(100% + 8px);

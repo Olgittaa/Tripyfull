@@ -163,7 +163,7 @@
               >
                 <span
                   style="
-                    font: var(--fw-medium) 14px/1.2 var(--font-display);
+                    font: var(--fw-medium) 14px/18px var(--font-display);
                     color: var(--text-primary);
                   "
                 >
@@ -221,7 +221,7 @@
                   <div style="display: flex; align-items: center; gap: 8px">
                     <span
                       style="
-                        font: var(--fw-medium) 14px/1.2 var(--font-display);
+                        font: var(--fw-medium) 14px/18px var(--font-display);
                         color: var(--text-primary);
                       "
                     >
@@ -2480,11 +2480,13 @@ onMounted(async () => {
   align-items: flex-start;
   gap: 8px;
 }
+/* Icon and value share one 18px line, so the icon sits level with the first
+   line of text whatever the fact is. */
 .fact-icon {
   flex: none;
   color: var(--accent);
   font-size: 15px;
-  padding-top: 3px;
+  line-height: 18px;
 }
 .fact > :not(.fact-icon) {
   flex: 1;
@@ -2967,7 +2969,7 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 2px 12px;
-  font: var(--fw-medium) 13px/1.4 var(--font-sans);
+  font: var(--fw-medium) 13px/18px var(--font-sans);
   color: var(--text-secondary);
 }
 .day-load b {
