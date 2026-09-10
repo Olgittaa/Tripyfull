@@ -205,7 +205,9 @@ public class PlaceService {
         if (c.contains("natural") || c.contains("forest") || c.contains("water") || c.contains("peak")
                 || c.contains("nature") || c.contains("wood")) return PlaceType.NATURE;
         if (c.contains("tourism") || c.contains("attraction") || c.contains("monument") || c.contains("historic")
-                || c.contains("artwork") || c.contains("sights") || c.contains("castle") || c.contains("temple")) return PlaceType.SIGHTSEEING;
+                || c.contains("artwork") || c.contains("sights") || c.contains("castle") || c.contains("temple")
+                || c.contains("place_of_worship") || c.contains("church") || c.contains("mosque")
+                || c.contains("landmark")) return PlaceType.SIGHTSEEING;
         if (c.contains("suburb") || c.contains("neighbourhood") || c.contains("quarter") || c.contains("city")
                 || c.contains("town") || c.contains("village") || c.contains("hamlet") || c.contains("locality")) return PlaceType.NEIGHBORHOOD;
         return PlaceType.OTHER;
@@ -268,8 +270,17 @@ public class PlaceService {
                     "That link opens a list or destination page, not a single place. Open a specific place and share its link.");
         }
 
+        // The link names the place and marks the spot; Google turns the two into
+        // the place itself — its id, canonical name, address, type — and later the
+        // id fetches its description and photos. Without Google, or when Google
+        // finds nothing there, the OSM geocoder reads the spot as before.
         GeocodingService.GeocodeResult r = null;
-        if (parsed.lat() != null && parsed.lon() != null) {
+        boolean fromGoogle = false;
+        if (googlePlacesService.isEnabled() && parsed.name() != null) {
+            r = googlePlacesService.locate(parsed.name(), parsed.lat(), parsed.lon());
+            fromGoogle = r != null;
+        }
+        if (r == null && parsed.lat() != null && parsed.lon() != null) {
             r = geocodingService.reverseGeocode(parsed.lat(), parsed.lon());
         }
         if (r == null && parsed.name() != null) {
@@ -297,21 +308,39 @@ public class PlaceService {
         place.setSource(PlaceSource.IMPORTED);
         place.setVisibility(PlaceVisibility.PRIVATE);
         place.setType(type);
-        place.setName(parsed.name() != null ? parsed.name()
-                : (r != null && r.name() != null ? r.name() : "Imported place"));
-        // Prefer the link's exact marker coordinates; fall back to the geocoder's.
-        place.setLatitude(parsed.lat() != null ? parsed.lat() : (r != null ? r.latitude() : null));
-        place.setLongitude(parsed.lon() != null ? parsed.lon() : (r != null ? r.longitude() : null));
+        if (fromGoogle) {
+            // Google's own record of the place: its name as listed, its pin.
+            place.setName(r.name() != null ? r.name() : parsed.name());
+            place.setLatitude(r.latitude());
+            place.setLongitude(r.longitude());
+        } else {
+            place.setName(parsed.name() != null ? parsed.name()
+                    : (r != null && r.name() != null ? r.name() : "Imported place"));
+            // Prefer the link's exact marker coordinates; fall back to the geocoder's.
+            place.setLatitude(parsed.lat() != null ? parsed.lat() : (r != null ? r.latitude() : null));
+            place.setLongitude(parsed.lon() != null ? parsed.lon() : (r != null ? r.longitude() : null));
+        }
         if (r != null) {
             place.setAddress(r.address());
             place.setOsmId(r.osmId());
             place.setCity(r.city());
             place.setCountry(r.country());
         }
-        if (parsed.description() != null) place.setDescription(parsed.description());
-        if (parsed.photo() != null) place.getPhotos().add(parsed.photo());
+        // The share page's own snippet ("★★★★★ · Buddhist temple") and preview
+        // image are the fallback: Google's editorial summary and photos, fetched
+        // by id in enrichPlace, come first when the place was found there.
+        if (!fromGoogle) {
+            if (parsed.description() != null) place.setDescription(parsed.description());
+            if (parsed.photo() != null) place.getPhotos().add(parsed.photo());
+        }
         addSourceLink(place, request.url());   // keep the Google Maps link the place came from
         enrichPlace(place);   // fills whatever the link didn't provide
+        if (fromGoogle) {
+            if ((place.getDescription() == null || place.getDescription().isBlank()) && parsed.description() != null) {
+                place.setDescription(parsed.description());
+            }
+            if (place.getPhotos().isEmpty() && parsed.photo() != null) place.getPhotos().add(parsed.photo());
+        }
         return toResponse(placeRepository.save(place), user, null);
     }
 

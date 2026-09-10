@@ -99,6 +99,39 @@ public class GooglePlacesService {
     }
 
     /**
+     * The place a map link points at: its name, searched within a few hundred
+     * metres of the link's own marker. A share link carries the name and the
+     * exact spot but no Places id; this is how the two become one. Returns null
+     * when nothing is found nearby (or the best match is somewhere else), so the
+     * caller can fall back to the OSM path.
+     */
+    public GeocodingService.GeocodeResult locate(String name, BigDecimal lat, BigDecimal lon) {
+        try {
+            List<Map<String, Object>> places = rawSearch(name, null, 1, lat, lon);
+            if (places.isEmpty()) return null;
+            Map<String, Object> p = places.get(0);
+            double[] latLng = location(p);
+            if (latLng == null) return null;
+            if (lat != null && lon != null
+                    && distanceMetres(lat.doubleValue(), lon.doubleValue(), latLng[0], latLng[1]) > 1500) {
+                log.info("Google found '{}' for '{}' but 1.5 km away — not the same place", displayName(p), name);
+                return null;
+            }
+            Map<String, String> addr = addressComponents(p);
+            String types = p.get("types") instanceof List<?> t ? String.join(",", t.stream().map(Object::toString).toList()) : null;
+            return new GeocodingService.GeocodeResult(
+                    BigDecimal.valueOf(latLng[0]), BigDecimal.valueOf(latLng[1]),
+                    str(p.get("formattedAddress")),
+                    p.get("id") != null ? "g:" + p.get("id") : null,
+                    addr.get("country"), addr.get("city"),
+                    displayName(p), types);
+        } catch (Exception e) {
+            log.warn("Google locate failed for '{}': {}", name, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Fills an empty description and/or photos via Place Details (photos resolved to
      * stable googleusercontent URLs so no API key leaks to the frontend).
      * Existing user data is never overwritten.
@@ -142,17 +175,30 @@ public class GooglePlacesService {
 
     /* ---- internals ---- */
 
-    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> rawSearch(String text, String regionCode, int limit) {
+        return rawSearch(text, regionCode, limit, null, null);
+    }
+
+    /** Text Search; with a point, biased to a 250 m circle around it. */
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> rawSearch(String text, String regionCode, int limit,
+                                                BigDecimal lat, BigDecimal lon) {
+        Map<String, Object> request = new java.util.HashMap<>(
+                Map.of("textQuery", text, "languageCode", "en", "pageSize", limit));
+        if (regionCode != null && !regionCode.isBlank()) {
+            request.put("regionCode", regionCode.toUpperCase(Locale.ROOT));
+        }
+        if (lat != null && lon != null) {
+            request.put("locationBias", Map.of("circle", Map.of(
+                    "center", Map.of("latitude", lat.doubleValue(), "longitude", lon.doubleValue()),
+                    "radius", 250.0)));
+        }
         Map<String, Object> body = restClient.post()
                 .uri("https://places.googleapis.com/v1/places:searchText")
                 .header("X-Goog-Api-Key", apiKey)
                 .header("X-Goog-FieldMask", SEARCH_FIELDS)
                 .header("Content-Type", "application/json")
-                .body(regionCode != null && !regionCode.isBlank()
-                        ? Map.of("textQuery", text, "languageCode", "en", "pageSize", limit,
-                                 "regionCode", regionCode.toUpperCase(Locale.ROOT))
-                        : Map.of("textQuery", text, "languageCode", "en", "pageSize", limit))
+                .body(request)
                 .retrieve()
                 .body(MAP_TYPE);
         List<Map<String, Object>> places = body != null ? (List<Map<String, Object>>) body.get("places") : null;
@@ -247,6 +293,14 @@ public class GooglePlacesService {
             return "address";
         }
         return "place";
+    }
+
+    /** Great-circle distance, good enough to tell "here" from "another town". */
+    private static double distanceMetres(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1), dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return 6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     private String str(Object o) { return o != null ? o.toString() : null; }
