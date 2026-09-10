@@ -196,7 +196,9 @@ public class PlaceService {
         if (c.contains("museum")) return PlaceType.MUSEUM;
         if (c.contains("viewpoint")) return PlaceType.VIEWPOINT;
         if (c.contains("aeroway") || c.contains("airport")) return PlaceType.AIRPORT;
-        if (c.contains("ferry") || c.contains("harbour") || c.contains("harbor") || c.contains("port")) return PlaceType.PORT;
+        // "port" as a word only: "sports_complex", "transport" and "airport" all contain it.
+        if (c.contains("ferry") || c.contains("harbour") || c.contains("harbor") || c.contains("seaport")
+                || c.contains("marina") || c.matches(".*\\bport\\b.*")) return PlaceType.PORT;
         if (c.contains("restaurant") || c.contains("cafe") || c.contains("bar") || c.contains("food")
                 || c.contains("catering") || c.contains("pub")) return PlaceType.RESTAURANT;
         if (c.contains("shop") || c.contains("mall") || c.contains("store") || c.contains("retail")
