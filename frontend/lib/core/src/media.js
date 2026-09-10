@@ -8,12 +8,3 @@ export function photoSrc(url) {
   if (!url) return url;
   return url.startsWith('/') ? API_BASE + url : url;
 }
-
-/**
- * Photo links known to be dead before any request is made. Google's older
- * `gps-cs-s` photo URLs answer 403 to everyone now; asking anyway only fills
- * the console with "Failed to load resource" for every card on the page.
- */
-export function isDeadPhotoUrl(url) {
-  return typeof url === 'string' && url.includes('googleusercontent.com/gps-cs-s/');
-}

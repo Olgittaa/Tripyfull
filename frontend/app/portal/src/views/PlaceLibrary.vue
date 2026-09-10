@@ -1109,7 +1109,7 @@ import { useTripStore } from '@/stores/tripStore.js';
 import { FEATURES } from '@/config.js';
 import BookingMap from '@/components/BookingMap.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api, isDeadPhotoUrl, photoSrc, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
+import { api, photoSrc, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
 
 const tripStore = useTripStore();
 const route = useRoute();
@@ -1384,8 +1384,10 @@ const removeFromCurrentTrip = async (place) => {
 // owner's own uploads, which sit after it. Only when nothing loads does the
 // card fall back to the type placeholder.
 const brokenPhotos = ref(new Set());
-const livePhotos = (p) =>
-  (p.photos || []).filter((url) => !isDeadPhotoUrl(url) && !brokenPhotos.value.has(url));
+/* A photo is shown until it fails to load; nothing is written off by its URL.
+   (Google's gps-cs-s links were once skipped wholesale after a spell of 403s —
+   the fresh ones every import brings back are exactly that shape, and load.) */
+const livePhotos = (p) => (p.photos || []).filter((url) => !brokenPhotos.value.has(url));
 const hasPhoto = (p) => livePhotos(p).length > 0;
 const cardPhoto = (p) => livePhotos(p)[photoIndex(p)];
 const onPhotoError = (p) => {
@@ -1623,7 +1625,7 @@ const photoInput = ref(null);
 // The grid renders from this same list, so a viewer index always matches.
 const shownPhotos = computed(() =>
   (drawerMode.value === 'edit' ? form.value.photoList : viewing.value?.photos || []).filter(
-    (url) => !isDeadPhotoUrl(url) && !brokenPhotos.value.has(url),
+    (url) => !brokenPhotos.value.has(url),
   ),
 );
 const viewerPhotos = computed(() => shownPhotos.value.map(photoSrc));

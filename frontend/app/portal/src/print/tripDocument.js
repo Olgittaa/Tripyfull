@@ -8,7 +8,6 @@
 // loaded once before the document is written — links to Google's photo hosts
 // expire, and a dead one would print as a broken box.
 
-import { isDeadPhotoUrl } from '@tripyfull/core';
 
 const TEAL = '#0e5c55';
 const INK = '#322a24';
@@ -93,7 +92,7 @@ const stars = (r) => (r ? '★'.repeat(r) + '☆'.repeat(5 - r) : '');
 
 /** Absolute URL for a stored photo, so the document works outside the app too. */
 const photoUrl = (path, apiBase) =>
-  !path || isDeadPhotoUrl(path) ? null : path.startsWith('/') ? apiBase + path : path;
+  !path ? null : path.startsWith('/') ? apiBase + path : path;
 
 /** Photos per stop; the reference route books use one or two, never a gallery. */
 const PHOTOS_PER_STOP = 2;
@@ -565,7 +564,7 @@ export function buildTripDocument(
     body,
     /** Whole document, for a print window or a .doc file. */
     html: (withToolbar = false) =>
-      `<!doctype html><html><head><meta charset="utf-8"><title>${esc(d.title)}</title><style>${css}</style></head>` +
+      `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>${esc(d.title)}</title><style>${css}</style></head>` +
       `<body class="${withToolbar ? 'has-toolbar' : ''}">${
         withToolbar
           ? `<div class="toolbar"><button onclick="window.print()">Print</button><button class="secondary" onclick="window.__saveDoc && window.__saveDoc()">Save for Word (.doc)</button></div>`
