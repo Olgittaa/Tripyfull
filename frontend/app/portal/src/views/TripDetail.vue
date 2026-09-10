@@ -572,7 +572,7 @@ const mustSeesLeft = computed(() =>
   places.value.filter((p) => p.rating === 5 && !plannedPlaceIds.value.has(p.id)),
 );
 
-/* ---- coming up: the three nearest to-dos and the three nearest events ----
+/* ---- coming up: the three nearest things, to-dos and events together ----
    Events are what happens on a date: a payment falling due, the departure, a
    booking — a flight leaving, a check-in, a booked activity. */
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -602,30 +602,26 @@ const bookingSub = (b) => {
 
 const agenda = computed(() => {
   const t = todayStr();
-  const todoItems = todos.value
-    .filter((td) => !td.done && td.dueDate)
-    .map((td) => {
-      const n = diffInDays(t, td.dueDate);
-      return {
-        key: 'todo-' + td.id,
-        date: td.dueDate,
-        title: td.title,
-        sub: td.groupName ? `To-do · ${td.groupName}` : 'To-do',
-        icon: '\u2611\uFE0F',
-        style: { background: 'var(--success-100)', color: 'var(--primary)' },
-        late: n < 0,
-        today: n === 0,
-        to: `/trips/${tripId}/todos`,
-      };
-    })
-    .sort(byDate)
-    .slice(0, 3);
-
-  const events = [];
+  const items = [];
+  for (const td of todos.value) {
+    if (td.done || !td.dueDate) continue;
+    const n = diffInDays(t, td.dueDate);
+    items.push({
+      key: 'todo-' + td.id,
+      date: td.dueDate,
+      title: td.title,
+      sub: td.groupName ? `To-do · ${td.groupName}` : 'To-do',
+      icon: '\u2611\uFE0F',
+      style: { background: 'var(--success-100)', color: 'var(--primary)' },
+      late: n < 0,
+      today: n === 0,
+      to: `/trips/${tripId}/todos`,
+    });
+  }
   for (const p of budgetData.value?.upcomingPayments || []) {
     if (!p.dueDate) continue;
     const n = diffInDays(t, p.dueDate);
-    events.push({
+    items.push({
       key: 'pay-' + p.paymentId,
       date: p.dueDate,
       title: p.bookingName,
@@ -639,7 +635,7 @@ const agenda = computed(() => {
     });
   }
   if (phase.value === 'before' && trip.value?.startDate) {
-    events.push({
+    items.push({
       key: 'departure',
       date: trip.value.startDate,
       title: 'Departure',
@@ -652,7 +648,7 @@ const agenda = computed(() => {
   for (const b of bookings.value) {
     const date = bookingDate(b);
     if (!date || date < t) continue; // a booking that has happened is not coming up
-    events.push({
+    items.push({
       key: 'booking-' + b.id,
       date,
       title: b.name,
@@ -663,9 +659,10 @@ const agenda = computed(() => {
       to: `/trips/${tripId}/bookings`,
     });
   }
-  const eventItems = events.sort(byDate).slice(0, 3);
-
-  return [...todoItems, ...eventItems].sort(byDate).map((i) => ({ ...i, ...dateParts(i.date) }));
+  return items
+    .sort(byDate)
+    .slice(0, 3)
+    .map((i) => ({ ...i, ...dateParts(i.date) }));
 });
 
 // What will happen to the itinerary if the edited dates are applied.
