@@ -1,3 +1,4 @@
+import { ownPhotosFirst } from '@tripyfull/core';
 // The printed plan: one HTML document built from /api/trips/{id}/export.
 //
 // Modelled on a travel-agency route book — cover, what is in the plan, a
@@ -7,7 +8,6 @@
 // that only works on screen. Every photo a place has is offered, but each is
 // loaded once before the document is written — links to Google's photo hosts
 // expire, and a dead one would print as a broken box.
-
 
 const TEAL = '#0e5c55';
 const INK = '#322a24';
@@ -91,8 +91,7 @@ const dayOf = (days, iso) => {
 const stars = (r) => (r ? '★'.repeat(r) + '☆'.repeat(5 - r) : '');
 
 /** Absolute URL for a stored photo, so the document works outside the app too. */
-const photoUrl = (path, apiBase) =>
-  !path ? null : path.startsWith('/') ? apiBase + path : path;
+const photoUrl = (path, apiBase) => (!path ? null : path.startsWith('/') ? apiBase + path : path);
 
 /** Photos per stop; the reference route books use one or two, never a gallery. */
 const PHOTOS_PER_STOP = 2;
@@ -163,7 +162,10 @@ export function buildTripDocument(
 ) {
   // With no probe result, trust only what this app stores itself.
   const usable = (url) => (liveUrls ? liveUrls.has(url) : url.startsWith(apiBase + '/api/'));
-  const livePhotos = (list) => (list || []).map((p) => photoUrl(p, apiBase)).filter(usable);
+  const livePhotos = (list) =>
+    ownPhotosFirst(list)
+      .map((p) => photoUrl(p, apiBase))
+      .filter(usable);
   const photosFor = (a) => livePhotos(a.placePhotos).slice(0, PHOTOS_PER_STOP);
   const cur = d.baseCurrency || currency;
   const days = d.days || [];

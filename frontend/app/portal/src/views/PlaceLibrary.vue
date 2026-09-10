@@ -1109,7 +1109,7 @@ import { useTripStore } from '@/stores/tripStore.js';
 import { FEATURES } from '@/config.js';
 import BookingMap from '@/components/BookingMap.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api, photoSrc, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
+import { api, photoSrc, ownPhotosFirst, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
 
 const tripStore = useTripStore();
 const route = useRoute();
@@ -1387,7 +1387,7 @@ const brokenPhotos = ref(new Set());
 /* A photo is shown until it fails to load; nothing is written off by its URL.
    (Google's gps-cs-s links were once skipped wholesale after a spell of 403s —
    the fresh ones every import brings back are exactly that shape, and load.) */
-const livePhotos = (p) => (p.photos || []).filter((url) => !brokenPhotos.value.has(url));
+const livePhotos = (p) => ownPhotosFirst(p.photos).filter((url) => !brokenPhotos.value.has(url));
 const hasPhoto = (p) => livePhotos(p).length > 0;
 const cardPhoto = (p) => livePhotos(p)[photoIndex(p)];
 const onPhotoError = (p) => {
@@ -1624,7 +1624,7 @@ const photoInput = ref(null);
 // Photos of the place open in the panel, minus the ones that turned out dead.
 // The grid renders from this same list, so a viewer index always matches.
 const shownPhotos = computed(() =>
-  (drawerMode.value === 'edit' ? form.value.photoList : viewing.value?.photos || []).filter(
+  ownPhotosFirst(drawerMode.value === 'edit' ? form.value.photoList : viewing.value?.photos).filter(
     (url) => !brokenPhotos.value.has(url),
   ),
 );
@@ -1727,7 +1727,7 @@ const openDialog = (p) => {
       audience: p.audience || 'ALL',
       needsPreparation: !!p.needsPreparation,
       needsBooking: !!p.needsBooking,
-      photoList: [...(p.photos || [])],
+      photoList: ownPhotosFirst(p.photos),
     };
     linksText.value = (p.links || []).join(', ');
   } else {
