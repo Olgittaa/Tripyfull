@@ -97,6 +97,19 @@ Rules that keep this working:
   width: beside the list on a laptop, parked below the screen as a fixed sheet on a
   phone and slid up on demand — so Leaflet measures a real box on mount.
 
+## Where logic lives (portal)
+
+- `app/portal/src/plan/` — pure functions over plain data (stops, legs, the day's
+  load). No Vue, no network, no DOM. Every module has a `*.test.js` next to it.
+- `app/portal/src/composables/` — stateful pieces a screen composes: refs,
+  computeds and the saving that goes with them (`useDayLegs`). They import from
+  `plan/` and `@tripyfull/core`, never from a view.
+- `lib/core/src/` — what every app shares: the API client, auth, dates, money,
+  durations and distances (`format.js`, `geo.js`), media and booking icons.
+- A view holds the template, its scoped layout styles and the wiring. When a
+  computed grows past a screen of code or needs a test, it moves to `plan/`.
+- `npm test` runs Vitest over `lib/**` and `app/**`; run it with the build.
+
 ## Hygiene
 
 - No dead selectors, no undefined tokens. Delete unused CSS/props when you remove a feature.
