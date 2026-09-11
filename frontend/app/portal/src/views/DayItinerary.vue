@@ -356,121 +356,20 @@
                 <span v-if="i < activities.length - 1" class="timeline-line"></span>
               </div>
               <div class="timeline-content">
-                <TfCard interactive @click="startEdit(a)" style="cursor: pointer">
-                  <div class="stop-card-row">
-                    <div class="cat-icon cat-icon--lg" :style="catStyle(a.type)">
-                      {{ stopIcon(a) }}
-                    </div>
-                    <div style="flex: 1; min-width: 0">
-                      <div class="stop-title-row">
-                        <span class="stop-name">{{ a.name }}</span>
-                        <TfBadge v-if="a.type" tone="neutral" variant="soft">{{
-                          typeLabel(a.type)
-                        }}</TfBadge>
-                        <TfBadge v-if="a.needsBooking" tone="gold" variant="soft" dot
-                          >Book ahead</TfBadge
-                        >
-                        <!-- Written by the booking sync, which owns it: the next
-                             run rewrites it, so edits here do not survive. -->
-                        <TfBadge
-                          v-if="a.fromBooking"
-                          tone="success"
-                          variant="soft"
-                          v-tooltip="'From a booking — rewritten when you update the plan'"
-                          >Booked</TfBadge
-                        >
-                      </div>
-                      <div
-                        style="
-                          font: var(--fw-regular) 13px/1.3 var(--font-sans);
-                          color: var(--text-secondary);
-                          margin-top: 3px;
-                          display: flex;
-                          gap: 10px;
-                          flex-wrap: wrap;
-                        "
-                      >
-                        <span
-                          v-if="a.startTime && a.endTime"
-                          style="display: inline-flex; align-items: center; gap: 4px"
-                        >
-                          <i class="pi pi-clock" style="font-size: 12px"></i>
-                          {{ a.startTime.slice(0, 5) }} – {{ a.endTime.slice(0, 5) }}
-                        </span>
-                        <span
-                          v-if="a.address"
-                          style="display: inline-flex; align-items: center; gap: 4px"
-                        >
-                          <i class="pi pi-map-marker" style="font-size: 12px"></i>
-                          {{ a.address }}
-                        </span>
-                        <span
-                          v-if="a.placeName"
-                          style="
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 4px;
-                            color: var(--accent);
-                          "
-                        >
-                          <i class="pi pi-bookmark" style="font-size: 12px"></i>
-                          {{ a.placeName }}
-                        </span>
-                        <span v-if="stopNumbers[a.id]" class="onmap-pill">
-                          <span class="onmap-dot">{{ stopNumbers[a.id] }}</span> on map
-                        </span>
-                      </div>
-                      <div
-                        v-if="a.notes"
-                        style="
-                          font: var(--type-small);
-                          color: var(--text-secondary);
-                          margin-top: 4px;
-                          font-style: italic;
-                        "
-                      >
-                        {{ a.notes }}
-                      </div>
-                    </div>
-                    <span v-if="a.costEstimate" class="money money--md stop-cost">
-                      {{ a.costEstimate }} {{ a.costCurrency || currency }}
-                      <span v-if="isForeign(a)" class="money-approx"
-                        >≈ {{ toBase(a).toFixed(2) }} {{ currency }}</span
-                      >
-                    </span>
-                  </div>
-                </TfCard>
+                <StopCard
+                  :activity="a"
+                  :map-number="stopNumbers[a.id]"
+                  :currency="currency"
+                  :approx-base="isForeign(a) ? toBase(a) : null"
+                  @open="startEdit(a)"
+                />
                 <!-- @dragstart guard: a press that drifts must not hijack the row drag -->
-                <div v-if="legInfoByActivity[a.id]" class="timeline-leg" @dragstart.prevent.stop>
-                  <!-- Not everyone rents a car: the whole set of ways to get to the
-                       next stop, with an honest note when the time is an estimate. -->
-                  <div class="leg-modes">
-                    <button
-                      v-for="m in TRAVEL_MODES"
-                      :key="m.key"
-                      class="leg-mode"
-                      :class="{ 'is-on': legInfoByActivity[a.id].mode === m.key }"
-                      v-tooltip="m.hint"
-                      @click="setLegMode(a, m.key)"
-                    >
-                      {{ m.icon }}
-                    </button>
-                  </div>
-                  <span v-if="legInfoByActivity[a.id].data">
-                    <template v-if="legInfoByActivity[a.id].data.estimated">~</template
-                    >{{ fmtDur(legInfoByActivity[a.id].data.durationSec) }} ·
-                    {{ fmtDist(legInfoByActivity[a.id].data.distanceM) }}
-                    {{ modeLabel(legInfoByActivity[a.id].mode)
-                    }}<template v-if="legInfoByActivity[a.id].data.note">
-                      · {{ legInfoByActivity[a.id].data.note }}</template
-                    >
-                    <span v-if="legInfoByActivity[a.id].data.estimated" class="leg-estimate"
-                      >estimate</span
-                    >
-                  </span>
-                  <span v-else-if="legInfoByActivity[a.id].data === null">no route found</span>
-                  <span v-else>…</span>
-                </div>
+                <LegRow
+                  v-if="legInfoByActivity[a.id]"
+                  :info="legInfoByActivity[a.id]"
+                  @change="setLegMode(a, $event)"
+                  @dragstart.prevent.stop
+                />
               </div>
             </div>
           </div>
@@ -957,7 +856,6 @@ import {
   TfButton,
   TfIconButton,
   TfBadge,
-  TfCard,
   TfDrawer,
   TfDrawerSection,
   TfCitySearch,
@@ -977,6 +875,14 @@ import BookingMap from '@/components/BookingMap.vue';
 import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import DayStrip from '@/components/DayStrip.vue';
 import DayDock from '@/components/DayDock.vue';
+import StopCard from '@/components/StopCard.vue';
+import LegRow from '@/components/LegRow.vue';
+import {
+  ACTIVITY_TYPES as typeOptions,
+  typeIcon,
+  typeLabel,
+  catStyle,
+} from '@/plan/activityTypes.js';
 import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import {
@@ -991,8 +897,6 @@ import {
 } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 import {
-  TRAVEL_MODES,
-  modeLabel,
   hasCoords,
   stopLat,
   stopLon,
@@ -1250,19 +1154,6 @@ const savePickedVenue = async () => {
   }
 };
 
-const typeOptions = [
-  { label: 'Sightseeing', value: 'SIGHTSEEING' },
-  { label: 'Beach', value: 'BEACH' },
-  { label: 'Nature', value: 'NATURE' },
-  { label: 'Neighborhood', value: 'NEIGHBORHOOD' },
-  { label: 'Restaurant', value: 'RESTAURANT' },
-  { label: 'Meal stop', value: 'MEAL_STOP' },
-  { label: 'Shopping', value: 'SHOPPING' },
-  { label: 'Transport', value: 'TRANSPORT' },
-  { label: 'Hotel', value: 'ACCOMMODATION' },
-  { label: 'Other', value: 'OTHER' },
-];
-
 // TfSelect works with string options; map label <-> type value.
 const typeLabelOptions = typeOptions.map((o) => o.label);
 const selectedTypeLabel = computed(
@@ -1270,51 +1161,6 @@ const selectedTypeLabel = computed(
 );
 const onTypeLabelPicked = (label) => {
   form.value.type = typeOptions.find((o) => o.label === label)?.value ?? null;
-};
-
-const typeIcon = (t) =>
-  ({
-    SIGHTSEEING: '\u{1F3DB}',
-    BEACH: '\u{1F3D6}',
-    NATURE: '\u{1F33F}',
-    NEIGHBORHOOD: '\u{1F3D8}',
-    RESTAURANT: '\u{1F37D}',
-    MEAL_STOP: '\u2615',
-    SHOPPING: '\u{1F6CD}',
-    TRANSPORT: '\u{1F68C}',
-    ACCOMMODATION: '\u{1F3E8}',
-    OTHER: '\u{1F4CC}',
-  })[t] ?? '\u{1F4CC}';
-
-const typeLabel = (t) => typeOptions.find((o) => o.value === t)?.label ?? t ?? '';
-
-// A journey written from a booking shows what it travels by, not a generic bus.
-const MODE_ICON = {
-  FLIGHT: '\u2708\uFE0F',
-  TRAIN: '\u{1F686}',
-  BUS: '\u{1F68C}',
-  FERRY: '\u26F4\uFE0F',
-  TAXI: '\u{1F695}',
-  CAR_RENTAL: '\u{1F697}',
-  METRO: '\u{1F687}',
-  WALK: '\u{1F6B6}',
-};
-const stopIcon = (a) => (a.fromBooking && MODE_ICON[a.bookingTransportMode]) || typeIcon(a.type);
-
-const catStyle = (type) => {
-  const styles = {
-    SIGHTSEEING: { background: 'var(--success-100)', color: 'var(--success-300)' },
-    BEACH: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
-    NATURE: { background: 'var(--success-100)', color: 'var(--accent)' },
-    NEIGHBORHOOD: { background: 'var(--danger-100)', color: 'var(--accent)' },
-    RESTAURANT: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
-    MEAL_STOP: { background: 'var(--warning-100)', color: 'var(--warning-500)' },
-    SHOPPING: { background: 'var(--danger-100)', color: 'var(--danger-500)' },
-    TRANSPORT: { background: 'var(--success-100)', color: 'var(--accent)' },
-    ACCOMMODATION: { background: 'var(--success-100)', color: 'var(--primary)' },
-    OTHER: { background: 'var(--surface)', color: 'var(--ink-500)' },
-  };
-  return styles[type] || styles.OTHER;
 };
 
 const currentDayIndex = computed(() => allDays.value.findIndex((d) => d.id === dayId.value));
@@ -2151,28 +1997,6 @@ onMounted(async () => {
   gap: 6px;
   min-width: 320px;
 }
-/* Icon, facts and cost on one line; on a phone the cost steps under the facts. */
-.stop-card-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.stop-cost {
-  flex: none;
-  text-align: right;
-}
-/* A stop's name and its badges: the badges drop to the next line on a phone
-   instead of dragging the card past the screen. */
-.stop-title-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.stop-name {
-  font: var(--fw-semibold) 16px/1.2 var(--font-sans);
-  color: var(--text-primary);
-}
 /* City, day load and overnight stay: a slim strip, side by side while they
    fit. Each fact is its icon and its value on one line; the icon stands for
    the title ("Visiting", "Day", "Overnight" are its tooltip). */
@@ -2230,46 +2054,6 @@ onMounted(async () => {
 .itin-map {
   position: sticky;
   top: 0;
-}
-/* Travel modes on a leg: small, always all of them, current one filled. */
-.leg-modes {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  flex: none;
-}
-.leg-mode {
-  width: 24px;
-  height: 22px;
-  /* see the phone override at the end of this block */
-  border: none;
-  background: none;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 1;
-  opacity: 0.45;
-  filter: grayscale(1);
-}
-.leg-mode:hover {
-  opacity: 0.8;
-  filter: none;
-}
-.leg-mode.is-on {
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
-  opacity: 1;
-  filter: none;
-}
-.leg-estimate {
-  margin-left: 4px;
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  font: var(--fw-medium) 10px/1.4 var(--font-sans);
-  color: var(--text-disabled);
 }
 .itin-map-legend {
   display: flex;
@@ -2482,14 +2266,6 @@ onMounted(async () => {
   font-size: 12px;
   color: var(--success-700);
 }
-.timeline-leg {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 0 4px;
-  color: var(--text-secondary);
-  font: var(--fw-medium) 12px/1 var(--font-sans);
-}
 .addfrom-title {
   display: flex;
   align-items: center;
@@ -2544,24 +2320,6 @@ onMounted(async () => {
   color: var(--text-secondary);
   margin-top: 2px;
 }
-.onmap-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--success-700);
-  font: var(--fw-semibold) 12px/1 var(--font-mono);
-}
-.onmap-dot {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: var(--success-500);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-}
 /* drag-and-drop ordering */
 .timeline-row {
   cursor: grab;
@@ -2589,11 +2347,6 @@ onMounted(async () => {
   .itin-map-empty {
     height: 280px;
   }
-}
-.money-approx {
-  display: block;
-  font: var(--fw-medium) 11px/1.3 var(--font-mono);
-  color: var(--text-secondary);
 }
 .timeline-time--derived {
   color: var(--text-disabled);
@@ -2812,32 +2565,9 @@ onMounted(async () => {
   .itin-picks-list {
     max-height: none;
   }
-  /* The cost was a right-hand column that left the name about 150px and wrapped
-     "Lunch at the riverside" over five lines; it takes a line of its own,
-     aligned with the text. */
-  .stop-card-row {
-    flex-wrap: wrap;
-  }
-  .stop-cost {
-    flex: 1 1 100%;
-    text-align: left;
-    padding-left: 52px;
-  }
   /* 22px of card around a stop is a laptop's air; the facts column gets it. */
   .timeline-content :deep(.tf-card) {
     padding: 14px;
-  }
-  /* Five mode icons in a row need a finger's worth of space each; the leg's
-     time and distance go under them rather than beside. */
-  .timeline-leg {
-    display: flex;
-    flex-wrap: wrap;
-    line-height: 1.35;
-  }
-  .leg-mode {
-    width: 34px;
-    height: 32px;
-    font-size: 15px;
   }
   /* A place's facts (type, minutes, distance) get two lines instead of an
      ellipsis that hides the distance — the reason the row is read at all. */
