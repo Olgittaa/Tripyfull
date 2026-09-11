@@ -1071,6 +1071,7 @@ import {
   isJourneyRow,
 } from '@/plan/stops.js';
 import { useDayLegs } from '@/composables/useDayLegs.js';
+import { dayLoad, minutesBetween } from '@/plan/dayLoad.js';
 const currencyOptions = CURRENCIES;
 
 const route = useRoute();
@@ -1673,63 +1674,17 @@ const pickSort = ref('rating');
 /** A usable sightseeing day, the yardstick the budget bar measures against. */
 /** "1 h 30 min" from minutes. */
 
-/**
- * How full the day is. Stops are the places you go to — the hotel rows and the
- * flights, trains and ferries written from bookings are not stops, they frame the
- * day. Time at places: a stop's own start–end, else the place's visit time; a stop
- * with neither is counted as unknown, not guessed at. Time on the move: the routed legs between mapped stops plus the
- * booked journeys with a departure and an arrival on this day (the flight itself).
- * A rental-car pickup is an errand — half an hour at a counter, not five days of
- * driving.
- */
-const minutesBetween = (a) => {
-  if (!a.startTime || !a.endTime) return 0;
-  const [h1, m1] = a.startTime.split(':').map(Number);
-  const [h2, m2] = a.endTime.split(':').map(Number);
-  const span = h2 * 60 + m2 - (h1 * 60 + m1);
-  return span > 0 ? span : 0;
-};
-
-/**
- * Minutes of a booked journey that fall on this day: an overnight flight leaving
- * at 20:55 is three hours of this day and seven of the next. Without the
- * booking's real times, the stop's own start–end has to do.
- */
-const journeyMinutesToday = (a) => {
-  if (!day.value?.date || !a.bookingDepartureAt || !a.bookingArrivalAt) return minutesBetween(a);
-  const dayStart = new Date(`${day.value.date}T00:00:00`);
-  const dayEnd = new Date(dayStart.getTime() + 86400000);
-  const from = Math.max(new Date(a.bookingDepartureAt).getTime(), dayStart.getTime());
-  const to = Math.min(new Date(a.bookingArrivalAt).getTime(), dayEnd.getTime());
-  return to > from ? Math.round((to - from) / 60000) : 0;
-};
-
-const dayBudget = computed(() => {
-  let visitMin = 0;
-  let travelMin = routeTotal.value ? Math.round(routeTotal.value.durationSec / 60) : 0;
-  let stops = 0;
-  let untimed = 0;
-  const seenJourneys = new Set();
-  for (const a of activities.value) {
-    if (isHotelRow(a)) continue;
-    if (isJourneyRow(a)) {
-      // A departure and its "Arrive" row are one journey; count it once.
-      const key = a.bookingDepartureAt ? `${a.bookingDepartureAt}|${a.bookingArrivalAt}` : a.id;
-      if (!seenJourneys.has(key)) {
-        seenJourneys.add(key);
-        travelMin += journeyMinutesToday(a);
-      }
-      continue;
-    }
-    stops += 1;
-    const span = minutesBetween(a);
-    const place = a.fromBooking ? null : placesLib.value.find((x) => x.id === a.placeId);
-    if (span) visitMin += span;
-    else if (place?.visitMinutes) visitMin += place.visitMinutes;
-    else untimed += 1; // no time, no estimate: say so instead of inventing an hour
-  }
-  return { stops, visitMin, travelMin, untimed };
-});
+/** How full the day is: stops, time at them, time on the move. A stop without a
+    clock borrows its saved place's usual visit length. */
+const dayBudget = computed(() =>
+  dayLoad({
+    activities: activities.value,
+    date: day.value?.date,
+    routeSeconds: routeTotal.value?.durationSec,
+    visitMinutesFor: (a) =>
+      a.fromBooking ? null : placesLib.value.find((x) => x.id === a.placeId)?.visitMinutes,
+  }),
+);
 
 /** Places attached to this trip — the shortlist the day should be built from. */
 const inThisTrip = (p) => (p.tripIds || []).includes(tripId);
