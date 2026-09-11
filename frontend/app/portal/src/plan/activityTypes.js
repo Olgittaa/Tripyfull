@@ -50,3 +50,20 @@ export const catStyle = (type) => {
 /** A journey written from a booking shows what it travels by, not a generic bus. */
 export const stopIcon = (a) =>
   (a.fromBooking && MODE_EMOJI[a.bookingTransportMode]) || typeIcon(a.type);
+
+/** The kind of stop a saved place of a given type usually becomes. */
+const PLACE_TO_ACT = {
+  BEACH: 'BEACH',
+  NATURE: 'NATURE',
+  PARK: 'NATURE',
+  RESTAURANT: 'RESTAURANT',
+  SHOP: 'SHOPPING',
+  MUSEUM: 'SIGHTSEEING',
+  SIGHTSEEING: 'SIGHTSEEING',
+  VIEWPOINT: 'SIGHTSEEING',
+  NEIGHBORHOOD: 'NEIGHBORHOOD',
+  PORT: 'TRANSPORT',
+  AIRPORT: 'TRANSPORT',
+  OTHER: 'OTHER',
+};
+export const placeToActivityType = (t) => PLACE_TO_ACT[t] || 'OTHER';
