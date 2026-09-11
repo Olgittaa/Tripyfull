@@ -1624,9 +1624,14 @@ const TRAVEL_MODES = [
 const MODE_KEYS = TRAVEL_MODES.map((m) => m.key);
 const modeLabel = (key) => TRAVEL_MODES.find((m) => m.key === key)?.label || '';
 
-const legMode = (a) => (MODE_KEYS.includes(a.travelModeToNext) ? a.travelModeToNext : 'foot');
+/* The way the leg was computed for — the chosen mode, or the day's default
+   (a short hop on foot, a longer one by car when a rental is at hand, else by
+   taxi) — as the server reports it. */
+const legMode = (a) =>
+  a.travelMode || (MODE_KEYS.includes(a.travelModeToNext) ? a.travelModeToNext : 'foot');
 const TRAVEL_FIELDS = [
   'travelModeToNext',
+  'travelMode',
   'travelKnown',
   'travelSeconds',
   'travelMeters',

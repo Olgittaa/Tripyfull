@@ -13,5 +13,7 @@ public record DayResponse(
         String notes,
         boolean isBuffer,
         /** How much is planned: lets an overview show which days are still empty. */
-        int activityCount
+        int activityCount,
+        /** Time on the move between the day's stops, summed from the stored legs. */
+        int travelSeconds
 ) {}

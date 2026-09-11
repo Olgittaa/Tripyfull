@@ -301,11 +301,16 @@
               {{ day.city || 'Set city…' }}
             </div>
             <div class="dash-day-foot">
-              <span>{{
-                day.activityCount
-                  ? `${day.activityCount} stop${day.activityCount === 1 ? '' : 's'}`
-                  : 'nothing planned'
-              }}</span>
+              <span>
+                {{
+                  day.activityCount
+                    ? `${day.activityCount} stop${day.activityCount === 1 ? '' : 's'}`
+                    : 'nothing planned'
+                }}
+                <template v-if="day.travelSeconds">
+                  · {{ fmtDur(day.travelSeconds) }} on the move</template
+                >
+              </span>
               <span v-if="day.overnightStay" class="dash-day-night" v-tooltip="day.overnightStay"
                 >🏨</span
               >
@@ -816,6 +821,11 @@ const saveDayCity = async (dayId) => {
 };
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '—');
+/** "25 min", "1 h 40 min" — a day's time between its stops. */
+const fmtDur = (sec) => {
+  const min = Math.max(1, Math.round(sec / 60));
+  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h${min % 60 ? ` ${min % 60} min` : ''}`;
+};
 
 onMounted(async () => {
   try {

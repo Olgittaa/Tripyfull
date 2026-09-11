@@ -97,11 +97,19 @@ public final class ActivityMapper {
                 source != null ? source.getToLatitude() : null,
                 source != null ? source.getToLongitude() : null,
                 a.getTravelKey() != null,
+                travelMode(a.getTravelKey()),
                 a.getTravelSeconds(),
                 a.getTravelMeters(),
                 geometry(a.getTravelGeometry()),
                 a.isTravelEstimated()
         );
+    }
+
+    /** The key reads "mode|lat,lon;lat,lon". */
+    private static String travelMode(String key) {
+        if (key == null) return null;
+        int bar = key.indexOf('|');
+        return bar > 0 ? key.substring(0, bar) : null;
     }
 
     private static final ObjectMapper JSON = new ObjectMapper();

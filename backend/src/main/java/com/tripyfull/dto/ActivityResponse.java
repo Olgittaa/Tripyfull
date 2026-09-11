@@ -40,6 +40,8 @@ public record ActivityResponse(
         // not computed yet, or the router was unreachable. Known with null
         // seconds: there is no route between the two.
         boolean travelKnown,
+        /** The way the stored leg was computed for: the chosen mode, or the day's default. */
+        String travelMode,
         Integer travelSeconds,
         Integer travelMeters,
         List<List<Double>> travelGeometry,

@@ -26,9 +26,11 @@ public class DayService {
     private final DayRepository dayRepository;
     private final ActivityRepository activityRepository;
     private final OwnershipGuard guard;
+    private final TravelLegService travelLegs;
 
     public DayService(DayRepository dayRepository, ActivityRepository activityRepository,
-                      OwnershipGuard guard) {
+                      OwnershipGuard guard, TravelLegService travelLegs) {
+        this.travelLegs = travelLegs;
         this.dayRepository = dayRepository;
         this.activityRepository = activityRepository;
         this.guard = guard;
@@ -37,6 +39,9 @@ public class DayService {
     public List<DayResponse> getDays(UUID tripId, String username) {
         Trip trip = findTripForUser(tripId, username);
         List<Day> days = dayRepository.findByTripIdOrderByDateAsc(trip.getId());
+        // Each day's time on the move comes from its stored legs; bring them up to
+        // date first, so the overview is right even for a day never opened.
+        for (Day day : days) travelLegs.refresh(activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(day.getId()));
         return DayMapper.toResponseList(days);
     }
 

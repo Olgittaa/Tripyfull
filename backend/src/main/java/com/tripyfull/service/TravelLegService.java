@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tripyfull.model.Activity;
 import com.tripyfull.model.ActivityType;
 import com.tripyfull.model.Booking;
+import com.tripyfull.model.BookingCategory;
+import com.tripyfull.model.Day;
+import com.tripyfull.model.TransportMode;
 import com.tripyfull.repository.ActivityRepository;
 import com.tripyfull.repository.BookingRepository;
 import org.slf4j.Logger;
@@ -29,8 +32,8 @@ public class TravelLegService {
 
     private static final Logger log = LoggerFactory.getLogger(TravelLegService.class);
 
-    /** How a stop is reached when nothing was chosen. */
-    public static final String DEFAULT_MODE = "foot";
+    /** Up to this far, as the crow flies, the default is to walk. */
+    private static final double WALK_M = 1500;
 
     /** Enough for a smooth line on the map; a long drive would otherwise be thousands of points. */
     private static final int MAX_POINTS = 300;
@@ -57,12 +60,17 @@ public class TravelLegService {
 
         List<Activity> stops = ordered.stream().filter(TravelLegService::hasCoords).toList();
         Set<UUID> withLeg = new HashSet<>();
+        Boolean carDay = null; // whether a rented car is at hand this day; looked up once, when first needed
         for (int i = 0; i < stops.size() - 1; i++) {
             Activity from = stops.get(i);
             Activity to = stops.get(i + 1);
             double[] start = legStart(from, bookings.get(from.getSourceBookingId()));
             double[] end = coords(to);
-            String mode = modeOf(from);
+            String mode = from.getTravelModeToNext();
+            if (mode == null) {
+                if (carDay == null) carDay = hasCarOn(from.getDay());
+                mode = defaultMode(start, end, carDay);
+            }
             String key = mode + "|" + fmt(start) + ";" + fmt(end);
             withLeg.add(from.getId());
             if (key.equals(from.getTravelKey())) continue;
@@ -103,8 +111,35 @@ public class TravelLegService {
         }
     }
 
-    public static String modeOf(Activity a) {
-        return a.getTravelModeToNext() != null ? a.getTravelModeToNext() : DEFAULT_MODE;
+    /**
+     * The way to the next stop when none was chosen: a short hop is walked; a
+     * longer one is driven when a rented car is at hand that day, else taken by
+     * taxi. Nothing is written down for it — the choice follows the day as it
+     * changes, while a mode the user picked stays put.
+     */
+    static String defaultMode(double[] start, double[] end, boolean carDay) {
+        if (distanceMetres(start, end) <= WALK_M) return "foot";
+        return carDay ? "car" : "taxi";
+    }
+
+    /** A car-rental booking whose pick-up and drop-off bracket the day. */
+    private boolean hasCarOn(Day day) {
+        if (day == null || day.getDate() == null || day.getTrip() == null) return false;
+        for (Booking b : bookingRepository.findByTripIdOrderByNameAsc(day.getTrip().getId())) {
+            if (b.getCategory() != BookingCategory.TRANSPORTATION || b.getTransportMode() != TransportMode.CAR_RENTAL
+                    || b.getDepartureAt() == null) continue;
+            boolean pickedUp = !day.getDate().isBefore(b.getDepartureAt().toLocalDate());
+            boolean notYetReturned = b.getArrivalAt() == null || !day.getDate().isAfter(b.getArrivalAt().toLocalDate());
+            if (pickedUp && notYetReturned) return true;
+        }
+        return false;
+    }
+
+    private static double distanceMetres(double[] a, double[] b) {
+        double dLat = Math.toRadians(b[0] - a[0]), dLon = Math.toRadians(b[1] - a[1]);
+        double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(a[0])) * Math.cos(Math.toRadians(b[0])) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return 6_371_000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
     }
 
     private static void clear(Activity a) {

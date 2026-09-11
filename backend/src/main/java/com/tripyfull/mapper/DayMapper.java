@@ -1,9 +1,11 @@
 package com.tripyfull.mapper;
 
 import com.tripyfull.dto.DayResponse;
+import com.tripyfull.model.Activity;
 import com.tripyfull.model.Day;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -21,7 +23,9 @@ public final class DayMapper {
                 day.getLinkedBookingId(),
                 day.getNotes(),
                 day.isBuffer(),
-                day.getActivities() != null ? day.getActivities().size() : 0
+                day.getActivities() != null ? day.getActivities().size() : 0,
+                day.getActivities() == null ? 0 : day.getActivities().stream()
+                        .map(Activity::getTravelSeconds).filter(Objects::nonNull).mapToInt(Integer::intValue).sum()
         );
     }
 
