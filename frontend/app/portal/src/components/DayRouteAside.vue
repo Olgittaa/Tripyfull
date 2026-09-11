@@ -83,7 +83,12 @@
         </div>
       </div>
       <div class="itin-picks-list">
-        <div v-for="p in candidatePlaces" :key="p.id" class="pick-row">
+        <div
+          v-for="p in candidatePlaces"
+          :key="p.id"
+          class="pick-row"
+          :class="{ 'is-planned': p.plannedDay != null }"
+        >
           <span class="pick-rating" :class="`pick-rating--${p.rating || 3}`"
             >★ {{ p.rating || 3 }}</span
           >
@@ -118,13 +123,21 @@
               : 'Everything on the trip list is already planned — add places to the trip on the Places page.'
           }}
         </p>
+        <button
+          v-if="plannedCount"
+          type="button"
+          class="link-btn itin-picks-planned"
+          @click="showPlanned = !showPlanned"
+        >
+          {{ showPlanned ? 'hide' : 'show' }} {{ plannedCount }} already in the plan
+        </button>
       </div>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import {
   api,
   distanceMeters,
@@ -266,32 +279,70 @@ const matchesDayCity = (p) => {
 };
 
 /** Rating first (the strategy's whole point), then nearest among equals. */
-const candidatePlaces = computed(() => {
-  const planned = new Set(props.activities.map((a) => a.placeId).filter(Boolean));
-  const fallback = cityAnchor.value;
-  const byKm = (a, b) => (a.km == null ? 1e9 : a.km) - (b.km == null ? 1e9 : b.km);
+/* A place already in the plan — on any day of the trip, not only this one — is
+   on the route, not a candidate. The trip's planned places are read once per
+   day and again after anything changes the plan; "show planned" brings them
+   back, greyed, for the rare second visit. */
+const plannedDayOf = ref(new Map()); // placeId -> day number of its first stop
+const loadPlanned = async () => {
+  try {
+    const res = await api.get(`/api/trips/${props.tripId}/planned-places`);
+    const m = new Map();
+    for (const row of res.data || []) {
+      if (row.placeId && !m.has(row.placeId)) m.set(row.placeId, row.dayNumber);
+    }
+    plannedDayOf.value = m;
+  } catch {
+    /* the list still works from today's stops alone */
+  }
+};
+onMounted(loadPlanned);
+watch(
+  () => props.activities.map((a) => a.id).join(','),
+  () => loadPlanned(),
+);
+const showPlanned = ref(false);
+
+/** The trip's shortlist for this scope, minus what is hidden or planned today. */
+const shortlist = computed(() => {
+  const today = new Set(props.activities.map((a) => a.placeId).filter(Boolean));
   return (
     props.places
-      .filter((p) => !planned.has(p.id) && !hiddenIds.value.has(p.id))
+      .filter((p) => !today.has(p.id) && !hiddenIds.value.has(p.id))
       // city subset of trip subset of all
       .filter(inThisTrip)
       .filter((p) => (pickScope.value === 'city' ? matchesDayCity(p) : true))
-      .map((p) => {
-        const near = nearestStop(p);
-        const km =
-          near?.km ??
-          (fallback && p.latitude != null && p.longitude != null
-            ? distanceKm(fallback.lat, fallback.lon, Number(p.latitude), Number(p.longitude))
-            : null);
-        return { ...p, nearStop: near, km };
-      })
-      .sort((a, b) =>
-        pickSort.value === 'near'
-          ? byKm(a, b) || (b.rating || 3) - (a.rating || 3)
-          : (b.rating || 3) - (a.rating || 3) || byKm(a, b) || a.name.localeCompare(b.name),
-      )
-      .slice(0, 40)
   );
+});
+/** How many of those are already on another day. */
+const plannedCount = computed(
+  () => shortlist.value.filter((p) => plannedDayOf.value.has(p.id)).length,
+);
+
+/** Rating first (the strategy's whole point), then nearest among equals. */
+const candidatePlaces = computed(() => {
+  const fallback = cityAnchor.value;
+  const byKm = (a, b) => (a.km == null ? 1e9 : a.km) - (b.km == null ? 1e9 : b.km);
+  return shortlist.value
+    .filter((p) => showPlanned.value || !plannedDayOf.value.has(p.id))
+    .map((p) => {
+      const near = nearestStop(p);
+      const km =
+        near?.km ??
+        (fallback && p.latitude != null && p.longitude != null
+          ? distanceKm(fallback.lat, fallback.lon, Number(p.latitude), Number(p.longitude))
+          : null);
+      return { ...p, nearStop: near, km, plannedDay: plannedDayOf.value.get(p.id) ?? null };
+    })
+    .sort(
+      (a, b) =>
+        // whatever the order, a place already planned goes after the open ones
+        (a.plannedDay != null) - (b.plannedDay != null) ||
+        (pickSort.value === 'near'
+          ? byKm(a, b) || (b.rating || 3) - (a.rating || 3)
+          : (b.rating || 3) - (a.rating || 3) || byKm(a, b) || a.name.localeCompare(b.name)),
+    )
+    .slice(0, 40);
 });
 
 const fmtKm = (km) => (km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`);
@@ -299,6 +350,7 @@ const fmtKm = (km) => (km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`)
 /** Type, how long it takes, and what it sits next to today. */
 const pickSub = (p) =>
   [
+    p.plannedDay != null ? `in the plan · Day ${p.plannedDay}` : null,
     placeTypeLabel(p.type),
     p.visitMinutes ? `${p.visitMinutes} min` : null,
     p.nearStop
@@ -478,6 +530,14 @@ const onMapDotAdd = (id) => {
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
+}
+/* Already on another day: still there to see, quieter, after the open ones. */
+.pick-row.is-planned {
+  opacity: 0.6;
+}
+.itin-picks-planned {
+  margin-top: 6px;
+  font: var(--fw-medium) 12px/1.3 var(--font-sans);
 }
 .pick-row:hover {
   background: var(--surface);
