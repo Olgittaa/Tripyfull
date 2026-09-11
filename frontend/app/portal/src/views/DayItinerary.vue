@@ -1059,6 +1059,18 @@ import {
   distanceMeters,
 } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
+import {
+  TRAVEL_MODES,
+  modeLabel,
+  hasCoords,
+  stopLat,
+  stopLon,
+  landsSameDay,
+  legStart,
+  isHotelRow,
+  isJourneyRow,
+} from '@/plan/stops.js';
+import { useDayLegs } from '@/composables/useDayLegs.js';
 const currencyOptions = CURRENCIES;
 
 const route = useRoute();
@@ -1547,28 +1559,6 @@ const onMapDotAdd = (id) => {
   if (p) openAddFromPlace(p);
 };
 
-// A stop is on the map either through its linked place or, for one written from
-// a booking (a hotel, an airport), through coordinates of its own.
-const stopLat = (a) => a.placeLatitude ?? a.latitude;
-const stopLon = (a) => a.placeLongitude ?? a.longitude;
-const hasCoords = (a) => stopLat(a) != null && stopLon(a) != null;
-
-/* A journey row is pinned where it departs. When it lands the same day, the
-   day continues from the arrival airport or station — the next leg starts
-   there, and the map shows where that is. An overnight journey has its own
-   "Arrive" row the next morning instead. */
-const landsSameDay = (a) =>
-  isJourneyRow(a) &&
-  a.bookingToLatitude != null &&
-  a.bookingToLongitude != null &&
-  !!a.bookingDepartureAt &&
-  !!a.bookingArrivalAt &&
-  a.bookingDepartureAt.slice(0, 10) === a.bookingArrivalAt.slice(0, 10);
-const legStart = (a) =>
-  landsSameDay(a)
-    ? [Number(a.bookingToLatitude), Number(a.bookingToLongitude)]
-    : [Number(stopLat(a)), Number(stopLon(a))];
-
 const mappedStopCount = computed(() => activities.value.filter(hasCoords).length);
 
 // Pins for activities that have coordinates, numbered like the rows; a same-day
@@ -1600,153 +1590,9 @@ const stopNumbers = computed(() => {
   return map;
 });
 
-/* The leg to the next stop is computed and kept on the server, on the stop it
-   leaves from (travelSeconds, travelMeters, travelGeometry, travelEstimated),
-   and recomputed there only when the order, a pin or the mode changes. This
-   page reads it; nothing is routed from here. */
-
-/**
- * How you get to the next stop. Walking and driving are routed for real; a bus
- * or train leg is looked up in Google's timetables for the stop's own time and
- * names its line, and is an estimate only where no service is listed; a taxi
- * is an estimate — the row says so. A flight is a booking with its own row and
- * its real times, not a way between two stops.
- */
-const TRAVEL_MODES = [
-  { key: 'foot', icon: '🚶', label: 'on foot', hint: 'Walk to the next stop' },
-  {
-    key: 'taxi',
-    icon: '🚕',
-    label: 'by taxi',
-    hint: 'Taxi / ride-hailing — road time plus hailing',
-  },
-  {
-    key: 'bus',
-    icon: '🚌',
-    label: 'by bus',
-    hint: 'Bus — by timetable where Google has one, else road time plus stops (estimate)',
-  },
-  {
-    key: 'train',
-    icon: '🚆',
-    label: 'by train',
-    hint: 'Train — by timetable where Google has one, else an estimate',
-  },
-  { key: 'car', icon: '🚗', label: 'by car', hint: 'Drive yourself to the next stop' },
-];
-const MODE_KEYS = TRAVEL_MODES.map((m) => m.key);
-const modeLabel = (key) => TRAVEL_MODES.find((m) => m.key === key)?.label || '';
-
-/* The way the leg was computed for — the chosen mode, or the day's default
-   (a short hop on foot, a longer one by car when a rental is at hand, else by
-   taxi) — as the server reports it. */
-const legMode = (a) =>
-  a.travelMode || (MODE_KEYS.includes(a.travelModeToNext) ? a.travelModeToNext : 'foot');
-const TRAVEL_FIELDS = [
-  'travelModeToNext',
-  'travelMode',
-  'travelKnown',
-  'travelSeconds',
-  'travelMeters',
-  'travelGeometry',
-  'travelEstimated',
-  'travelNote',
-];
-
-/** What the server knows about a stop's leg: undefined while it is not known
-    yet, null when there is no route, else the numbers and the line. */
-const legData = (a) => {
-  if (!a.travelKnown) return undefined;
-  if (a.travelSeconds == null) return null;
-  return {
-    durationSec: a.travelSeconds,
-    distanceM: a.travelMeters,
-    geometry: a.travelGeometry,
-    estimated: a.travelEstimated,
-    note: a.travelNote, // the line, when a timetable answered
-  };
-};
-
-// One leg per consecutive pair of mapped stops, owned by the departing activity.
-const dayLegs = computed(() => {
-  const stops = activities.value.filter(hasCoords);
-  const legs = [];
-  for (let i = 0; i < stops.length - 1; i++) {
-    const from = stops[i];
-    const to = stops[i + 1];
-    legs.push({
-      fromId: from.id,
-      mode: legMode(from),
-      from: legStart(from),
-      to: [Number(stopLat(to)), Number(stopLon(to))],
-      data: legData(from),
-    });
-  }
-  return legs;
-});
-
-// activity id -> its outgoing leg { mode, data } (data: undefined = loading, null = failed)
-const legInfoByActivity = computed(() => {
-  const m = {};
-  for (const l of dayLegs.value) m[l.fromId] = { mode: l.mode, data: l.data };
-  return m;
-});
-
-// Latest requested mode per activity: quick repeated toggles are last-write-wins,
-// and stale settlements (or a reorder replacing the array) can't desync the UI.
-const pendingModeSaves = new Map(); // activity id -> mode of the newest in-flight PATCH
-const setLegMode = async (a, mode) => {
-  if (legMode(a) === mode) return;
-  const id = a.id;
-  pendingModeSaves.set(id, mode);
-  a.travelModeToNext = mode; // optimistic — the row shows "…" until the server answers
-  a.travelKnown = false;
-  try {
-    const res = await api.patch(`/api/activities/${id}`, { travelModeToNext: mode });
-    if (pendingModeSaves.get(id) !== mode) return; // superseded by a newer click
-    pendingModeSaves.delete(id);
-    // re-apply to the current object — the array may have been replaced meanwhile
-    const cur = activities.value.find((x) => x.id === id);
-    if (cur) {
-      // The server routed the leg for the new mode along with saving it.
-      for (const k of TRAVEL_FIELDS) cur[k] = res.data[k];
-    }
-  } catch {
-    if (pendingModeSaves.get(id) !== mode) return; // a newer click owns the state now
-    pendingModeSaves.delete(id);
-    toast.danger('Error', 'Failed to save travel mode');
-    loadDay(dayId.value); // resync from the server instead of guessing a revert
-  }
-};
-
-// Map geometry per leg: road points when routed, straight segment while
-// loading or when unroutable.
-const mapLegs = computed(() => {
-  const legs = dayLegs.value.map((l) => ({
-    mode: l.mode,
-    points: l.data?.geometry?.length >= 2 ? l.data.geometry : [l.from, l.to],
-  }));
-  // The journey itself, as the crow flies, between its two pins.
-  for (const a of activities.value) {
-    if (landsSameDay(a) && hasCoords(a)) {
-      legs.push({ mode: 'plane', points: [[Number(stopLat(a)), Number(stopLon(a))], legStart(a)] });
-    }
-  }
-  return legs;
-});
-
-// Whole-day totals; hidden until every leg has real numbers.
-const routeTotal = computed(() => {
-  if (!dayLegs.value.length) return null;
-  let durationSec = 0;
-  let distanceM = 0;
-  for (const l of dayLegs.value) {
-    const d = l.data;
-    if (!d) return null;
-    durationSec += d.durationSec;
-    distanceM += d.distanceM;
-  }
-  return { durationSec, distanceM };
+const { legInfoByActivity, mapLegs, routeTotal, setLegMode } = useDayLegs({
+  activities,
+  reload: () => loadDay(dayId.value),
 });
 
 // Saved places in this day's city, for quick-add in the empty state.
@@ -1843,8 +1689,6 @@ const minutesBetween = (a) => {
   const span = h2 * 60 + m2 - (h1 * 60 + m1);
   return span > 0 ? span : 0;
 };
-const isHotelRow = (a) => a.type === 'ACCOMMODATION';
-const isJourneyRow = (a) => a.fromBooking && a.type === 'TRANSPORT';
 
 /**
  * Minutes of a booked journey that fall on this day: an overnight flight leaving
