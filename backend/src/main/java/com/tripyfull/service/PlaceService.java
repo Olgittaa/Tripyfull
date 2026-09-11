@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.PlaceTypes;
 import com.tripyfull.dto.PlaceGeocodeRequest;
 import com.tripyfull.dto.PlaceImportRequest;
 import com.tripyfull.dto.PlaceRequest;
@@ -189,32 +190,6 @@ public class PlaceService {
     }
 
     /** Maps an OSM category hint (e.g. "natural:beach", "amenity:restaurant") to a PlaceType. */
-    private PlaceType inferType(String category) {
-        if (category == null || category.isBlank()) return PlaceType.OTHER;
-        String c = category.toLowerCase();
-        if (c.contains("beach")) return PlaceType.BEACH;
-        if (c.contains("museum")) return PlaceType.MUSEUM;
-        if (c.contains("viewpoint")) return PlaceType.VIEWPOINT;
-        if (c.contains("aeroway") || c.contains("airport")) return PlaceType.AIRPORT;
-        // "port" as a word only: "sports_complex", "transport" and "airport" all contain it.
-        if (c.contains("ferry") || c.contains("harbour") || c.contains("harbor") || c.contains("seaport")
-                || c.contains("marina") || c.matches(".*\\bport\\b.*")) return PlaceType.PORT;
-        if (c.contains("restaurant") || c.contains("cafe") || c.contains("bar") || c.contains("food")
-                || c.contains("catering") || c.contains("pub")) return PlaceType.RESTAURANT;
-        if (c.contains("shop") || c.contains("mall") || c.contains("store") || c.contains("retail")
-                || c.contains("supermarket") || c.contains("commercial")) return PlaceType.SHOP;
-        if (c.contains("park") || c.contains("garden") || c.contains("playground")) return PlaceType.PARK;
-        if (c.contains("natural") || c.contains("forest") || c.contains("water") || c.contains("peak")
-                || c.contains("nature") || c.contains("wood")) return PlaceType.NATURE;
-        if (c.contains("tourism") || c.contains("attraction") || c.contains("monument") || c.contains("historic")
-                || c.contains("artwork") || c.contains("sights") || c.contains("castle") || c.contains("temple")
-                || c.contains("place_of_worship") || c.contains("church") || c.contains("mosque")
-                || c.contains("landmark")) return PlaceType.SIGHTSEEING;
-        if (c.contains("suburb") || c.contains("neighbourhood") || c.contains("quarter") || c.contains("city")
-                || c.contains("town") || c.contains("village") || c.contains("hamlet") || c.contains("locality")) return PlaceType.NEIGHBORHOOD;
-        return PlaceType.OTHER;
-    }
-
     public PlaceResponse create(PlaceRequest request, String username) {
         User user = getUser(username);
         Place place = new Place();
@@ -245,7 +220,7 @@ public class PlaceService {
         place.setOwner(user);
         place.setSource(PlaceSource.GEOCODED);
         place.setVisibility(PlaceVisibility.PRIVATE);
-        place.setType(inferType(r.category()));
+        place.setType(PlaceTypes.infer(r.category()));
         place.setName(r.name() != null && !r.name().isBlank() ? r.name() : request.text());
         place.setAddress(r.address());
         place.setLatitude(r.latitude());
@@ -302,8 +277,8 @@ public class PlaceService {
         }
 
         // Type from the geocoder's category, falling back to the place description (e.g. "Buddhist temple").
-        PlaceType type = inferType(r != null ? r.category() : null);
-        if (type == PlaceType.OTHER && parsed.description() != null) type = inferType(parsed.description());
+        PlaceType type = PlaceTypes.infer(r != null ? r.category() : null);
+        if (type == PlaceType.OTHER && parsed.description() != null) type = PlaceTypes.infer(parsed.description());
 
         Place place = new Place();
         place.setOwner(user);

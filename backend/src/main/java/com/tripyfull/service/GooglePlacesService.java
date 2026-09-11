@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.GeoMath;
 import com.tripyfull.model.Place;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +114,7 @@ public class GooglePlacesService {
             double[] latLng = location(p);
             if (latLng == null) return null;
             if (lat != null && lon != null
-                    && distanceMetres(lat.doubleValue(), lon.doubleValue(), latLng[0], latLng[1]) > 1500) {
+                    && GeoMath.distanceMetres(lat.doubleValue(), lon.doubleValue(), latLng[0], latLng[1]) > 1500) {
                 log.info("Google found '{}' for '{}' but 1.5 km away — not the same place", displayName(p), name);
                 return null;
             }
@@ -293,14 +294,6 @@ public class GooglePlacesService {
             return "address";
         }
         return "place";
-    }
-
-    /** Great-circle distance, good enough to tell "here" from "another town". */
-    private static double distanceMetres(double lat1, double lon1, double lat2, double lon2) {
-        double dLat = Math.toRadians(lat2 - lat1), dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        return 6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     private String str(Object o) { return o != null ? o.toString() : null; }

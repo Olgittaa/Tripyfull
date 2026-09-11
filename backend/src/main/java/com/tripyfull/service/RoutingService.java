@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.GeoMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -35,8 +36,7 @@ public class RoutingService {
     /** travel mode -> OSRM profile path segment on routing.openstreetmap.de */
     private static final Map<String, String> PROFILES = Map.of(
             "foot", "routed-foot",
-            "car", "routed-car",
-            "bike", "routed-bike");
+            "car", "routed-car");
 
     /**
      * Ways of getting around without a rental car. There is no open timetable for
@@ -52,7 +52,6 @@ public class RoutingService {
             "bus", new Derived("car", 1.45, 600),      // stops on the way, plus the wait
             "train", new Derived("car", 0.85, 900));   // its own track, plus the station
 
-    private static final double EARTH_R_KM = 6371;
 
     private final RestClient restClient = buildClient();
     private final GoogleRoutesService googleRoutes;
@@ -103,11 +102,6 @@ public class RoutingService {
 
     /** Waypoints are valid but unroutable (or beyond {@link #MAX_DISTANCE_M}). Cached like a hit. */
     public static final RouteResult NO_ROUTE = new RouteResult("none", 0, 0, List.of(), List.of());
-
-    public boolean supportsMode(String mode) {
-        return mode != null
-                && (PROFILES.containsKey(mode) || DERIVED.containsKey(mode));
-    }
 
     /**
      * Like {@link #route(List, String)}, but a bus or train leg that has a
@@ -186,13 +180,7 @@ public class RoutingService {
     /** Straight-line flight estimate — no route service knows about air corridors. */
 
     private static double haversineM(double[] a, double[] b) {
-        double dLat = Math.toRadians(b[0] - a[0]);
-        double dLon = Math.toRadians(b[1] - a[1]);
-        double la1 = Math.toRadians(a[0]);
-        double la2 = Math.toRadians(b[0]);
-        double h = Math.pow(Math.sin(dLat / 2), 2)
-                + Math.cos(la1) * Math.cos(la2) * Math.pow(Math.sin(dLon / 2), 2);
-        return 2 * EARTH_R_KM * Math.asin(Math.sqrt(h)) * 1000;
+        return GeoMath.distanceMetres(a, b);
     }
 
     @SuppressWarnings("unchecked")

@@ -29,8 +29,7 @@ public class GoogleRoutesService {
 
     private static final Map<String, String> TRAVEL_MODES = Map.of(
             "foot", "WALK",
-            "car", "DRIVE",
-            "bike", "BICYCLE");
+            "car", "DRIVE");
 
     /** Our bus / train legs → the transit vehicles Google may use for them. */
     public static final Map<String, List<String>> TRANSIT_MODES = Map.of(

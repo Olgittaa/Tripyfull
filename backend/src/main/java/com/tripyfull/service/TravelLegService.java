@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.GeoMath;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tripyfull.model.Activity;
 import com.tripyfull.model.ActivityType;
@@ -126,7 +127,7 @@ public class TravelLegService {
      * changes, while a mode the user picked stays put.
      */
     static String defaultMode(double[] start, double[] end, boolean carDay) {
-        if (distanceMetres(start, end) <= WALK_M) return "foot";
+        if (GeoMath.distanceMetres(start, end) <= WALK_M) return "foot";
         return carDay ? "car" : "taxi";
     }
 
@@ -143,12 +144,6 @@ public class TravelLegService {
         return false;
     }
 
-    private static double distanceMetres(double[] a, double[] b) {
-        double dLat = Math.toRadians(b[0] - a[0]), dLon = Math.toRadians(b[1] - a[1]);
-        double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(a[0])) * Math.cos(Math.toRadians(b[0])) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        return 6_371_000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-    }
 
     private static void clear(Activity a) {
         a.setTravelKey(null);

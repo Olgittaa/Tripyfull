@@ -3,7 +3,6 @@ package com.tripyfull.controller;
 import com.tripyfull.model.Country;
 import com.tripyfull.repository.CountryRepository;
 import com.tripyfull.service.GeoSearchService;
-import com.tripyfull.service.RoutingService;
 import com.tripyfull.service.TripAdvisorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +18,11 @@ public class GeoController {
 
     private final CountryRepository countryRepository;
     private final GeoSearchService geoSearchService;
-    private final RoutingService routingService;
     private final TripAdvisorService tripAdvisorService;
 
-    public GeoController(CountryRepository countryRepository, GeoSearchService geoSearchService,
-                         RoutingService routingService, TripAdvisorService tripAdvisorService) {
+    public GeoController(CountryRepository countryRepository, GeoSearchService geoSearchService, TripAdvisorService tripAdvisorService) {
         this.countryRepository = countryRepository;
         this.geoSearchService = geoSearchService;
-        this.routingService = routingService;
         this.tripAdvisorService = tripAdvisorService;
     }
 
@@ -65,61 +61,7 @@ public class GeoController {
                 .toList();
     }
 
-    /**
-     * Road route through ordered waypoints. {@code points} is "lat,lon;lat,lon;…",
-     * {@code mode} is foot | car | bike. Returns total + per-leg durations/distances
-     * and the route geometry as [lat, lon] pairs.
-     */
-    @GetMapping("/route")
-    public ResponseEntity<Map<String, Object>> route(
-            @RequestParam String points,
-            @RequestParam(defaultValue = "foot") String mode) {
-        if (!routingService.supportsMode(mode)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Unknown mode: " + mode));
-        }
-        List<double[]> parsed = parsePoints(points);
-        if (parsed == null || parsed.size() < 2 || parsed.size() > 25) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "points must be 2–25 'lat,lon' pairs separated by ';'"));
-        }
-        RoutingService.RouteResult r = routingService.route(parsed, mode);
-        if (r == null) {
-            return ResponseEntity.status(502).body(Map.of("error", "Routing service unavailable"));
-        }
-        if (r == RoutingService.NO_ROUTE) {
-            return ResponseEntity.status(404).body(Map.of("error", "No route found between these points"));
-        }
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("mode", r.mode());
-        // Bus, train, taxi and plane are adjusted road/air estimates, not timetables.
-        out.put("estimated", r.estimated());
-        out.put("durationSec", r.durationSec());
-        out.put("distanceM", r.distanceM());
-        out.put("legs", r.legs().stream()
-                .map(l -> Map.of("durationSec", l.durationSec(), "distanceM", l.distanceM()))
-                .toList());
-        out.put("geometry", r.geometry());
-        return ResponseEntity.ok(out);
-    }
 
-    private static List<double[]> parsePoints(String points) {
-        try {
-            List<double[]> out = new ArrayList<>();
-            for (String pair : points.split(";")) {
-                String[] parts = pair.split(",");
-                if (parts.length != 2) return null;
-                double lat = Double.parseDouble(parts[0].trim());
-                double lon = Double.parseDouble(parts[1].trim());
-                // isFinite also rejects NaN, which passes every </> comparison
-                if (!Double.isFinite(lat) || !Double.isFinite(lon)) return null;
-                if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
-                out.add(new double[] { lat, lon });
-            }
-            return out;
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     @GetMapping("/places")
     public List<Map<String, Object>> searchPlaces(@RequestParam(defaultValue = "") String q) {

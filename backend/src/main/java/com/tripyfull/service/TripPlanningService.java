@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.GeoMath;
 import com.tripyfull.dto.PlanApplyRequest;
 import com.tripyfull.dto.PlanRequest;
 import com.tripyfull.dto.PlanResponse;
@@ -508,13 +509,8 @@ public class TripPlanningService {
 
     private static double round1(double v) { return Math.round(v * 10.0) / 10.0; }
 
+    /** Kilometres between two points. */
     static double haversine(double lat1, double lng1, double lat2, double lng2) {
-        double r = 6371.0;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return 2 * r * Math.asin(Math.sqrt(a));
+        return GeoMath.distanceMetres(lat1, lng1, lat2, lng2) / 1000.0;
     }
 }
