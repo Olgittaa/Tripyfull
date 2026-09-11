@@ -1048,7 +1048,16 @@ import BookingMap from '@/components/BookingMap.vue';
 import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { CURRENCIES, formatDayDate, placeTypeMeta, PLACE_TYPE_META } from '@tripyfull/core';
+import {
+  CURRENCIES,
+  formatDayDate,
+  placeTypeMeta,
+  PLACE_TYPE_META,
+  formatDuration as fmtDur,
+  formatMinutes as fmtMin,
+  formatDistance as fmtDist,
+  distanceMeters,
+} from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 const currencyOptions = CURRENCIES;
 
@@ -1740,11 +1749,6 @@ const routeTotal = computed(() => {
   return { durationSec, distanceM };
 });
 
-const fmtDur = (sec) => {
-  const min = Math.max(1, Math.round(sec / 60));
-  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60} min`;
-};
-const fmtDist = (m) => (m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`);
 // Saved places in this day's city, for quick-add in the empty state.
 /** The map is the widest thing here, so it follows the window's height. */
 const mapHeight = ref(560);
@@ -1759,15 +1763,7 @@ const measureMap = () => {
 const mapOpen = ref(false);
 
 /** km between two points — good enough to sort candidates by "how far off route". */
-const distanceKm = (aLat, aLon, bLat, bLon) => {
-  const R = 6371;
-  const dLat = ((bLat - aLat) * Math.PI) / 180;
-  const dLon = ((bLon - aLon) * Math.PI) / 180;
-  const la1 = (aLat * Math.PI) / 180;
-  const la2 = (bLat * Math.PI) / 180;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-};
+const distanceKm = (aLat, aLon, bLat, bLon) => distanceMeters([aLat, aLon], [bLat, bLon]) / 1000;
 
 /** Rating wording shared with the places library. */
 const RATING_HINTS = {
@@ -1830,10 +1826,6 @@ const pickSort = ref('rating');
 
 /** A usable sightseeing day, the yardstick the budget bar measures against. */
 /** "1 h 30 min" from minutes. */
-const fmtMin = (min) => {
-  const m = Math.max(0, Math.round(min));
-  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60 ? (m % 60) + ' min' : ''}`.trim();
-};
 
 /**
  * How full the day is. Stops are the places you go to — the hotel rows and the

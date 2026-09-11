@@ -1,4 +1,4 @@
-import { ownPhotosFirst } from '@tripyfull/core';
+import { ownPhotosFirst, formatDuration as fmtDur } from '@tripyfull/core';
 // The printed plan: one HTML document built from /api/trips/{id}/export.
 //
 // Modelled on a travel-agency route book — cover, what is in the plan, a
@@ -90,14 +90,6 @@ const dayOf = (days, iso) => {
 
 /** Absolute URL for a stored photo, so the document works outside the app too. */
 const photoUrl = (path, apiBase) => (!path ? null : path.startsWith('/') ? apiBase + path : path);
-
-/** "25 min", "1 h 40 min" — the leg's time as the plan knows it. */
-const fmtDur = (sec) => {
-  const min = Math.max(1, Math.round(sec / 60));
-  return min < 60
-    ? `${min} min`
-    : `${Math.floor(min / 60)} h ${min % 60 ? `${min % 60} min` : ''}`.trim();
-};
 
 /** Photos per stop; the reference route books use one or two, never a gallery. */
 const PHOTOS_PER_STOP = 2;

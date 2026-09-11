@@ -17,6 +17,7 @@
     "build": "npm run build -w @tripyfull/portal && npm run build -w @tripyfull/dev",
     "build:portal": "npm run build -w @tripyfull/portal",
     "build:styleguide": "npm run build -w @tripyfull/dev",
+    "test": "vitest run",
     "format": "prettier --check .",
     "format:fix": "prettier --write ."
   },
@@ -24,6 +25,7 @@
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/compiler-sfc": "^3.5.0",
     "prettier": "^3.9.5",
-    "vite": "^8.0.3"
+    "vite": "^8.0.3",
+    "vitest": "^5.0.0"
   }
 }

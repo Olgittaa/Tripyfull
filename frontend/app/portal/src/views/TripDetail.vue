@@ -424,7 +424,12 @@ import {
   TfModal,
   toast,
 } from '@tripyfull/ui';
-import { baseCurrency as accountCurrency, bookingEmoji, MODE_LABEL } from '@tripyfull/core';
+import {
+  baseCurrency as accountCurrency,
+  bookingEmoji,
+  MODE_LABEL,
+  formatDuration as fmtDur,
+} from '@tripyfull/core';
 import {
   buildTripDocument,
   collectMapPoints,
@@ -821,11 +826,6 @@ const saveDayCity = async (dayId) => {
 };
 
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '—');
-/** "25 min", "1 h 40 min" — a day's time between its stops. */
-const fmtDur = (sec) => {
-  const min = Math.max(1, Math.round(sec / 60));
-  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h${min % 60 ? ` ${min % 60} min` : ''}`;
-};
 
 onMounted(async () => {
   try {
