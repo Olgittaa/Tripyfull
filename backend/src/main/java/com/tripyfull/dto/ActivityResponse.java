@@ -3,6 +3,7 @@ package com.tripyfull.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.UUID;
 
 public record ActivityResponse(
@@ -34,5 +35,13 @@ public record ActivityResponse(
         LocalDateTime bookingArrivalAt,
         // Where a journey lands, so the leg to the next stop can start there.
         Double bookingToLatitude,
-        Double bookingToLongitude
+        Double bookingToLongitude,
+        // The leg to the next stop, as the server last computed it. Not known:
+        // not computed yet, or the router was unreachable. Known with null
+        // seconds: there is no route between the two.
+        boolean travelKnown,
+        Integer travelSeconds,
+        Integer travelMeters,
+        List<List<Double>> travelGeometry,
+        boolean travelEstimated
 ) {}

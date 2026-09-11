@@ -40,15 +40,30 @@ public class ActivityService {
     private final TripRepository tripRepository;
     private final BookingRepository bookingRepository;
     private final OwnershipGuard guard;
+    private final TravelLegService travelLegs;
 
     public ActivityService(ActivityRepository activityRepository, PlaceRepository placeRepository,
                            TripRepository tripRepository, BookingRepository bookingRepository,
-                           OwnershipGuard guard) {
+                           OwnershipGuard guard, TravelLegService travelLegs) {
         this.activityRepository = activityRepository;
         this.placeRepository = placeRepository;
         this.tripRepository = tripRepository;
         this.bookingRepository = bookingRepository;
         this.guard = guard;
+        this.travelLegs = travelLegs;
+    }
+
+    /** The day's stops in order, with every leg to the next stop brought up to date. */
+    private List<Activity> dayInOrder(UUID dayId) {
+        List<Activity> list = activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(dayId);
+        travelLegs.refresh(list);
+        return list;
+    }
+
+    /** A stop as it stands after its day's legs were refreshed. */
+    private ActivityResponse freshResponse(Activity saved) {
+        dayInOrder(saved.getDay().getId());
+        return toResponse(activityRepository.findById(saved.getId()).orElse(saved));
     }
 
     /** Responses with their source bookings attached — one query for the whole list. */
@@ -70,7 +85,7 @@ public class ActivityService {
 
     public List<ActivityResponse> getActivities(UUID dayId, String username) {
         Day day = findDayForUser(dayId, username);
-        return toResponses(activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(day.getId()));
+        return toResponses(dayInOrder(day.getId()));
     }
 
     /**
@@ -106,11 +121,12 @@ public class ActivityService {
         activity.setDay(day);
         activity.setOrderIndex(nextOrderIndex(dayId));
         applyPlace(activity, request, guard.requireUser(username));
-        return toResponse(activityRepository.save(activity));
+        return freshResponse(activityRepository.save(activity));
     }
 
     public ActivityResponse update(UUID activityId, ActivityRequest request, String username) {
         Activity activity = findActivityForUser(activityId, username);
+        UUID dayBefore = activity.getDay().getId();
         // Optional move to another day of the same trip; appended at the target's end.
         if (request.dayId() != null && !request.dayId().equals(activity.getDay().getId())) {
             Day target = findDayForUser(request.dayId(), username);
@@ -124,7 +140,9 @@ public class ActivityService {
         }
         ActivityMapper.updateEntity(activity, request);
         applyPlace(activity, request, guard.requireUser(username));
-        return toResponse(activityRepository.save(activity));
+        Activity saved = activityRepository.save(activity);
+        if (!saved.getDay().getId().equals(dayBefore)) dayInOrder(dayBefore); // the day it left closes its gap
+        return freshResponse(saved);
     }
 
     /** Append position: one past the day's current highest orderIndex (count would collide after deletes). */
@@ -156,7 +174,9 @@ public class ActivityService {
 
     public void delete(UUID activityId, String username) {
         Activity activity = findActivityForUser(activityId, username);
+        UUID dayId = activity.getDay().getId();
         activityRepository.delete(activity);
+        dayInOrder(dayId); // the stops around the gap meet each other now
     }
 
     public List<ActivityResponse> reorder(UUID dayId, ReorderRequest request, String username) {
@@ -173,7 +193,7 @@ public class ActivityService {
             activity.setOrderIndex(i);
             activityRepository.save(activity);
         }
-        return toResponses(activityRepository.findByDayIdOrderByOrderIndexAscIdAsc(dayId));
+        return toResponses(dayInOrder(dayId));
     }
 
     private Day findDayForUser(UUID dayId, String username) {

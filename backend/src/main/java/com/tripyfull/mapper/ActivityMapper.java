@@ -1,5 +1,7 @@
 package com.tripyfull.mapper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tripyfull.dto.ActivityRequest;
 import com.tripyfull.dto.ActivityResponse;
 import com.tripyfull.model.Activity;
@@ -8,11 +10,13 @@ import com.tripyfull.model.ActivityType;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Set;
 
 public final class ActivityMapper {
 
-    private static final Set<String> TRAVEL_MODES = Set.of("foot", "taxi", "bus", "train", "car", "plane");
+    // A flight is a booking, not a way between two stops.
+    private static final Set<String> TRAVEL_MODES = Set.of("foot", "taxi", "bus", "train", "car");
 
     private ActivityMapper() {}
 
@@ -91,7 +95,25 @@ public final class ActivityMapper {
                 source != null ? source.getDepartureAt() : null,
                 source != null ? source.getArrivalAt() : null,
                 source != null ? source.getToLatitude() : null,
-                source != null ? source.getToLongitude() : null
+                source != null ? source.getToLongitude() : null,
+                a.getTravelKey() != null,
+                a.getTravelSeconds(),
+                a.getTravelMeters(),
+                geometry(a.getTravelGeometry()),
+                a.isTravelEstimated()
         );
+    }
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final TypeReference<List<List<Double>>> POINTS = new TypeReference<>() {};
+
+    /** The stored leg line, [lat, lon] pairs; nothing when there is none or it is unreadable. */
+    private static List<List<Double>> geometry(String json) {
+        if (json == null || json.isBlank()) return List.of();
+        try {
+            return JSON.readValue(json, POINTS);
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 }

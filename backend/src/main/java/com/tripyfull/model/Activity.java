@@ -66,6 +66,21 @@ public class Activity {
     private Double latitude;
     private Double longitude;
 
+    /* The leg to the next stop, computed on the server and kept here (see
+       TravelLegService). The key names what it was computed for — mode and
+       both endpoints — so a changed order, pin or mode is noticed; a key with
+       null seconds means no route exists between the two. */
+    @Column(name = "travel_key", length = 160)
+    private String travelKey;
+    @Column(name = "travel_seconds")
+    private Integer travelSeconds;
+    @Column(name = "travel_meters")
+    private Integer travelMeters;
+    @Column(name = "travel_geometry", columnDefinition = "text")
+    private String travelGeometry;
+    @Column(name = "travel_estimated", nullable = false)
+    private boolean travelEstimated = false;
+
     public UUID getId() { return id; }
 
     public UUID getSourceBookingId() { return sourceBookingId; }
@@ -73,6 +88,17 @@ public class Activity {
 
     public Double getLatitude() { return latitude; }
     public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public String getTravelKey() { return travelKey; }
+    public void setTravelKey(String travelKey) { this.travelKey = travelKey; }
+    public Integer getTravelSeconds() { return travelSeconds; }
+    public void setTravelSeconds(Integer travelSeconds) { this.travelSeconds = travelSeconds; }
+    public Integer getTravelMeters() { return travelMeters; }
+    public void setTravelMeters(Integer travelMeters) { this.travelMeters = travelMeters; }
+    public String getTravelGeometry() { return travelGeometry; }
+    public void setTravelGeometry(String travelGeometry) { this.travelGeometry = travelGeometry; }
+    public boolean isTravelEstimated() { return travelEstimated; }
+    public void setTravelEstimated(boolean travelEstimated) { this.travelEstimated = travelEstimated; }
 
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }

@@ -1,0 +1,180 @@
+package com.tripyfull.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tripyfull.model.Activity;
+import com.tripyfull.model.ActivityType;
+import com.tripyfull.model.Booking;
+import com.tripyfull.repository.ActivityRepository;
+import com.tripyfull.repository.BookingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * The time and distance from each stop to the next, kept on the stop itself.
+ *
+ * A day is routed once per change, not once per look: every stop with a pin
+ * carries the leg to the following pinned stop — seconds, metres, the line for
+ * the map, the mode — together with a key naming what that leg was computed
+ * for. On every read of a day the keys are compared with the day as it now
+ * stands; only a leg whose order, pin or mode moved is routed again. Reordering
+ * five stops re-routes the two or three legs whose neighbours changed and no
+ * others, and a day that nobody touched costs nothing to open.
+ */
+@Service
+public class TravelLegService {
+
+    private static final Logger log = LoggerFactory.getLogger(TravelLegService.class);
+
+    /** How a stop is reached when nothing was chosen. */
+    public static final String DEFAULT_MODE = "foot";
+
+    /** Enough for a smooth line on the map; a long drive would otherwise be thousands of points. */
+    private static final int MAX_POINTS = 300;
+
+    private final RoutingService routing;
+    private final ActivityRepository activityRepository;
+    private final BookingRepository bookingRepository;
+    private final ObjectMapper json = new ObjectMapper();
+
+    public TravelLegService(RoutingService routing, ActivityRepository activityRepository,
+                            BookingRepository bookingRepository) {
+        this.routing = routing;
+        this.activityRepository = activityRepository;
+        this.bookingRepository = bookingRepository;
+    }
+
+    /** Brings every leg of the day (given in its order) up to date and saves what changed. */
+    public void refresh(List<Activity> ordered) {
+        if (ordered == null || ordered.isEmpty()) return;
+        Set<UUID> bookingIds = ordered.stream()
+                .map(Activity::getSourceBookingId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<UUID, Booking> bookings = bookingIds.isEmpty() ? Map.of()
+                : bookingRepository.findAllById(bookingIds).stream().collect(Collectors.toMap(Booking::getId, b -> b));
+
+        List<Activity> stops = ordered.stream().filter(TravelLegService::hasCoords).toList();
+        Set<UUID> withLeg = new HashSet<>();
+        for (int i = 0; i < stops.size() - 1; i++) {
+            Activity from = stops.get(i);
+            Activity to = stops.get(i + 1);
+            double[] start = legStart(from, bookings.get(from.getSourceBookingId()));
+            double[] end = coords(to);
+            String mode = modeOf(from);
+            String key = mode + "|" + fmt(start) + ";" + fmt(end);
+            withLeg.add(from.getId());
+            if (key.equals(from.getTravelKey())) continue;
+
+            RoutingService.RouteResult r;
+            try {
+                r = routing.route(List.of(start, end), mode);
+            } catch (Exception e) {
+                log.warn("Routing failed for leg from '{}': {}", from.getName(), e.getMessage());
+                r = null;
+            }
+            if (r == null) {
+                // The router was unreachable: forget the old leg rather than show a stale one,
+                // and leave no key so the next read tries again.
+                if (from.getTravelKey() != null) { clear(from); activityRepository.save(from); }
+                continue;
+            }
+            from.setTravelKey(key);
+            if (r == RoutingService.NO_ROUTE) {
+                from.setTravelSeconds(null);
+                from.setTravelMeters(null);
+                from.setTravelGeometry(null);
+                from.setTravelEstimated(false);
+            } else {
+                from.setTravelSeconds((int) Math.round(r.durationSec()));
+                from.setTravelMeters((int) Math.round(r.distanceM()));
+                from.setTravelGeometry(toJson(thin(r.geometry())));
+                from.setTravelEstimated(r.estimated());
+            }
+            activityRepository.save(from);
+        }
+        // The last stop, and stops without a pin, lead nowhere.
+        for (Activity a : ordered) {
+            if (!withLeg.contains(a.getId()) && a.getTravelKey() != null) {
+                clear(a);
+                activityRepository.save(a);
+            }
+        }
+    }
+
+    public static String modeOf(Activity a) {
+        return a.getTravelModeToNext() != null ? a.getTravelModeToNext() : DEFAULT_MODE;
+    }
+
+    private static void clear(Activity a) {
+        a.setTravelKey(null);
+        a.setTravelSeconds(null);
+        a.setTravelMeters(null);
+        a.setTravelGeometry(null);
+        a.setTravelEstimated(false);
+    }
+
+    /** The stop's pin: the saved place's, else its own. */
+    static Double lat(Activity a) {
+        if (a.getPlace() != null && a.getPlace().getLatitude() != null) return a.getPlace().getLatitude().doubleValue();
+        return a.getLatitude();
+    }
+
+    static Double lon(Activity a) {
+        if (a.getPlace() != null && a.getPlace().getLongitude() != null) return a.getPlace().getLongitude().doubleValue();
+        return a.getLongitude();
+    }
+
+    static boolean hasCoords(Activity a) {
+        return lat(a) != null && lon(a) != null;
+    }
+
+    static double[] coords(Activity a) {
+        return new double[]{lat(a), lon(a)};
+    }
+
+    /**
+     * Where the leg to the next stop begins. A journey row is pinned where it
+     * departs; when it lands the same day, the day continues from where it
+     * lands. An overnight journey has its own "Arrive" row the next morning.
+     */
+    static double[] legStart(Activity a, Booking source) {
+        if (source != null && a.getType() == ActivityType.TRANSPORT
+                && source.getDepartureAt() != null && source.getArrivalAt() != null
+                && source.getDepartureAt().toLocalDate().equals(source.getArrivalAt().toLocalDate())
+                && source.getToLatitude() != null && source.getToLongitude() != null) {
+            return new double[]{source.getToLatitude(), source.getToLongitude()};
+        }
+        return coords(a);
+    }
+
+    private static String fmt(double[] p) {
+        return String.format(Locale.ROOT, "%.6f,%.6f", p[0], p[1]);
+    }
+
+    /** Every n-th point, first and last kept, when the line is long. */
+    private static List<List<Double>> thin(List<List<Double>> g) {
+        if (g == null || g.size() <= MAX_POINTS) return g == null ? List.of() : g;
+        List<List<Double>> out = new ArrayList<>(MAX_POINTS + 1);
+        double step = (g.size() - 1) / (double) (MAX_POINTS - 1);
+        for (int i = 0; i < MAX_POINTS - 1; i++) out.add(g.get((int) Math.round(i * step)));
+        out.add(g.get(g.size() - 1));
+        return out;
+    }
+
+    private String toJson(List<List<Double>> g) {
+        try {
+            // Six decimals (~0.1 m) is plenty and keeps the text short.
+            List<List<Double>> rounded = new ArrayList<>(g.size());
+            for (List<Double> p : g) rounded.add(List.of(round6(p.get(0)), round6(p.get(1))));
+            return json.writeValueAsString(rounded);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static double round6(double v) {
+        return Math.round(v * 1_000_000d) / 1_000_000d;
+    }
+}

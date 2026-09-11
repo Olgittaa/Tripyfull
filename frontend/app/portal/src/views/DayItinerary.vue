@@ -1019,7 +1019,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   TfButton,
@@ -1588,20 +1588,16 @@ const stopNumbers = computed(() => {
   return map;
 });
 
-// Per-leg road routes (OSRM via /api/geo/route): each pair of consecutive
-// mapped stops is routed with its own travel mode (activity.travelModeToNext,
-// walking by default). Results are keyed by mode+coords — toggling a leg only
-// fetches what's missing, and late responses can never mismatch their leg.
-// Non-fatal: a failed leg falls back to a straight segment and a "no route" chip.
-const LEG_CACHE_MAX = 150;
-const legCache = ref(new Map()); // key -> { durationSec, distanceM, geometry } | null (no route)
-const legsInFlight = new Set();
-let legTimer = null;
-let legRetryTimer = null;
+/* The leg to the next stop is computed and kept on the server, on the stop it
+   leaves from (travelSeconds, travelMeters, travelGeometry, travelEstimated),
+   and recomputed there only when the order, a pin or the mode changes. This
+   page reads it; nothing is routed from here. */
 
 /**
  * How you get to the next stop. Walking and driving are routed for real; taxi,
- * bus, train and plane are estimates (no open timetables here) — the row says so.
+ * bus and train are estimates (no open timetables here) — the row says so. A
+ * flight is a booking with its own row and its real times, not a way between
+ * two stops.
  */
 const TRAVEL_MODES = [
   { key: 'foot', icon: '🚶', label: 'on foot', hint: 'Walk to the next stop' },
@@ -1624,17 +1620,32 @@ const TRAVEL_MODES = [
     hint: 'Train — own track, plus station time (estimate)',
   },
   { key: 'car', icon: '🚗', label: 'by car', hint: 'Drive yourself to the next stop' },
-  {
-    key: 'plane',
-    icon: '✈️',
-    label: 'by plane',
-    hint: 'Flight — straight line plus airport time (estimate)',
-  },
 ];
 const MODE_KEYS = TRAVEL_MODES.map((m) => m.key);
 const modeLabel = (key) => TRAVEL_MODES.find((m) => m.key === key)?.label || '';
 
 const legMode = (a) => (MODE_KEYS.includes(a.travelModeToNext) ? a.travelModeToNext : 'foot');
+const TRAVEL_FIELDS = [
+  'travelModeToNext',
+  'travelKnown',
+  'travelSeconds',
+  'travelMeters',
+  'travelGeometry',
+  'travelEstimated',
+];
+
+/** What the server knows about a stop's leg: undefined while it is not known
+    yet, null when there is no route, else the numbers and the line. */
+const legData = (a) => {
+  if (!a.travelKnown) return undefined;
+  if (a.travelSeconds == null) return null;
+  return {
+    durationSec: a.travelSeconds,
+    distanceM: a.travelMeters,
+    geometry: a.travelGeometry,
+    estimated: a.travelEstimated,
+  };
+};
 
 // One leg per consecutive pair of mapped stops, owned by the departing activity.
 const dayLegs = computed(() => {
@@ -1643,70 +1654,21 @@ const dayLegs = computed(() => {
   for (let i = 0; i < stops.length - 1; i++) {
     const from = stops[i];
     const to = stops[i + 1];
-    const mode = legMode(from);
-    const points = `${legStart(from).join(',')};${Number(stopLat(to))},${Number(stopLon(to))}`;
-    legs.push({ fromId: from.id, mode, key: `${mode}|${points}` });
+    legs.push({
+      fromId: from.id,
+      mode: legMode(from),
+      from: legStart(from),
+      to: [Number(stopLat(to)), Number(stopLon(to))],
+      data: legData(from),
+    });
   }
   return legs;
-});
-
-// Fetch every leg without a cached result. Only a definite 404 ("no route
-// between these points" — the backend caches that verdict too) is stored as
-// null; transient failures (backend/OSRM down, timeouts) stay uncached and are
-// retried on a timer, so one blip can't pin "no route found" on a leg.
-const fetchMissingLegs = () => {
-  const missing = dayLegs.value.filter(
-    (l) => !legCache.value.has(l.key) && !legsInFlight.has(l.key),
-  );
-  missing.forEach(async ({ key }) => {
-    legsInFlight.add(key);
-    try {
-      const [mode, points] = key.split('|');
-      const res = await api.get('/api/geo/route', { params: { points, mode } });
-      legCache.value.set(key, {
-        durationSec: res.data.durationSec,
-        distanceM: res.data.distanceM,
-        geometry: res.data.geometry,
-        estimated: !!res.data.estimated,
-      });
-    } catch (err) {
-      if (err.response?.status === 404) {
-        legCache.value.set(key, null); // genuinely unroutable
-      } else if (!legRetryTimer) {
-        legRetryTimer = setTimeout(() => {
-          legRetryTimer = null;
-          fetchMissingLegs();
-        }, 8000);
-      }
-    } finally {
-      legsInFlight.delete(key);
-    }
-  });
-  // keep the cache bounded; drop entries the current day no longer uses
-  if (legCache.value.size > LEG_CACHE_MAX) {
-    const keep = new Set(dayLegs.value.map((l) => l.key));
-    for (const k of legCache.value.keys()) if (!keep.has(k)) legCache.value.delete(k);
-  }
-};
-
-// Debounced — drag-reordering mutates the list many times per second.
-watch(
-  () => dayLegs.value.map((l) => l.key).join(' '),
-  () => {
-    clearTimeout(legTimer);
-    legTimer = setTimeout(fetchMissingLegs, 400);
-  },
-);
-
-onUnmounted(() => {
-  clearTimeout(legTimer);
-  clearTimeout(legRetryTimer);
 });
 
 // activity id -> its outgoing leg { mode, data } (data: undefined = loading, null = failed)
 const legInfoByActivity = computed(() => {
   const m = {};
-  for (const l of dayLegs.value) m[l.fromId] = { mode: l.mode, data: legCache.value.get(l.key) };
+  for (const l of dayLegs.value) m[l.fromId] = { mode: l.mode, data: l.data };
   return m;
 });
 
@@ -1717,14 +1679,18 @@ const setLegMode = async (a, mode) => {
   if (legMode(a) === mode) return;
   const id = a.id;
   pendingModeSaves.set(id, mode);
-  a.travelModeToNext = mode; // optimistic — dayLegs recomputes and fetches
+  a.travelModeToNext = mode; // optimistic — the row shows "…" until the server answers
+  a.travelKnown = false;
   try {
     const res = await api.patch(`/api/activities/${id}`, { travelModeToNext: mode });
     if (pendingModeSaves.get(id) !== mode) return; // superseded by a newer click
     pendingModeSaves.delete(id);
     // re-apply to the current object — the array may have been replaced meanwhile
     const cur = activities.value.find((x) => x.id === id);
-    if (cur) cur.travelModeToNext = res.data.travelModeToNext;
+    if (cur) {
+      // The server routed the leg for the new mode along with saving it.
+      for (const k of TRAVEL_FIELDS) cur[k] = res.data[k];
+    }
   } catch {
     if (pendingModeSaves.get(id) !== mode) return; // a newer click owns the state now
     pendingModeSaves.delete(id);
@@ -1736,17 +1702,10 @@ const setLegMode = async (a, mode) => {
 // Map geometry per leg: road points when routed, straight segment while
 // loading or when unroutable.
 const mapLegs = computed(() => {
-  const legs = dayLegs.value.map((l) => {
-    const cached = legCache.value.get(l.key);
-    const [from, to] = l.key
-      .split('|')[1]
-      .split(';')
-      .map((p) => p.split(',').map(Number));
-    return {
-      mode: l.mode,
-      points: cached?.geometry?.length >= 2 ? cached.geometry : [from, to],
-    };
-  });
+  const legs = dayLegs.value.map((l) => ({
+    mode: l.mode,
+    points: l.data?.geometry?.length >= 2 ? l.data.geometry : [l.from, l.to],
+  }));
   // The journey itself, as the crow flies, between its two pins.
   for (const a of activities.value) {
     if (landsSameDay(a) && hasCoords(a)) {
@@ -1762,7 +1721,7 @@ const routeTotal = computed(() => {
   let durationSec = 0;
   let distanceM = 0;
   for (const l of dayLegs.value) {
-    const d = legCache.value.get(l.key);
+    const d = l.data;
     if (!d) return null;
     durationSec += d.durationSec;
     distanceM += d.distanceM;

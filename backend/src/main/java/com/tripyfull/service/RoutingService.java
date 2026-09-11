@@ -51,9 +51,6 @@ public class RoutingService {
             "bus", new Derived("car", 1.45, 600),      // stops on the way, plus the wait
             "train", new Derived("car", 0.85, 900));   // its own track, plus the station
 
-    /** Air travel: a straight line at cruise speed plus door-to-door overhead. */
-    private static final double PLANE_KMH = 750;
-    private static final int PLANE_OVERHEAD_SEC = 150 * 60;
     private static final double EARTH_R_KM = 6371;
 
     private final RestClient restClient = buildClient();
@@ -102,13 +99,12 @@ public class RoutingService {
 
     public boolean supportsMode(String mode) {
         return mode != null
-                && (PROFILES.containsKey(mode) || DERIVED.containsKey(mode) || "plane".equals(mode));
+                && (PROFILES.containsKey(mode) || DERIVED.containsKey(mode));
     }
 
     /** points are [lat, lon]; returns null when the route can't be computed. */
     public RouteResult route(List<double[]> points, String mode) {
         if (points == null || points.size() < 2) return null;
-        if ("plane".equals(mode)) return flightEstimate(points);
 
         Derived derived = DERIVED.get(mode);
         if (derived != null) {
@@ -153,22 +149,6 @@ public class RoutingService {
     }
 
     /** Straight-line flight estimate — no route service knows about air corridors. */
-    private RouteResult flightEstimate(List<double[]> points) {
-        List<RouteLeg> legs = new ArrayList<>();
-        List<List<Double>> geometry = new ArrayList<>();
-        double totalM = 0;
-        double totalSec = 0;
-        for (int i = 0; i < points.size(); i++) {
-            geometry.add(List.of(points.get(i)[1], points.get(i)[0]));
-            if (i == 0) continue;
-            double m = haversineM(points.get(i - 1), points.get(i));
-            double sec = (m / 1000.0) / PLANE_KMH * 3600 + PLANE_OVERHEAD_SEC;
-            legs.add(new RouteLeg(sec, m));
-            totalM += m;
-            totalSec += sec;
-        }
-        return new RouteResult("plane", totalSec, totalM, legs, geometry, true);
-    }
 
     private static double haversineM(double[] a, double[] b) {
         double dLat = Math.toRadians(b[0] - a[0]);

@@ -88,9 +88,16 @@ const dayOf = (days, iso) => {
   return days.find((d) => d.date === date) || null;
 };
 
-
 /** Absolute URL for a stored photo, so the document works outside the app too. */
 const photoUrl = (path, apiBase) => (!path ? null : path.startsWith('/') ? apiBase + path : path);
+
+/** "25 min", "1 h 40 min" — the leg's time as the plan knows it. */
+const fmtDur = (sec) => {
+  const min = Math.max(1, Math.round(sec / 60));
+  return min < 60
+    ? `${min} min`
+    : `${Math.floor(min / 60)} h ${min % 60 ? `${min % 60} min` : ''}`.trim();
+};
 
 /** Photos per stop; the reference route books use one or two, never a gallery. */
 const PHOTOS_PER_STOP = 2;
@@ -440,7 +447,7 @@ export function buildTripDocument(
               const next = acts[i + 1];
               const travel =
                 a.travelModeToNext && next && !hotel && !isTransport
-                  ? `<p class="travel">→ ${esc(next.name)} ${MODE_WORD[a.travelModeToNext] || a.travelModeToNext}</p>`
+                  ? `<p class="travel">→ ${esc(next.name)} ${MODE_WORD[a.travelModeToNext] || a.travelModeToNext}${a.travelSeconds ? ` · ${fmtDur(a.travelSeconds)}` : ''}</p>`
                   : '';
               return `
               <article class="${cls}">
