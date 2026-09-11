@@ -8,7 +8,8 @@
 const TILE = 256;
 const TILE_URL = (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 
-const RATING_COLOR = { 5: '#dc2626', 4: '#f97316', 3: '#eab308', 2: '#78716c', 1: '#a8a29e' };
+// One colour for every stop: the printed book does not show ratings.
+const STOP_COLOR = '#e35a38';
 const TEAL = '#0e5c55';
 
 const lonToX = (lon, z) => ((lon + 180) / 360) * TILE * 2 ** z;
@@ -114,7 +115,7 @@ export async function buildRouteMap(points, { width = 1400, height = 1700, route
     ctx.stroke();
   }
 
-  // Markers: hotels as squares, places as dots coloured by rating.
+  // Markers: hotels as squares, places as dots.
   for (const p of pts) {
     const [x, y] = toPx(p.lat, p.lon);
     ctx.shadowColor = 'rgba(0,0,0,0.35)';
@@ -127,10 +128,10 @@ export async function buildRouteMap(points, { width = 1400, height = 1700, route
       ctx.lineWidth = 3;
       ctx.strokeRect(x - 12, y - 12, 24, 24);
     } else {
-      const r = p.rating === 5 ? 14 : p.rating === 4 ? 12 : 10;
+      const r = 12;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = RATING_COLOR[p.rating] || RATING_COLOR[3];
+      ctx.fillStyle = STOP_COLOR;
       ctx.fill();
       ctx.shadowBlur = 0;
       ctx.lineWidth = 3;

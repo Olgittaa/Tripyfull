@@ -88,7 +88,6 @@ const dayOf = (days, iso) => {
   return days.find((d) => d.date === date) || null;
 };
 
-const stars = (r) => (r ? '★'.repeat(r) + '☆'.repeat(5 - r) : '');
 
 /** Absolute URL for a stored photo, so the document works outside the app too. */
 const photoUrl = (path, apiBase) => (!path ? null : path.startsWith('/') ? apiBase + path : path);
@@ -228,8 +227,7 @@ export function buildTripDocument(
       <h2>The route</h2>
       <img class="route-map" src="${mapImage}" alt="Route map">
       <p class="map-legend">
-        <span class="lg lg-5"></span> must-see &nbsp; <span class="lg lg-4"></span> 4★ &nbsp;
-        <span class="lg lg-3"></span> 3★ &nbsp; <span class="lg lg-h"></span> hotel &nbsp;
+        <span class="lg lg-s"></span> stop &nbsp; <span class="lg lg-h"></span> hotel &nbsp;
         <span class="lg-line"></span> route, day by day
       </p>
     </section>`
@@ -242,14 +240,12 @@ export function buildTripDocument(
     const t = a.placeType || a.type || 'OTHER';
     byType.set(t, (byType.get(t) || 0) + 1);
   }
-  const mustSees = stops.filter((a) => a.placeRating === 5);
   const included = stops.length
     ? `
     <section class="page">
       <h2>What is in the plan</h2>
       <ul class="counts">
         <li><b>${stops.length}</b> stops over ${plural(total, 'day', 'days')}</li>
-        ${mustSees.length ? `<li><b>${mustSees.length}</b> must-sees (★★★★★)</li>` : ''}
         ${[...byType.entries()]
           .sort((a, b) => b[1] - a[1])
           .map(([t, n]) => `<li><b>${n}</b> ${esc(PLACE_TYPE_WORD[t] || t.toLowerCase())}</li>`)
@@ -398,9 +394,7 @@ export function buildTripDocument(
       <h2>Reading the days</h2>
       <ul class="plain legend-list">
         <li><b>🕘</b> start time of a stop, when set</li>
-        <li><b>★</b> rating from the shortlist — five is a must-see</li>
         <li><b>⏱</b> time to allow at the place</li>
-        <li><b>💡</b> why it is on the list</li>
         <li><b>🎟</b> needs a ticket or a reservation in advance</li>
         <li><b>→</b> how to reach the next stop</li>
         <li><b>🏨</b> where the night is spent</li>
@@ -440,7 +434,6 @@ export function buildTripDocument(
                 meta.push(
                   `🕘 ${fmtTime(a.startTime)}${a.endTime ? ` – ${fmtTime(a.endTime)}` : ''}`,
                 );
-              if (a.placeRating) meta.push(`<span class="stars">${stars(a.placeRating)}</span>`);
               if (a.placeVisitMinutes) meta.push(`⏱ ${a.placeVisitMinutes} min`);
               if (a.needsBooking) meta.push('🎟 book ahead');
               const photos = photosFor(a);
@@ -460,7 +453,6 @@ export function buildTripDocument(
                     : ''
                 }
                 ${a.placeDescription ? `<p>${esc(a.placeDescription)}</p>` : ''}
-                ${a.placeRatingComment ? `<p class="tip">💡 ${esc(a.placeRatingComment)}</p>` : ''}
                 ${a.notes ? `<p class="notes">${esc(a.notes)}</p>` : ''}
                 ${a.costEstimate ? `<p class="muted">~${money(a.costEstimate, a.costCurrency || cur)}</p>` : ''}
                 ${a.placeLink ? `<p class="muted"><a href="${esc(a.placeLink)}">${esc(a.placeLink)}</a></p>` : ''}
@@ -531,7 +523,6 @@ export function buildTripDocument(
     .stop--hotel h4, .stop--transport h4 { color: ${TEAL}; font-size: 11.5pt; }
     .stop--hotel, .stop--transport { padding: 6px 0 8px; }
     .meta { font-size: 10pt; color: ${INK_SOFT}; }
-    .stars { color: #b7791f; letter-spacing: 1px; }
     .addr { font-size: 10pt; color: ${INK_SOFT}; }
     .photos { display: flex; gap: 8px; margin: 8px 0; }
     .photo { display: block; width: 100%; max-height: 70mm; object-fit: cover; border-radius: 6px; }
@@ -545,10 +536,9 @@ export function buildTripDocument(
     .route-map { display: block; width: 100%; border-radius: 6px; border: 1px solid ${LINE}; }
     .map-legend { font-size: 9.5pt; color: ${INK_SOFT}; margin-top: 8px; }
     .lg { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }
-    .lg-5 { background: #dc2626; } .lg-4 { background: #f97316; } .lg-3 { background: #eab308; }
+    .lg-s { background: #e35a38; }
     .lg-h { background: ${TEAL}; border-radius: 2px; }
     .lg-line { display: inline-block; width: 22px; height: 3px; background: ${TEAL}; vertical-align: 2px; }
-    .tip { background: #f6f1e8; border-left: 3px solid ${TEAL}; padding: 6px 10px; border-radius: 0 6px 6px 0; }
     .notes { font-style: italic; }
     .travel { font-size: 10pt; color: ${TEAL}; margin-top: 8px; }
     .overnight { margin-top: 14px; font-weight: 600; }
