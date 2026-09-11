@@ -106,6 +106,8 @@ async function initMap() {
     attribution:
       '© <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
     maxZoom: 19,
+    // The app sends no referrer (index.html), but OSM blocks tile requests without one.
+    referrerPolicy: 'strict-origin-when-cross-origin',
   }).addTo(map);
   renderMarkers();
   // The map can be born inside a panel that is still animating open (width ~0),

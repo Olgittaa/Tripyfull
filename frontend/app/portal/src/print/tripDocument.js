@@ -134,26 +134,6 @@ export function collectPhotoUrls(d, apiBase = '') {
   return out;
 }
 
-/** What the route map needs: every stop with coordinates, in visiting order. */
-export function collectMapPoints(d) {
-  const pts = [];
-  for (const day of d.days || []) {
-    if (!day.date) continue;
-    for (const a of day.activities || []) {
-      if (a.latitude == null || a.longitude == null) continue;
-      if (a.fromBooking && a.type === 'TRANSPORT') continue; // airports and stations are not the route
-      pts.push({
-        lat: Number(a.latitude),
-        lon: Number(a.longitude),
-        kind: a.type === 'ACCOMMODATION' ? 'hotel' : 'stop',
-        rating: a.placeRating || 3,
-        dayNumber: day.dayNumber,
-      });
-    }
-  }
-  return pts;
-}
-
 export function buildTripDocument(
   d,
   { apiBase = '', currency = 'EUR', liveUrls = null, mapImage = null } = {},

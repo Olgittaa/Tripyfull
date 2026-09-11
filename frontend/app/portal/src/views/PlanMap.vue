@@ -158,7 +158,12 @@ function applyBaseLayer() {
   if (!map || !L) return;
   const cfg = BASE_LAYERS[baseLayer.value];
   if (baseTiles) map.removeLayer(baseTiles);
-  baseTiles = L.tileLayer(cfg.url, { attribution: cfg.attribution, maxZoom: cfg.maxZoom });
+  baseTiles = L.tileLayer(cfg.url, {
+    attribution: cfg.attribution,
+    maxZoom: cfg.maxZoom,
+    // The app sends no referrer (index.html), but OSM blocks tile requests without one.
+    referrerPolicy: 'strict-origin-when-cross-origin',
+  });
   baseTiles.addTo(map);
   baseTiles.bringToBack();
 }

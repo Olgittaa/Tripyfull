@@ -2,11 +2,13 @@
 //
 // The printed plan wants a map on page two, the way a route book has one. A
 // live Leaflet map is dozens of tile images and an SVG — fine on screen, a mess
-// in print and lost in Word. One flat image survives both. OSM's tile server
-// answers with CORS headers, so the canvas stays readable and can be exported.
+// in print and lost in Word. One flat image survives both. Tiles are fetched in
+// CORS mode, so the canvas stays readable and can be exported.
 
 const TILE = 256;
 const TILE_URL = (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+// The app sends no referrer (index.html), but OSM blocks tile requests without one.
+const TILE_REFERRER = 'strict-origin-when-cross-origin';
 
 // One colour for every stop: the printed book does not show ratings.
 const STOP_COLOR = '#e35a38';
@@ -18,28 +20,52 @@ const latToY = (lat, z) => {
   return ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * TILE * 2 ** z;
 };
 
-function loadTile(z, x, y) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    const timer = setTimeout(() => resolve(null), 8000);
-    img.onload = () => {
+const CONCURRENCY = 6; // OSM asks for a gentle client; a burst of 50 gets throttled
+const ATTEMPTS = 2;
+const TIMEOUT_MS = 10000;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** @returns {Promise<{image?: ImageBitmap, error?: string}>} */
+async function loadTile(z, x, y) {
+  let error = 'network';
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
+    if (attempt) await sleep(600 * attempt);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(TILE_URL(z, x, y), {
+        mode: 'cors',
+        referrerPolicy: TILE_REFERRER,
+        signal: ctrl.signal,
+      });
+      if (res.ok) return { image: await createImageBitmap(await res.blob()) };
+      error = `HTTP ${res.status}`;
+      if (res.status !== 429 && res.status < 500) break; // a retry will not help
+    } catch (e) {
+      error = e.name === 'AbortError' ? 'timeout' : 'network';
+    } finally {
       clearTimeout(timer);
-      resolve(img);
-    };
-    img.onerror = () => {
-      clearTimeout(timer);
-      resolve(null);
-    };
-    img.src = TILE_URL(z, x, y);
-  });
+    }
+  }
+  return { error };
+}
+
+/** Runs `jobs` with at most CONCURRENCY in flight. */
+async function runPool(jobs) {
+  const queue = [...jobs];
+  const worker = async () => {
+    for (let job = queue.shift(); job; job = queue.shift()) await job();
+  };
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, jobs.length) }, worker));
 }
 
 /**
- * @param {Array<{lat:number, lon:number, kind:'stop'|'hotel', rating?:number, dayNumber?:number}>} points
+ * @param {Array<{lat:number, lon:number, kind:'stop'|'hotel', dayNumber?:number}>} points
  *        in the order they are visited; the line follows it
  * @param {Array<[number, number]>} route  optional lat/lon pairs for the line (defaults to the points)
- * @returns {Promise<string|null>} JPEG data URL, or null when nothing could be drawn
+ * @returns {Promise<{dataUrl: string|null, tilesTotal: number, tilesMissing: number, reason?: string}|null>}
+ *          `dataUrl` is a JPEG; null when most tiles are missing (a map of markers on a blank
+ *          ground helps nobody), `reason` says why. The whole result is null without points.
  */
 export async function buildRouteMap(points, { width = 1400, height = 1700, route = null } = {}) {
   const pts = points.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
@@ -81,18 +107,22 @@ export async function buildRouteMap(points, { width = 1400, height = 1700, route
   const y0 = Math.floor(top / TILE),
     y1 = Math.floor((top + height) / TILE);
   const jobs = [];
+  const failures = [];
   for (let x = x0; x <= x1; x++) {
     for (let y = y0; y <= y1; y++) {
       if (y < 0 || y >= n) continue;
       const tx = ((x % n) + n) % n;
-      jobs.push(
-        loadTile(z, tx, y).then((img) => {
-          if (img) ctx.drawImage(img, x * TILE - left, y * TILE - top, TILE, TILE);
-        }),
-      );
+      jobs.push(async () => {
+        const { image, error } = await loadTile(z, tx, y);
+        if (image) ctx.drawImage(image, x * TILE - left, y * TILE - top, TILE, TILE);
+        else failures.push(error);
+      });
     }
   }
-  await Promise.all(jobs);
+  await runPool(jobs);
+  const coverage = { tilesTotal: jobs.length, tilesMissing: failures.length };
+  if (failures.length) coverage.reason = mostCommon(failures);
+  if (failures.length > jobs.length / 2) return { dataUrl: null, ...coverage };
 
   // Streets are loud under coloured markers; the same muting the app's maps use.
   ctx.fillStyle = 'rgba(255,255,255,0.28)';
@@ -171,11 +201,13 @@ export async function buildRouteMap(points, { width = 1400, height = 1700, route
   ctx.fillStyle = '#322a24';
   ctx.fillText(label, width - 10, height - 7);
 
-  try {
-    // JPEG: a map of tiles is photographic enough, and it keeps the document
-    // (and the .doc made from it) several times smaller than PNG would.
-    return canvas.toDataURL('image/jpeg', 0.82);
-  } catch {
-    return null; // a tainted canvas: a tile came back without CORS headers
-  }
+  // JPEG: a map of tiles is photographic enough, and it keeps the document
+  // (and the .doc made from it) several times smaller than PNG would.
+  return { dataUrl: canvas.toDataURL('image/jpeg', 0.82), ...coverage };
+}
+
+function mostCommon(values) {
+  const counts = new Map();
+  for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }

@@ -430,13 +430,9 @@ import {
   MODE_LABEL,
   formatDuration as fmtDur,
 } from '@tripyfull/core';
-import {
-  buildTripDocument,
-  collectMapPoints,
-  collectPhotoUrls,
-  probeImages,
-} from '@/print/tripDocument.js';
+import { buildTripDocument, collectPhotoUrls, probeImages } from '@/print/tripDocument.js';
 import { buildRouteMap } from '@/print/routeMap.js';
+import { collectMapPoints } from '@/plan/routePoints.js';
 import { api } from '@tripyfull/core';
 import {
   toDateStr,
@@ -754,15 +750,22 @@ const printTrip = async () => {
     w.document.write('<p style="font:14px sans-serif;padding:24px">Preparing the document…</p>');
     const apiBase = import.meta.env.VITE_API_URL || '';
     const res = await api.get(`/api/trips/${tripId}/export`);
-    const [liveUrls, mapImage] = await Promise.all([
+    const [liveUrls, map] = await Promise.all([
       probeImages(collectPhotoUrls(res.data, apiBase)),
       buildRouteMap(collectMapPoints(res.data)).catch(() => null),
     ]);
+    if (map?.tilesMissing) {
+      const where = `${map.tilesMissing} of ${map.tilesTotal} map tiles did not load (${map.reason})`;
+      toast.warning(
+        'Route map',
+        map.dataUrl ? `${where} — the map has gaps` : `${where} — the book goes without the map`,
+      );
+    }
     const doc = buildTripDocument(res.data, {
       apiBase,
       currency: accountCurrency.value,
       liveUrls,
-      mapImage,
+      mapImage: map?.dataUrl ?? null,
     });
     w.document.open();
     w.document.write(doc.html(true));
