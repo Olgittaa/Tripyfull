@@ -14,116 +14,22 @@
     </div>
 
     <template v-else>
-      <!-- Day header with prev/next -->
-      <div class="day-head">
-        <div class="day-head-main">
-          <TfIconButton
-            class="phone-hide"
-            variant="outline"
-            size="sm"
-            label="Previous day"
-            :disabled="currentDayIndex <= 0"
-            @click="goToDay(currentDayIndex - 1)"
-          >
-            <i class="pi pi-chevron-left"></i>
-          </TfIconButton>
-          <div>
-            <!-- The dock and the strip already name the day on a phone; the head
-                 keeps the city alone there. -->
-            <div class="tf-eyebrow phone-hide" style="margin-bottom: 4px">
-              <template v-if="day && !day.date"
-                >Reserve day {{ reserveIndex }} · outside the trip dates</template
-              >
-              <template v-else>Day {{ day?.dayNumber }} · {{ formatDayDate(day?.date) }}</template>
-            </div>
-            <h1 v-if="!editingCity" class="day-h1">
-              <span class="day-h1-text">{{ day?.city || 'No city set' }}</span>
-              <button
-                type="button"
-                class="day-h1-edit"
-                aria-label="Change the city"
-                @click="
-                  editingCity = true;
-                  cityDraft = day?.city || '';
-                "
-              >
-                <i class="pi pi-pencil"></i>
-              </button>
-            </h1>
-            <div v-else class="day-h1-form">
-              <TfCitySearch
-                v-model="cityDraft"
-                placeholder="e.g. Tokyo, Kamakura"
-                style="flex: 1"
-                @select="onCitySelected"
-              />
-              <TfIconButton variant="ghost" size="sm" label="Save" @click="saveCity"
-                ><i class="pi pi-check"></i
-              ></TfIconButton>
-              <TfIconButton variant="ghost" size="sm" label="Cancel" @click="editingCity = false"
-                ><i class="pi pi-times"></i
-              ></TfIconButton>
-            </div>
-          </div>
-          <TfIconButton
-            class="phone-hide"
-            variant="outline"
-            size="sm"
-            label="Next day"
-            :disabled="currentDayIndex >= allDays.length - 1"
-            @click="goToDay(currentDayIndex + 1)"
-          >
-            <i class="pi pi-chevron-right"></i>
-          </TfIconButton>
-        </div>
-        <div class="day-head-actions">
-          <TfButton
-            variant="secondary"
-            size="sm"
-            @click="showAutoPlan = true"
-            title="Fill the days from your saved places, following the hotels"
-          >
-            <i class="pi pi-sparkles" style="font-size: 12px"></i>
-            <span>Auto-plan</span>
-          </TfButton>
-          <TfButton
-            v-if="activities.length > 1"
-            variant="ghost"
-            size="sm"
-            @click="sortByTime"
-            title="Reorder activities by their start time"
-          >
-            <i class="pi pi-sort-amount-down" style="font-size: 13px"></i>
-            <span>Sort by time</span>
-          </TfButton>
-          <!-- Buffer days are their own reserve days now (the "+ Buffer" chip in
-               the strip), so a dated day has nothing to toggle. -->
-          <TfButton
-            v-if="!day?.date"
-            variant="ghost"
-            size="sm"
-            @click="removeReserveDay(day)"
-            title="Remove this reserve day"
-          >
-            <i class="pi pi-trash" style="font-size: 13px"></i>
-            <span>Remove reserve</span>
-          </TfButton>
-          <TfButton
-            v-if="allDays.length > 1"
-            variant="ghost"
-            size="sm"
-            @click="openSwapModal"
-            title="Swap this day's plan with another day"
-          >
-            <i class="pi pi-arrow-right-arrow-left" style="font-size: 13px"></i>
-            <span>Swap</span>
-          </TfButton>
-          <TfButton class="phone-hide" variant="primary" @click="openAddDialog">
-            <i class="pi pi-plus" style="font-size: 14px"></i> Activity
-          </TfButton>
-        </div>
-      </div>
-
+      <DayHead
+        :day="day"
+        :day-id="dayId"
+        :day-index="currentDayIndex"
+        :day-count="allDays.length"
+        :reserve-index="reserveIndex"
+        :can-sort="activities.length > 1"
+        @prev="goToDay(currentDayIndex - 1)"
+        @next="goToDay(currentDayIndex + 1)"
+        @auto-plan="showAutoPlan = true"
+        @sort="sortByTime"
+        @remove-reserve="removeReserveDay(day)"
+        @swap="openSwapModal"
+        @add="openAddDialog"
+        @updated="updateDayLocal"
+      />
       <DayStrip
         v-if="allDays.length > 1"
         :days="allDays"
@@ -139,188 +45,14 @@
       <div class="itin-layout">
         <div class="itin-main">
           <!-- The day in numbers, and the night when the plan does not show it -->
-          <div class="card day-facts">
-            <!-- How full the day is: places you go to, and time spent getting there -->
-            <div v-if="activities.length" class="fact">
-              <i class="pi pi-clock fact-icon" title="Day"></i>
-              <div class="day-load">
-                <span
-                  ><b>{{ dayBudget.stops }}</b> stop{{ dayBudget.stops === 1 ? '' : 's' }}</span
-                >
-                <span
-                  ><span class="day-load-dot day-load-dot--visit"></span
-                  >{{ fmtMin(dayBudget.visitMin) }} at places<span
-                    v-if="dayBudget.untimed"
-                    class="text-subtle"
-                  >
-                    · {{ dayBudget.untimed }} without a time</span
-                  ></span
-                >
-                <span
-                  ><span class="day-load-dot day-load-dot--travel"></span
-                  >{{ fmtMin(dayBudget.travelMin) }} on the move</span
-                >
-              </div>
-            </div>
-
-            <!-- Overnight stay — only when the plan does not show it already: a
-                 hotel's own row or an overnight flight says where the night is. -->
-            <div v-if="!nightInPlan" class="fact">
-              <i class="pi pi-moon fact-icon" title="Overnight"></i>
-
-              <!-- Not editing -->
-              <div v-if="!editingOvernight">
-                <!-- Has overnight set -->
-                <template v-if="day?.overnightStay">
-                  <div style="display: flex; align-items: center; gap: 8px">
-                    <span
-                      style="
-                        font: var(--fw-medium) 14px/18px var(--font-display);
-                        color: var(--text-primary);
-                      "
-                    >
-                      {{ day.overnightStay }}
-                    </span>
-                    <i
-                      class="pi pi-pencil"
-                      style="font-size: 11px; color: var(--text-secondary); cursor: pointer"
-                      @click="
-                        editingOvernight = true;
-                        overnightDraft = day.overnightStay;
-                      "
-                    ></i>
-                  </div>
-                  <!-- Linked booking badge -->
-                  <div
-                    v-if="linkedBooking"
-                    style="margin-top: 6px; display: flex; align-items: center; gap: 6px"
-                  >
-                    <TfBadge tone="accent" variant="soft">
-                      <i class="pi pi-link" style="font-size: 10px"></i>
-                      {{ linkedBooking.name
-                      }}{{
-                        linkedBooking.accommodationCity
-                          ? ' · ' + linkedBooking.accommodationCity
-                          : ''
-                      }}
-                    </TfBadge>
-                    <TfTooltip text="Unlink booking">
-                      <button
-                        style="
-                          background: none;
-                          border: none;
-                          color: var(--text-secondary);
-                          font-size: 11px;
-                          cursor: pointer;
-                          padding: 2px;
-                        "
-                        @click="unlinkBooking"
-                      >
-                        <i class="pi pi-times"></i>
-                      </button>
-                    </TfTooltip>
-                  </div>
-                </template>
-
-                <!-- No overnight — show suggestion or placeholder -->
-                <template v-else>
-                  <!-- Booking suggestion available -->
-                  <div v-if="overnightSuggestion">
-                    <button
-                      style="
-                        border: 1.5px dashed var(--border-default);
-                        background: transparent;
-                        border-radius: var(--radius-md);
-                        padding: 10px 14px;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                        color: var(--text-secondary);
-                        font: var(--type-small);
-                        width: 100%;
-                        transition: all var(--dur-fast) var(--ease-out);
-                        text-align: left;
-                      "
-                      @click="applyOvernightSuggestion"
-                    >
-                      <i
-                        class="pi pi-sparkles"
-                        style="color: var(--warning-300); font-size: 16px"
-                      ></i>
-                      <div>
-                        <div
-                          style="
-                            font: var(--fw-semibold) 14px/1.2 var(--font-sans);
-                            color: var(--text-primary);
-                          "
-                        >
-                          {{ overnightSuggestion.name }}
-                        </div>
-                        <div
-                          style="
-                            font: var(--fw-regular) 12px/1.2 var(--font-sans);
-                            color: var(--text-secondary);
-                            margin-top: 2px;
-                          "
-                        >
-                          {{ overnightSuggestion.accommodationCity }} · from booking
-                        </div>
-                      </div>
-                    </button>
-                    <div
-                      style="
-                        margin-top: 6px;
-                        font: var(--type-small);
-                        color: var(--text-secondary);
-                        cursor: pointer;
-                      "
-                      @click="
-                        editingOvernight = true;
-                        overnightDraft = '';
-                      "
-                    >
-                      or enter manually...
-                    </div>
-                  </div>
-                  <!-- No suggestion -->
-                  <div
-                    v-else
-                    style="display: flex; align-items: center; gap: 8px; cursor: pointer"
-                    @click="
-                      editingOvernight = true;
-                      overnightDraft = '';
-                    "
-                  >
-                    <span
-                      style="
-                        font: var(--fw-regular) 14px/1.2 var(--font-sans);
-                        color: var(--text-secondary);
-                      "
-                      >Not set — click to add</span
-                    >
-                  </div>
-                </template>
-              </div>
-
-              <!-- Editing manually -->
-              <div v-else style="display: flex; gap: 6px; align-items: center">
-                <TfInput
-                  v-model="overnightDraft"
-                  placeholder="e.g. Friend's apartment, Airbnb..."
-                  style="flex: 1"
-                  @keyup.enter="saveOvernightManual"
-                  @keyup.escape="editingOvernight = false"
-                />
-                <TfIconButton variant="ghost" size="sm" @click="saveOvernightManual"
-                  ><i class="pi pi-check"></i
-                ></TfIconButton>
-                <TfIconButton variant="ghost" size="sm" @click="editingOvernight = false"
-                  ><i class="pi pi-times"></i
-                ></TfIconButton>
-              </div>
-            </div>
-          </div>
+          <DayFacts
+            :day="day"
+            :day-id="dayId"
+            :load="activities.length ? dayBudget : null"
+            :night-in-plan="nightInPlan"
+            :bookings="bookings"
+            @updated="updateDayLocal"
+          />
 
           <!-- Activities timeline -->
           <div v-if="activities.length" style="display: flex; flex-direction: column; gap: 12px">
@@ -506,18 +238,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {
-  TfButton,
-  TfIconButton,
-  TfBadge,
-  TfCitySearch,
-  TfInput,
-  TfSelect,
-  TfModal,
-  TfTooltip,
-  toast,
-  confirm,
-} from '@tripyfull/ui';
+import { TfButton, TfSelect, TfModal, toast, confirm } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
 import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import DayStrip from '@/components/DayStrip.vue';
@@ -526,6 +247,8 @@ import StopCard from '@/components/StopCard.vue';
 import LegRow from '@/components/LegRow.vue';
 import StopDrawer from '@/components/StopDrawer.vue';
 import DayRouteAside from '@/components/DayRouteAside.vue';
+import DayHead from '@/components/DayHead.vue';
+import DayFacts from '@/components/DayFacts.vue';
 import {
   ACTIVITY_TYPES as typeOptions,
   typeIcon,
@@ -533,7 +256,7 @@ import {
   catStyle,
 } from '@/plan/activityTypes.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import { formatDayDate, formatMinutes as fmtMin } from '@tripyfull/core';
+import { formatDayDate } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 import {
   hasCoords,
@@ -541,8 +264,7 @@ import {
   stopLon,
   landsSameDay,
   legStart,
-  isHotelRow,
-  isJourneyRow,
+  nightShownInPlan,
 } from '@/plan/stops.js';
 import { useDayLegs } from '@/composables/useDayLegs.js';
 import { dayLoad, minutesBetween } from '@/plan/dayLoad.js';
@@ -559,12 +281,6 @@ const activities = ref([]);
 const bookings = ref([]);
 const loading = ref(false);
 const currency = accountCurrency;
-
-// City + overnight editing
-const editingCity = ref(false);
-const cityDraft = ref('');
-const editingOvernight = ref(false);
-const overnightDraft = ref('');
 
 // Library places for linking activities
 const placesLib = ref([]);
@@ -780,6 +496,8 @@ const mapOpen = ref(false);
 
 /** How full the day is: stops, time at them, time on the move. A stop without a
     clock borrows its saved place's usual visit length. */
+const nightInPlan = computed(() => nightShownInPlan(activities.value, day.value?.date));
+
 const dayBudget = computed(() =>
   dayLoad({
     activities: activities.value,
@@ -838,98 +556,6 @@ const costByType = computed(() => {
   });
   return map;
 });
-
-// Find accommodation booking that covers this day's date (for suggestion)
-const overnightSuggestion = computed(() => {
-  if (!day.value?.date || day.value?.linkedBookingId) return null;
-  const dayDate = day.value.date;
-  return (
-    bookings.value.find(
-      (b) =>
-        b.category === 'ACCOMMODATION' &&
-        b.checkIn &&
-        b.checkOut &&
-        dayDate >= b.checkIn &&
-        dayDate < b.checkOut,
-    ) || null
-  );
-});
-
-/* The night is already on the page when a stay has its evening row in the plan
-   ("Check in", "Overnight", or a hotel stop of your own) or a journey lands on
-   the next day; the overnight fact would say it twice. A "Check out" row is the
-   morning after — it says nothing about where this night is spent. */
-const nightInPlan = computed(() =>
-  activities.value.some(
-    (a) =>
-      (isHotelRow(a) && !(a.fromBooking && /^Check out · /.test(a.name || ''))) ||
-      (isJourneyRow(a) &&
-        day.value?.date &&
-        a.bookingArrivalAt &&
-        String(a.bookingArrivalAt).slice(0, 10) > day.value.date),
-  ),
-);
-
-// Find the linked booking (when day has linkedBookingId)
-const linkedBooking = computed(() => {
-  if (!day.value?.linkedBookingId) return null;
-  return bookings.value.find((b) => b.id === day.value.linkedBookingId) || null;
-});
-
-const onCitySelected = (item) => {
-  cityDraft.value = item.name;
-  saveCity();
-};
-
-const saveCity = async () => {
-  try {
-    const res = await api.patch(`/api/days/${dayId.value}`, { city: cityDraft.value });
-    updateDayLocal(res.data);
-    editingCity.value = false;
-  } catch {
-    toast.danger('Error', 'Failed to update city');
-  }
-};
-
-// Manual overnight entry — no booking link
-const saveOvernightManual = async () => {
-  try {
-    const res = await api.patch(`/api/days/${dayId.value}`, {
-      overnightStay: overnightDraft.value,
-      clearLinkedBooking: true,
-    });
-    updateDayLocal(res.data);
-    editingOvernight.value = false;
-  } catch {
-    toast.danger('Error', 'Failed to update overnight');
-  }
-};
-
-// Apply from booking — saves overnight + city + booking link
-const applyOvernightSuggestion = async () => {
-  if (!overnightSuggestion.value) return;
-  const booking = overnightSuggestion.value;
-  try {
-    const res = await api.patch(`/api/days/${dayId.value}`, {
-      overnightStay: booking.name,
-      city: booking.accommodationCity,
-      linkedBookingId: booking.id,
-    });
-    updateDayLocal(res.data);
-  } catch {
-    toast.danger('Error', 'Failed to link booking');
-  }
-};
-
-// Unlink booking but keep the text
-const unlinkBooking = async () => {
-  try {
-    const res = await api.patch(`/api/days/${dayId.value}`, { clearLinkedBooking: true });
-    updateDayLocal(res.data);
-  } catch {
-    toast.danger('Error', 'Failed to unlink');
-  }
-};
 
 // Helper to sync day data locally
 const updateDayLocal = (data) => {
@@ -995,8 +621,6 @@ const goToDay = (idx) => {
 const showAutoPlan = ref(false);
 
 const loadDay = async (id) => {
-  editingCity.value = false;
-  editingOvernight.value = false;
   try {
     // Reload all days to get fresh overnightStay/city data
     const [daysRes, activitiesRes] = await Promise.all([
@@ -1037,99 +661,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* The day's head: arrows around the title on the left, the day's tools on the right. */
-.day-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-.day-head-main {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-.day-h1 {
-  font: var(--fw-bold) 30px/1 var(--font-display);
-  letter-spacing: -0.03em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.day-h1-text {
-  min-width: 0;
-}
-/* The pencil that changes the city: quiet until the title is hovered. */
-.day-h1-edit {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--text-disabled);
-  font-size: 14px;
-  cursor: pointer;
-  transition: color var(--dur-fast) var(--ease-out);
-}
-.day-h1:hover .day-h1-edit,
-.day-h1-edit:focus-visible {
-  color: var(--text-secondary);
-}
-.day-h1-edit:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--input-select-focus-bg);
-}
-.day-h1-form {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 320px;
-}
-/* City, day load and overnight stay: a slim strip, side by side while they
-   fit. Each fact is its icon and its value on one line; the icon stands for
-   the title ("Visiting", "Day", "Overnight" are its tooltip). */
-.day-facts {
-  margin-bottom: 16px;
-  padding: 10px 14px;
-  display: flex;
-  gap: 6px 24px;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-.fact {
-  /* Natural widths: the city is short, the load is long, and the overnight
-  stay with its booking badge takes the next line rather than squeezing. */
-  flex: 0 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-/* Icon and value share one 18px line, so the icon sits level with the first
-   line of text whatever the fact is. */
-.fact-icon {
-  flex: none;
-  color: var(--accent);
-  font-size: 15px;
-  line-height: 18px;
-}
-.fact > :not(.fact-icon) {
-  flex: 1;
-  min-width: 0;
-}
-/* The day's own buttons: they wrap under the title rather than push the page. */
-.day-head-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
 .itin-layout {
   display: grid;
   /* The map earns the wider half it needs to be read at a glance. */
@@ -1223,53 +754,7 @@ onMounted(async () => {
   color: var(--text-disabled);
   font-style: italic;
 }
-.day-load {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 12px;
-  font: var(--fw-medium) 13px/18px var(--font-sans);
-  color: var(--text-secondary);
-}
-.day-load b {
-  color: var(--text-primary);
-}
-.day-load-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 5px;
-  vertical-align: 1px;
-}
-.day-load-dot--visit {
-  background: var(--primary);
-}
-.day-load-dot--travel {
-  background: var(--warning-500);
-}
 @media (max-width: 700px) {
-  /* The head stacks: the title takes the width, and the day's three tools sit
-     in one short row under it instead of piling up beside a two-line city. */
-  .day-head {
-    flex-wrap: wrap;
-    gap: 8px 0;
-    margin-bottom: 16px;
-  }
-  .day-head-main {
-    flex: 1 1 100%;
-  }
-  .day-h1 {
-    font-size: 24px;
-    line-height: 1.1;
-  }
-  .day-h1-edit {
-    width: 38px;
-    height: 38px;
-    color: var(--text-secondary);
-  }
-  .day-h1-form {
-    min-width: 0;
-  }
   /* Room under the list for the dock. */
   .itin-layout {
     padding-bottom: 72px;
@@ -1277,21 +762,6 @@ onMounted(async () => {
   .itin-main {
     display: flex;
     flex-direction: column;
-  }
-  /* The three tools share one row: a little less air inside each button. */
-  .day-head-actions {
-    gap: 6px;
-  }
-  .day-head-actions .btn {
-    padding-inline: 10px;
-  }
-  /* One fact per line on a phone. */
-  .day-facts {
-    margin: 0 0 12px;
-    padding: 10px 12px;
-  }
-  .fact {
-    flex-basis: 100%;
   }
   /* 22px of card around a stop is a laptop's air; the facts column gets it. */
   .timeline-content :deep(.tf-card) {

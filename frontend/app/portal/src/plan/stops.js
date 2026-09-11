@@ -142,3 +142,20 @@ export function mapSegments(activities, legs) {
   }
   return out;
 }
+
+/**
+ * The night is already on the page when a stay has its evening row in the plan
+ * ("Check in", "Overnight", or a hotel stop of your own) or a journey lands on
+ * the next day; an overnight fact would say it twice. A "Check out" row is the
+ * morning after — it says nothing about where this night is spent.
+ */
+export function nightShownInPlan(activities, date) {
+  return activities.some(
+    (a) =>
+      (isHotelRow(a) && !(a.fromBooking && /^Check out · /.test(a.name || ''))) ||
+      (isJourneyRow(a) &&
+        !!date &&
+        !!a.bookingArrivalAt &&
+        String(a.bookingArrivalAt).slice(0, 10) > date),
+  );
+}

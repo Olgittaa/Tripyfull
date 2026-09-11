@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLegs, legData, legMode, legTotals, mapSegments } from './stops.js';
+import { buildLegs, legData, legMode, legTotals, mapSegments, nightShownInPlan } from './stops.js';
 
 const pin = (id, lat, lon, extra = {}) => ({ id, latitude: lat, longitude: lon, ...extra });
 
@@ -69,5 +69,29 @@ describe('buildLegs', () => {
         [18.77, 98.96],
       ],
     });
+  });
+});
+
+describe('nightShownInPlan', () => {
+  const checkIn = { type: 'ACCOMMODATION', fromBooking: true, name: 'Check in · Hotel' };
+  const checkOut = { type: 'ACCOMMODATION', fromBooking: true, name: 'Check out · Hotel' };
+  const ownHotel = { type: 'ACCOMMODATION', name: "Cousin's flat" };
+  const nightFlight = {
+    type: 'TRANSPORT',
+    fromBooking: true,
+    bookingArrivalAt: '2026-12-11T07:00:00',
+  };
+
+  it('counts a check-in, an overnight row or your own hotel stop', () => {
+    expect(nightShownInPlan([checkIn], '2026-12-10')).toBe(true);
+    expect(nightShownInPlan([ownHotel], '2026-12-10')).toBe(true);
+  });
+  it('does not count the morning after', () => {
+    expect(nightShownInPlan([checkOut], '2026-12-10')).toBe(false);
+  });
+  it('counts a journey that lands the next day, not one that lands today', () => {
+    expect(nightShownInPlan([nightFlight], '2026-12-10')).toBe(true);
+    expect(nightShownInPlan([nightFlight], '2026-12-11')).toBe(false);
+    expect(nightShownInPlan([nightFlight], null)).toBe(false);
   });
 });
