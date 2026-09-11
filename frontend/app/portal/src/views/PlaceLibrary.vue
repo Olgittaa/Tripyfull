@@ -287,6 +287,16 @@
                   placeholder="Move to folder…"
                 />
               </div>
+              <!-- Everywhere but inside a trip: put the whole selection on a trip's list. -->
+              <div v-if="!tripMode && trips.length" style="width: 170px">
+                <TfSelect
+                  size="sm"
+                  :modelValue="null"
+                  @update:modelValue="(v) => bulkAddToTrip(v)"
+                  :options="tripLabels"
+                  placeholder="Add to trip…"
+                />
+              </div>
               <div style="width: 150px">
                 <TfSelect
                   size="sm"
@@ -879,16 +889,19 @@
                   </div>
                 </template>
                 <template v-else>
-                  <!-- Picking a trip toggles membership; the placeholder lists the
-                       trips the place is already in. -->
-                  <TfSelect
-                    v-if="trips.length"
-                    label="Trips"
-                    :modelValue="null"
-                    @update:modelValue="(v) => toggleTripMembership(viewing, tripValueFromLabel(v))"
-                    :options="tripLabels"
-                    :placeholder="tripMembershipLabel(viewing)"
-                  />
+                  <!-- One box per trip, ticked where the place already is. -->
+                  <div v-if="trips.length" class="field">
+                    <label class="label">Trips</label>
+                    <div class="field-stack" style="gap: 6px">
+                      <TfCheckbox
+                        v-for="t in trips"
+                        :key="t.id"
+                        :modelValue="(viewing.tripIds || []).includes(t.id)"
+                        @update:modelValue="toggleTripMembership(viewing, t.id)"
+                        >{{ t.title }}</TfCheckbox
+                      >
+                    </div>
+                  </div>
                   <div v-else class="field">
                     <label class="label">Trips</label>
                     <span class="text-sm">No trips yet</span>
@@ -1271,6 +1284,12 @@ const bulkMoveToFolder = (folderName) => {
   );
 };
 
+const bulkAddToTrip = (title) => {
+  const tripId = tripValueFromLabel(title);
+  if (!tripId) return;
+  return runBulk((id) => api.put(`/api/places/${id}/trips/${tripId}`), `Added to ${title}`);
+};
+
 /** Trip list only: drop the selection from this trip, keeping the places. */
 const bulkRemoveFromTrip = () => {
   if (!routeTripId.value) return;
@@ -1357,6 +1376,10 @@ const toggleTripMembership = async (place, tripId) => {
       : await api.put(`/api/places/${place.id}/trips/${tripId}`);
     const idx = places.value.findIndex((p) => p.id === place.id);
     if (idx !== -1) places.value[idx] = res.data;
+    // The panel shows this very place: it must see the new list too, or the
+    // next click would toggle from a stale one.
+    if (viewing.value?.id === place.id) viewing.value = res.data;
+    if (editing.value?.id === place.id) editing.value = res.data;
     toast.success(inTrip ? 'Removed from trip' : 'Added to trip', place.name);
   } catch {
     toast.danger('Error', 'Could not update the trip list');
@@ -1506,13 +1529,6 @@ const countryValue = (l) => countryOptions.value.find((o) => o.label === l)?.val
 
 const tripLabels = computed(() => trips.value.map((t) => t.title));
 const tripValueFromLabel = (title) => trips.value.find((t) => t.title === title)?.id ?? null;
-/** Card placeholder: which trips already include this place. */
-const tripMembershipLabel = (p) => {
-  const names = (p.tripIds || [])
-    .map((id) => trips.value.find((t) => t.id === id)?.title)
-    .filter(Boolean);
-  return names.length ? `🗺 ${names.join(', ')}` : '＋ Add to trip';
-};
 
 const folderLabels = computed(() => folders.value.map((f) => f.name));
 const folderLabel = (id) => folders.value.find((f) => f.id === id)?.name ?? null;
@@ -1752,8 +1768,9 @@ const save = async () => {
       drawerMode.value = 'view'; // back to details, so the change is visible
     } else {
       const res = await api.post('/api/places', payload);
-      places.value.unshift(res.data);
-      viewing.value = res.data;
+      const created = await attachToScope(res.data);
+      places.value.unshift(created);
+      viewing.value = created;
       drawerMode.value = 'view';
     }
     toast.success('Saved');
@@ -1800,10 +1817,36 @@ const upsertPlace = (place) => {
 /** A place just saved from the finder: into the list, the finder closed, and
     its card open — imported details are worth a look, and a wrong pick is
     caught at once. */
-const showSaved = (place) => {
-  upsertPlace(place);
+const showSaved = async (place) => {
+  const filed = await attachToScope(place);
+  upsertPlace(filed);
   showFindDialog.value = false;
-  openDetails(place);
+  openDetails(filed);
+};
+
+/* A place made while a folder or a trip is open belongs there — that is what
+   the view was opened for. A folder brings its own trip along; the server
+   files the place into both. Filing is best effort: the place is saved either
+   way, and a failure says so instead of losing it. */
+const attachToScope = async (place) => {
+  let p = place;
+  const tripId = routeTripId.value || selectedTripId.value || currentFolder.value?.tripId || null;
+  try {
+    if (tripId && !(p.tripIds || []).includes(tripId)) {
+      p = (await api.put(`/api/places/${p.id}/trips/${tripId}`)).data;
+    }
+    if (selectedFolderId.value && p.folderId !== selectedFolderId.value) {
+      await api.put(`/api/folders/${selectedFolderId.value}/places/${p.id}`);
+      p = { ...p, folderId: selectedFolderId.value };
+      loadFolders();
+    }
+  } catch {
+    toast.warning(
+      'Saved, not filed',
+      'The place is in your library, but not in this folder or trip',
+    );
+  }
+  return p;
 };
 
 // Google result: geocode-create by its precise display name (dedupes by place id).
