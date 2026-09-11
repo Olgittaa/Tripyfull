@@ -124,52 +124,15 @@
         </div>
       </div>
 
-      <!-- Day picker strip: buffer days stand in line with the rest, marked but
-           not set apart, and can be flipped from here as the plan changes. -->
-      <div class="day-picker" v-if="allDays.length > 1">
-        <button
-          v-for="d in datedDays"
-          :key="d.id"
-          class="day-picker-btn"
-          :class="d.id === dayId ? 'day-picker-btn--on' : 'day-picker-btn--off'"
-          @click="switchDay(d.id)"
-        >
-          <div class="day-picker-label">D{{ d.dayNumber }}</div>
-          <div class="day-picker-date">{{ formatDayDate(d.date) }}</div>
-          <div class="day-picker-note">{{ d.city || '' }}</div>
-        </button>
-
-        <!-- Reserve days: part of the trip, outside its dates. Nothing is planned
-             on them until you swap one into a real day. -->
-        <span v-if="reserveDays.length" class="day-picker-sep"></span>
-        <button
-          v-for="(d, i) in reserveDays"
-          :key="d.id"
-          class="day-picker-btn day-picker-btn--reserve"
-          :class="d.id === dayId ? 'day-picker-btn--on' : 'day-picker-btn--off'"
-          @click="switchDay(d.id)"
-        >
-          <span
-            class="day-picker-flag is-on"
-            v-tooltip="'Remove this reserve day'"
-            @click.stop="removeReserveDay(d)"
-          >
-            <i class="pi pi-times"></i>
-          </span>
-          <div class="day-picker-label">R{{ i + 1 }}</div>
-          <div class="day-picker-date">reserve</div>
-          <div class="day-picker-note">{{ d.city || 'no date' }}</div>
-        </button>
-        <button
-          class="day-picker-add"
-          v-tooltip="'Add a buffer day outside the trip dates'"
-          :disabled="addingBuffer"
-          @click="addBufferDay"
-        >
-          <i class="pi pi-plus"></i>
-          <span>Buffer</span>
-        </button>
-      </div>
+      <DayStrip
+        v-if="allDays.length > 1"
+        :days="allDays"
+        :current-id="dayId"
+        :adding="addingBuffer"
+        @select="switchDay"
+        @remove="removeReserveDay"
+        @add="addBufferDay"
+      />
 
       <!-- How full the day already is: the question every "add this?" answers to. -->
       <!-- Two-column: itinerary (left) + day route map (right) -->
@@ -702,51 +665,17 @@
       <!-- /itin-layout -->
 
       <!-- Phones only (CSS): the day, the map and "add" within a thumb's reach. -->
-      <nav class="day-dock" aria-label="Day controls">
-        <button
-          type="button"
-          class="dock-btn"
-          aria-label="Previous day"
-          :disabled="currentDayIndex <= 0"
-          @click="goToDay(currentDayIndex - 1)"
-        >
-          <i class="pi pi-chevron-left"></i>
-        </button>
-        <div class="dock-day">
-          <span class="dock-day-num">{{
-            day && !day.date ? `Reserve ${reserveIndex}` : `Day ${day?.dayNumber}`
-          }}</span>
-          <span class="dock-day-date">{{ day?.date ? formatDayDate(day.date) : 'no date' }}</span>
-        </div>
-        <button
-          type="button"
-          class="dock-btn"
-          aria-label="Next day"
-          :disabled="currentDayIndex >= allDays.length - 1"
-          @click="goToDay(currentDayIndex + 1)"
-        >
-          <i class="pi pi-chevron-right"></i>
-        </button>
-        <span class="dock-sep"></span>
-        <button
-          type="button"
-          class="dock-btn"
-          :class="{ 'is-on': mapOpen }"
-          aria-label="Day route on the map"
-          @click="mapOpen = !mapOpen"
-        >
-          <i class="pi pi-map"></i>
-          <span v-if="activityMarkers.length" class="dock-badge">{{ activityMarkers.length }}</span>
-        </button>
-        <button
-          type="button"
-          class="dock-btn dock-btn--primary"
-          aria-label="Add a stop"
-          @click="openAddDialog"
-        >
-          <i class="pi pi-plus"></i>
-        </button>
-      </nav>
+      <DayDock
+        :day="day"
+        :day-index="currentDayIndex"
+        :day-count="allDays.length"
+        :reserve-index="reserveIndex"
+        :pins="activityMarkers.length"
+        v-model:map-open="mapOpen"
+        @prev="goToDay(currentDayIndex - 1)"
+        @next="goToDay(currentDayIndex + 1)"
+        @add="openAddDialog"
+      />
     </template>
 
     <!-- Activity Drawer -->
@@ -1046,6 +975,8 @@ import {
 } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
 import AutoPlanModal from '@/components/AutoPlanModal.vue';
+import DayStrip from '@/components/DayStrip.vue';
+import DayDock from '@/components/DayDock.vue';
 import { FEATURES } from '@/config.js';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import {
@@ -1958,26 +1889,6 @@ const switchDay = (id) => {
   loadDay(id);
 };
 
-/* The strip scrolls sideways; whichever way the day changes (strip, arrows,
-   dock), the current chip is brought to the middle — horizontally only, so the
-   page itself never jumps. */
-let stripSettled = false; // the first positioning is a jump, later ones glide
-watch(
-  [dayId, allDays],
-  async () => {
-    await nextTick();
-    const strip = document.querySelector('.day-picker');
-    const on = strip?.querySelector('.day-picker-btn--on');
-    if (!strip || !on) return;
-    strip.scrollTo({
-      left: on.offsetLeft - strip.clientWidth / 2 + on.offsetWidth / 2,
-      behavior: stripSettled ? 'smooth' : 'auto',
-    });
-    stripSettled = true;
-  },
-  { immediate: true },
-);
-
 // Swap this day's plan with another day of the trip.
 const showSwapModal = ref(false);
 const swapping = ref(false);
@@ -2182,6 +2093,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* The sheet's close button exists for phones; see the block below. */
+.itin-map-close {
+  display: none;
+}
 /* The day's head: arrows around the title on the left, the day's tools on the right. */
 .day-head {
   display: flex;
@@ -2236,7 +2151,6 @@ onMounted(async () => {
   gap: 6px;
   min-width: 320px;
 }
-
 /* Icon, facts and cost on one line; on a phone the cost steps under the facts. */
 .stop-card-row {
   display: flex;
@@ -2247,7 +2161,6 @@ onMounted(async () => {
   flex: none;
   text-align: right;
 }
-
 /* A stop's name and its badges: the badges drop to the next line on a phone
    instead of dragging the card past the screen. */
 .stop-title-row {
@@ -2260,7 +2173,6 @@ onMounted(async () => {
   font: var(--fw-semibold) 16px/1.2 var(--font-sans);
   color: var(--text-primary);
 }
-
 /* City, day load and overnight stay: a slim strip, side by side while they
    fit. Each fact is its icon and its value on one line; the icon stands for
    the title ("Visiting", "Day", "Overnight" are its tooltip). */
@@ -2274,7 +2186,7 @@ onMounted(async () => {
 }
 .fact {
   /* Natural widths: the city is short, the load is long, and the overnight
-     stay with its booking badge takes the next line rather than squeezing. */
+  stay with its booking badge takes the next line rather than squeezing. */
   flex: 0 1 auto;
   min-width: 0;
   display: flex;
@@ -2293,7 +2205,6 @@ onMounted(async () => {
   flex: 1;
   min-width: 0;
 }
-
 /* The day's own buttons: they wrap under the title rather than push the page. */
 .day-head-actions {
   display: flex;
@@ -2360,7 +2271,6 @@ onMounted(async () => {
   font: var(--fw-medium) 10px/1.4 var(--font-sans);
   color: var(--text-disabled);
 }
-
 .itin-map-legend {
   display: flex;
   align-items: baseline;
@@ -2370,9 +2280,7 @@ onMounted(async () => {
   font: var(--fw-regular) 11px/1.4 var(--font-sans);
   color: var(--text-secondary);
 }
-
 /* How full the day is: two stacked shares of a 10h day. */
-
 .itin-picks-controls {
   display: flex;
   flex-wrap: wrap;
@@ -2408,7 +2316,6 @@ onMounted(async () => {
   opacity: 0.5;
   cursor: default;
 }
-
 /* Candidates: a dense, scannable list — rating badge, name, the facts that
    decide whether it fits today. */
 .itin-picks {
@@ -2508,72 +2415,6 @@ onMounted(async () => {
   font-size: 13px;
   flex: none;
 }
-
-/* Reserve days live after a divider: same strip, outside the dates. */
-.day-picker-sep {
-  width: 1px;
-  align-self: stretch;
-  margin: 4px 6px;
-  background: var(--border-default);
-  flex: none;
-}
-.day-picker-btn--reserve .day-picker-date {
-  font-style: italic;
-}
-.day-picker-add {
-  flex: none;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-width: 58px;
-  padding: 8px 10px;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-md);
-  background: none;
-  color: var(--text-secondary);
-  font: var(--fw-medium) 11px/1.2 var(--font-sans);
-  cursor: pointer;
-}
-.day-picker-add:hover {
-  background: var(--surface);
-  color: var(--text-primary);
-}
-.day-picker-add:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* Buffer days: same row, same size, just visibly held in reserve. */
-.day-picker-btn {
-  position: relative;
-}
-.day-picker-note {
-  font: var(--fw-regular) 10px/1.2 var(--font-sans);
-  color: var(--text-disabled);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 68px;
-}
-.day-picker-flag {
-  position: absolute;
-  top: 2px;
-  right: 3px;
-  font-size: 10px;
-  line-height: 1;
-  color: var(--text-disabled);
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-out);
-}
-.day-picker-flag.is-on {
-  opacity: 1;
-}
-.day-picker-flag.is-on {
-  color: var(--warning-700);
-}
-
 /* The linked place's own words, read-only inside the activity drawer. */
 .linked-facts {
   border: 1px solid var(--border-default);
@@ -2610,7 +2451,6 @@ onMounted(async () => {
   font: var(--type-small);
   color: var(--text-secondary);
 }
-
 .itin-map-head {
   display: flex;
   align-items: center;
@@ -2650,7 +2490,6 @@ onMounted(async () => {
   color: var(--text-secondary);
   font: var(--fw-medium) 12px/1 var(--font-sans);
 }
-
 .addfrom-title {
   display: flex;
   align-items: center;
@@ -2705,7 +2544,6 @@ onMounted(async () => {
   color: var(--text-secondary);
   margin-top: 2px;
 }
-
 .onmap-pill {
   display: inline-flex;
   align-items: center;
@@ -2724,7 +2562,6 @@ onMounted(async () => {
   justify-content: center;
   font-size: 9px;
 }
-
 /* drag-and-drop ordering */
 .timeline-row {
   cursor: grab;
@@ -2745,7 +2582,6 @@ onMounted(async () => {
 .timeline-row:hover .drag-grip {
   opacity: 1;
 }
-
 @media (max-width: 1024px) {
   .itin-map {
     position: static;
@@ -2754,18 +2590,15 @@ onMounted(async () => {
     height: 280px;
   }
 }
-
 .money-approx {
   display: block;
   font: var(--fw-medium) 11px/1.3 var(--font-mono);
   color: var(--text-secondary);
 }
-
 .timeline-time--derived {
   color: var(--text-disabled);
   font-style: italic;
 }
-
 .day-load {
   display: flex;
   flex-wrap: wrap;
@@ -2790,7 +2623,6 @@ onMounted(async () => {
 .day-load-dot--travel {
   background: var(--warning-500);
 }
-
 .stop-address {
   display: flex;
   align-items: center;
@@ -2827,7 +2659,6 @@ onMounted(async () => {
   font: var(--fw-medium) 13px/1 var(--font-sans);
   color: var(--text-secondary);
 }
-
 .booking-stop {
   padding: 12px 14px;
   border-radius: var(--radius-md);
@@ -2844,7 +2675,6 @@ onMounted(async () => {
   font: var(--type-small);
   color: var(--text-secondary);
 }
-
 .linked-place {
   display: flex;
   align-items: center;
@@ -2877,7 +2707,6 @@ onMounted(async () => {
 .link-edit:hover {
   text-decoration: underline;
 }
-
 .save-place-toggle {
   display: flex;
   align-items: center;
@@ -2899,14 +2728,6 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
 }
-
-/* The dock and the sheet's close button exist for phones; see the block below. */
-.day-dock,
-.itin-map-close {
-  display: none;
-}
-
-/* ---- Phones: last in the file, so these win over the rules above ---- */
 @media (max-width: 700px) {
   /* The head stacks: the title takes the width, and the day's three tools sit
      in one short row under it instead of piling up beside a two-line city. */
@@ -2929,11 +2750,6 @@ onMounted(async () => {
   }
   .day-h1-form {
     min-width: 0;
-  }
-  /* The dock switches days on a phone; the strip would be the same days a
-     second time, 64px above the list. */
-  .day-picker {
-    display: none;
   }
   /* Room under the list for the dock. */
   .itin-layout {
@@ -2958,7 +2774,6 @@ onMounted(async () => {
   .fact {
     flex-basis: 100%;
   }
-
   /* The map aside becomes a sheet, parked below the screen until the dock
      slides it up. It keeps its real size while parked, so Leaflet measures a
      true box on mount and fits the route correctly the first time it shows. */
@@ -2996,83 +2811,6 @@ onMounted(async () => {
   }
   .itin-picks-list {
     max-height: none;
-  }
-
-  /* The dock: previous · day · next, then the map and "add". */
-  .day-dock {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 75;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-    background: var(--card);
-    border-top: 1px solid var(--border-default);
-  }
-  .dock-btn {
-    position: relative;
-    flex: none;
-    width: 44px;
-    height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border-default);
-    border-radius: 50%;
-    background: var(--card);
-    color: var(--text-primary);
-    font-size: 16px;
-    cursor: pointer;
-  }
-  .dock-btn:disabled {
-    opacity: 0.35;
-    cursor: default;
-  }
-  .dock-btn.is-on {
-    background: var(--surface);
-    border-color: var(--border-strong);
-  }
-  .dock-btn--primary {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-  }
-  .dock-day {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  .dock-day-num {
-    font: var(--fw-semibold) 14px/1.15 var(--font-sans);
-    color: var(--text-primary);
-  }
-  .dock-day-date {
-    font: var(--fw-medium) 11px/1.3 var(--font-mono);
-    color: var(--text-secondary);
-  }
-  .dock-sep {
-    width: 1px;
-    height: 26px;
-    background: var(--border-default);
-    margin: 0 2px;
-  }
-  .dock-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: #fff;
-    font: var(--fw-semibold) 10px/18px var(--font-mono);
   }
   /* The cost was a right-hand column that left the name about 150px and wrapped
      "Lunch at the riverside" over five lines; it takes a line of its own,
