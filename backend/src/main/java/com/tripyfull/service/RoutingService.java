@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClientResponseException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -87,10 +88,16 @@ public class RoutingService {
     /** {@code geometry} is [lat, lon] pairs (already flipped from GeoJSON), ready for Leaflet. */
     public record RouteResult(String mode, double durationSec, double distanceM,
                               List<RouteLeg> legs, List<List<Double>> geometry,
-                              boolean estimated) {
+                              boolean estimated,
+                              /** What the leg rides on, when a timetable said ("RTC Bus Chiang Mai"). */
+                              String note) {
         public RouteResult(String mode, double durationSec, double distanceM,
                            List<RouteLeg> legs, List<List<Double>> geometry) {
-            this(mode, durationSec, distanceM, legs, geometry, false);
+            this(mode, durationSec, distanceM, legs, geometry, false, null);
+        }
+        public RouteResult(String mode, double durationSec, double distanceM,
+                           List<RouteLeg> legs, List<List<Double>> geometry, boolean estimated) {
+            this(mode, durationSec, distanceM, legs, geometry, estimated, null);
         }
     }
 
@@ -100,6 +107,29 @@ public class RoutingService {
     public boolean supportsMode(String mode) {
         return mode != null
                 && (PROFILES.containsKey(mode) || DERIVED.containsKey(mode));
+    }
+
+    /**
+     * Like {@link #route(List, String)}, but a bus or train leg that has a
+     * departure time is first asked of Google's transit timetables — the real
+     * service, its line and its time. Where no service is listed (a songthaew
+     * route, a country bus), the road-based estimate stays the answer.
+     */
+    public RouteResult route(List<double[]> points, String mode, Instant departAt) {
+        if (departAt != null && GoogleRoutesService.TRANSIT_MODES.containsKey(mode)
+                && googleRoutes.isEnabled() && points != null && points.size() >= 2) {
+            String key = "transit-" + mode + "|" + departAt.getEpochSecond() / 60 + "|" + coords(points);
+            CachedRoute cached = cache.get(key);
+            RouteResult transit;
+            if (cached != null && System.currentTimeMillis() - cached.timestamp < CACHE_TTL_MS) {
+                transit = cached.route;
+            } else {
+                transit = googleRoutes.transit(points, mode, departAt);
+                if (transit != null) remember(key, transit); // NO_ROUTE too: "no service here" is an answer
+            }
+            if (transit != null && transit != NO_ROUTE) return transit;
+        }
+        return route(points, mode);
     }
 
     /** points are [lat, lon]; returns null when the route can't be computed. */
@@ -116,11 +146,7 @@ public class RoutingService {
         String profile = PROFILES.get(mode);
         if (profile == null) return null;
 
-        // OSRM wants lon,lat; 6 decimals (~0.1 m) keeps cache keys stable
-        String coords = points.stream()
-                .map(p -> fmt(p[1]) + "," + fmt(p[0]))
-                .collect(Collectors.joining(";"));
-
+        String coords = coords(points);
         String key = mode + "|" + coords;
         CachedRoute cached = cache.get(key);
         if (cached != null && System.currentTimeMillis() - cached.timestamp < CACHE_TTL_MS) {
@@ -130,11 +156,20 @@ public class RoutingService {
         // Google Routes first when configured; the public OSRM instance stays as fallback.
         RouteResult result = googleRoutes.isEnabled() ? googleRoutes.route(points, mode) : null;
         if (result == null) result = fetchFromOsrm(profile, coords, mode, points.size());
-        if (result != null) {
-            if (cache.size() >= CACHE_MAX_ENTRIES) cache.clear(); // crude, but keeps memory bounded
-            cache.put(key, new CachedRoute(result, System.currentTimeMillis()));
-        }
+        if (result != null) remember(key, result);
         return result;
+    }
+
+    /** OSRM wants lon,lat; 6 decimals (~0.1 m) keeps cache keys stable. */
+    private static String coords(List<double[]> points) {
+        return points.stream()
+                .map(p -> fmt(p[1]) + "," + fmt(p[0]))
+                .collect(Collectors.joining(";"));
+    }
+
+    private void remember(String key, RouteResult result) {
+        if (cache.size() >= CACHE_MAX_ENTRIES) cache.clear(); // crude, but keeps memory bounded
+        cache.put(key, new CachedRoute(result, System.currentTimeMillis()));
     }
 
     /** Scales a driving route into a taxi / bus / train estimate. */

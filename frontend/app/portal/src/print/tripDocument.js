@@ -447,7 +447,7 @@ export function buildTripDocument(
               const next = acts[i + 1];
               const travel =
                 a.travelModeToNext && next && !hotel && !isTransport
-                  ? `<p class="travel">→ ${esc(next.name)} ${MODE_WORD[a.travelModeToNext] || a.travelModeToNext}${a.travelSeconds ? ` · ${fmtDur(a.travelSeconds)}` : ''}</p>`
+                  ? `<p class="travel">→ ${esc(next.name)} ${MODE_WORD[a.travelModeToNext] || a.travelModeToNext}${a.travelSeconds ? ` · ${fmtDur(a.travelSeconds)}` : ''}${a.travelNote ? ` · ${esc(a.travelNote)}` : ''}</p>`
                   : '';
               return `
               <article class="${cls}">

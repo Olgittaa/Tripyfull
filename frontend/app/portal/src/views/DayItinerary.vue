@@ -497,7 +497,10 @@
                     <template v-if="legInfoByActivity[a.id].data.estimated">~</template
                     >{{ fmtDur(legInfoByActivity[a.id].data.durationSec) }} ·
                     {{ fmtDist(legInfoByActivity[a.id].data.distanceM) }}
-                    {{ modeLabel(legInfoByActivity[a.id].mode) }}
+                    {{ modeLabel(legInfoByActivity[a.id].mode)
+                    }}<template v-if="legInfoByActivity[a.id].data.note">
+                      · {{ legInfoByActivity[a.id].data.note }}</template
+                    >
                     <span v-if="legInfoByActivity[a.id].data.estimated" class="leg-estimate"
                       >estimate</span
                     >
@@ -1594,10 +1597,11 @@ const stopNumbers = computed(() => {
    page reads it; nothing is routed from here. */
 
 /**
- * How you get to the next stop. Walking and driving are routed for real; taxi,
- * bus and train are estimates (no open timetables here) — the row says so. A
- * flight is a booking with its own row and its real times, not a way between
- * two stops.
+ * How you get to the next stop. Walking and driving are routed for real; a bus
+ * or train leg is looked up in Google's timetables for the stop's own time and
+ * names its line, and is an estimate only where no service is listed; a taxi
+ * is an estimate — the row says so. A flight is a booking with its own row and
+ * its real times, not a way between two stops.
  */
 const TRAVEL_MODES = [
   { key: 'foot', icon: '🚶', label: 'on foot', hint: 'Walk to the next stop' },
@@ -1611,13 +1615,13 @@ const TRAVEL_MODES = [
     key: 'bus',
     icon: '🚌',
     label: 'by bus',
-    hint: 'Bus — road time plus stops and waiting (estimate)',
+    hint: 'Bus — by timetable where Google has one, else road time plus stops (estimate)',
   },
   {
     key: 'train',
     icon: '🚆',
     label: 'by train',
-    hint: 'Train — own track, plus station time (estimate)',
+    hint: 'Train — by timetable where Google has one, else an estimate',
   },
   { key: 'car', icon: '🚗', label: 'by car', hint: 'Drive yourself to the next stop' },
 ];
@@ -1637,6 +1641,7 @@ const TRAVEL_FIELDS = [
   'travelMeters',
   'travelGeometry',
   'travelEstimated',
+  'travelNote',
 ];
 
 /** What the server knows about a stop's leg: undefined while it is not known
@@ -1649,6 +1654,7 @@ const legData = (a) => {
     distanceM: a.travelMeters,
     geometry: a.travelGeometry,
     estimated: a.travelEstimated,
+    note: a.travelNote, // the line, when a timetable answered
   };
 };
 

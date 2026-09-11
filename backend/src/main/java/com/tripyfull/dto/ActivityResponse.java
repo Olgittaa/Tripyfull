@@ -45,5 +45,7 @@ public record ActivityResponse(
         Integer travelSeconds,
         Integer travelMeters,
         List<List<Double>> travelGeometry,
-        boolean travelEstimated
+        boolean travelEstimated,
+        /** The line a bus or train leg rides, when a timetable said ("RTC Bus Chiang Mai"). */
+        String travelNote
 ) {}

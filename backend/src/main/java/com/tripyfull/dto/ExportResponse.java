@@ -57,6 +57,7 @@ public record ExportResponse(
             boolean fromBooking,
             String travelModeToNext,
             Integer travelSeconds,
+            String travelNote,
             // Where the stop is: the linked place's coordinates, else its own
             Double latitude,
             Double longitude,

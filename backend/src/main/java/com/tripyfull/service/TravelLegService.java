@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.*;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,13 +73,17 @@ public class TravelLegService {
                 if (carDay == null) carDay = hasCarOn(from.getDay());
                 mode = defaultMode(start, end, carDay);
             }
-            String key = mode + "|" + fmt(start) + ";" + fmt(end);
+            // A bus or train leg is asked of the timetable for its own departure
+            // time, so the time is part of what the leg was computed for.
+            Instant departAt = GoogleRoutesService.TRANSIT_MODES.containsKey(mode) ? departureOf(from, start) : null;
+            String key = mode + "|" + fmt(start) + ";" + fmt(end)
+                    + (departAt != null ? "|" + departAt.getEpochSecond() / 60 : "");
             withLeg.add(from.getId());
             if (key.equals(from.getTravelKey())) continue;
 
             RoutingService.RouteResult r;
             try {
-                r = routing.route(List.of(start, end), mode);
+                r = routing.route(List.of(start, end), mode, departAt);
             } catch (Exception e) {
                 log.warn("Routing failed for leg from '{}': {}", from.getName(), e.getMessage());
                 r = null;
@@ -94,11 +100,13 @@ public class TravelLegService {
                 from.setTravelMeters(null);
                 from.setTravelGeometry(null);
                 from.setTravelEstimated(false);
+                from.setTravelNote(null);
             } else {
                 from.setTravelSeconds((int) Math.round(r.durationSec()));
                 from.setTravelMeters((int) Math.round(r.distanceM()));
                 from.setTravelGeometry(toJson(thin(r.geometry())));
                 from.setTravelEstimated(r.estimated());
+                from.setTravelNote(r.note());
             }
             activityRepository.save(from);
         }
@@ -148,6 +156,26 @@ public class TravelLegService {
         a.setTravelMeters(null);
         a.setTravelGeometry(null);
         a.setTravelEstimated(false);
+        a.setTravelNote(null);
+    }
+
+    /**
+     * When the leg sets off: the stop's end (else its start, else 09:00) on the
+     * day's date, read as local time where the stop is — the zone is taken from
+     * the longitude, fifteen degrees to the hour, which is right for Thailand,
+     * Europe and most places with one zone. Timetables are for the future: a day
+     * without a date takes the coming Monday, a date already past the same
+     * weekday of the coming week.
+     */
+    static Instant departureOf(Activity from, double[] start) {
+        LocalDate today = LocalDate.now();
+        LocalDate date = from.getDay() != null ? from.getDay().getDate() : null;
+        if (date == null) date = today.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        while (date.isBefore(today)) date = date.plusWeeks(1);
+        LocalTime time = from.getEndTime() != null ? from.getEndTime()
+                : from.getStartTime() != null ? from.getStartTime() : LocalTime.of(9, 0);
+        int offsetHours = Math.max(-12, Math.min(14, (int) Math.round(start[1] / 15.0)));
+        return date.atTime(time).toInstant(ZoneOffset.ofHours(offsetHours));
     }
 
     /** The stop's pin: the saved place's, else its own. */

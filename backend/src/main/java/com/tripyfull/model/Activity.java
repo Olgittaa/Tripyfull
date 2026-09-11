@@ -80,6 +80,9 @@ public class Activity {
     private String travelGeometry;
     @Column(name = "travel_estimated", nullable = false)
     private boolean travelEstimated = false;
+    /** What a bus or train leg rides on, when a timetable said. */
+    @Column(name = "travel_note", length = 160)
+    private String travelNote;
 
     public UUID getId() { return id; }
 
@@ -99,6 +102,8 @@ public class Activity {
     public void setTravelGeometry(String travelGeometry) { this.travelGeometry = travelGeometry; }
     public boolean isTravelEstimated() { return travelEstimated; }
     public void setTravelEstimated(boolean travelEstimated) { this.travelEstimated = travelEstimated; }
+    public String getTravelNote() { return travelNote; }
+    public void setTravelNote(String travelNote) { this.travelNote = travelNote; }
 
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }

@@ -91,7 +91,7 @@ public class ExportController {
                 a.getName(), a.getType() != null ? a.getType().name() : null,
                 a.getStartTime(), a.getEndTime(), a.getAddress(),
                 a.getCostEstimate(), a.getCostCurrency(), a.getNotes(),
-                a.isNeedsBooking(), a.getSourceBookingId() != null, a.getTravelModeToNext(), a.getTravelSeconds(),
+                a.isNeedsBooking(), a.getSourceBookingId() != null, a.getTravelModeToNext(), a.getTravelSeconds(), a.getTravelNote(),
                 coord(p != null ? p.getLatitude() : null, a.getLatitude()),
                 coord(p != null ? p.getLongitude() : null, a.getLongitude()),
                 p != null && p.getType() != null ? p.getType().name() : null,

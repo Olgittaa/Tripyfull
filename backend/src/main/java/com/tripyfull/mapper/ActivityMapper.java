@@ -101,7 +101,8 @@ public final class ActivityMapper {
                 a.getTravelSeconds(),
                 a.getTravelMeters(),
                 geometry(a.getTravelGeometry()),
-                a.isTravelEstimated()
+                a.isTravelEstimated(),
+                a.getTravelNote()
         );
     }
 
