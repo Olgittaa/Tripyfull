@@ -56,7 +56,9 @@ npm run dev                 # http://localhost:5173, proxies to the API on :8080
 |---|---|---|
 | `spring.datasource.*` | `application-local.properties` | PostgreSQL connection |
 | `jwt.secret` | `application-local.properties` | JWT signing (≥ 32 characters) |
-| `AERODATABOX_API_KEY` | env / local props | flight lookup (RapidAPI) |
+| `GOOGLE_MAPS_API_KEY` | env / local props | optional: Google Places (search, import, photos, descriptions) and Google Routes (driving, walking, transit timetables); without it the free OSM stack (Photon, Nominatim, OSRM) is used |
+| `TRIPADVISOR_API_KEY` | env / local props | optional: ratings and reviews shown on demand, never stored |
+| `AERODATABOX_API_KEY` | env / local props | optional: flight lookup by number and date (RapidAPI) |
 | `OPENTRIPMAP_API_KEY` | env / local props | optional: attraction descriptions & photos on saved places (free key at dev.opentripmap.org) |
 | `VITE_API_URL` | `frontend/.env.development` | API address for the frontend |
 
@@ -66,4 +68,16 @@ npm run dev                 # http://localhost:5173, proxies to the API on :8080
 **Booking** (flight/ferry/rental/lodging) + **Payment[]** + **Attachment[]**.
 **Place** — a reusable place (POI) with coordinates, photos, and PUBLIC/PRIVATE visibility.
 
-For more detail, see [`frontend/CONCEPT.md`](frontend/CONCEPT.md).
+**Day** also carries the leg to the next stop on each **Activity** (time, distance, mode,
+route line), computed on the server and kept until the day changes.
+
+For what every screen does, see [`docs/features.md`](docs/features.md). The original design
+spec, personas and flows are in [`docs/`](docs/) as well.
+
+## Tests and QA
+
+```bash
+cd backend && ./mvnw test          # unit tests: geometry, place types, travel-leg rules
+cd frontend && npm test            # Vitest over lib/core and app/portal/src/plan
+python3 scripts/seed-qa.py qa_user # a throwaway user with a six-day trip, on a running backend
+```

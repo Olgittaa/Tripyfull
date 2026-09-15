@@ -1,6 +1,6 @@
 # Tripyfull — Application Spec: Views, Flows & Logic
 
-**Status:** v1 · July 2026
+**Status:** v1 · July 2026 — the design spec. For what the app does **today**, see [`features.md`](features.md); where the two differ, the code and `features.md` are right.
 **Related docs:** [`persona_jbtd.md`](persona_jbtd.md) (product frame, personas, JTBD) ·
 [`competitor_analysis.md`](competitor_analysis.md) · [`user_flow.md`](user_flow.md) (early flow sketches) ·
 [`../frontend/docs/CONCEPT.md`](../frontend/docs/CONCEPT.md) ·
