@@ -106,6 +106,10 @@ test('a consultant builds a trip and prints the book', async ({ page }) => {
       .last()
       .click();
     await expect(page.locator('.timeline-row').filter({ hasText: STOPS.searched })).toHaveCount(1);
+    // The way from the stop before it is the server's to compute, and it has to
+    // arrive without a reload — the day used to show "…" there until the screen
+    // was opened again.
+    await expect(page.locator('.timeline-leg').first()).toContainText(/\d+\s?(min|h)\b/);
 
     // 3 — typed in, no place behind it
     await page.getByRole('button', { name: /Activity/ }).click();

@@ -51,6 +51,17 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **Itinerary — the way to a stop did not appear until the day was reopened** — adding a
+  stop, editing one, moving it to another day or deleting it left the leg above it showing
+  "…" (or the time it had before the change). Reported from use; reproduced on the seeded
+  trip: a place added at the end of day 2 showed nothing under the stop before it, and after a
+  reload the same row read "1 h 3 min · 46.3 km by car". *Cause:* the server recomputes the
+  day's legs on every one of those calls, but answers with the stop that changed alone, and
+  the day screen patched that one row into its list instead of taking the day back from the
+  server. Dragging and the map's quick-add-after-a-stop were fine — they go through the
+  reorder endpoint, which returns the whole day. *Fixed:* 2026-09-17 — the day's stops are
+  re-read after every change, and the golden-path test fails without it.
+
 - [x] **Print — the route book left out every travel time** — a day's stops printed with no
   "→ next stop by car · 25 min" line unless the consultant had picked the mode by hand. The
   server computes a default mode (walk / taxi / car) without writing it on the stop — it only

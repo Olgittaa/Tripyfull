@@ -177,7 +177,7 @@
           :day="day"
           :day-id="dayId"
           :trip-id="tripId"
-          @updated="activities = $event"
+          @updated="onAsideUpdated"
           @open-place="openAddFromPlace"
         />
       </div>
@@ -299,20 +299,43 @@ const openAddFromPlace = (p) => {
 const onPlaceAdded = (p) => {
   if (!placesLib.value.some((x) => x.id === p.id)) placesLib.value.unshift(p);
 };
-const onStopSaved = ({ activity, created, moved }) => {
+/** The map's quick-add composes the new list itself; the legs still come from the server. */
+const onAsideUpdated = async (list) => {
+  activities.value = list;
+  await refreshStops();
+};
+/**
+ * The legs belong to the server: adding, editing, moving or deleting a stop
+ * changes the way to it from the stop before, and every one of those calls
+ * answers with the stop that changed — never with the day around it. So the
+ * list comes back from the server afterwards. Without it the screen keeps the
+ * leg the plan had before the change: no time at all on a stop that just
+ * gained a neighbour, a stale one on a stop whose neighbour moved away.
+ */
+const refreshStops = async () => {
+  try {
+    activities.value = (await api.get(`/api/days/${dayId.value}/itinerary`)).data;
+  } catch {
+    // Keep what is on screen; the next visit to the day straightens it out.
+  }
+};
+
+const onStopSaved = async ({ activity, created, moved }) => {
   if (moved) {
     activities.value = activities.value.filter((a) => a.id !== activity.id);
-    return;
-  }
-  if (created) activities.value.push(activity);
-  else {
+  } else if (created) {
+    activities.value.push(activity);
+  } else {
     const idx = activities.value.findIndex((a) => a.id === activity.id);
     if (idx !== -1) activities.value[idx] = activity;
   }
-  if (activity.startTime) autoSortByTime();
+  // A re-sort saves the new order, and that answer already carries fresh legs.
+  if (!moved && activity.startTime && (await autoSortByTime())) return;
+  await refreshStops();
 };
-const onStopDeleted = (a) => {
+const onStopDeleted = async (a) => {
   activities.value = activities.value.filter((x) => x.id !== a.id);
+  await refreshStops();
 };
 
 const currentDayIndex = computed(() => allDays.value.findIndex((d) => d.id === dayId.value));
@@ -379,12 +402,12 @@ const sortByTime = () => {
   persistOrder();
 };
 /** After a save: if the day is no longer in time order, put it back. */
-const autoSortByTime = () => {
+const autoSortByTime = async () => {
   const ordered = inTimeOrder(activities.value);
-  if (ordered.some((a, i) => a.id !== activities.value[i].id)) {
-    activities.value = ordered;
-    persistOrder();
-  }
+  if (ordered.every((a, i) => a.id === activities.value[i].id)) return false;
+  activities.value = ordered;
+  await persistOrder();
+  return true;
 };
 
 /**
