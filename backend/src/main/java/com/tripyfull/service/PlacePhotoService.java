@@ -41,8 +41,11 @@ public class PlacePhotoService {
     private static final Set<String> ALLOWED_TYPES =
             Set.of("image/jpeg", "image/jpg", "image/png", "image/gif", "image/bmp");
 
-    /** Photos per place — keeps one place from becoming an album. */
-    public static final int MAX_PER_PLACE = 12;
+    /**
+     * Photos per place — keeps one place from becoming an album. Places saved before the
+     * limit came down keep the photos they have; only adding another is refused.
+     */
+    public static final int MAX_PER_PLACE = 5;
 
     /** Public URL prefix; the serving endpoint lives at the same path. */
     public static final String URL_PREFIX = "/api/place-photos/";

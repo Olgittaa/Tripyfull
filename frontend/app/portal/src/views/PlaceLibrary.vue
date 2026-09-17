@@ -1416,7 +1416,7 @@ const onAddressSelect = (r) => {
 
 // ---- Photos: a lightbox to view, an upload the API normalises on the way in ----
 // Both numbers mirror PlacePhotoService on the backend, which is the authority.
-const MAX_PHOTOS = 12;
+const MAX_PHOTOS = 5;
 const MAX_PHOTO_EDGE = 1600;
 const viewerOpen = ref(false);
 const viewerIndex = ref(0);
@@ -1469,8 +1469,9 @@ const uploadPhotos = async (files) => {
     }
     toast.success(files.length > 1 ? `${files.length} photos added` : 'Photo added');
   } catch (e) {
-    // The server explains the refusal (too large, wrong type, place full).
-    toast.danger('Upload failed', e.response?.data?.message || 'Could not store the image');
+    // The server explains the refusal (too large, wrong type, place full);
+    // it answers with {"error": …}, which is what the toast has to read.
+    toast.danger('Upload failed', e.response?.data?.error || 'Could not store the image');
   } finally {
     uploading.value = false;
     uploadKey.value += 1; // remounts the dropzone, clearing its staged list

@@ -155,7 +155,7 @@ by nobody else — there is no sharing and no public place.
   in (typed, geocoded, imported) is still recorded on the row, but no screen shows it.
 - **Add place** (form): name, type, country/city/address search, coordinates,
   description, rating 1–5 and why, time to visit, audience (everyone / adults / kids),
-  needs preparation, needs booking, photos (upload up to 12, own photos shown first), links.
+  needs preparation, needs booking, photos (upload up to 5, own photos shown first), links.
 - **Find & import**: search Google Maps, or paste a Google Maps link. The link imports
   Google's own record of the place — name, address, type, editorial description and up to
   three photos. The saved place opens at once.
