@@ -284,4 +284,8 @@ opened. A day nobody touched costs nothing to open.
   (`npm test`); stateful pieces in `composables/`; the itinerary is composed of
   `DayHead`, `DayStrip`, `DayFacts`, `StopCard`, `LegRow`, `StopDrawer`, `DayRouteAside`,
   `DayDock`.
-- `scripts/seed-qa.py` seeds a throwaway user with a six-day trip for QA.
+- `scripts/seed-qa.py` seeds a throwaway consultant account with **the** QA trip: six days
+  plus a reserve day, two hotels, two flights and a car rental, a payment schedule in three
+  parts (paid / overdue / ahead), seven places in three folders, hand-made stops in a second
+  currency, the stops generated from the bookings, and a to-do list. Every manual check runs
+  on this trip.

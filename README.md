@@ -87,5 +87,5 @@ Personas and early flows are in [`docs/`](docs/) as well.
 ```bash
 cd backend && ./mvnw test          # unit tests: geometry, place types, travel-leg rules
 cd frontend && npm test            # Vitest over lib/core and app/portal/src/plan
-python3 scripts/seed-qa.py qa_user # a throwaway user with a six-day trip, on a running backend
+python3 scripts/seed-qa.py         # a throwaway consultant with one client trip, on a running backend
 ```
