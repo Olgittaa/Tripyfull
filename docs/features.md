@@ -22,8 +22,10 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
 
 - **Sign in / register** (`/auth`): username + password, JWT session. The token lives a day;
   when it runs out — on a 401 or when the expiry passes while the tab is open — a
-  *Session expired* dialog asks for the password in place. The page stays where it is, and the
-  requests that failed replay themselves after sign-in.
+  *Session expired* dialog asks for the password in place. It sits above whatever else is open,
+  including a half-filled form, the page stays where it is, and the requests that failed replay
+  themselves after sign-in — what was typed is saved, not retyped. *Sign out* in the dialog
+  clears the session and goes to `/auth`.
 - **Settings** (`/settings`): base currency (everything in the budget is converted into it),
   language, region, date & time preferences. The currency shows in the top bar.
 - **Shell**: top bar (All trips · All places · currency · account), and inside a trip a

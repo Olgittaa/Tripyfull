@@ -65,6 +65,14 @@
   padding: var(--space-4);
   background: rgba(33, 27, 23, 0.45);
 }
+/* The one overlay that is never opened on purpose: it must sit above the modal,
+   drawer or lightbox the person was already in, or there is no way to answer it
+   without throwing away what they were doing. Above the lightbox (120), below a
+   select's own popup (1100), which belongs to whatever it is inside. */
+.modal-overlay--topmost {
+  z-index: 130;
+}
+
 .modal {
   width: 100%;
   display: flex;

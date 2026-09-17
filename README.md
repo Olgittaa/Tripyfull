@@ -98,6 +98,10 @@ trip → three stops added three different ways → drag one to the front → a 
 stops, the hotel and a way to the next stop with a time on it. **A red run means no merge**,
 whatever the unit tests say.
 
-It starts what it needs: `npm test` inside `e2e/` brings up Postgres, the backend and the
+`auth.spec.js` covers the way in and the way back in: registering, the errors, and a session
+that dies while a form is open — the dialog has to be answerable from inside that form, and the
+save that failed has to go through afterwards without anything being retyped.
+
+They start what they need: `npm test` inside `e2e/` brings up Postgres, the backend and the
 portal when they are not already running, and reuses them when they are. The first run needs
 the browser: `npx playwright install chromium`.

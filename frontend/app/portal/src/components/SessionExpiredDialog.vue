@@ -5,6 +5,7 @@
     subtitle="Signed out after a day. Sign in and carry on from the same page."
     size="sm"
     :dismissible="false"
+    topmost
   >
     <form class="field-stack" @submit.prevent="submit">
       <TfInput v-model="user" label="Username" autocomplete="username" />

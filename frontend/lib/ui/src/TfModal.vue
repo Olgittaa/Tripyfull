@@ -1,7 +1,12 @@
 <template>
   <teleport to="body">
     <transition name="modal">
-      <div v-if="modelValue" class="modal-overlay" @click.self="onBackdrop">
+      <div
+        v-if="modelValue"
+        class="modal-overlay"
+        :class="{ 'modal-overlay--topmost': topmost }"
+        @click.self="onBackdrop"
+      >
         <div class="modal" :class="`modal--${size}`" role="dialog" aria-modal="true">
           <div class="modal-head">
             <div>
@@ -39,6 +44,11 @@ const props = defineProps({
   /* false = the dialog has to be answered: no ✕, no Escape, no backdrop click.
      For decisions the app cannot continue without (an expired session). */
   dismissible: { type: Boolean, default: true },
+  /* Above every other overlay, whatever was already open. A modal that appears
+     on its own — the expired session — has to be reachable from inside the form
+     the person was filling in; every other overlay is opened on purpose and
+     layers in the order it was asked for. */
+  topmost: Boolean,
 });
 const emit = defineEmits(['update:modelValue']);
 

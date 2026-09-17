@@ -32,7 +32,11 @@ never ends, a wrong number in the budget. **These block the launch.**
 It works if you know the trick, or it is ugly but harmless. Fixed when nothing in section 1
 is waiting, or when a consultant names it in an interview.
 
-*(empty)*
+- [ ] **"Failed to load day" after signing out on purpose** — choosing *Sign out* in the
+  expired-session dialog lands on the sign-in page with a red error toast, because the request
+  that was waiting for the sign-in is rejected and the screen it belonged to complains. Nobody
+  needs to be told a load failed after they chose to leave. *Steps:* let a session expire on a
+  day screen → *Sign out*. *Seen:* 2026-09-17.
 
 ## 3. Only I noticed
 
@@ -50,6 +54,17 @@ occupying the head. Never a reason to delay anything.
 ---
 
 ## Fixed
+
+- [x] **A session that died inside a form could not be answered** — the *Session expired*
+  dialog opened **underneath** the modal or drawer the consultant was working in, and its
+  backdrop swallowed every click, so the only way out was to close the form and lose what was
+  typed — in the one case the dialog exists for. *Cause:* every overlay sits at the same
+  z-index (90) and a modal teleports to `<body>` at the position its component was mounted, so
+  the dialog, mounted once with the app shell, was always earlier in the document than a modal
+  a screen opened later. *Found by:* the session test, which fills in a new trip and lets the
+  save run into a dead session. *Fixed:* 2026-09-17 — `TfModal` takes `topmost`, the one
+  overlay nobody opens on purpose sits above the rest, and the test now proves the trip is
+  saved after signing back in, without retyping.
 
 - [x] **Itinerary — the way to a stop did not appear until the day was reopened** — adding a
   stop, editing one, moving it to another day or deleting it left the leg above it showing
