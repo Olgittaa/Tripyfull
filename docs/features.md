@@ -135,9 +135,11 @@ The core screen: the day's list on the left, its route on the right.
 
 ## 5. Plan map (`/trips/:tripId/map`)
 
-- Every place on the trip's list on one map (Map / Satellite base layers), coloured by
-  rating, with layer toggles per rating and counters; planned places carry a day tag, and a
-  filter narrows the map to *Not planned yet*. Legend and rating balance explained.
+- Every place on the trip's list on **one map** — OpenStreetMap tiles, no basemap switch.
+  A pin's colour and size is its rating (5★ red and largest down to 1★ small grey); above the
+  map a key names each rating with how many places carry it. Planned places carry their day
+  number as a tag on the pin, and *Planned only* narrows the map to them. A pin's popup gives
+  the place, its rating and the days it is planned on, each a link to that day.
 
 ## 6. Trip places (`/trips/:tripId/places`) and the library (`/places`)
 
@@ -224,7 +226,7 @@ spending. See [`../AFTER_M1.md`](../AFTER_M1.md).
 | Routing between stops | Google Routes (drive, walk, transit) | OSRM (drive, walk); road-based estimates for taxi/bus/train |
 | Flight lookup | AeroDataBox | — |
 | Exchange rates | Frankfurter | — |
-| Map tiles | OpenStreetMap; Esri satellite on the plan map | — |
+| Map tiles | OpenStreetMap | — |
 
 Without a Google key the free OSM stack runs everywhere; OpenTripMap and AeroDataBox are
 optional too.

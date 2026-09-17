@@ -10,16 +10,9 @@
       </div>
     </div>
 
-    <!-- Rating layers + counters -->
+    <!-- What the colours mean, and how many places carry each rating -->
     <div class="layer-row">
-      <button
-        v-for="l in RATING_LAYERS"
-        :key="l.r"
-        type="button"
-        class="layer-chip"
-        :class="{ 'is-off': !layersOn[l.r] }"
-        @click="toggleLayer(l.r)"
-      >
+      <span v-for="l in RATING_DOTS" :key="l.r" class="layer-chip">
         <span
           :style="{
             width: l.size * 2 + 'px',
@@ -27,53 +20,35 @@
             borderRadius: '50%',
             background: l.color,
             display: 'inline-block',
-            opacity: layersOn[l.r] ? 1 : 0.35,
           }"
         ></span>
         {{ l.r }}★ · {{ countByRating(l.r) }}
-      </button>
+      </span>
       <!-- Planned places carry a day tag on the map; this narrows the map to them. -->
       <label class="layer-chip layer-toggle">
         <input type="checkbox" v-model="onlyPlanned" />
         <span>Planned only · {{ plannedCount }}</span>
       </label>
-      <span class="base-switch">
-        <button
-          v-for="(cfg, key) in BASE_LAYERS"
-          :key="key"
-          type="button"
-          class="base-switch-btn"
-          :class="{ 'is-on': baseLayer === key }"
-          @click="setBaseLayer(key)"
-        >
-          {{ cfg.label }}
-        </button>
-      </span>
       <span class="map-legend text-subtle text-sm">
         <span class="map-legend-swatch"></span>hotels from bookings
       </span>
     </div>
 
     <div v-if="loading" class="skeleton map-canvas"></div>
-    <div
-      v-show="!loading"
-      ref="mapEl"
-      class="map-canvas"
-      :class="{ 'map-canvas--photo': baseLayer === 'satellite' }"
-    ></div>
+    <div v-show="!loading" ref="mapEl" class="map-canvas"></div>
     <p
       v-if="!loading && !visiblePlaces.length"
       class="text-muted text-sm"
       style="margin-top: 10px; flex: none"
     >
-      No places with coordinates match the current layers — add places in the
+      No places with coordinates to show — add places in the
       <router-link to="/places">library</router-link> and rate them.
     </p>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api, formatDayDate, placeTypeMeta } from '@tripyfull/core';
 import { toast } from '@tripyfull/ui';
@@ -88,7 +63,7 @@ const places = ref([]);
 const hotels = ref([]); // bookings with coordinates
 
 // Strategy colors: 5 red (anchor), 4 orange, 3 yellow, 2-1 grey dots.
-const RATING_LAYERS = [
+const RATING_DOTS = [
   { r: 5, color: '#dc2626', size: 11 },
   { r: 4, color: '#f97316', size: 9 },
   { r: 3, color: '#eab308', size: 7 },
@@ -96,8 +71,6 @@ const RATING_LAYERS = [
   { r: 2, color: '#78716c', size: 6 },
   { r: 1, color: '#a8a29e', size: 5 },
 ];
-const layersOn = reactive({ 5: true, 4: true, 3: true, 2: true, 1: true });
-const toggleLayer = (r) => (layersOn[r] = !layersOn[r]);
 
 /* ---- Planned places: which day each one is already in ---- */
 // The itinerary decides what is planned; the map only shows it. One place can be
@@ -125,53 +98,34 @@ const dayLabel = (e) =>
 const mapped = computed(() => places.value.filter((p) => p.latitude && p.longitude));
 const countByRating = (r) => mapped.value.filter((p) => (p.rating || 3) === r).length;
 const visiblePlaces = computed(() =>
-  mapped.value.filter((p) => layersOn[p.rating || 3] && (!onlyPlanned.value || plansFor(p).length)),
+  mapped.value.filter((p) => !onlyPlanned.value || plansFor(p).length),
 );
 
 /* ---- Leaflet ---- */
-// Keyless, free tile sources (attribution is the only requirement). CARTO's
-// Voyager was calmer under coloured markers, but it now stamps "API KEY
-// REQUIRED" over keyless tiles, so the map is OSM's own.
-const BASE_LAYERS = {
-  map: {
-    label: 'Map',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution:
-      '© <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  },
-  satellite: {
-    label: 'Satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Imagery © <a href="https://www.esri.com" target="_blank">Esri</a>, Maxar',
-    maxZoom: 19,
-  },
+// One basemap: OSM's own tiles, keyless and free (attribution is the only
+// requirement). CARTO's Voyager was calmer under coloured markers, but it now
+// stamps "API KEY REQUIRED" over keyless tiles.
+const BASE_TILES = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution:
+    '© <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+  maxZoom: 19,
 };
-const baseLayer = ref('map');
 const mapEl = ref(null);
 let map = null;
 let L = null;
-let baseTiles = null;
 
-/** Swaps the tile layer in place, keeping markers and the current view. */
-function applyBaseLayer() {
+function addBaseTiles() {
   if (!map || !L) return;
-  const cfg = BASE_LAYERS[baseLayer.value];
-  if (baseTiles) map.removeLayer(baseTiles);
-  baseTiles = L.tileLayer(cfg.url, {
-    attribution: cfg.attribution,
-    maxZoom: cfg.maxZoom,
+  L.tileLayer(BASE_TILES.url, {
+    attribution: BASE_TILES.attribution,
+    maxZoom: BASE_TILES.maxZoom,
     // The app sends no referrer (index.html), but OSM blocks tile requests without one.
     referrerPolicy: 'strict-origin-when-cross-origin',
-  });
-  baseTiles.addTo(map);
-  baseTiles.bringToBack();
+  })
+    .addTo(map)
+    .bringToBack();
 }
-
-const setBaseLayer = (key) => {
-  baseLayer.value = key;
-  applyBaseLayer();
-};
 let lastBounds = [];
 let resizeObserver = null;
 
@@ -202,7 +156,7 @@ async function initMap() {
         }),
       );
   });
-  applyBaseLayer();
+  addBaseTiles();
   resizeObserver = new ResizeObserver(() => fitToBounds());
   resizeObserver.observe(mapEl.value);
   render();
@@ -218,7 +172,7 @@ function render() {
 
   const bounds = [];
   for (const p of visiblePlaces.value) {
-    const layer = RATING_LAYERS.find((l) => l.r === (p.rating || 3)) || RATING_LAYERS[2];
+    const layer = RATING_DOTS.find((l) => l.r === (p.rating || 3)) || RATING_DOTS[2];
     const plans = plansFor(p);
     const marker = plans.length
       ? // Planned: the same coloured dot, with the day number riding on it, so
@@ -334,8 +288,8 @@ onUnmounted(() => {
   flex-direction: column;
   height: calc(100vh - var(--topbar-height) - 2 * var(--page-pad));
 }
-/* Rating layers, the planned-only toggle, the basemap switch and the legend
-   share one wrapping row above the map. */
+/* The rating key, the planned-only toggle and the legend share one wrapping
+   row above the map. */
 .layer-row {
   display: flex;
   gap: 8px;
@@ -356,13 +310,9 @@ onUnmounted(() => {
   background: var(--card);
   color: var(--text-primary);
   font: var(--fw-medium) 13px/1 var(--font-sans);
-  cursor: pointer;
-}
-.layer-chip.is-off {
-  background: var(--surface);
-  color: var(--text-disabled);
 }
 .layer-toggle {
+  cursor: pointer;
   margin-left: 4px;
 }
 .layer-toggle input {
@@ -384,29 +334,6 @@ onUnmounted(() => {
   border-radius: 3px;
   background: var(--primary);
 }
-.base-switch {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  margin-left: 4px;
-}
-.base-switch-btn {
-  border: none;
-  background: none;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  font: var(--fw-medium) var(--text-sm)/1 var(--font-sans);
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-.base-switch-btn.is-on {
-  background: var(--card);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
-}
-
 .map-canvas {
   flex: 1;
   min-height: 260px;
@@ -421,14 +348,11 @@ onUnmounted(() => {
 }
 
 /* Muted streets under coloured markers: the plain OSM style puts every shop in
-   colour, which competed with the rating dots. Satellite is left alone. */
+   colour, which competed with the rating dots. */
 .map-canvas :deep(.leaflet-tile-pane) {
   filter: saturate(0.5) contrast(0.9) brightness(1.06);
 }
-.map-canvas--photo :deep(.leaflet-tile-pane) {
-  filter: none;
-}
-/* Lifts every dot off the tiles, whichever basemap is under it. */
+/* Lifts every dot off the tiles. */
 .map-canvas :deep(path.leaflet-interactive) {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }

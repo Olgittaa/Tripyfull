@@ -33,6 +33,10 @@ first afterwards.
 
 ## From the plan
 
+- **A satellite basemap on the plan map** — Esri imagery as a second base layer with a
+  Map/Satellite switch. *Why not now:* the pins and the day tags are what the map is for, and
+  they read worse over photography; one map is one less thing to explain. *Added:* 2026-09-17.
+
 - **Password reset** — there is none today: no reset endpoint, no mail flow. *Why not now:* the
   first users are five invited consultants; a forgotten password is a message to us. Needed
   before open sign-up, so it comes back with stage 4's transactional mail. *Added:* 2026-09-17.
