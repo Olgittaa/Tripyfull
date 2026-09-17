@@ -4,6 +4,7 @@ import com.tripyfull.model.Place;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.PlaceRepository;
 import com.tripyfull.security.OwnershipGuard;
+import com.tripyfull.util.GeoMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -218,9 +219,9 @@ public class TripAdvisorService {
             double distance = 0;
             if (place.getLatitude() != null && place.getLongitude() != null
                     && loc.get("coordinates") instanceof Map<?, ?> c) {
-                distance = TripPlanningService.haversine(
+                distance = GeoMath.distanceMetres(
                         place.getLatitude().doubleValue(), place.getLongitude().doubleValue(),
-                        toDouble(c.get("latitude")), toDouble(c.get("longitude")));
+                        toDouble(c.get("latitude")), toDouble(c.get("longitude"))) / 1000.0;
             }
             hits.add(new Hit(id, distance));
         }

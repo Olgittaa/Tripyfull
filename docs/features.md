@@ -74,7 +74,7 @@ The core screen: the day's list on the left, its route on the right.
 - Previous / next arrows; a strip of all days (D1, D2 … plus **reserve days** after a divider
   and a **+ Buffer** chip). Reserve days sit outside the trip dates until swapped into a real
   one; they can be removed.
-- Tools: **Auto-plan** (§4.6), **Sort by time**, **Swap** (trade this day's plan with another
+- Tools: **Sort by time**, **Swap** (trade this day's plan with another
   day; the linked overnight booking stays with the date), **Remove reserve**,
   **+ Activity**.
 - On a phone: the strip and arrows give way to a **dock** at the bottom — previous · day ·
@@ -132,13 +132,6 @@ The core screen: the day's list on the left, its route on the right.
 
 ### Empty day
 - "Nothing planned yet" with a quick-add grid of the city's saved places.
-
-### Auto-plan (modal)
-- Fills the days from the saved places, **following the hotels**: each day is anchored to
-  where you sleep that night, every place goes to the day whose hotel is nearest within a
-  day-trip radius (100 km), must-sees first, no more than three of one type per day, each day
-  ordered as a route from its hotel. A day without a hotel borrows the nearest one in time;
-  with no hotels at all, places are grouped by geography. Preview, then apply.
 
 ## 5. Plan map (`/trips/:tripId/map`)
 
@@ -270,7 +263,7 @@ opened. A day nobody touched costs nothing to open.
 | Trips | `GET/POST /api/trips`, `GET/PATCH/DELETE /api/trips/{id}`, `GET …/countries`, `POST …/reschedule`, `GET …/export` |
 | Days | `GET/POST /api/trips/{tripId}/days`, `POST …/days/buffer`, `PATCH/DELETE /api/days/{id}`, `POST …/days/{a}/swap/{b}` |
 | Stops | `GET /api/days/{id}/itinerary`, `POST /api/days/{id}/activities`, `PATCH …/activities/reorder`, `PATCH/DELETE /api/activities/{id}`, `GET /api/trips/{id}/planned-places` |
-| Plan | `POST /api/trips/{id}/plan` (preview), `POST …/plan/apply`, `GET/POST …/plan/from-bookings` |
+| Plan from bookings | `GET/POST /api/trips/{id}/plan/from-bookings` |
 | Bookings | `GET/POST /api/trips/{id}/bookings`, `PATCH/DELETE /api/bookings/{id}`, payments `POST …/payments`, `PATCH/DELETE /api/payments/{id}`, `PATCH …/paid` / `…/unpaid`, attachments, `POST /api/trips/{id}/import/csv`, `GET /api/flights/lookup` |
 | Budget | `GET /api/trips/{id}/budget`, `GET /api/exchange-rate` |
 | To-do | `GET/POST /api/trips/{id}/todos`, `PATCH/DELETE /api/todos/{id}`, `GET …/todos/suggestions`, `POST …/todos/from-suggestions` |

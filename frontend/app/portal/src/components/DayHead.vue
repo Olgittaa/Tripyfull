@@ -64,15 +64,6 @@
     </div>
     <div class="day-head-actions">
       <TfButton
-        variant="secondary"
-        size="sm"
-        @click="$emit('auto-plan')"
-        title="Fill the days from your saved places, following the hotels"
-      >
-        <i class="pi pi-sparkles" style="font-size: 12px"></i>
-        <span>Auto-plan</span>
-      </TfButton>
-      <TfButton
         v-if="canSort"
         variant="ghost"
         size="sm"
@@ -129,7 +120,6 @@ const props = defineProps({
 const emit = defineEmits([
   'prev',
   'next',
-  'auto-plan',
   'sort',
   'remove-reserve',
   'swap',

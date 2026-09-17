@@ -23,7 +23,6 @@
         :can-sort="activities.length > 1"
         @prev="goToDay(currentDayIndex - 1)"
         @next="goToDay(currentDayIndex + 1)"
-        @auto-plan="showAutoPlan = true"
         @sort="sortByTime"
         @remove-reserve="removeReserveDay(day)"
         @swap="openSwapModal"
@@ -231,7 +230,6 @@
         </TfButton>
       </div>
     </TfModal>
-    <AutoPlanModal v-model="showAutoPlan" :trip-id="tripId" @applied="loadDay(dayId)" />
   </div>
 </template>
 
@@ -240,7 +238,6 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { TfButton, TfSelect, TfModal, toast, confirm } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
-import AutoPlanModal from '@/components/AutoPlanModal.vue';
 import DayStrip from '@/components/DayStrip.vue';
 import DayDock from '@/components/DayDock.vue';
 import StopCard from '@/components/StopCard.vue';
@@ -618,7 +615,6 @@ const goToDay = (idx) => {
   }
 };
 
-const showAutoPlan = ref(false);
 
 const loadDay = async (id) => {
   try {
