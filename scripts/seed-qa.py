@@ -101,7 +101,7 @@ for amount, due, paid in schedule:
     if paid and after and after.get('payments'):
         call('PATCH', f'/api/payments/{after["payments"][-1]["id"]}/paid', None, tok)
 today = date.today().isoformat()
-print('payments', len(schedule), '— one paid, one overdue as of', today, ', one ahead')
+print(f'payments {len(schedule)} — one paid, one overdue as of {today}, one ahead')
 
 places = [
  ('Wat Rong Khun (White Temple)', 'SIGHTSEEING', 'Chiang Rai', 19.8242, 99.7631, 5, 120),

@@ -67,7 +67,11 @@ public class TravelLegService {
         for (int i = 0; i < stops.size() - 1; i++) {
             Activity from = stops.get(i);
             Activity to = stops.get(i + 1);
-            double[] start = legStart(from, bookings.get(from.getSourceBookingId()));
+            // A stop nobody generated from a booking has no source. Asking the map for a null
+            // key has to come back empty — and when the day holds no generated stop at all,
+            // that map is Map.of(), which throws on a null key instead of answering null.
+            UUID sourceId = from.getSourceBookingId();
+            double[] start = legStart(from, sourceId == null ? null : bookings.get(sourceId));
             double[] end = coords(to);
             String mode = from.getTravelModeToNext();
             if (mode == null) {
