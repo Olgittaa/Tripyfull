@@ -573,10 +573,6 @@
                   .join(', ') || 'Not in a trip'
               }}</span>
             </div>
-            <div class="info-row">
-              <span class="info-label">Source</span>
-              <span class="info-value">{{ (viewing.source || 'MANUAL').toLowerCase() }}</span>
-            </div>
             <!-- Dropping a place from the trip leaves it in the global library. -->
             <TfButton
               v-if="tripMode"
@@ -790,7 +786,6 @@
                     <span class="text-sm">No trips yet</span>
                   </div>
                 </template>
-                <span class="hint">Source: {{ (viewing.source || 'MANUAL').toLowerCase() }}</span>
               </div>
             </TfDrawerSection>
 
@@ -1024,7 +1019,6 @@ const filterQ = ref('');
 const filtersOpen = ref(false);
 const filterCountry = ref(null);
 const filterType = ref(null);
-const filterSource = ref(null);
 const filterCity = ref('');
 const sortBy = ref('name');
 
@@ -1047,11 +1041,6 @@ const showFolderDialog = ref(false);
 const editingFolder = ref(null);
 const folderForm = ref({ name: '', color: '#e35a38' });
 
-const sourceOptions = [
-  { label: 'Manual', value: 'MANUAL' },
-  { label: 'Geocoded', value: 'GEOCODED' },
-  { label: 'Imported', value: 'IMPORTED' },
-];
 const sortOptions = [
   { label: 'Name', value: 'name' },
   { label: 'Recently added', value: 'recent' },
@@ -1340,10 +1329,6 @@ const typeLabel = (v) => typeOptions.find((o) => o.value === v)?.label || v;
 const typeLabels = typeOptions.map((o) => o.label);
 const typeLabelFromValue = (v) => typeOptions.find((o) => o.value === v)?.label ?? null;
 const typeValueFromLabel = (l) => typeOptions.find((o) => o.label === l)?.value ?? null;
-
-const sourceLabels = sourceOptions.map((o) => o.label);
-const sourceLabelFromValue = (v) => sourceOptions.find((o) => o.value === v)?.label ?? null;
-const sourceValueFromLabel = (l) => sourceOptions.find((o) => o.label === l)?.value ?? null;
 
 const sortLabels = sortOptions.map((o) => o.label);
 const sortLabelFromValue = (v) => sortOptions.find((o) => o.value === v)?.label ?? null;
@@ -1722,7 +1707,6 @@ const loadPlaces = async () => {
         : routeTripId.value || selectedTripId.value || undefined,
       country: filterCountry.value || undefined,
       type: filterType.value || undefined,
-      source: filterSource.value || undefined,
       city: clean(filterCity.value),
       q: clean(filterQ.value),
       sort: sortBy.value || undefined,

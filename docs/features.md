@@ -150,8 +150,9 @@ by nobody else — there is no sharing and no public place.
 - **Cards or table**, search by name/city/address, filters: country, type, rating,
   folder / trip. Sort by name, recent, type, rating. Rating balance bar in a trip.
 - **Place card**: photos (carousel), name, city · country, type, visit time, description,
-  rating with a reason, source (manual / geocoded / imported), links, address on a small map.
-  The rating is the consultant's own — there is no rating from anywhere else.
+  rating with a reason, links, address on a small map.
+  The rating is the consultant's own — there is no rating from anywhere else. How a place got
+  in (typed, geocoded, imported) is still recorded on the row, but no screen shows it.
 - **Add place** (form): name, type, country/city/address search, coordinates,
   description, rating 1–5 and why, time to visit, audience (everyone / adults / kids),
   needs preparation, needs booking, photos (upload up to 12, own photos shown first), links.
