@@ -52,5 +52,6 @@ Not "later" — **no**. Written down so the question does not come back every mo
 - **Open-rate analytics and push on the client page** — a consultant who needs to know whether
   the client opened it can ask them.
 - **Collaboration / multiple users on one account** — one consultant, one account.
-- **Actual expenses** (deleted in stage 1) — Tripyfull plans money, it does not track spending.
-  Removed because it doubled every money screen and nobody filled it in.
+- **Actual expenses** — Tripyfull plans money, it does not track spending. Removed on
+  2026-09-17 (entity, endpoints, the day's expense list and the spent columns, `V4__drop_expenses`)
+  because it doubled every money screen and nobody filled it in.

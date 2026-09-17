@@ -75,7 +75,7 @@ The core screen: the day's list on the left, its route on the right.
   and a **+ Buffer** chip). Reserve days sit outside the trip dates until swapped into a real
   one; they can be removed.
 - Tools: **Auto-plan** (§4.6), **Sort by time**, **Swap** (trade this day's plan with another
-  day; expenses and the linked overnight booking stay with the date), **Remove reserve**,
+  day; the linked overnight booking stays with the date), **Remove reserve**,
   **+ Activity**.
 - On a phone: the strip and arrows give way to a **dock** at the bottom — previous · day ·
   next, the map (with a pin count) and "add" — and the map becomes a sheet the dock slides up.
@@ -209,13 +209,16 @@ the whole library across trips.
 All in the account's base currency, converted at live rates (missing rates are counted and
 shown).
 
-- **Hero**: planned total, with paid and still to pay; KPI tiles.
+- **Hero**: the planned total — bookings plus the day plans' estimates — with how much of the
+  bookings is paid and how much is still to pay.
 - **Payments**: the schedule of instalments falling due, and bookings that still owe money
-  without a plan to say when.
-- **By category**: booked, paid, estimated (day plans), spent (expenses) per category.
-- **Day by day**: booked, estimated and spent per day; expand a day.
-- **Expenses on the way**: add an actual expense (day, category, amount, currency,
-  description); delete.
+  without a plan to say when. A payment can be ticked paid from here.
+- **By category**: booked, paid and estimated (day plans) per category, with planned against
+  paid as a bar.
+- **Day by day**: booked and estimated per day.
+
+What the trip actually cost is deliberately not here: Tripyfull plans money, it does not track
+spending. See [`../AFTER_M1.md`](../AFTER_M1.md).
 
 ## 10. Places' data sources (all through the backend; keys never reach the browser)
 
@@ -268,7 +271,7 @@ opened. A day nobody touched costs nothing to open.
 | Stops | `GET /api/days/{id}/itinerary`, `POST /api/days/{id}/activities`, `PATCH …/activities/reorder`, `PATCH/DELETE /api/activities/{id}`, `GET /api/trips/{id}/planned-places` |
 | Plan | `POST /api/trips/{id}/plan` (preview), `POST …/plan/apply`, `GET/POST …/plan/from-bookings` |
 | Bookings | `GET/POST /api/trips/{id}/bookings`, `PATCH/DELETE /api/bookings/{id}`, payments `POST …/payments`, `PATCH/DELETE /api/payments/{id}`, `PATCH …/paid` / `…/unpaid`, attachments, `POST /api/trips/{id}/import/csv`, `GET /api/flights/lookup` |
-| Budget | `GET /api/trips/{id}/budget`, expenses `GET/POST /api/days/{id}/expenses`, `DELETE /api/expenses/{id}`, `GET /api/exchange-rate` |
+| Budget | `GET /api/trips/{id}/budget`, `GET /api/exchange-rate` |
 | To-do | `GET/POST /api/trips/{id}/todos`, `PATCH/DELETE /api/todos/{id}`, `GET …/todos/suggestions`, `POST …/todos/from-suggestions` |
 | Places | `GET/POST /api/places`, `POST …/geocode`, `POST …/import`, `PATCH/DELETE /api/places/{id}`, `PUT/DELETE …/trips/{tripId}`, `GET …/tripadvisor`, photos `POST/DELETE /api/places/{id}/photos`, `GET /api/place-photos/…` |
 | Folders | `GET/POST /api/folders`, `PATCH/DELETE /api/folders/{id}`, `PUT/DELETE …/places/{placeId}` |
@@ -277,7 +280,7 @@ opened. A day nobody touched costs nothing to open.
 ## 14. Development notes
 
 - Backend: Spring Boot 4, Java 25, PostgreSQL 16, Flyway (`V1__baseline`, `V2__travel_legs`,
-  `V3__travel_note`). Unit tests for geometry, place types and the travel-leg rules.
+  `V3__travel_note`, `V4__drop_expenses`). Unit tests for geometry, place types and the travel-leg rules.
 - Frontend: Vue 3 monorepo — `lib/ui` (design system, `Tf*` components, tokens),
   `lib/core` (API client, auth, dates, money, durations, geo), `app/portal` (the app),
   `app/dev` (styleguide). Pure logic in `app/portal/src/plan/` with Vitest tests

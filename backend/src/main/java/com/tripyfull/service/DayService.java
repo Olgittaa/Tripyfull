@@ -52,8 +52,8 @@ public class DayService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trip must have start and end dates");
         }
 
-        // Backfill-only: regenerating over existing days would wipe their activities
-        // and expenses. Date changes go through the reschedule flow, which preserves content.
+        // Backfill-only: regenerating over existing days would wipe their activities.
+        // Date changes go through the reschedule flow, which preserves content.
         if (dayRepository.existsByTripId(tripId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Days already exist — change the trip dates to reshape them");
@@ -121,8 +121,8 @@ public class DayService {
 
     /**
      * Swaps the PLANS of two days of the same trip: activities, city, overnight stay,
-     * notes and the buffer flag move between the dates. Date-bound data stays put —
-     * expenses (actual spending) and the linked overnight booking belong to the date.
+     * notes and the buffer flag move between the dates. Date-bound data stays put:
+     * the linked overnight booking belongs to the date.
      */
     public List<DayResponse> swapDays(UUID tripId, UUID dayId, UUID otherDayId, String username) {
         Trip trip = findTripForUser(tripId, username);

@@ -5,12 +5,10 @@ import com.tripyfull.model.Activity;
 import com.tripyfull.model.Booking;
 import com.tripyfull.model.BookingCategory;
 import com.tripyfull.model.Day;
-import com.tripyfull.model.Expense;
 import com.tripyfull.model.Payment;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.BookingRepository;
 import com.tripyfull.repository.DayRepository;
-import com.tripyfull.repository.ExpenseRepository;
 import com.tripyfull.security.OwnershipGuard;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,21 +29,18 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class BudgetService {
 
-    /** Expense categories are the common language; bookings are mapped onto them. */
+    /** One set of words for the money; bookings and day estimates are mapped onto it. */
     private static final List<String> CATEGORY_ORDER =
             List.of("TRANSPORT", "ACCOMMODATION", "ACTIVITY", "FOOD", "OTHER");
 
     private final DayRepository dayRepository;
-    private final ExpenseRepository expenseRepository;
     private final BookingRepository bookingRepository;
     private final ExchangeRateService exchangeRateService;
     private final OwnershipGuard guard;
 
-    public BudgetService(DayRepository dayRepository, ExpenseRepository expenseRepository,
-                         BookingRepository bookingRepository, ExchangeRateService exchangeRateService,
-                         OwnershipGuard guard) {
+    public BudgetService(DayRepository dayRepository, BookingRepository bookingRepository,
+                         ExchangeRateService exchangeRateService, OwnershipGuard guard) {
         this.dayRepository = dayRepository;
-        this.expenseRepository = expenseRepository;
         this.bookingRepository = bookingRepository;
         this.exchangeRateService = exchangeRateService;
         this.guard = guard;
@@ -57,7 +52,6 @@ public class BudgetService {
         String base = user.getBaseCurrency();
 
         List<Day> days = dayRepository.findByTripIdOrderByDateAsc(tripId);
-        List<Expense> expenses = expenseRepository.findByDayTripId(tripId);
         List<Booking> bookings = bookingRepository.findByTripIdOrderByNameAsc(tripId);
 
         Map<UUID, BigDecimal> rateOf = new HashMap<>();
@@ -121,19 +115,9 @@ public class BudgetService {
         upcoming.sort(Comparator.comparing(BudgetResponse.UpcomingPayment::dueDate,
                 Comparator.nullsLast(Comparator.naturalOrder())));
 
-        // ---- estimates and expenses, per day and per category ----
+        // ---- estimates, per day and per category ----
         Map<String, BigDecimal> estimatedByCat = new LinkedHashMap<>();
-        Map<String, BigDecimal> spentByCat = new LinkedHashMap<>();
-        Map<UUID, BigDecimal> spentByDay = new HashMap<>();
         BigDecimal estimatesTotal = BigDecimal.ZERO;
-        BigDecimal expensesTotal = BigDecimal.ZERO;
-
-        for (Expense e : expenses) {
-            BigDecimal amt = toBase(e.getAmount(), rateFor(e.getCurrency(), base, liveRates));
-            expensesTotal = expensesTotal.add(amt);
-            spentByCat.merge(e.getCategory() != null ? e.getCategory().name() : "OTHER", amt, BigDecimal::add);
-            spentByDay.merge(e.getDay().getId(), amt, BigDecimal::add);
-        }
 
         List<BudgetResponse.DayBudget> dayBudgets = new ArrayList<>();
         for (int i = 0; i < days.size(); i++) {
@@ -144,14 +128,13 @@ public class BudgetService {
                 BigDecimal amt = toBase(a.getCostEstimate(), rateFor(a.getCostCurrency(), base, liveRates));
                 estimated = estimated.add(amt);
                 // A dinner estimate is food, a taxi estimate is transport — the same
-                // words the expenses use, so the two columns line up.
+                // words the bookings are mapped onto, so the columns line up.
                 estimatedByCat.merge(categoryOf(a), amt, BigDecimal::add);
             }
             estimatesTotal = estimatesTotal.add(estimated);
             dayBudgets.add(new BudgetResponse.DayBudget(day.getId(), i + 1, day.getDate(), day.getCity(),
                     bookedByDay.getOrDefault(day.getId(), BigDecimal.ZERO),
-                    estimated,
-                    spentByDay.getOrDefault(day.getId(), BigDecimal.ZERO)));
+                    estimated));
         }
 
         List<BudgetResponse.CategoryBudget> byCategory = new ArrayList<>();
@@ -159,16 +142,15 @@ public class BudgetService {
             BigDecimal booked = bookedByCat.getOrDefault(cat, BigDecimal.ZERO);
             BigDecimal paidCat = paidByCat.getOrDefault(cat, BigDecimal.ZERO);
             BigDecimal est = estimatedByCat.getOrDefault(cat, BigDecimal.ZERO);
-            BigDecimal spent = spentByCat.getOrDefault(cat, BigDecimal.ZERO);
-            if (booked.signum() == 0 && est.signum() == 0 && spent.signum() == 0) continue;
-            byCategory.add(new BudgetResponse.CategoryBudget(cat, booked, paidCat, est, spent));
+            if (booked.signum() == 0 && est.signum() == 0) continue;
+            byCategory.add(new BudgetResponse.CategoryBudget(cat, booked, paidCat, est));
         }
 
         return new BudgetResponse(
                 base,
-                bookingsTotal.add(estimatesTotal), expensesTotal,
+                bookingsTotal.add(estimatesTotal),
                 bookingsTotal, bookingsPaid, bookingsRemaining,
-                estimatesTotal, expensesTotal, missingRates,
+                estimatesTotal, missingRates,
                 byCategory, dayBudgets, upcoming, unscheduled
         );
     }
@@ -197,7 +179,7 @@ public class BudgetService {
         }
     }
 
-    /** Activity types in the expense categories' words. */
+    /** Activity types in the budget's words. */
     private static String categoryOf(Activity a) {
         if (a.getType() == null) return "ACTIVITY";
         return switch (a.getType()) {
@@ -209,7 +191,7 @@ public class BudgetService {
         };
     }
 
-    /** Booking categories in the expense categories' words, so the two line up. */
+    /** Booking categories in the budget's words, so the two line up. */
     private static String categoryOf(Booking b) {
         if (b.getCategory() == null) return "OTHER";
         return switch (b.getCategory()) {
@@ -242,7 +224,7 @@ public class BudgetService {
         return amount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
     }
 
-    /** Live rate for an expense or estimate currency, memoised per request. */
+    /** Live rate for an estimate's currency, memoised per request. */
     private BigDecimal rateFor(String currency, String base, Map<String, BigDecimal> memo) {
         if (currency == null || currency.isBlank() || currency.equalsIgnoreCase(base)) return BigDecimal.ONE;
         return memo.computeIfAbsent(currency.toUpperCase(), c -> {

@@ -3,22 +3,12 @@
     <div class="page-head">
       <div>
         <h1>Budget</h1>
-        <p>
-          What the trip costs, what is paid, what is still to pay — and what you spend on the way.
-        </p>
-      </div>
-      <div class="page-head-actions">
-        <TfButton variant="secondary" @click="openExpenseDialog(null)">
-          <i class="pi pi-plus" style="font-size: 14px"></i> Expense
-        </TfButton>
+        <p>What the trip costs, what is paid, and what is still to pay.</p>
       </div>
     </div>
 
     <div v-if="loading" style="display: flex; flex-direction: column; gap: 20px">
       <div class="skeleton" style="height: 150px"></div>
-      <div class="metric-grid metric-grid--pair">
-        <div v-for="i in 2" :key="i" class="skeleton" style="height: 110px"></div>
-      </div>
       <div class="skeleton" style="height: 260px"></div>
     </div>
 
@@ -48,12 +38,13 @@
            where it only repeated these numbers. -->
       <div class="card budget-hero">
         <div class="budget-hero-main">
-          <div class="metric-label">Trip cost so far</div>
+          <div class="metric-label">Trip cost</div>
           <span class="money budget-hero-value"
             >{{ fmt(tripCost) }} <span class="money-cur">{{ currency }}</span></span
           >
           <div class="metric-sub">
-            {{ fmt(budget.bookingsTotal) }} booked · {{ fmt(budget.expensesTotal) }} spent
+            {{ fmt(budget.bookingsTotal) }} booked · {{ fmt(budget.estimatesTotal) }} estimated in
+            the day plans
           </div>
         </div>
 
@@ -77,24 +68,6 @@
               <span class="budget-fact-sub">{{ remainingSub }}</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Money spent while travelling: what the plan expects, what actually went -->
-      <div class="metric-grid metric-grid--pair">
-        <div class="metric-tile">
-          <div class="metric-label">Estimated on the way</div>
-          <span class="money money--lg"
-            >{{ fmt(budget.estimatesTotal) }} <span class="money-cur">{{ currency }}</span></span
-          >
-          <div class="metric-sub">{{ estimateSub }}</div>
-        </div>
-        <div class="metric-tile">
-          <div class="metric-label">Spent on the way</div>
-          <span class="money money--lg"
-            >{{ fmt(budget.expensesTotal) }} <span class="money-cur">{{ currency }}</span></span
-          >
-          <div class="metric-sub">{{ spentSub }}</div>
         </div>
       </div>
 
@@ -153,17 +126,17 @@
           </template>
         </div>
 
-        <!-- Where the money goes, in the same categories for booked and spent -->
+        <!-- Where the money goes, and how much of it is settled -->
         <div class="card">
           <h3 class="card-title">By category</h3>
           <div v-if="!budget.byCategory.length" class="text-muted text-sm">
-            Nothing booked or spent yet.
+            Nothing booked or planned yet.
           </div>
           <div v-else class="budget-cats">
             <div class="budget-cat-head">
               <span style="flex: 1"></span>
               <span class="budget-cat-col">Planned</span>
-              <span class="budget-cat-col">Spent</span>
+              <span class="budget-cat-col">Paid</span>
             </div>
             <div v-for="c in budget.byCategory" :key="c.category" class="budget-cat">
               <div class="budget-cat-row">
@@ -172,12 +145,12 @@
                 </div>
                 <span class="budget-cat-name">{{ catLabel(c.category) }}</span>
                 <span class="budget-cat-col">{{ planned(c) ? fmt(planned(c)) : '—' }}</span>
-                <span class="budget-cat-col">{{ fmt(spentAll(c)) }}</span>
+                <span class="budget-cat-col">{{ fmt(paidOf(c)) }}</span>
               </div>
-              <!-- Plan against reality. Planned is everything this category is
-                   expected to cost: the bookings' prices plus the estimates in the
-                   day plans. Spent is what is gone: the paid part of the bookings
-                   plus the expenses. An unpaid booking is a plan until it is paid. -->
+              <!-- Plan against what is settled. Planned is everything this category
+                   is expected to cost: the bookings' prices plus the estimates in the
+                   day plans. Paid is the part of the bookings already gone. An unpaid
+                   booking is a plan until it is paid. -->
               <div v-if="planned(c)" class="budget-cat-plan">
                 <div
                   class="progress-track"
@@ -211,12 +184,12 @@
         </div>
       </div>
 
-      <!-- Per day: what the bookings cost for that day, what the plan estimates, what was spent -->
+      <!-- Per day: what the bookings cost for that day and what the plan estimates -->
       <div class="card budget-days-card" style="margin-top: 20px">
         <div class="card-head-row">
           <h3 class="card-title" style="margin: 0">Day by day</h3>
           <span v-if="!daysWithMoney.length" class="text-subtle text-sm"
-            >Amounts appear here once bookings have dates or expenses are recorded.</span
+            >Amounts appear here once bookings have dates or stops carry a cost.</span
           >
           <span v-else class="text-subtle text-sm"
             >{{ daysWithMoney.length }} of {{ budget.days.length }} days carry an amount</span
@@ -228,11 +201,9 @@
             <span style="flex: 1">Day</span>
             <span class="budget-day-col">Booked</span>
             <span class="budget-day-col">Estimated</span>
-            <span class="budget-day-col">Spent</span>
-            <span style="width: 28px"></span>
           </div>
           <div v-for="d in daysWithMoney" :key="d.dayId" class="budget-day">
-            <button class="budget-day-row-btn" @click="toggleDay(d.dayId)">
+            <div class="budget-day-row">
               <span class="budget-day-label">
                 Day {{ d.dayNumber }}
                 <span class="text-subtle"> · {{ formatDayDate(d.date) }}</span>
@@ -246,105 +217,17 @@
                 <span class="budget-day-col-label">Booked</span>{{ dash(d.booked) }}
               </span>
               <span
-                class="budget-day-col text-subtle"
+                class="budget-day-col"
                 :class="{ 'is-empty': !Number(d.estimated) }"
+                style="font-weight: 600"
               >
                 <span class="budget-day-col-label">Est.</span>{{ dash(d.estimated) }}
               </span>
-              <span
-                class="budget-day-col"
-                :class="{ 'is-empty': !Number(d.spent) }"
-                style="font-weight: 600"
-              >
-                <span class="budget-day-col-label">Spent</span>{{ dash(d.spent) }}
-              </span>
-              <!-- Down to open, up to close: a chevron pointing right reads as a
-                   link to somewhere else, and this row only opens in place. -->
-              <span
-                class="budget-day-chevron"
-                :style="{ transform: expandedDay === d.dayId ? 'rotate(180deg)' : 'none' }"
-              >
-                <i class="pi pi-chevron-down" style="font-size: 13px"></i>
-              </span>
-            </button>
-            <div v-if="expandedDay === d.dayId" class="budget-day-detail">
-              <template v-if="(dayExpenses[d.dayId] || []).length">
-                <div class="budget-list-label">Expenses</div>
-                <div class="budget-list">
-                  <div v-for="e in dayExpenses[d.dayId]" :key="e.id" class="budget-exp-row">
-                    <div class="cat-icon cat-icon--sm" :style="catStyle(e.category)">
-                      {{ catEmoji(e.category) }}
-                    </div>
-                    <span style="flex: 1; min-width: 0">{{
-                      e.description || catLabel(e.category) || 'Expense'
-                    }}</span>
-                    <span class="money money--sm text-subtle">
-                      {{ Number(e.amount).toFixed(2) }} {{ e.currency || currency }}
-                    </span>
-                    <TfTooltip text="Delete">
-                      <button class="del-btn" @click.stop="deleteExpense(d.dayId, e.id)">
-                        <i class="pi pi-times" style="font-size: 10px"></i>
-                      </button>
-                    </TfTooltip>
-                  </div>
-                </div>
-              </template>
-              <div v-else class="text-subtle text-sm">
-                No expenses recorded for this day
-                {{ Number(d.booked) ? '— the booked amount comes from your bookings' : '' }}.
-              </div>
-              <TfButton
-                size="sm"
-                variant="ghost"
-                style="margin-top: 10px"
-                @click.stop="openExpenseDialog(d.dayId)"
-              >
-                <i class="pi pi-plus" style="font-size: 14px"></i> Expense for this day
-              </TfButton>
             </div>
           </div>
         </template>
       </div>
     </template>
-
-    <!-- Add Expense Dialog -->
-    <TfModal v-model="showExpenseDialog" title="Add expense" size="sm">
-      <form @submit.prevent="saveExpense" class="dialog-form">
-        <TfSelect
-          v-if="!expenseDayId"
-          label="Day"
-          v-model="expenseDaySelectLabel"
-          :options="dayOptions.map((o) => o.label)"
-          placeholder="Select day"
-        />
-        <TfSelect
-          label="Category"
-          v-model="expenseCategoryLabel"
-          :options="expCategoryOptions.map((o) => o.label)"
-          placeholder="Select"
-        />
-        <div class="field-pair field-pair--wide">
-          <TfNumberInput
-            label="Amount *"
-            v-model="expenseForm.amount"
-            type="plain"
-            :precision="2"
-          />
-          <TfInput label="Currency" v-model="expenseForm.currency" :placeholder="currency" />
-        </div>
-        <TfInput
-          label="Description"
-          v-model="expenseForm.description"
-          placeholder="e.g. Lunch at taverna"
-        />
-        <div class="dialog-actions">
-          <TfButton type="button" variant="ghost" @click="showExpenseDialog = false">
-            Cancel
-          </TfButton>
-          <TfButton type="submit" icon="pi-plus" :loading="savingExpense">Add</TfButton>
-        </div>
-      </form>
-    </TfModal>
   </div>
 </template>
 
@@ -353,16 +236,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { api, formatDateShort, formatDayDate, toDateStr } from '@tripyfull/core';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
-import {
-  TfButton,
-  TfInput,
-  TfSelect,
-  TfNumberInput,
-  TfModal,
-  TfProgress,
-  TfTooltip,
-  toast,
-} from '@tripyfull/ui';
+import { TfButton, TfProgress, toast } from '@tripyfull/ui';
 
 const route = useRoute();
 const tripId = route.params.tripId;
@@ -371,16 +245,13 @@ const tripTitle = ref('');
 const tripDates = ref('');
 const loading = ref(false);
 const budget = ref(null);
-const dayExpenses = ref({});
-const expandedDay = ref(null);
 
 // The backend converts everything into the owner's base currency; this is it.
 const currency = computed(() => budget.value?.baseCurrency || accountCurrency.value);
 
 /* ---- headline figures ---- */
-const tripCost = computed(
-  () => Number(budget.value?.bookingsTotal || 0) + Number(budget.value?.expensesTotal || 0),
-);
+// Everything the trip is expected to cost: the bookings plus the day plans' estimates.
+const tripCost = computed(() => Number(budget.value?.totalPlanned || 0));
 const remaining = computed(() => Number(budget.value?.bookingsRemaining || 0));
 const paidPct = computed(() => {
   const total = Number(budget.value?.bookingsTotal || 0);
@@ -398,30 +269,6 @@ const remainingSub = computed(() => {
   if (unscheduled.value.length) parts.push(`${unscheduled.value.length} without a date`);
   return parts.join(' · ');
 });
-const expenseCount = computed(() =>
-  Object.values(dayExpenses.value).reduce((s, arr) => s + arr.length, 0),
-);
-// Estimates are the cost fields on the day plans' stops — what the days are
-// expected to cost before anything is spent.
-const estimateSub = computed(() => {
-  const days = (budget.value?.days || []).filter((d) => Number(d.estimated)).length;
-  if (!days) return 'no stop in the plan carries a cost yet';
-  return `stops with a cost on ${days} day${days === 1 ? '' : 's'}`;
-});
-const spentSub = computed(() => {
-  const est = Number(budget.value?.estimatesTotal || 0);
-  const spent = Number(budget.value?.expensesTotal || 0);
-  if (!expenseCount.value) return 'add expenses as you go';
-  const parts = [`${expenseCount.value} expense${expenseCount.value === 1 ? '' : 's'}`];
-  if (est)
-    parts.push(
-      spent > est
-        ? `${fmt(spent - est)} over the estimate`
-        : `${Math.round((spent / est) * 100)}% of the estimate`,
-    );
-  return parts.join(' · ');
-});
-
 /* ---- categories ---- */
 const catEmoji = (c) =>
   ({
@@ -439,14 +286,6 @@ const catLabel = (c) =>
     ACCOMMODATION: 'Accommodation',
     OTHER: 'Other',
   })[c] ?? c;
-const catColor = (c) =>
-  ({
-    FOOD: 'var(--warning-300)',
-    TRANSPORT: 'var(--accent)',
-    ACTIVITY: 'var(--success-300)',
-    ACCOMMODATION: 'var(--primary)',
-    OTHER: 'var(--ink-400)',
-  })[c] || 'var(--accent)';
 const catStyle = (c) =>
   ({
     FOOD: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
@@ -456,109 +295,27 @@ const catStyle = (c) =>
     OTHER: { background: 'var(--surface)', color: 'var(--ink-500)' },
   })[c] || { background: 'var(--surface)', color: 'var(--ink-500)' };
 
-/* Plan against reality, per category. A booking's price is part of the plan;
-   the paid part of it is money gone, same as an expense on the way. */
+/* Plan against what is settled, per category. A booking's price is part of the
+   plan; the paid part of it is money already gone. */
 const planned = (c) => Number(c.booked) + Number(c.estimated);
-const spentAll = (c) => Number(c.paid) + Number(c.spent);
-const planPct = (c) =>
-  planned(c) ? Math.min(100, Math.round((spentAll(c) / planned(c)) * 100)) : 0;
-const over = (c) => planned(c) > 0 && spentAll(c) > planned(c);
+const paidOf = (c) => Number(c.paid);
+const planPct = (c) => (planned(c) ? Math.min(100, Math.round((paidOf(c) / planned(c)) * 100)) : 0);
+const over = (c) => planned(c) > 0 && paidOf(c) > planned(c);
 const planLabel = (c) => {
   const plan = planned(c),
-    done = spentAll(c);
+    done = paidOf(c);
   if (done > plan) return `${fmt(done - plan)} ${currency.value} over`;
   return `${Math.round((done / plan) * 100)}%`;
 };
 
 /* ---- days ---- */
 const daysWithMoney = computed(() =>
-  (budget.value?.days || []).filter(
-    (d) => Number(d.booked) || Number(d.estimated) || Number(d.spent),
-  ),
+  (budget.value?.days || []).filter((d) => Number(d.booked) || Number(d.estimated)),
 );
-const toggleDay = (dayId) => {
-  expandedDay.value = expandedDay.value === dayId ? null : dayId;
-};
 
 const fmt = (v) => Number(v || 0).toFixed(2);
 const dash = (v) => (Number(v) ? fmt(v) : '—');
 const isLate = (d) => d && d < toDateStr(new Date());
-
-/* ---- expenses ---- */
-const showExpenseDialog = ref(false);
-const savingExpense = ref(false);
-const expenseDayId = ref(null);
-const expenseDayIdSelect = ref(null);
-const expenseForm = ref({ category: null, amount: null, currency: '', description: '' });
-const expCategoryOptions = [
-  { label: 'Food', value: 'FOOD' },
-  { label: 'Transport', value: 'TRANSPORT' },
-  { label: 'Activity', value: 'ACTIVITY' },
-  { label: 'Accommodation', value: 'ACCOMMODATION' },
-  { label: 'Other', value: 'OTHER' },
-];
-// TfSelect works with string arrays; bridge label<->value while preserving stored values
-const dayOptions = computed(
-  () =>
-    budget.value?.days?.map((d) => ({
-      label: `Day ${d.dayNumber}${d.city ? ' · ' + d.city : ''} (${formatDayDate(d.date)})`,
-      value: d.dayId,
-    })) || [],
-);
-const expenseDaySelectLabel = computed({
-  get: () => dayOptions.value.find((o) => o.value === expenseDayIdSelect.value)?.label || null,
-  set: (label) => {
-    expenseDayIdSelect.value = dayOptions.value.find((o) => o.label === label)?.value ?? null;
-  },
-});
-const expenseCategoryLabel = computed({
-  get: () => expCategoryOptions.find((o) => o.value === expenseForm.value.category)?.label || null,
-  set: (label) => {
-    expenseForm.value.category = expCategoryOptions.find((o) => o.label === label)?.value ?? null;
-  },
-});
-
-const openExpenseDialog = (dayId) => {
-  expenseDayId.value = dayId;
-  expenseDayIdSelect.value = dayId;
-  expenseForm.value = {
-    category: null,
-    amount: null,
-    currency: accountCurrency.value,
-    description: '',
-  };
-  showExpenseDialog.value = true;
-};
-
-const saveExpense = async () => {
-  const targetDayId = expenseDayId.value || expenseDayIdSelect.value;
-  if (!targetDayId) return;
-  savingExpense.value = true;
-  try {
-    const res = await api.post(`/api/days/${targetDayId}/expenses`, expenseForm.value);
-    if (!dayExpenses.value[targetDayId]) dayExpenses.value[targetDayId] = [];
-    dayExpenses.value[targetDayId].push(res.data);
-    showExpenseDialog.value = false;
-    expandedDay.value = targetDayId;
-    await refreshBudget();
-    toast.success('Added', 'Expense recorded');
-  } catch {
-    toast.danger('Error', 'Failed to add expense');
-  } finally {
-    savingExpense.value = false;
-  }
-};
-
-const deleteExpense = async (dayId, expenseId) => {
-  try {
-    await api.delete(`/api/expenses/${expenseId}`);
-    dayExpenses.value[dayId] = (dayExpenses.value[dayId] || []).filter((e) => e.id !== expenseId);
-    await refreshBudget();
-    toast.success('Deleted');
-  } catch {
-    toast.danger('Error', 'Failed to delete expense');
-  }
-};
 
 const markPaymentPaid = async (p) => {
   try {
@@ -587,17 +344,6 @@ onMounted(async () => {
         formatDateShort(tripRes.data.startDate) + ' – ' + formatDateShort(tripRes.data.endDate);
     }
     budget.value = budgetRes.data;
-    const results = await Promise.all(
-      budgetRes.data.days.map((d) =>
-        api
-          .get(`/api/days/${d.dayId}/expenses`)
-          .then((r) => ({ id: d.dayId, data: r.data }))
-          .catch(() => ({ id: d.dayId, data: [] })),
-      ),
-    );
-    const map = {};
-    results.forEach((r) => (map[r.id] = r.data));
-    dayExpenses.value = map;
   } catch {
     toast.danger('Error', 'Failed to load budget');
   } finally {

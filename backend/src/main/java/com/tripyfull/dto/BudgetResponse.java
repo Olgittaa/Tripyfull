@@ -8,21 +8,18 @@ import java.util.UUID;
 /**
  * The trip's money in one shape, all in the owner's base currency.
  *
- * Three streams, kept apart because they answer different questions:
- * bookings (what is committed, paid, and still to pay), activity estimates (what
- * the days are expected to cost on the way), and expenses (what was actually
- * spent on the way). {@code totalPlanned} = bookings + estimates is the Overview
- * card's headline and stays for that reason.
+ * Two streams, kept apart because they answer different questions: bookings
+ * (what is committed, paid, and still to pay) and activity estimates (what the
+ * days are expected to cost on the way). {@code totalPlanned} = bookings +
+ * estimates is the headline both the Overview card and the Budget page lead with.
  */
 public record BudgetResponse(
         String baseCurrency,
         BigDecimal totalPlanned,
-        BigDecimal totalActual,
         BigDecimal bookingsTotal,
         BigDecimal bookingsPaid,
         BigDecimal bookingsRemaining,
         BigDecimal estimatesTotal,
-        BigDecimal expensesTotal,
         int missingRates,
         List<CategoryBudget> byCategory,
         List<DayBudget> days,
@@ -30,16 +27,15 @@ public record BudgetResponse(
         List<UnscheduledBooking> unscheduled
 ) {
     /**
-     * One expense category. Booked is the bookings' full price, paid the part of
-     * it already settled, estimated the day plans' cost fields, spent the expenses
-     * on the way — so the page can add them up whichever way it reads them.
+     * One category of spending. Booked is the bookings' full price, paid the part
+     * of it already settled, estimated the day plans' cost fields — so the page can
+     * add them up whichever way it reads them.
      */
     public record CategoryBudget(
             String category,
             BigDecimal booked,
             BigDecimal paid,
-            BigDecimal estimated,
-            BigDecimal spent
+            BigDecimal estimated
     ) {}
 
     public record DayBudget(
@@ -48,8 +44,7 @@ public record BudgetResponse(
             LocalDate date,
             String city,
             BigDecimal booked,
-            BigDecimal estimated,
-            BigDecimal spent
+            BigDecimal estimated
     ) {}
 
     /** A scheduled instalment not yet paid. */

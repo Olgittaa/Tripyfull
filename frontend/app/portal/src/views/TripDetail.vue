@@ -551,9 +551,7 @@ const stays = computed(() => {
 const gaps = computed(() => stays.value.filter((s) => s.gap));
 
 /* ---- money (the budget endpoint does the converting) ---- */
-const tripCost = computed(
-  () => Number(budgetData.value?.bookingsTotal || 0) + Number(budgetData.value?.expensesTotal || 0),
-);
+const tripCost = computed(() => Number(budgetData.value?.totalPlanned || 0));
 const remaining = computed(() => Number(budgetData.value?.bookingsRemaining || 0));
 const paidPct = computed(() =>
   pct(Number(budgetData.value?.bookingsPaid || 0), Number(budgetData.value?.bookingsTotal || 0)),

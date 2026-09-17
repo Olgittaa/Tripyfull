@@ -214,8 +214,8 @@
     <!-- Swap-days modal -->
     <TfModal v-model="showSwapModal" title="Swap days">
       <p class="text-muted text-sm" style="margin: 0 0 12px">
-        The two days trade their plans — activities, cities, stays and notes. Date-bound things
-        (expenses, the linked overnight booking) stay on their dates.
+        The two days trade their plans — activities, cities, stays and notes. The linked
+        overnight booking stays on its date.
       </p>
       <TfSelect
         label="Swap this day with"

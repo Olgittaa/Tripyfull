@@ -40,9 +40,6 @@ public class Day {
     @OrderBy("orderIndex ASC, id ASC")
     private List<Activity> activities = new ArrayList<>();
 
-    @OneToMany(mappedBy = "day", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Expense> expenses = new ArrayList<>();
-
     public UUID getId() { return id; }
     public Trip getTrip() { return trip; }
     public void setTrip(Trip trip) { this.trip = trip; }
@@ -59,5 +56,4 @@ public class Day {
     public boolean isBuffer() { return isBuffer; }
     public void setBuffer(boolean buffer) { this.isBuffer = buffer; }
     public List<Activity> getActivities() { return activities; }
-    public List<Expense> getExpenses() { return expenses; }
 }
