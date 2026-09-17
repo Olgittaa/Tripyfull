@@ -78,6 +78,7 @@ public class TripService {
 
     public TripResponse create(TripRequest request, String username) {
         User user = getUser(username);
+        requireOrderedDates(request.startDate(), request.endDate());
         Trip trip = TripMapper.toEntity(request);
         trip.setOwner(user);
         generateDaysIfMissing(trip);
@@ -86,12 +87,26 @@ public class TripService {
 
     public TripResponse update(UUID id, TripRequest request, String username) {
         Trip trip = findTripForUser(id, username);
+        requireOrderedDates(
+                request.startDate() != null ? request.startDate() : trip.getStartDate(),
+                request.endDate() != null ? request.endDate() : trip.getEndDate());
         TripMapper.updateEntity(trip, request);
         // Dates set on a trip that had none (or a legacy trip without days) —
         // days appear automatically, exactly like on create. Date CHANGES on a
         // trip that already has days go through reschedule() instead.
         generateDaysIfMissing(trip);
         return TripMapper.toResponse(tripRepository.save(trip));
+    }
+
+    /**
+     * A trip that ends before it starts has no days to generate and no range to
+     * reason about, so it is refused wherever it is set — the same sentence the
+     * reschedule gives, because it is the same mistake.
+     */
+    private void requireOrderedDates(LocalDate start, LocalDate end) {
+        if (start != null && end != null && end.isBefore(start)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date cannot be before start date");
+        }
     }
 
     /** One empty Day per date in [start, end] — only when the trip has no days yet. */

@@ -43,7 +43,9 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   generated from the dates at once.
 - **Edit trip** (overview → Edit): title, destination, dates, status. Changing the dates opens
   a **reschedule preview** — how many days shift, which are added, which are removed with
-  their content — before `POST /trips/{id}/reschedule` runs. Rescheduling shifts every day by
+  their content (reserve days have no date and are none of those) — before
+  `POST /trips/{id}/reschedule` runs. An end date before the start is refused wherever it is
+  set — on create, on edit and on reschedule — with the same sentence. Rescheduling shifts every day by
   the same delta, deletes days that fall outside the new range, and fills uncovered dates
   with empty days; bookings and payment schedules are left as they are.
 - Delete a trip (confirmation).

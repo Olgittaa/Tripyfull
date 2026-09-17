@@ -55,6 +55,22 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **The reschedule preview threatened to delete a day that was never at risk** — moving a
+  trip with a reserve day to another week, same length, warned "1 day now outside the range
+  will be deleted, together with their activities". Nothing was going to be deleted: a reserve
+  day has no date, so the move neither shifts nor drops it. The preview counted every day the
+  trip has, including the undated ones, against the length of the new range. It is the one
+  dialog whose whole job is to be believed before data is destroyed, and it cried wolf.
+  *Found by:* the walkthrough of the trip-dates link, on the seeded trip. *Fixed:* 2026-09-17 —
+  the preview counts dated days only, and a test moves a trip with a reserve day and fails if
+  the word "deleted" appears.
+
+- [x] **A trip could be created ending before it started** — `POST /api/trips` and `PATCH
+  /api/trips/{id}` took an end date before the start without a word, and the trip came out with
+  no days at all (there is no date in the range to generate one for), while `POST …/reschedule`
+  refused the same thing properly. *Fixed:* 2026-09-17 — all three doors give the same
+  sentence, "End date cannot be before start date".
+
 - [x] **A session that died inside a form could not be answered** — the *Session expired*
   dialog opened **underneath** the modal or drawer the consultant was working in, and its
   backdrop swallowed every click, so the only way out was to close the form and lose what was

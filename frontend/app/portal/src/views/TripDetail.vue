@@ -674,7 +674,10 @@ const rescheduleImpact = computed(() => {
   const end = editDateRange.value?.[1];
   if (!start || !end || !trip.value?.startDate) return null;
   const delta = diffInDays(trip.value.startDate, start);
-  const origLen = days.value.length;
+  // Only dated days are in the move's way. A reserve day has no date: it is
+  // neither shifted nor dropped, and counting it here warned about a deletion
+  // that was never going to happen.
+  const origLen = days.value.filter((d) => d.date).length;
   const rangeLen = diffInDays(start, end) + 1;
   const kept = Math.min(origLen, rangeLen);
   return { delta, rangeLen, origLen, removed: origLen - kept, added: rangeLen - kept };

@@ -102,6 +102,12 @@ whatever the unit tests say.
 that dies while a form is open — the dialog has to be answerable from inside that form, and the
 save that failed has to go through afterwards without anything being retyped.
 
+`trip-dates.spec.js` guards the one place that deletes data: days are generated per date, a
+backwards range is refused wherever it is set, moving a trip keeps every day with its city,
+notes and stops (and leaves the bookings on their own dates), shortening it deletes the days
+that fall outside together with what was on them, lengthening it fills the gap — and the
+preview that asks before all this has to say what will really happen.
+
 They start what they need: `npm test` inside `e2e/` brings up Postgres, the backend and the
 portal when they are not already running, and reuses them when they are. The first run needs
 the browser: `npx playwright install chromium`.
