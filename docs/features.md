@@ -1,10 +1,16 @@
 # Tripyfull — What the app does
 
+> **This is the single specification.** Nothing else decides what Tripyfull should do.
+> Every change to the app changes this document **first**, in the same commit as the code.
+> Every working session starts by reading it. If the code and this document disagree, that is
+> a bug in one of them — record it in [`../BUGS.md`](../BUGS.md) rather than leaving it.
+
 **Status:** current as of September 2026 (commit `36fb576` and later).
 This is the functional reference: every screen, what it shows, what you can do there, and
 the rules the server applies. For the product frame see [`persona_jbtd.md`](persona_jbtd.md);
-for the original design spec (July 2026, partly superseded by this document) see
-[`app_spec.md`](app_spec.md).
+the July 2026 design spec [`app_spec.md`](app_spec.md) is **archived** — kept for its
+reasoning and its gap list, not for what the app does. Known defects live in
+[`../BUGS.md`](../BUGS.md), deliberately postponed ideas in [`../AFTER_M1.md`](../AFTER_M1.md).
 
 Tripyfull is a personal trip planner for one traveller (or one household): **trips → days →
 stops**, with bookings and their payments, a budget, a to-do list, and a reusable library of

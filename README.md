@@ -71,8 +71,16 @@ npm run dev                 # http://localhost:5173, proxies to the API on :8080
 **Day** also carries the leg to the next stop on each **Activity** (time, distance, mode,
 route line), computed on the server and kept until the day changes.
 
-For what every screen does, see [`docs/features.md`](docs/features.md). The original design
-spec, personas and flows are in [`docs/`](docs/) as well.
+## Where things are written down
+
+| File | What it is |
+|---|---|
+| [`docs/features.md`](docs/features.md) | **The specification.** What the app does today, screen by screen. Changed in the same commit as the code it describes. |
+| [`BUGS.md`](BUGS.md) | Known defects, in three buckets. Only *Breaks the main path* blocks a release. |
+| [`AFTER_M1.md`](AFTER_M1.md) | Ideas parked until after launch, and the ones rejected on purpose. |
+| [`docs/app_spec.md`](docs/app_spec.md) | Archived July 2026 design spec — reasoning and gap list, not current behaviour. |
+
+Personas and early flows are in [`docs/`](docs/) as well.
 
 ## Tests and QA
 
