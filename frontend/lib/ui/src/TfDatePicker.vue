@@ -77,6 +77,7 @@
               class="dp-day"
               :class="dayClass(d.date)"
               :disabled="isDayDisabled(d.date)"
+              :data-date="isoDay(d.date)"
               @click="pickDay(d.date)"
             >
               <span class="dp-day-inner">{{ d.date.getDate() }}</span>
@@ -192,6 +193,10 @@ function chooseMonth(mi) {
   view.value = new Date(view.value.getFullYear(), mi, 1);
   pickMode.value = false;
 }
+
+/** The cell's own date, in the calendar's timezone — what an end-to-end test aims at. */
+const isoDay = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const sameDay = (a, b) =>
   a &&

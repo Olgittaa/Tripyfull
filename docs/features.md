@@ -244,7 +244,8 @@ survive Word too.
   fetched gently; gaps are reported, and a map with most tiles missing is left out);
   **What is in the plan** (counts by type); **Day by day** — each day with its city, its
   stops (time, name, address, photos, description, notes, cost) and the way to the next
-  stop with its mode and time ("→ Wat Rong Khun by car · 25 min · RTC Bus"); **Booked & to
+  stop with its mode and time ("→ Wat Rong Khun by car · 25 min · RTC Bus" — the mode is the
+  one the consultant picked, or the one the server used when nobody picked); **Booked & to
   book ahead**; **Still to do**; a legend. Ratings are deliberately not printed.
 
 Also: `GET /trips/{id}/export` returns the whole trip as JSON.
@@ -285,6 +286,9 @@ opened. A day nobody touched costs nothing to open.
   (`npm test`); stateful pieces in `composables/`; the itinerary is composed of
   `DayHead`, `DayStrip`, `DayFacts`, `StopCard`, `LegRow`, `StopDrawer`, `DayRouteAside`,
   `DayDock`.
+- `e2e/` holds the golden-path Playwright test — the gate before `main`. It starts Postgres,
+  the backend and the portal when they are not running, drives the whole consultant path in a
+  browser and reads the printed book at the end. `cd e2e && npm test`.
 - `scripts/seed-qa.py` seeds a throwaway consultant account with **the** QA trip: six days
   plus a reserve day, two hotels, two flights and a car rental, a payment schedule in three
   parts (paid / overdue / ahead), seven places in three folders, hand-made stops in a second

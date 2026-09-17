@@ -1,7 +1,8 @@
 <template>
   <div class="field">
-    <label v-if="label" class="label">{{ label }}</label>
+    <label v-if="label" class="label" :for="inputId">{{ label }}</label>
     <textarea
+      :id="inputId"
       class="textarea"
       :class="[stateClass, { 'textarea--error': error }]"
       :placeholder="placeholder"
@@ -17,7 +18,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, useAttrs, useId } from 'vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -35,4 +36,11 @@ const props = defineProps({
 defineEmits(['update:modelValue']);
 
 const stateClass = computed(() => (props.state ? `is-${props.state}` : ''));
+
+// A label has to point at its control — for a screen reader, for a click on the
+// label, and for a test that asks for a field by the name a person reads. An id
+// passed in from outside wins; otherwise Vue hands out a stable one.
+const attrs = useAttrs();
+const generatedId = useId();
+const inputId = computed(() => attrs.id || generatedId);
 </script>

@@ -85,13 +85,27 @@ public class ExportController {
                 trip.getEndDate(), trip.getBaseCurrency(), exportDays, exportBookings, todos, places);
     }
 
+    /**
+     * How the leg to the next stop is travelled. A mode the consultant picked is
+     * stored on the stop; one the server chose for itself is only remembered in the
+     * leg's key ("taxi|37.38,-5.99;37.37,-5.98"), and the book has to be able to say
+     * it — a leg printed without its mode used to be dropped from the page entirely.
+     */
+    private static String travelMode(Activity a) {
+        if (a.getTravelModeToNext() != null) return a.getTravelModeToNext();
+        String key = a.getTravelKey();
+        if (key == null || a.getTravelSeconds() == null) return null;
+        int bar = key.indexOf('|');
+        return bar > 0 ? key.substring(0, bar) : null;
+    }
+
     private ExportResponse.ExportActivity toActivity(Activity a) {
         Place p = a.getPlace();
         return new ExportResponse.ExportActivity(
                 a.getName(), a.getType() != null ? a.getType().name() : null,
                 a.getStartTime(), a.getEndTime(), a.getAddress(),
                 a.getCostEstimate(), a.getCostCurrency(), a.getNotes(),
-                a.isNeedsBooking(), a.getSourceBookingId() != null, a.getTravelModeToNext(), a.getTravelSeconds(), a.getTravelNote(),
+                a.isNeedsBooking(), a.getSourceBookingId() != null, travelMode(a), a.getTravelSeconds(), a.getTravelNote(),
                 coord(p != null ? p.getLatitude() : null, a.getLatitude()),
                 coord(p != null ? p.getLongitude() : null, a.getLongitude()),
                 p != null && p.getType() != null ? p.getType().name() : null,

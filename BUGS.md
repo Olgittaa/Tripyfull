@@ -39,11 +39,26 @@ is waiting, or when a consultant names it in an interview.
 Wrong padding, a word that grates, an animation that stutters. Written down so it stops
 occupying the head. Never a reason to delay anything.
 
-*(empty)*
+- [ ] **Labels not tied to their controls in several dialogs** — the payment dialog's "Amount",
+  the booking form's "City", the trip dialog's "Destination" and "Dates" are plain `<label>`
+  elements next to a component rather than labels of the control inside it. A screen reader
+  announces the field without its name, clicking the label does not focus it, and a test has to
+  aim at a class. The three components that own their control (`TfInput`, `TfNumberInput`,
+  `TfTextarea`) were fixed on 2026-09-17; what is left are the bare labels in the views.
+  *Seen:* 2026-09-17.
 
 ---
 
 ## Fixed
+
+- [x] **Print — the route book left out every travel time** — a day's stops printed with no
+  "→ next stop by car · 25 min" line unless the consultant had picked the mode by hand. The
+  server computes a default mode (walk / taxi / car) without writing it on the stop — it only
+  goes into the leg's key — so `travelModeToNext` was null for every leg nobody touched, and
+  the book prints the line only when it has a mode. The itinerary screen derives the same
+  default for itself, which is why the gap showed up only on paper. *Found by:* the golden-path
+  test, on its first complete run. *Fixed:* 2026-09-17 — `GET /trips/{id}/export` reports the
+  mode the leg was computed with when the stop carries none.
 
 - [x] **Itinerary, any trip without bookings** — the **second** stop with coordinates on a day
   fails with `500 NullPointerException` and is **not saved**; the first one is fine, and so is

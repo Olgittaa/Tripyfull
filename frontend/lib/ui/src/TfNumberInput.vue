@@ -1,6 +1,6 @@
 <template>
   <div class="field">
-    <label v-if="label" class="label"
+    <label v-if="label" class="label" :for="inputId"
       >{{ label }}<span v-if="required" class="label-req" aria-hidden="true">*</span></label
     >
     <div
@@ -21,6 +21,7 @@
       <span v-if="prefix" class="num-prefix">{{ prefix }}</span>
 
       <input
+        :id="inputId"
         class="num-field"
         type="text"
         inputmode="decimal"
@@ -69,7 +70,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, useAttrs, useId } from 'vue';
 
 const props = defineProps({
   label: String,
@@ -89,6 +90,13 @@ const emit = defineEmits(['update:modelValue']);
 
 const focused = ref(false);
 const draft = ref('');
+
+// A label has to point at its control — for a screen reader, for a click on the
+// label, and for a test that asks for a field by the name a person reads. An id
+// passed in from outside wins; otherwise Vue hands out a stable one.
+const attrs = useAttrs();
+const generatedId = useId();
+const inputId = computed(() => attrs.id || generatedId);
 
 function clamp(v) {
   if (props.min != null && v < props.min) v = props.min;

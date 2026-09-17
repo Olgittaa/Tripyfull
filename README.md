@@ -86,5 +86,18 @@ Personas and early flows are in [`docs/`](docs/) as well.
 ```bash
 cd backend && ./mvnw test          # unit tests: geometry, place types, travel-leg rules
 cd frontend && npm test            # Vitest over lib/core and app/portal/src/plan
+cd e2e && npm test                 # the golden path, end to end in a browser
 python3 scripts/seed-qa.py         # a throwaway consultant with one client trip, on a running backend
 ```
+
+### The golden path
+
+`e2e/` holds one Playwright test, and it is the gate before `main`: register → a three-day
+trip → three stops added three different ways → drag one to the front → a hotel for two nights
+→ *Add to plan* → an instalment → the budget → the printed route book, which must carry the
+stops, the hotel and a way to the next stop with a time on it. **A red run means no merge**,
+whatever the unit tests say.
+
+It starts what it needs: `npm test` inside `e2e/` brings up Postgres, the backend and the
+portal when they are not already running, and reuses them when they are. The first run needs
+the browser: `npx playwright install chromium`.
