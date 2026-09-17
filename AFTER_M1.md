@@ -52,6 +52,9 @@ Not "later" — **no**. Written down so the question does not come back every mo
 - **Open-rate analytics and push on the client page** — a consultant who needs to know whether
   the client opened it can ask them.
 - **Collaboration / multiple users on one account** — one consultant, one account.
+- **CSV import of bookings** — uploading a spreadsheet of bookings into a trip. Removed on
+  2026-09-17: it read one undocumented column layout, nobody had a file in it, and a booking
+  typed into the form takes less time than fixing a mis-parsed row.
 - **Ratings and reviews from Tripadvisor** — a rating on the place card, reviews on request,
   and a Tripadvisor column in the finder. Removed on 2026-09-17: the consultant's own 1–5
   rating with a reason is the one the itinerary is built on, and a second opinion beside it

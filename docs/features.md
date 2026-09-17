@@ -181,7 +181,6 @@ by nobody else — there is no sharing and no public place.
 - **Payments**: "paid in full" switch, or an instalment schedule (amount, due date, paid /
   unpaid with the paid date); Σ instalments ≤ full price. **Attachments** (tickets,
   vouchers) upload, download, delete — 10 MB each.
-- **CSV import** of bookings.
 - **Update plan** (`plan/from-bookings`): writes the bookings into the days — the hotel as
   the day's last stop on arrival night, first stop on the morning you leave, both in
   between; transport on the day it departs at its time, with an "Arrive" stop the next
@@ -263,7 +262,7 @@ opened. A day nobody touched costs nothing to open.
 | Days | `GET/POST /api/trips/{tripId}/days`, `POST …/days/buffer`, `PATCH/DELETE /api/days/{id}`, `POST …/days/{a}/swap/{b}` |
 | Stops | `GET /api/days/{id}/itinerary`, `POST /api/days/{id}/activities`, `PATCH …/activities/reorder`, `PATCH/DELETE /api/activities/{id}`, `GET /api/trips/{id}/planned-places` |
 | Plan from bookings | `GET/POST /api/trips/{id}/plan/from-bookings` |
-| Bookings | `GET/POST /api/trips/{id}/bookings`, `PATCH/DELETE /api/bookings/{id}`, payments `POST …/payments`, `PATCH/DELETE /api/payments/{id}`, `PATCH …/paid` / `…/unpaid`, attachments, `POST /api/trips/{id}/import/csv`, `GET /api/flights/lookup` |
+| Bookings | `GET/POST /api/trips/{id}/bookings`, `PATCH/DELETE /api/bookings/{id}`, payments `POST …/payments`, `PATCH/DELETE /api/payments/{id}`, `PATCH …/paid` / `…/unpaid`, attachments, `GET /api/flights/lookup` |
 | Budget | `GET /api/trips/{id}/budget`, `GET /api/exchange-rate` |
 | To-do | `GET/POST /api/trips/{id}/todos`, `PATCH/DELETE /api/todos/{id}`, `GET …/todos/suggestions`, `POST …/todos/from-suggestions` |
 | Places | `GET/POST /api/places`, `POST …/geocode`, `POST …/import`, `PATCH/DELETE /api/places/{id}`, `PUT/DELETE …/trips/{tripId}`, photos `POST/DELETE /api/places/{id}/photos`, `GET /api/place-photos/…` |

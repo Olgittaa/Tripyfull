@@ -44,11 +44,6 @@
           ></i>
           <span class="phone-hide">{{ refreshingRates ? 'Updating...' : 'Update rates' }}</span>
         </TfButton>
-        <TfButton class="phone-icon-btn" variant="ghost" @click="$refs.csvInput.click()">
-          <i class="pi pi-upload" style="font-size: 14px"></i>
-          <span class="phone-hide">CSV</span>
-        </TfButton>
-        <input ref="csvInput" type="file" accept=".csv" style="display: none" @change="importCsv" />
       </div>
     </div>
 
@@ -1823,22 +1818,6 @@ const refreshAllRates = async () => {
   }
   refreshingRates.value = false;
   toast.success(`${updated} rate${updated !== 1 ? 's' : ''} updated`);
-};
-
-const importCsv = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  const formData = new FormData();
-  formData.append('file', file);
-  try {
-    const res = await api.post(`/api/trips/${tripId}/import/csv`, formData);
-    toast.success('Imported', `${res.data.imported} bookings imported`);
-    const bookingsRes = await api.get(`/api/trips/${tripId}/bookings`);
-    bookings.value = bookingsRes.data;
-  } catch {
-    toast.danger('Error', 'Failed to import CSV');
-  }
-  event.target.value = '';
 };
 
 const formatDateTime = (d) => {
