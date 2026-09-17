@@ -57,7 +57,6 @@ npm run dev                 # http://localhost:5173, proxies to the API on :8080
 | `spring.datasource.*` | `application-local.properties` | PostgreSQL connection |
 | `jwt.secret` | `application-local.properties` | JWT signing (≥ 32 characters) |
 | `GOOGLE_MAPS_API_KEY` | env / local props | optional: Google Places (search, import, photos, descriptions) and Google Routes (driving, walking, transit timetables); without it the free OSM stack (Photon, Nominatim, OSRM) is used |
-| `TRIPADVISOR_API_KEY` | env / local props | optional: ratings and reviews shown on demand, never stored |
 | `AERODATABOX_API_KEY` | env / local props | optional: flight lookup by number and date (RapidAPI) |
 | `OPENTRIPMAP_API_KEY` | env / local props | optional: attraction descriptions & photos on saved places (free key at dev.opentripmap.org) |
 | `VITE_API_URL` | `frontend/.env.development` | API address for the frontend |

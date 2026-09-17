@@ -615,56 +615,6 @@
             <span v-else class="info-value">—</span>
           </TfDrawerSection>
 
-          <TfDrawerSection label="Tripadvisor">
-            <!-- Idle by default: each lookup spends Tripadvisor quota. -->
-            <template v-if="taState === 'idle'">
-              <TfButton size="sm" variant="soft" icon="pi-star" @click="loadTripadvisor(viewing.id)"
-                >Check rating &amp; reviews</TfButton
-              >
-            </template>
-            <span v-else-if="taState === 'loading'" class="text-subtle text-sm">
-              <i class="pi pi-spinner pi-spin" style="font-size: 12px"></i> Asking Tripadvisor…
-            </span>
-            <span v-else-if="taState === 'none'" class="text-subtle text-sm">
-              No match on Tripadvisor.
-            </span>
-            <span v-else-if="taState === 'error'" class="text-subtle text-sm">
-              Could not reach Tripadvisor.
-              <button type="button" class="link-btn" @click="loadTripadvisor(viewing.id)">
-                Try again
-              </button>
-            </span>
-            <template v-else>
-              <div class="info-row">
-                <span class="info-label">
-                  <img
-                    v-if="taData.ratingIconUrl"
-                    :src="taData.ratingIconUrl"
-                    alt=""
-                    style="height: 14px"
-                  />
-                  {{ taData.reviewCount.toLocaleString() }} reviews
-                </span>
-                <span class="info-value">{{ taData.rating }} / 5</span>
-              </div>
-              <!-- One clamped quote: three long reviews were the only thing that
-                   made this panel scroll. The rest are one click away. -->
-              <div v-for="r in (taData.reviews || []).slice(0, 1)" :key="r.url">
-                <div style="font: var(--fw-semibold) 12px/1.3 var(--font-sans)">{{ r.title }}</div>
-                <div class="text-muted text-xs review-text">{{ r.text }}</div>
-              </div>
-              <a
-                v-if="taData.url"
-                :href="taData.url"
-                target="_blank"
-                rel="noopener"
-                class="text-sm"
-                style="color: var(--primary)"
-                >All {{ taData.reviewCount.toLocaleString() }} reviews on Tripadvisor
-                <i class="pi pi-external-link" style="font-size: 10px"></i
-              ></a>
-            </template>
-          </TfDrawerSection>
         </template>
 
         <!-- Edit mode keeps the details layout: same sections, same order, same
@@ -925,7 +875,7 @@
         }}</TfButton>
       </template>
     </TfModal>
-    <!-- Find & import: Google Maps + Tripadvisor search, link import below -->
+    <!-- Find & import: Google Maps search, link import below -->
     <TfModal v-model="showFindDialog" title="Find a place">
       <div class="dialog-form">
         <div class="form-row" style="align-items: flex-end">
@@ -966,34 +916,6 @@
             </div>
           </div>
 
-          <!-- Tripadvisor results -->
-          <div class="find-section">
-            <div class="find-section-title"><i class="pi pi-star"></i> Tripadvisor</div>
-            <p v-if="!findTa.length" class="text-subtle text-sm" style="margin: 4px 0">
-              No results.
-            </p>
-            <div v-for="(r, i) in findTa" :key="'t' + i" class="find-row">
-              <div style="min-width: 0; flex: 1">
-                <div class="find-row-name">{{ r.name }}</div>
-                <div class="text-muted text-sm" style="overflow: hidden; text-overflow: ellipsis">
-                  {{ r.address || r.city || '' }}
-                </div>
-              </div>
-              <span v-if="r.rating" class="text-sm" style="white-space: nowrap">
-                <b>{{ r.rating }}</b
-                ><span class="text-muted"> · {{ (r.reviewCount || 0).toLocaleString() }}</span>
-              </span>
-              <TfButton
-                size="sm"
-                variant="soft"
-                :disabled="!r.latitude"
-                :loading="savingKey === 't' + i"
-                @click="addTaResult(r, 't' + i)"
-              >
-                <i class="pi pi-plus" style="font-size: 12px"></i> Add
-              </TfButton>
-            </div>
-          </div>
         </template>
 
         <!-- Link import -->
@@ -1003,7 +925,7 @@
             <div style="flex: 1">
               <TfInput
                 v-model="importUrl"
-                placeholder="https://maps.app.goo.gl/… or tripadvisor.com/…"
+                placeholder="https://maps.app.goo.gl/…"
                 @keyup.enter="runImport"
               />
             </div>
@@ -1479,29 +1401,6 @@ const splitList = (s) =>
     .map((x) => x.trim())
     .filter(Boolean);
 
-// Tripadvisor costs quota per lookup (a search plus a details call), so it is
-// never fetched just because a place was opened — the user asks for it.
-const taData = ref(null);
-const taState = ref('idle'); // idle | loading | loaded | none | error
-
-const resetTripadvisor = () => {
-  taData.value = null;
-  taState.value = 'idle';
-};
-
-const loadTripadvisor = async (placeId) => {
-  taData.value = null;
-  taState.value = 'loading';
-  try {
-    const res = await api.get(`/api/places/${placeId}/tripadvisor`);
-    // 204 = no match on Tripadvisor; say so instead of offering the button again.
-    taData.value = res.status === 200 ? res.data : null;
-    taState.value = taData.value ? 'loaded' : 'none';
-  } catch {
-    taState.value = 'error';
-  }
-};
-
 // The drawer shows details first; editing is an explicit step from its footer.
 // ---- Location: one map for both modes, filled by the Google-backed search ----
 const mapMarkers = computed(() => {
@@ -1620,7 +1519,6 @@ const viewing = ref(null);
 const openDetails = (p) => {
   viewing.value = p;
   drawerMode.value = 'view';
-  resetTripadvisor();
   showDialog.value = true;
 };
 
@@ -1629,7 +1527,6 @@ const openDialog = (p) => {
   if (p) {
     editing.value = p;
     viewing.value = p;
-    resetTripadvisor();
     form.value = {
       name: p.name,
       type: p.type || 'OTHER',
@@ -1650,7 +1547,6 @@ const openDialog = (p) => {
     linksText.value = (p.links || []).join(', ');
   } else {
     editing.value = null;
-    resetTripadvisor();
     form.value = { ...emptyForm, photoList: [], country: tripCountryCodes.value[0] || '' };
     linksText.value = '';
   }
@@ -1683,12 +1579,11 @@ const save = async () => {
   }
 };
 
-// ---- Find & import dialog: parallel Google + Tripadvisor search ----
+// ---- Find & import dialog: Google search ----
 const findQuery = ref('');
 const finding = ref(false);
 const searched = ref(false);
 const findGoogle = ref([]);
-const findTa = ref([]);
 const savingKey = ref(''); // which result row is being saved
 
 const runFind = async () => {
@@ -1696,13 +1591,11 @@ const runFind = async () => {
   if (q.length < 2) return;
   finding.value = true;
   try {
-    const params = { q };
-    const [g, t] = await Promise.allSettled([
-      api.get('/api/geo/places', { params }),
-      api.get('/api/geo/tripadvisor', { params }),
-    ]);
-    findGoogle.value = g.status === 'fulfilled' ? g.value.data : [];
-    findTa.value = t.status === 'fulfilled' ? t.value.data : [];
+    try {
+      findGoogle.value = (await api.get('/api/geo/places', { params: { q } })).data;
+    } catch {
+      findGoogle.value = [];
+    }
     searched.value = true;
   } finally {
     finding.value = false;
@@ -1768,30 +1661,7 @@ const addGoogleResult = async (r, key) => {
   }
 };
 
-// Tripadvisor result: create directly from its data; enrichment adds photos/description.
-const TA_CATEGORY_TO_TYPE = { attraction: 'SIGHTSEEING', restaurant: 'RESTAURANT', hotel: 'OTHER' };
-const addTaResult = async (r, key) => {
-  savingKey.value = key;
-  try {
-    const res = await api.post('/api/places', {
-      name: r.name,
-      type: TA_CATEGORY_TO_TYPE[(r.category || '').toLowerCase()] || 'SIGHTSEEING',
-      country: r.countryCode || null,
-      city: r.city || null,
-      address: r.address || null,
-      latitude: r.latitude,
-      longitude: r.longitude,
-    });
-    showSaved(res.data);
-    toast.success('Place saved', res.data.name);
-  } catch {
-    toast.warning('Error', 'Could not save this place');
-  } finally {
-    savingKey.value = '';
-  }
-};
-
-// Import a place from a Google Maps / Tripadvisor share link.
+// Import a place from a Google Maps share link.
 const importUrl = ref('');
 const importing = ref(false);
 const runImport = async () => {
@@ -2388,14 +2258,6 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   min-width: 0;
-}
-
-/* Two lines of quote carry the tone; the link has the rest. */
-.review-text {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 /* ---- The edit form ---- */

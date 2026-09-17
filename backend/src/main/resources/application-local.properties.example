@@ -14,9 +14,6 @@ jwt.secret=CHANGE_ME_local-dev-secret-min-32-chars
 # AeroDataBox (RapidAPI) — get your own key at https://rapidapi.com
 aerodatabox.api-key=CHANGE_ME
 
-# Optional: Tripadvisor Terra key (developer-tripadvisor.com) — ratings & reviews on places.
-tripadvisor.api-key=
-
 # Optional: Google Maps Platform key (console.cloud.google.com) with
 # "Places API (New)" + "Routes API" enabled. When set, search/geocoding/photos/routing
 # switch to Google; leave empty to keep the free OSM stack.

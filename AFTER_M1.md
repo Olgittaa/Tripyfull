@@ -52,6 +52,10 @@ Not "later" — **no**. Written down so the question does not come back every mo
 - **Open-rate analytics and push on the client page** — a consultant who needs to know whether
   the client opened it can ask them.
 - **Collaboration / multiple users on one account** — one consultant, one account.
+- **Ratings and reviews from Tripadvisor** — a rating on the place card, reviews on request,
+  and a Tripadvisor column in the finder. Removed on 2026-09-17: the consultant's own 1–5
+  rating with a reason is the one the itinerary is built on, and a second opinion beside it
+  only muddied the choice. It also cost an API key, a quota and a per-place lookup.
 - **Auto-plan** — filling the days from the saved places by clustering them around the hotels.
   Removed on 2026-09-17: it guessed badly often enough that the plan it produced took longer to
   repair than building the days by hand. Planning the route *is* the consultant's craft.

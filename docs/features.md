@@ -148,14 +148,14 @@ by nobody else — there is no sharing and no public place.
 - **Cards or table**, search by name/city/address, filters: country, type, rating,
   folder / trip. Sort by name, recent, type, rating. Rating balance bar in a trip.
 - **Place card**: photos (carousel), name, city · country, type, visit time, description,
-  rating with a reason, source (manual / geocoded / imported), Tripadvisor
-  rating and reviews on request (fetched live, never stored), links, address on a small map.
+  rating with a reason, source (manual / geocoded / imported), links, address on a small map.
+  The rating is the consultant's own — there is no rating from anywhere else.
 - **Add place** (form): name, type, country/city/address search, coordinates,
   description, rating 1–5 and why, time to visit, audience (everyone / adults / kids),
   needs preparation, needs booking, photos (upload up to 12, own photos shown first), links.
-- **Find & import**: search Google Maps and Tripadvisor side by side, or paste a Google Maps /
-  Tripadvisor link. A Google link imports Google's own record of the place — name, address,
-  type, editorial description and up to three photos. The saved place opens at once.
+- **Find & import**: search Google Maps, or paste a Google Maps link. The link imports
+  Google's own record of the place — name, address, type, editorial description and up to
+  three photos. The saved place opens at once.
 - A place made while a **folder or a trip is open joins it** (a folder brings its trip along).
 - **Selection mode** for bulk actions: move to folder (in a trip), **add to trip**, set type,
   remove from trip, delete.
@@ -222,14 +222,13 @@ spending. See [`../AFTER_M1.md`](../AFTER_M1.md).
 | City / country pick-lists | seeded database | — |
 | Import from a link | Google Places by name near the link's pin; page metadata | OSM reverse geocoding |
 | Description & photos | Google Place Details (editorial summary, 3 photos) | OpenTripMap (Wikipedia extract, photo) |
-| Ratings & reviews on demand | Tripadvisor (never stored) | — |
 | Routing between stops | Google Routes (drive, walk, transit) | OSRM (drive, walk); road-based estimates for taxi/bus/train |
 | Flight lookup | AeroDataBox | — |
 | Exchange rates | Frankfurter | — |
 | Map tiles | OpenStreetMap; Esri satellite on the plan map | — |
 
-Without a Google key the free OSM stack runs everywhere; Tripadvisor, OpenTripMap and
-AeroDataBox are optional too.
+Without a Google key the free OSM stack runs everywhere; OpenTripMap and AeroDataBox are
+optional too.
 
 ## 11. Print — the route book
 
@@ -267,9 +266,9 @@ opened. A day nobody touched costs nothing to open.
 | Bookings | `GET/POST /api/trips/{id}/bookings`, `PATCH/DELETE /api/bookings/{id}`, payments `POST …/payments`, `PATCH/DELETE /api/payments/{id}`, `PATCH …/paid` / `…/unpaid`, attachments, `POST /api/trips/{id}/import/csv`, `GET /api/flights/lookup` |
 | Budget | `GET /api/trips/{id}/budget`, `GET /api/exchange-rate` |
 | To-do | `GET/POST /api/trips/{id}/todos`, `PATCH/DELETE /api/todos/{id}`, `GET …/todos/suggestions`, `POST …/todos/from-suggestions` |
-| Places | `GET/POST /api/places`, `POST …/geocode`, `POST …/import`, `PATCH/DELETE /api/places/{id}`, `PUT/DELETE …/trips/{tripId}`, `GET …/tripadvisor`, photos `POST/DELETE /api/places/{id}/photos`, `GET /api/place-photos/…` |
+| Places | `GET/POST /api/places`, `POST …/geocode`, `POST …/import`, `PATCH/DELETE /api/places/{id}`, `PUT/DELETE …/trips/{tripId}`, photos `POST/DELETE /api/places/{id}/photos`, `GET /api/place-photos/…` |
 | Folders | `GET/POST /api/folders`, `PATCH/DELETE /api/folders/{id}`, `PUT/DELETE …/places/{placeId}` |
-| Geo | `GET /api/geo/places`, `…/cities`, `…/countries`, `…/tripadvisor` |
+| Geo | `GET /api/geo/places`, `…/cities`, `…/countries` |
 
 ## 14. Development notes
 

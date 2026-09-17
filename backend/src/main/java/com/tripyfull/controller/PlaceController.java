@@ -5,9 +5,7 @@ import com.tripyfull.dto.PlaceImportRequest;
 import com.tripyfull.dto.PlaceRequest;
 import com.tripyfull.dto.PlaceResponse;
 import com.tripyfull.service.PlaceService;
-import com.tripyfull.service.TripAdvisorService;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,11 +19,9 @@ import java.util.UUID;
 public class PlaceController {
 
     private final PlaceService placeService;
-    private final TripAdvisorService tripAdvisorService;
 
-    public PlaceController(PlaceService placeService, TripAdvisorService tripAdvisorService) {
+    public PlaceController(PlaceService placeService) {
         this.placeService = placeService;
-        this.tripAdvisorService = tripAdvisorService;
     }
 
     /** Adds a place to a trip's own list (the trip's Places tab). */
@@ -40,14 +36,6 @@ public class PlaceController {
     public PlaceResponse removeFromTrip(@PathVariable UUID placeId, @PathVariable UUID tripId,
                                         @AuthenticationPrincipal UserDetails user) {
         return placeService.removeFromTrip(tripId, placeId, user.getUsername());
-    }
-
-    /** Tripadvisor rating + top reviews for a place; 204 when TA has no confident match. */
-    @GetMapping("/{id}/tripadvisor")
-    public ResponseEntity<TripAdvisorService.TaSummary> tripadvisor(@PathVariable UUID id,
-                                                                    @AuthenticationPrincipal UserDetails user) {
-        TripAdvisorService.TaSummary summary = tripAdvisorService.summaryForPlace(id, user.getUsername());
-        return summary == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(summary);
     }
 
     @GetMapping

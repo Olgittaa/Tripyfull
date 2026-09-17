@@ -235,7 +235,7 @@ public class PlaceService {
         MapLinkService.ParsedLink parsed = mapLinkService.parse(request.url());
         if (parsed == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Couldn't read that link — paste a Google Maps or Tripadvisor place link");
+                    "Couldn't read that link — paste a Google Maps place link");
         }
         if (parsed.isList()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -256,10 +256,7 @@ public class PlaceService {
             r = geocodingService.reverseGeocode(parsed.lat(), parsed.lon());
         }
         if (r == null && parsed.name() != null) {
-            // geoQuery carries location context (e.g. "Eiffel Tower, Paris") for
-            // links that don't embed coordinates, like Tripadvisor ones.
-            r = geocodingService.geocode(
-                    parsed.geoQuery() != null ? parsed.geoQuery() : parsed.name(), null);
+            r = geocodingService.geocode(parsed.name(), null);
         }
 
         if (r != null && r.osmId() != null) {
