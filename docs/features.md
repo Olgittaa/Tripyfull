@@ -196,9 +196,12 @@ by nobody else — there is no sharing and no public place.
 - Groups (Documents, Money, Health, Bookings, Home, Packing … or your own), a to-do with
   title, group, due date, notes; done / undone. One line of state: progress and whether
   anything is late; quick add straight into a group.
-- **Suggestions**: a built-in list (passport validity, visas, insurance, copies of documents,
-  telling the bank, local cash, card limits, vaccinations, medicine, first-aid kit, airport
-  transfer …), each dated against the trip; add the ones you want.
+- **Suggestions** (button in the head): a modal of built-in items (passport validity, visas,
+  insurance, copies of documents, telling the bank, local cash, card limits, vaccinations,
+  medicine, first-aid kit, airport transfer …), grouped, each dated against the trip, each
+  with a checkbox — tick the ones you want and add them in one go. Nothing is suggested on
+  the list itself, and an added item is an ordinary to-do: the list never says which items
+  came from the built-in set.
 
 ## 9. Budget (`/trips/:tripId/budget`)
 

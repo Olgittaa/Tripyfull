@@ -41,15 +41,10 @@
       <div v-if="!todos.length" class="empty-state">
         <div class="empty-state-icon"><i class="pi pi-check-square"></i></div>
         <h3>Nothing on the list yet</h3>
-        <p>Start from our suggestions, or add your own to-dos and group them as you like.</p>
-        <div style="display: flex; gap: 10px; justify-content: center">
-          <TfButton variant="primary" @click="openSuggestions">
-            <i class="pi pi-sparkles" style="font-size: 14px"></i> See suggestions
-          </TfButton>
-          <TfButton variant="secondary" @click="openEditor(null)">
-            <i class="pi pi-plus" style="font-size: 14px"></i> Add a to-do
-          </TfButton>
-        </div>
+        <p>What has to happen before you leave, on the way, and once you are back.</p>
+        <TfButton variant="primary" @click="openEditor(null)">
+          <i class="pi pi-plus" style="font-size: 14px"></i> Add a to-do
+        </TfButton>
       </div>
 
       <div v-else class="todo-groups">
@@ -76,15 +71,7 @@
                 />
               </label>
               <div class="todo-main">
-                <div class="todo-title">
-                  {{ t.title }}
-                  <span
-                    v-if="t.templateKey"
-                    class="todo-from-us"
-                    v-tooltip="'One of our suggestions'"
-                    ><i class="pi pi-sparkles"></i
-                  ></span>
-                </div>
+                <div class="todo-title">{{ t.title }}</div>
                 <div v-if="t.notes" class="todo-notes">{{ t.notes }}</div>
               </div>
               <TfBadge
@@ -592,11 +579,6 @@ onMounted(async () => {
 .todo-row--done .todo-title {
   color: var(--text-secondary);
   text-decoration: line-through;
-}
-.todo-from-us {
-  margin-left: 4px;
-  color: var(--text-disabled);
-  font-size: 11px;
 }
 .todo-notes {
   margin-top: 2px;
