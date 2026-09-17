@@ -66,7 +66,7 @@ npm run dev                 # http://localhost:5173, proxies to the API on :8080
 
 **Trip** (dates, status, currency) → **Day** (date, city) → **Activity** (type, time, cost).
 **Booking** (flight/ferry/rental/lodging) + **Payment[]** + **Attachment[]**.
-**Place** — a reusable place (POI) with coordinates, photos, and PUBLIC/PRIVATE visibility.
+**Place** — a reusable place (POI) with coordinates and photos, private to its owner.
 
 **Day** also carries the leg to the next stop on each **Activity** (time, distance, mode,
 route line), computed on the server and kept until the day changes.

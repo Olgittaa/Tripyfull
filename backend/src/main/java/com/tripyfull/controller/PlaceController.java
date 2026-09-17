@@ -55,13 +55,12 @@ public class PlaceController {
                                       @RequestParam(required = false) UUID tripId,
                                       @RequestParam(required = false) String country,
                                       @RequestParam(required = false) String type,
-                                      @RequestParam(required = false) String visibility,
                                       @RequestParam(required = false) String source,
                                       @RequestParam(required = false) String city,
                                       @RequestParam(required = false) String q,
                                       @RequestParam(required = false) String sort,
                                       @AuthenticationPrincipal UserDetails user) {
-        return placeService.getAll(user.getUsername(), folderId, tripId, country, type, visibility,
+        return placeService.getAll(user.getUsername(), folderId, tripId, country, type,
                 source, city, q, sort);
     }
 

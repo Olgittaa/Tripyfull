@@ -147,7 +147,7 @@ watch(
         api.get(`/api/trips/${props.tripId}/bookings`),
       ]);
       folders.value = f.data || [];
-      places.value = (p.data || []).filter((x) => x.owned);
+      places.value = p.data || [];
       bookings.value = (b.data || []).filter((x) => x.latitude != null && x.longitude != null);
     } catch {
       toast.danger('Error', 'Failed to load places');

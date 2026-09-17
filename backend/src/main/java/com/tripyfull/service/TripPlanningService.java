@@ -12,7 +12,6 @@ import com.tripyfull.model.ActivityType;
 import com.tripyfull.model.Day;
 import com.tripyfull.model.Place;
 import com.tripyfull.model.PlaceType;
-import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.ActivityRepository;
@@ -479,7 +478,7 @@ public class TripPlanningService {
     }
 
     private boolean isVisible(Place p, User user) {
-        return p.getOwner().getId().equals(user.getId()) || p.getVisibility() == PlaceVisibility.PUBLIC;
+        return p.getOwner().getId().equals(user.getId());
     }
 
     static ActivityType toActivityType(PlaceType type) {

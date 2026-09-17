@@ -16,7 +16,6 @@ public record PlaceRequest(
         String description,
         List<String> photos,
         List<String> links,
-        String visibility,      // PUBLIC | PRIVATE
         Integer rating,         // 1..5 (5 = worth the whole trip)
         String ratingComment,
         Integer visitMinutes,

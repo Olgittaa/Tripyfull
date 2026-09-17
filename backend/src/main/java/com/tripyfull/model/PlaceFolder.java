@@ -33,7 +33,7 @@ public class PlaceFolder {
 
     /**
      * Places filed into this folder. Membership belongs to the folder's owner, so a place
-     * (including someone else's PUBLIC place) can live in at most one of a given user's folders.
+     * can live in at most one of the user's folders.
      */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "folder_places",

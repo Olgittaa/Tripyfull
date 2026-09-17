@@ -132,19 +132,6 @@
                 placeholder="Type"
               />
             </div>
-            <div style="flex: 0 1 140px">
-              <TfSelect
-                :modelValue="visibilityLabelFromValue(filterVisibility)"
-                @update:modelValue="
-                  (v) => {
-                    filterVisibility = visibilityValueFromLabel(v);
-                    loadPlaces();
-                  }
-                "
-                :options="visibilityLabels"
-                placeholder="Public/private"
-              />
-            </div>
             <!-- Rating filter: multi-select, any of the picked stars -->
             <div class="rating-filter">
               <span class="rating-filter-label">Rating</span>
@@ -306,12 +293,6 @@
                   placeholder="Set type…"
                 />
               </div>
-              <TfButton size="sm" variant="secondary" @click="bulkVisibility('PUBLIC')">
-                <i class="pi pi-globe" style="font-size: 12px"></i> Make public
-              </TfButton>
-              <TfButton size="sm" variant="secondary" @click="bulkVisibility('PRIVATE')">
-                <i class="pi pi-lock" style="font-size: 12px"></i> Make private
-              </TfButton>
               <TfButton v-if="tripMode" size="sm" variant="secondary" @click="bulkRemoveFromTrip">
                 <i class="pi pi-minus-circle" style="font-size: 12px"></i> Remove from trip
               </TfButton>
@@ -326,18 +307,10 @@
               v-for="p in shownPlaces"
               :key="p.id"
               class="place-card"
-              :class="{
-                'card--selected': isSelected(p),
-                'card--selectable': selectMode && p.owned,
-                'card--unselectable': selectMode && !p.owned,
-              }"
+              :class="{ 'card--selected': isSelected(p), 'card--selectable': selectMode }"
               @click="selectMode ? toggleSelect(p) : openDetails(p)"
             >
-              <span
-                v-if="selectMode && p.owned"
-                class="select-check"
-                :class="{ on: isSelected(p) }"
-              >
+              <span v-if="selectMode" class="select-check" :class="{ on: isSelected(p) }">
                 <i class="pi pi-check"></i>
               </span>
               <!-- Cover: 16:9 photo with a real fallback; only a 4-5★ badge earns space here. -->
@@ -350,15 +323,6 @@
                   @error="onPhotoError(p)"
                 />
                 <span v-else class="cover-placeholder">{{ typeEmoji(p.type) }}</span>
-
-                <span
-                  v-if="!selectMode"
-                  class="cover-icon"
-                  v-tooltip="p.visibility === 'PUBLIC' ? 'Public' : 'Private'"
-                  :aria-label="p.visibility === 'PUBLIC' ? 'Public' : 'Private'"
-                >
-                  <i :class="p.visibility === 'PUBLIC' ? 'pi pi-globe' : 'pi pi-lock'"></i>
-                </span>
 
                 <span
                   class="cover-rating"
@@ -400,14 +364,13 @@
                   <TfBadge size="sm" tone="neutral" variant="soft">{{ typeLabel(p.type) }}</TfBadge>
                   <span v-if="p.visitMinutes" class="meta-fact">{{ p.visitMinutes }} min</span>
                   <!-- Words, not icons: on a 280 px card a glyph was 12 px of
-                       decoration that pushed "shared" off the row. -->
+                       decoration that pushed the badges off the row. -->
                   <TfBadge v-if="p.needsBooking" size="sm" tone="brand" variant="soft"
                     >Book ahead</TfBadge
                   >
                   <TfBadge v-if="p.needsPreparation" size="sm" tone="danger" variant="soft"
                     >Prep needed</TfBadge
                   >
-                  <span v-if="!p.owned" class="meta-fact meta-fact--muted">shared</span>
                 </div>
                 <p v-if="p.description" class="place-card-desc">{{ p.description }}</p>
               </div>
@@ -425,7 +388,7 @@
             >
               <template #sel="{ row: p }">
                 <span
-                  v-if="selectMode && p.owned"
+                  v-if="selectMode"
                   class="select-check select-check--inline"
                   :class="{ on: isSelected(p) }"
                 >
@@ -448,12 +411,7 @@
                     typeEmoji(p.type)
                   }}</span>
                   <span class="cell-name-main">
-                    <span class="cell-name-text cell-clip">
-                      {{ p.name }}
-                      <span v-if="!p.owned" class="text-subtle text-xs" style="font-style: italic"
-                        >shared</span
-                      >
-                    </span>
+                    <span class="cell-name-text cell-clip">{{ p.name }}</span>
                     <span class="cell-name-sub cell-clip">{{ placeLocation(p) || '—' }}</span>
                   </span>
                 </div>
@@ -476,15 +434,8 @@
               <template #visit="{ row: p }">
                 <span class="text-muted">{{ p.visitMinutes ? p.visitMinutes + ' min' : '—' }}</span>
               </template>
-              <!-- Public/private is an icon here: the word cost a third of the
-                   column for something almost every place shares. -->
               <template #flags="{ row: p }">
                 <span class="cell-flags">
-                  <i
-                    class="pi"
-                    :class="p.visibility === 'PUBLIC' ? 'pi-globe' : 'pi-lock'"
-                    v-tooltip="p.visibility === 'PUBLIC' ? 'Public' : 'Private'"
-                  ></i>
                   <span
                     v-if="p.needsBooking"
                     class="cell-flag cell-flag--book"
@@ -534,11 +485,6 @@
                 >★ {{ viewing.rating || 3 }} · {{ RATING_HINTS[viewing.rating || 3] }}</TfBadge
               >
               <TfBadge tone="neutral" variant="soft">{{ typeLabel(viewing.type) }}</TfBadge>
-              <TfBadge
-                :tone="viewing.visibility === 'PUBLIC' ? 'success' : 'neutral'"
-                variant="soft"
-                >{{ viewing.visibility === 'PUBLIC' ? 'Public' : 'Private' }}</TfBadge
-              >
               <TfBadge v-if="viewing.needsBooking" tone="brand" variant="soft" dot
                 >Book ahead</TfBadge
               >
@@ -562,7 +508,6 @@
             </div>
             <span v-else class="info-value">—</span>
             <TfButton
-              v-if="viewing.owned"
               size="sm"
               variant="soft"
               icon="pi-cloud-upload"
@@ -631,10 +576,6 @@
             <div class="info-row">
               <span class="info-label">Source</span>
               <span class="info-value">{{ (viewing.source || 'MANUAL').toLowerCase() }}</span>
-            </div>
-            <div v-if="!viewing.owned" class="info-row">
-              <span class="info-label">Owner</span>
-              <span class="info-value">shared by another user</span>
             </div>
             <!-- Dropping a place from the trip leaves it in the global library. -->
             <TfButton
@@ -742,20 +683,12 @@
                   required
                   placeholder="e.g. Navagio Beach"
                 />
-                <div class="field-pair">
-                  <TfSelect
-                    label="Type"
-                    :modelValue="typeLabelFromValue(form.type)"
-                    @update:modelValue="(v) => (form.type = typeValueFromLabel(v))"
-                    :options="typeLabels"
-                  />
-                  <TfSelect
-                    label="Visibility"
-                    :modelValue="visibilityLabelFromValue(form.visibility)"
-                    @update:modelValue="(v) => (form.visibility = visibilityValueFromLabel(v))"
-                    :options="visibilityLabels"
-                  />
-                </div>
+                <TfSelect
+                  label="Type"
+                  :modelValue="typeLabelFromValue(form.type)"
+                  @update:modelValue="(v) => (form.type = typeValueFromLabel(v))"
+                  :options="typeLabels"
+                />
                 <div class="check-row">
                   <TfCheckbox v-model="form.needsBooking">
                     <i class="pi pi-ticket" style="font-size: 12px"></i> Book ahead
@@ -933,22 +866,11 @@
 
         <template #footer>
           <template v-if="drawerMode === 'view' && viewing">
-            <TfButton
-              v-if="viewing.owned"
-              icon="pi-pencil"
-              style="flex: 1"
-              @click="openDialog(viewing)"
+            <TfButton icon="pi-pencil" style="flex: 1" @click="openDialog(viewing)"
               >Edit place</TfButton
             >
-            <TfButton
-              v-if="viewing.owned"
-              variant="danger"
-              icon="pi-trash"
-              @click="confirmDelete(viewing)"
+            <TfButton variant="danger" icon="pi-trash" @click="confirmDelete(viewing)"
               >Delete</TfButton
-            >
-            <TfButton v-else variant="ghost" style="flex: 1" @click="showDialog = false"
-              >Close</TfButton
             >
           </template>
           <template v-else>
@@ -1180,7 +1102,6 @@ const filterQ = ref('');
 const filtersOpen = ref(false);
 const filterCountry = ref(null);
 const filterType = ref(null);
-const filterVisibility = ref(null);
 const filterSource = ref(null);
 const filterCity = ref('');
 const sortBy = ref('name');
@@ -1237,13 +1158,12 @@ const toggleSelectMode = () => {
 };
 const isSelected = (p) => selectedIds.value.has(p.id);
 const toggleSelect = (p) => {
-  if (!p.owned) return; // shared public places belong to someone else
   const next = new Set(selectedIds.value);
   next.has(p.id) ? next.delete(p.id) : next.add(p.id);
   selectedIds.value = next;
 };
 const selectAll = () => {
-  selectedIds.value = new Set(shownPlaces.value.filter((p) => p.owned).map((p) => p.id));
+  selectedIds.value = new Set(shownPlaces.value.map((p) => p.id));
 };
 const clearSelection = () => (selectedIds.value = new Set());
 
@@ -1262,12 +1182,6 @@ const runBulk = async (op, doneMessage) => {
   if (failed) toast.warning('Partly done', `${failed} of ${ids.length} failed`);
   else toast.success(doneMessage, `${ids.length} place${ids.length === 1 ? '' : 's'}`);
 };
-
-const bulkVisibility = (visibility) =>
-  runBulk(
-    (id) => api.patch(`/api/places/${id}`, { visibility }),
-    visibility === 'PUBLIC' ? 'Made public' : 'Made private',
-  );
 
 const bulkChangeType = (typeLabelValue) => {
   const type = typeValueFromLabel(typeLabelValue);
@@ -1339,8 +1253,7 @@ const placeColumns = computed(() => {
   ];
 });
 const tableRowClass = (p) => ({
-  'card--selectable': selectMode.value && p.owned,
-  'card--unselectable': selectMode.value && !p.owned,
+  'card--selectable': selectMode.value,
   'row--selected': isSelected(p),
 });
 
@@ -1350,7 +1263,6 @@ const activeFilterCount = computed(
   () =>
     (filterCountry.value ? 1 : 0) +
     (filterType.value ? 1 : 0) +
-    (filterVisibility.value ? 1 : 0) +
     (filterRatings.value.size ? 1 : 0),
 );
 const toggleRating = (n) => {
@@ -1500,20 +1412,12 @@ const chipStyle = (active) => ({
 });
 
 const typeOptions = PLACE_TYPE_OPTIONS;
-const visibilityOptions = [
-  { label: 'Private', value: 'PRIVATE' },
-  { label: 'Public', value: 'PUBLIC' },
-];
 const typeLabel = (v) => typeOptions.find((o) => o.value === v)?.label || v;
 
 // --- Label <-> value mapping helpers for TfSelect (string-array based) ---
 const typeLabels = typeOptions.map((o) => o.label);
 const typeLabelFromValue = (v) => typeOptions.find((o) => o.value === v)?.label ?? null;
 const typeValueFromLabel = (l) => typeOptions.find((o) => o.label === l)?.value ?? null;
-
-const visibilityLabels = visibilityOptions.map((o) => o.label);
-const visibilityLabelFromValue = (v) => visibilityOptions.find((o) => o.value === v)?.label ?? null;
-const visibilityValueFromLabel = (l) => visibilityOptions.find((o) => o.label === l)?.value ?? null;
 
 const sourceLabels = sourceOptions.map((o) => o.label);
 const sourceLabelFromValue = (v) => sourceOptions.find((o) => o.value === v)?.label ?? null;
@@ -1558,7 +1462,6 @@ const emptyForm = {
   latitude: null,
   longitude: null,
   description: '',
-  visibility: 'PRIVATE',
   rating: 3,
   ratingComment: '',
   visitMinutes: null,
@@ -1736,7 +1639,6 @@ const openDialog = (p) => {
       latitude: p.latitude,
       longitude: p.longitude,
       description: p.description || '',
-      visibility: p.visibility || 'PRIVATE',
       rating: p.rating || 3,
       ratingComment: p.ratingComment || '',
       visitMinutes: p.visitMinutes ?? null,
@@ -1950,7 +1852,6 @@ const loadPlaces = async () => {
         : routeTripId.value || selectedTripId.value || undefined,
       country: filterCountry.value || undefined,
       type: filterType.value || undefined,
-      visibility: filterVisibility.value || undefined,
       source: filterSource.value || undefined,
       city: clean(filterCity.value),
       q: clean(filterQ.value),
@@ -2167,9 +2068,6 @@ onMounted(async () => {
 }
 .card--selectable :deep(*) {
   pointer-events: none;
-}
-.card--unselectable {
-  opacity: 0.45;
 }
 .card--selected {
   box-shadow: 0 0 0 3px var(--input-select-focus-bg) !important;
@@ -2630,24 +2528,6 @@ onMounted(async () => {
   inset: 0;
   background: linear-gradient(to bottom, rgba(33, 27, 23, 0.32), transparent 40%);
   pointer-events: none;
-}
-
-/* Publicity is a quiet fact, not a status — neutral, never green. */
-.cover-icon {
-  position: absolute;
-  top: 7px;
-  left: 7px;
-  z-index: 1;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(33, 27, 23, 0.45);
-  backdrop-filter: blur(3px);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* Every card shows its rating, but the weight is graded so 5★ still stands out. */

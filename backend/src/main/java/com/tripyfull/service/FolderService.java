@@ -4,7 +4,6 @@ import com.tripyfull.dto.FolderRequest;
 import com.tripyfull.dto.FolderResponse;
 import com.tripyfull.model.Place;
 import com.tripyfull.model.PlaceFolder;
-import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.PlaceFolderRepository;
 import com.tripyfull.repository.PlaceRepository;
@@ -76,8 +75,7 @@ public class FolderService {
         PlaceFolder folder = findOwned(folderId, user);
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
-        boolean visible = place.getOwner().getId().equals(user.getId())
-                || place.getVisibility() == PlaceVisibility.PUBLIC;
+        boolean visible = place.getOwner().getId().equals(user.getId());
         if (!visible) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found");
 
         for (PlaceFolder f : folderRepository.findByOwnerIdOrderByNameAsc(user.getId())) {

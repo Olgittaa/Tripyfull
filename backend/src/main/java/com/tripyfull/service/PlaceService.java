@@ -11,7 +11,6 @@ import com.tripyfull.model.PlaceFolder;
 import com.tripyfull.model.PlaceAudience;
 import com.tripyfull.model.PlaceSource;
 import com.tripyfull.model.PlaceType;
-import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.PlaceFolderRepository;
@@ -72,12 +71,12 @@ public class PlaceService {
     }
 
     /**
-     * Visible places (own + everyone's PUBLIC), narrowed to one folder or to a trip's
-     * itinerary, with optional filters (country/type/visibility/source/city/text) and
-     * sort (name|recent|type|rating). The text query matches name, city or address.
+     * The user's places, narrowed to one folder or to a trip's itinerary, with optional
+     * filters (country/type/source/city/text) and sort (name|recent|type|rating). The
+     * text query matches name, city or address.
      */
     public List<PlaceResponse> getAll(String username, UUID folderId, UUID tripId, String country,
-                                      String type, String visibility, String source, String city,
+                                      String type, String source, String city,
                                       String q, String sort) {
         User user = getUser(username);
         Map<UUID, UUID> placeToFolder = myPlaceFolderMap(user);
@@ -87,20 +86,19 @@ public class PlaceService {
             PlaceFolder folder = folderRepository.findByIdAndOwnerId(folderId, user.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder not found"));
             base = folder.getPlaces().stream()
-                    .filter(p -> isVisible(p, user))
+                    .filter(p -> isMine(p, user))
                     .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
         } else if (tripId != null) {
             Trip trip = guard.requireTrip(tripId, user);   // 404 for someone else's trip
             base = trip.getPlaces().stream()
-                    .filter(p -> isVisible(p, user))
+                    .filter(p -> isMine(p, user))
                     .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
         } else {
-            base = new ArrayList<>(placeRepository.findVisible(user.getId(), PlaceVisibility.PUBLIC, null, null));
+            base = new ArrayList<>(placeRepository.findByOwnerIdOrderByNameAsc(user.getId()));
         }
 
         String country2 = blankToNull(country);
         String type2 = blankToNull(type);
-        String visibility2 = blankToNull(visibility);
         String source2 = blankToNull(source);
         String city2 = blankToNull(city);
         String q2 = blankToNull(q);
@@ -108,7 +106,6 @@ public class PlaceService {
         List<Place> filtered = base.stream()
                 .filter(p -> country2 == null || (p.getCountry() != null && p.getCountry().equalsIgnoreCase(country2)))
                 .filter(p -> type2 == null || (p.getType() != null && p.getType().name().equalsIgnoreCase(type2)))
-                .filter(p -> visibility2 == null || (p.getVisibility() != null && p.getVisibility().name().equalsIgnoreCase(visibility2)))
                 .filter(p -> source2 == null || (p.getSource() != null && p.getSource().name().equalsIgnoreCase(source2)))
                 .filter(p -> city2 == null || (p.getCity() != null && p.getCity().toLowerCase().contains(city2.toLowerCase())))
                 .filter(p -> q2 == null || matchesText(p, q2.toLowerCase()))
@@ -137,7 +134,7 @@ public class PlaceService {
         User user = getUser(username);
         Trip trip = guard.requireTrip(tripId, user);
         Place place = placeRepository.findById(placeId)
-                .filter(p -> isVisible(p, user))
+                .filter(p -> isMine(p, user))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
         if (trip.getPlaces().add(place)) tripRepository.save(trip);
         return toResponse(place, user, myPlaceFolderMap(user).get(placeId), myPlaceTripMap(user).get(placeId));
@@ -174,8 +171,8 @@ public class PlaceService {
         return map;
     }
 
-    private boolean isVisible(Place p, User user) {
-        return p.getOwner().getId().equals(user.getId()) || p.getVisibility() == PlaceVisibility.PUBLIC;
+    private boolean isMine(Place p, User user) {
+        return p.getOwner().getId().equals(user.getId());
     }
 
     private String blankToNull(String s) { return (s == null || s.isBlank()) ? null : s; }
@@ -196,7 +193,6 @@ public class PlaceService {
         place.setOwner(user);
         place.setSource(PlaceSource.MANUAL);
         applyRequest(place, request);
-        if (place.getVisibility() == null) place.setVisibility(PlaceVisibility.PRIVATE);
         // Geocode manual entries that lack coordinates, caching the result on the place.
         if (place.getLatitude() == null || place.getLongitude() == null) {
             geocodeInto(place);
@@ -219,7 +215,6 @@ public class PlaceService {
         Place place = new Place();
         place.setOwner(user);
         place.setSource(PlaceSource.GEOCODED);
-        place.setVisibility(PlaceVisibility.PRIVATE);
         place.setType(PlaceTypes.infer(r.category()));
         place.setName(r.name() != null && !r.name().isBlank() ? r.name() : request.text());
         place.setAddress(r.address());
@@ -283,7 +278,6 @@ public class PlaceService {
         Place place = new Place();
         place.setOwner(user);
         place.setSource(PlaceSource.IMPORTED);
-        place.setVisibility(PlaceVisibility.PRIVATE);
         place.setType(type);
         if (fromGoogle) {
             // Google's own record of the place: its name as listed, its pin.
@@ -333,7 +327,7 @@ public class PlaceService {
 
     public PlaceResponse update(UUID id, PlaceRequest request, String username) {
         User user = getUser(username);
-        Place place = findOwned(id, user);   // visibility change & edits are owner-only
+        Place place = findOwned(id, user);   // edits are owner-only
         applyRequest(place, request);
         Place saved = placeRepository.save(place);
         return toResponse(saved, user, myPlaceFolderMap(user).get(saved.getId()));
@@ -404,7 +398,6 @@ public class PlaceService {
         if (request.description() != null) place.setDescription(request.description());
         if (request.photos() != null) place.setPhotos(request.photos());
         if (request.links() != null) place.setLinks(request.links());
-        if (request.visibility() != null) place.setVisibility(parseVisibility(request.visibility()));
         if (request.rating() != null) {
             if (request.rating() < 1 || request.rating() > 5) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be 1..5");
@@ -451,11 +444,6 @@ public class PlaceService {
         catch (IllegalArgumentException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid place type: " + s); }
     }
 
-    private PlaceVisibility parseVisibility(String s) {
-        try { return PlaceVisibility.valueOf(s); }
-        catch (IllegalArgumentException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid visibility: " + s); }
-    }
-
     private Place findOwned(UUID id, User user) {
         Place place = placeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
@@ -480,7 +468,6 @@ public class PlaceService {
                 p.getCountry(), p.getCity(), p.getAddress(),
                 p.getLatitude(), p.getLongitude(), p.getDescription(),
                 p.getPhotos(), p.getLinks(), p.getOsmId(),
-                p.getVisibility() != null ? p.getVisibility().name() : null,
                 p.getSource() != null ? p.getSource().name() : null,
                 p.getRating(),
                 p.getRatingComment(),
@@ -488,7 +475,6 @@ public class PlaceService {
                 p.getAudience() != null ? p.getAudience().name() : PlaceAudience.ALL.name(),
                 p.isNeedsPreparation(),
                 p.isNeedsBooking(),
-                p.getOwner().getId().equals(currentUser.getId()),
                 folderId,
                 tripIds != null ? tripIds : List.of()
         );

@@ -149,14 +149,15 @@ The core screen: the day's list on the left, its route on the right.
 ## 6. Trip places (`/trips/:tripId/places`) and the library (`/places`)
 
 The same screen in two scopes: one trip's shortlist (grouped by the trip's **folders**), or
-the whole library across trips.
+the whole library across trips. Every place belongs to the account that saved it and is seen
+by nobody else — there is no sharing and no public place.
 
-- **Cards or table**, search by name/city/address, filters: country, type, public/private,
-  rating, folder / trip. Sort by name, recent, type, rating. Rating balance bar in a trip.
+- **Cards or table**, search by name/city/address, filters: country, type, rating,
+  folder / trip. Sort by name, recent, type, rating. Rating balance bar in a trip.
 - **Place card**: photos (carousel), name, city · country, type, visit time, description,
-  rating with a reason, public/private, source (manual / geocoded / imported), Tripadvisor
+  rating with a reason, source (manual / geocoded / imported), Tripadvisor
   rating and reviews on request (fetched live, never stored), links, address on a small map.
-- **Add place** (form): name, type, visibility, country/city/address search, coordinates,
+- **Add place** (form): name, type, country/city/address search, coordinates,
   description, rating 1–5 and why, time to visit, audience (everyone / adults / kids),
   needs preparation, needs booking, photos (upload up to 12, own photos shown first), links.
 - **Find & import**: search Google Maps and Tripadvisor side by side, or paste a Google Maps /
@@ -164,7 +165,7 @@ the whole library across trips.
   type, editorial description and up to three photos. The saved place opens at once.
 - A place made while a **folder or a trip is open joins it** (a folder brings its trip along).
 - **Selection mode** for bulk actions: move to folder (in a trip), **add to trip**, set type,
-  make public / private, remove from trip, delete.
+  remove from trip, delete.
 - **Folders** per trip: create, rename, colour, delete; drag places in or assign from the
   panel.
 - **Trips**: one checkbox per trip in the place panel, ticked where the place already is.
@@ -280,7 +281,7 @@ opened. A day nobody touched costs nothing to open.
 ## 14. Development notes
 
 - Backend: Spring Boot 4, Java 25, PostgreSQL 16, Flyway (`V1__baseline`, `V2__travel_legs`,
-  `V3__travel_note`, `V4__drop_expenses`). Unit tests for geometry, place types and the travel-leg rules.
+  `V3__travel_note`, `V4__drop_expenses`, `V5__places_are_private`). Unit tests for geometry, place types and the travel-leg rules.
 - Frontend: Vue 3 monorepo — `lib/ui` (design system, `Tf*` components, tokens),
   `lib/core` (API client, auth, dates, money, durations, geo), `app/portal` (the app),
   `app/dev` (styleguide). Pure logic in `app/portal/src/plan/` with Vitest tests

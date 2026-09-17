@@ -116,7 +116,7 @@ pids = []
 for name, ptype, city, lat, lon, rating, mins in places:
     p = call('POST', '/api/places', {'name': name, 'type': ptype, 'city': city, 'country': 'TH',
                                      'latitude': lat, 'longitude': lon, 'rating': rating,
-                                     'visitMinutes': mins, 'visibility': 'PRIVATE',
+                                     'visitMinutes': mins,
                                      'description': 'Seeded for layout testing.'}, tok)
     if p:
         pids.append(p['id'])

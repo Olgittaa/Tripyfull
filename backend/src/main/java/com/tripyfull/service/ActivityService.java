@@ -9,7 +9,6 @@ import com.tripyfull.model.Activity;
 import com.tripyfull.model.Booking;
 import com.tripyfull.model.Day;
 import com.tripyfull.model.Place;
-import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.ActivityRepository;
@@ -160,8 +159,7 @@ public class ActivityService {
         if (request.placeId() == null) return;
         Place place = placeRepository.findById(request.placeId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
-        boolean visible = place.getOwner().getId().equals(user.getId())
-                || place.getVisibility() == PlaceVisibility.PUBLIC;
+        boolean visible = place.getOwner().getId().equals(user.getId());
         if (!visible) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found");
         activity.setPlace(place);
         if (activity.getAddress() == null || activity.getAddress().isBlank()) {

@@ -17,7 +17,6 @@ public record PlaceResponse(
         List<String> photos,
         List<String> links,
         String osmId,
-        String visibility,
         String source,
         int rating,          // 1..5 (5 = worth the whole trip)
         String ratingComment,
@@ -25,7 +24,6 @@ public record PlaceResponse(
         String audience,     // ALL | ADULTS | KIDS
         boolean needsPreparation,
         boolean needsBooking,
-        boolean owned,       // true if the current user owns it (editable)
         UUID folderId,       // the current user's folder this place is filed in, if any
         List<UUID> tripIds   // trips whose place list includes it
 ) {}

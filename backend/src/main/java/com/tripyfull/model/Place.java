@@ -86,10 +86,6 @@ public class Place {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
-    private PlaceVisibility visibility = PlaceVisibility.PRIVATE;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
     private PlaceSource source = PlaceSource.MANUAL;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -137,8 +133,6 @@ public class Place {
     public void setNeedsPreparation(boolean needsPreparation) { this.needsPreparation = needsPreparation; }
     public boolean isNeedsBooking() { return needsBooking; }
     public void setNeedsBooking(boolean needsBooking) { this.needsBooking = needsBooking; }
-    public PlaceVisibility getVisibility() { return visibility; }
-    public void setVisibility(PlaceVisibility visibility) { this.visibility = visibility; }
     public PlaceSource getSource() { return source; }
     public void setSource(PlaceSource source) { this.source = source; }
     public User getOwner() { return owner; }

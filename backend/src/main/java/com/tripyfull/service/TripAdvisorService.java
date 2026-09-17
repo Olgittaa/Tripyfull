@@ -1,7 +1,6 @@
 package com.tripyfull.service;
 
 import com.tripyfull.model.Place;
-import com.tripyfull.model.PlaceVisibility;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.PlaceRepository;
 import com.tripyfull.security.OwnershipGuard;
@@ -80,8 +79,7 @@ public class TripAdvisorService {
         }
         User user = guard.requireUser(username);
         Place place = placeRepository.findById(placeId)
-                .filter(p -> p.getOwner().getId().equals(user.getId())
-                        || p.getVisibility() == PlaceVisibility.PUBLIC)
+                .filter(p -> p.getOwner().getId().equals(user.getId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
 
         Cached cached = cache.get(placeId);
