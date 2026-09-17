@@ -2009,13 +2009,6 @@ onMounted(async () => {
   align-items: center;
   margin-top: 16px;
 }
-.scope-sep {
-  width: 1px;
-  height: 20px;
-  background: var(--border-default);
-  margin: 0 2px;
-}
-
 /* Rename/delete icons inside the active folder chip. */
 .chip-action {
   display: inline-flex;
@@ -2505,10 +2498,6 @@ onMounted(async () => {
   font: var(--fw-medium) 11px/1 var(--font-mono);
   color: var(--text-secondary);
 }
-.meta-fact--muted {
-  color: var(--text-disabled);
-  font-style: italic;
-}
 
 .place-card-desc {
   margin: 6px 0 0;
@@ -2520,11 +2509,6 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.place-card-links {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
 .place-link-chip {
   display: inline-flex;
   align-items: center;

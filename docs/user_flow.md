@@ -1,7 +1,13 @@
 # Tripyfull — User Flows
 
-**Status:** draft v1 · July 2026
-**Related docs:** `product.md` (personas, JTBD), `competitive-analysis.md`
+> **ARCHIVE — not the source of truth.**
+> Flow sketches from **July 2026**, kept for their reasoning and **not maintained**. Several
+> flows here describe things the app no longer has (actual expenses, auto-plan, public places,
+> Tripadvisor, CSV import). What the app does today is [`features.md`](features.md).
+
+**Status:** draft v1 · July 2026 · archived 2026-09-17
+**Related docs:** [`persona_jbtd.md`](persona_jbtd.md) (personas, JTBD),
+[`competitor_analysis.md`](competitor_analysis.md)
 
 Mermaid diagrams render natively on GitHub/GitLab and in most IDEs.
 To edit visually: FigJam → Mermaid Bridge plugin → paste the code → Generate.

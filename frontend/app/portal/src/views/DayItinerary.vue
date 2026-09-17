@@ -237,7 +237,6 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { TfButton, TfSelect, TfModal, toast, confirm } from '@tripyfull/ui';
-import BookingMap from '@/components/BookingMap.vue';
 import DayStrip from '@/components/DayStrip.vue';
 import DayDock from '@/components/DayDock.vue';
 import StopCard from '@/components/StopCard.vue';
@@ -247,7 +246,6 @@ import DayRouteAside from '@/components/DayRouteAside.vue';
 import DayHead from '@/components/DayHead.vue';
 import DayFacts from '@/components/DayFacts.vue';
 import {
-  ACTIVITY_TYPES as typeOptions,
   typeIcon,
   typeLabel,
   catStyle,
@@ -671,60 +669,6 @@ onMounted(async () => {
 }
 .itin-main {
   min-width: 0;
-}
-.addfrom-title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font: var(--fw-semibold) 16px/1 var(--font-sans);
-  color: var(--text-primary);
-  margin-bottom: 14px;
-}
-.addfrom-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-}
-.addfrom-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  cursor: pointer;
-  text-align: left;
-  background: var(--card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  transition:
-    border-color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
-}
-.addfrom-item:hover {
-  border-color: var(--border-default);
-  box-shadow: var(--shadow-sm);
-}
-.addfrom-thumb {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background-size: cover;
-  background-position: center;
-  border: 1px solid var(--border-default);
-}
-.addfrom-name {
-  display: block;
-  font: var(--fw-semibold) 15px/1.2 var(--font-sans);
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.addfrom-sub {
-  display: block;
-  font: var(--fw-regular) 13px/1.3 var(--font-sans);
-  color: var(--text-secondary);
-  margin-top: 2px;
 }
 /* drag-and-drop ordering */
 .timeline-row {

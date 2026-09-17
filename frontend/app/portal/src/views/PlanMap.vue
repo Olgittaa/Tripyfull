@@ -411,9 +411,6 @@ onUnmounted(() => {
   .layer-toggle {
     margin-left: 0;
   }
-  .base-switch-btn {
-    padding: 9px 12px;
-  }
   .map-legend {
     margin-left: 0;
   }

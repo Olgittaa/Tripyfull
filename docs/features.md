@@ -263,12 +263,12 @@ opened. A day nobody touched costs nothing to open.
 
 | Area | Endpoints |
 |---|---|
-| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, settings |
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET/PATCH /api/auth/me` (the PATCH is the settings) |
 | Trips | `GET/POST /api/trips`, `GET/PATCH/DELETE /api/trips/{id}`, `GET …/countries`, `POST …/reschedule`, `GET …/export` |
 | Days | `GET/POST /api/trips/{tripId}/days`, `POST …/days/buffer`, `PATCH/DELETE /api/days/{id}`, `POST …/days/{a}/swap/{b}` |
 | Stops | `GET /api/days/{id}/itinerary`, `POST /api/days/{id}/activities`, `PATCH …/activities/reorder`, `PATCH/DELETE /api/activities/{id}`, `GET /api/trips/{id}/planned-places` |
 | Plan from bookings | `GET/POST /api/trips/{id}/plan/from-bookings` |
-| Bookings | `GET/POST /api/trips/{id}/bookings`, `PATCH/DELETE /api/bookings/{id}`, payments `POST …/payments`, `PATCH/DELETE /api/payments/{id}`, `PATCH …/paid` / `…/unpaid`, attachments, `GET /api/flights/lookup` |
+| Bookings | `GET/POST /api/trips/{id}/bookings`, `PATCH/DELETE /api/bookings/{id}`, payments `POST …/payments`, `PATCH/DELETE /api/payments/{id}`, `PATCH …/paid` / `…/unpaid`, attachments `POST /api/bookings/{id}/attachments`, `GET /api/attachments/{id}/download`, `DELETE /api/attachments/{id}`, `GET /api/flights/lookup` |
 | Budget | `GET /api/trips/{id}/budget`, `GET /api/exchange-rate` |
 | To-do | `GET/POST /api/trips/{id}/todos`, `PATCH/DELETE /api/todos/{id}`, `GET …/todos/suggestions`, `POST …/todos/from-suggestions` |
 | Places | `GET/POST /api/places`, `POST …/geocode`, `POST …/import`, `PATCH/DELETE /api/places/{id}`, `PUT/DELETE …/trips/{tripId}`, photos `POST/DELETE /api/places/{id}/photos`, `GET /api/place-photos/…` |

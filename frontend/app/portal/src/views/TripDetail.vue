@@ -442,7 +442,6 @@ import {
   formatDayDate,
   formatDateRange,
   tripStatusLabel as statusLabel,
-  tripStatusTone as statusTone,
 } from '@tripyfull/core';
 
 const route = useRoute();
