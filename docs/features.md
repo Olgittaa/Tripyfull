@@ -188,8 +188,10 @@ by nobody else — there is no sharing and no public place.
 - **Payments**: "paid in full" switch, or an instalment schedule (amount, due date, paid /
   unpaid with the paid date); Σ instalments ≤ full price. **Attachments** (tickets,
   vouchers) upload, download, delete — 10 MB each, stored per booking.
-- **Deleting a booking** takes its instalments and its attachments with it — the rows, the
-  stored files and the booking's own folder — and the budget loses what it owed on it.
+- **Deleting a booking** takes everything that belonged to it: its instalments, its attachments
+  (rows, stored files and the booking's own folder) and the stops it had written into the days.
+  The budget loses what it owed on it, and no day keeps a check-in for a hotel that was
+  cancelled.
 - **Update plan** (`plan/from-bookings`): writes the bookings into the days — the hotel as
   the day's last stop on arrival night, first stop on the morning you leave, both in
   between; transport on the day it departs at its time, with an "Arrive" stop the next

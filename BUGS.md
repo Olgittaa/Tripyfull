@@ -55,6 +55,15 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **A cancelled booking left its stops on the itinerary** — deleting a hotel, a flight or an
+  activity removed the booking, its instalments and its files, but the stops it had written into
+  the days stayed: "Check in · Hotel Alfonso XIII" still on day 1, still marked *Booked*, still
+  refusing to be edited ("change the booking and press Update plan" — for a booking that no
+  longer exists). They only went away the next time somebody pressed *Update plan*, and a book
+  printed before that showed the client a hotel that had been cancelled. *Found by:* the
+  walkthrough of the "update plan from bookings" link. *Fixed:* 2026-09-18 — a booking takes its
+  own stops with it, the way it already took its payments and its files.
+
 - [x] **The reschedule preview threatened to delete a day that was never at risk** — moving a
   trip with a reserve day to another week, same length, warned "1 day now outside the range
   will be deleted, together with their activities". Nothing was going to be deleted: a reserve

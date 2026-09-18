@@ -122,6 +122,11 @@ removed — and the printed book offers it rather than passing it off as day sev
 rather than broken and can be typed in by hand, a ticket uploads and downloads byte for byte,
 and deleting a booking takes its payments and its files with it — the budget included.
 
+`plan-from-bookings.spec.js` pins the one action that edits the itinerary on the consultant's
+behalf: a three-night stay marks four days (in, both ends of the days between, out), pressing it
+twice changes nothing, a hand-made stop keeps its name, time, notes and its place in the day,
+an overnight journey arrives the next morning, and a cancelled booking leaves nothing behind.
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.

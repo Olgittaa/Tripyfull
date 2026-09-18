@@ -8,6 +8,7 @@ import com.tripyfull.model.BookingCategory;
 import com.tripyfull.model.Payment;
 import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
+import com.tripyfull.repository.ActivityRepository;
 import com.tripyfull.repository.AttachmentRepository;
 import com.tripyfull.repository.BookingRepository;
 import com.tripyfull.repository.PaymentRepository;
@@ -33,18 +34,20 @@ public class BookingService {
     private final GeoSearchService geoSearchService;
     private final FileStorageService fileStorageService;
     private final AttachmentRepository attachmentRepository;
+    private final ActivityRepository activityRepository;
     private final OwnershipGuard guard;
 
     public BookingService(BookingRepository bookingRepository, PaymentRepository paymentRepository,
                           ExchangeRateService exchangeRateService, GeoSearchService geoSearchService,
                           FileStorageService fileStorageService, AttachmentRepository attachmentRepository,
-                          OwnershipGuard guard) {
+                          ActivityRepository activityRepository, OwnershipGuard guard) {
         this.bookingRepository = bookingRepository;
         this.paymentRepository = paymentRepository;
         this.exchangeRateService = exchangeRateService;
         this.geoSearchService = geoSearchService;
         this.fileStorageService = fileStorageService;
         this.attachmentRepository = attachmentRepository;
+        this.activityRepository = activityRepository;
         this.guard = guard;
     }
 
@@ -84,6 +87,10 @@ public class BookingService {
         for (Attachment a : booking.getAttachments()) {
             fileStorageService.delete(a.getStorageKey());
         }
+        // The stops this booking wrote into the days belong to it: a cancelled
+        // hotel must not keep a check-in on the itinerary — and in the printed
+        // book — until somebody remembers to press "Update plan".
+        activityRepository.deleteAll(activityRepository.findBySourceBookingId(bookingId));
         bookingRepository.delete(booking);
     }
 

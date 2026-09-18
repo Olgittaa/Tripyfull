@@ -20,4 +20,7 @@ public interface ActivityRepository extends JpaRepository<Activity, UUID> {
     List<Activity> findByDayTripIdAndSourceBookingIdIsNotNull(UUID tripId);
 
     long countByDayTripIdAndSourceBookingIdIsNotNull(UUID tripId);
+
+    /** The stops one booking put on the days, so cancelling it can take them back. */
+    List<Activity> findBySourceBookingId(UUID bookingId);
 }
