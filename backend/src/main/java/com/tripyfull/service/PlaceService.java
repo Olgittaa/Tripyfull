@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.GeoMath;
 import com.tripyfull.util.PlaceTypes;
 import com.tripyfull.dto.PlaceGeocodeRequest;
 import com.tripyfull.dto.PlaceImportRequest;
@@ -258,6 +259,15 @@ public class PlaceService {
         if (r == null && parsed.name() != null) {
             r = geocodingService.geocode(parsed.name(), null);
         }
+        // A link shared from a phone in Thailand carries the place's Thai name in
+        // its own path, and Google, asked in English, answers with the listing that
+        // name belongs to — which for many places is the only one Google has. The
+        // card then reads "เป็น น้ำตกวชิรธาร · ตำบลบ้านหลวง", and so does the client's
+        // book. OpenStreetMap keeps an English name beside the local one, so the
+        // same words go to the OSM geocoders and their naming is taken instead.
+        if (fromGoogle && !hasLatinLetters(r.name())) {
+            r = inLatinLetters(r, geocodingService.geocodeOsm(parsed.name(), null));
+        }
 
         if (r != null && r.osmId() != null) {
             Place existing = placeRepository.findByOwnerIdAndOsmId(user.getId(), r.osmId()).orElse(null);
@@ -382,6 +392,50 @@ public class PlaceService {
     }
 
     // ---- helpers ----
+
+    /** How far a second opinion may sit from the pin and still be the same place. */
+    static final double SAME_PLACE_METRES = 300;
+
+    /**
+     * Letters a client can read without a keyboard they do not own. A name with
+     * any Latin letter in it — "Café Kyoto 京都" — is left alone; one with none is
+     * the case this asks about.
+     */
+    static boolean hasLatinLetters(String s) {
+        if (s == null) return false;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) return true;
+        }
+        return false;
+    }
+
+    /**
+     * The naming of {@code found} in Latin letters, when it needs one and a second
+     * opinion offers it for the same spot. Only the words change — the pin, the id
+     * and the category stay with the record that was found first, so a wrong match
+     * can rename a place but never move it. Everything is kept as it was when
+     * {@code found} can already be read, and when the second opinion is missing, is
+     * not in Latin letters either, or is further away than one place can be from
+     * itself.
+     */
+    static GeocodingService.GeocodeResult inLatinLetters(GeocodingService.GeocodeResult found,
+                                                         GeocodingService.GeocodeResult other) {
+        if (found == null || hasLatinLetters(found.name())) return found;
+        if (other == null || !hasLatinLetters(other.name())) return found;
+        if (found.latitude() == null || found.longitude() == null
+                || other.latitude() == null || other.longitude() == null) return found;
+        double metres = GeoMath.distanceMetres(
+                found.latitude().doubleValue(), found.longitude().doubleValue(),
+                other.latitude().doubleValue(), other.longitude().doubleValue());
+        if (metres > SAME_PLACE_METRES) return found;
+        return new GeocodingService.GeocodeResult(
+                found.latitude(), found.longitude(),
+                other.address() != null ? other.address() : found.address(),
+                found.osmId(), found.country(),
+                other.city() != null ? other.city() : found.city(),
+                other.name(), found.category());
+    }
 
     /** Applies present (non-null) request fields onto the place. */
     private void applyRequest(Place place, PlaceRequest request) {

@@ -95,6 +95,23 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **A place shared from a phone in Thai came in in Thai** — importing a Google Maps link
+  brought the place's name, address and city in the local script: *เป็น น้ำตกวชิรธาร ·
+  ตำบลบ้านหลวง · Thailand* for the Wachirathan waterfall, which is what the client's book would
+  then have printed. Our own request was never at fault — every Google call already sends
+  `languageCode: en`, and the country in that same answer does come back as "Thailand" rather
+  than "ประเทศไทย". The cause was one step earlier: the name we search Google with is the one in
+  the shared link's own path, which is Thai when the link was shared from a Thai phone, and
+  Google's best match for a Thai string is the Thai-only listing — this waterfall has two,
+  130 m apart, and only the other one is called *Wachirathan Waterfall*. Asking Google for more
+  results, or for the details of the one it found, brings back nothing in English: that listing
+  has no English name to give. *Fixed:* 2026-09-18 — when the name Google answers with has no
+  Latin letter in it, the same words go to the OSM geocoders, which carry an English name beside
+  the local one, and their naming is taken; only the words change, and only from an answer
+  within 300 m. The seeded example now imports as *Wachirathan Waterfall · Ban Sop Hat*.
+  *Left over:* a place OSM does not know keeps its local name — Google has `shortFormattedAddress`
+  in Latin letters even then, which would at least romanise the address.
+
 - [x] **The settings screen could not load or save** — `GET` and `PATCH /api/auth/me` answered
   401 to a perfectly good token, so opening Settings showed the load error and Save answered
   "Failed to save settings". The account's currency, language, region and date/time formats were

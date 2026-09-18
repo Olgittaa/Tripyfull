@@ -46,6 +46,17 @@ public class GeocodingService {
             GeocodeResult g = googlePlaces.geocode(text, country);
             if (g != null) return g;
         }
+        return geocodeOsm(text, country);
+    }
+
+    /**
+     * The same question put to the OSM geocoders alone. Google answers first
+     * everywhere else; this is for when it has already answered and the caller
+     * wants a second opinion — OpenStreetMap carries an English name beside the
+     * local one, and these clients ask for it.
+     */
+    public GeocodeResult geocodeOsm(String text, String country) {
+        if (text == null || text.isBlank()) return null;
         GeocodeResult r = photon(text, country);
         if (r != null) return r;
         return nominatim(text, country);

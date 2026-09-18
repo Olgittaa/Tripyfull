@@ -167,6 +167,14 @@ by nobody else — there is no sharing and no public place.
 - **Find & import**: search Google Maps, or paste a Google Maps link. The link imports
   Google's own record of the place — name, address, type, editorial description and up to
   three photos. The saved place opens at once.
+  - **In letters the client can read.** A link shared from a phone abroad carries the place's
+    local name in its own path, and Google answers with the listing that name belongs to —
+    for many places the only one it keeps, in the local script whatever language is asked for.
+    When the name that comes back has no Latin letter in it, the same words go to the OSM
+    geocoders, which carry an English name beside the local one, and their name, address and
+    city are taken instead. Only the words change: the pin, the Google id, the type, the
+    description and the photos stay as they were, and nothing is taken from an answer more
+    than 300 m away. *(เป็น น้ำตกวชิรธาร · ตำบลบ้านหลวง → Wachirathan Waterfall · Ban Sop Hat.)*
 - A place made while a **folder or a trip is open joins it** (a folder brings its trip along).
 - **Selection mode** for bulk actions: move to folder (in a trip), **add to trip**, set type,
   remove from trip, delete.
@@ -243,7 +251,7 @@ spending. See [`../AFTER_M1.md`](../AFTER_M1.md).
 |---|---|---|
 | Place & address search | Google Places (New) | Photon (OSM), Nominatim |
 | City / country pick-lists | seeded database | — |
-| Import from a link | Google Places by name near the link's pin; page metadata | OSM reverse geocoding |
+| Import from a link | Google Places by name near the link's pin; page metadata | OSM reverse geocoding; OSM naming when Google's is not in Latin letters |
 | Description & photos | Google Place Details (editorial summary, 3 photos) | OpenTripMap (Wikipedia extract, photo) |
 | Routing between stops | Google Routes (drive, walk, transit) | OSRM (drive, walk); road-based estimates for taxi/bus/train |
 | Flight lookup | AeroDataBox | — |
