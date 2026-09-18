@@ -14,7 +14,11 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  retries: 0,
+  // One retry, for the browser that occasionally fails to start and the first
+  // exchange-rate lookup that has to cross the internet. A real failure fails
+  // twice; a test that only passes the second time is reported as flaky, and
+  // that report is worth reading rather than ignoring.
+  retries: 1,
   timeout: 120_000,
   expect: { timeout: 15_000 },
   reporter: process.env.CI
@@ -28,7 +32,12 @@ export default defineConfig({
     actionTimeout: 15_000,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      // The phone spec belongs to the phone; on a laptop there is no dock to find.
+      testIgnore: /mobile\.spec\.js/,
+      use: { ...devices['Desktop Chrome'] },
+    },
     // The route book is the one thing that leaves the app and lands on someone
     // else's screen or printer, so it is the one thing checked in every engine —
     // and on a phone, where a client reads it more often than on a laptop.
@@ -43,8 +52,8 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
     {
-      name: 'phone · the book',
-      testMatch: /print-book\.spec\.js/,
+      name: 'phone',
+      testMatch: /(print-book|mobile)\.spec\.js/,
       use: { ...devices['iPhone 14'] },
     },
   ],

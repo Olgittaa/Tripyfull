@@ -147,6 +147,12 @@ joins a trip and leaves it while staying in the library, and the screen's own se
 Google key — it is checked by hand (it fills the canonical name, address, pin, description and
 photos).
 
+`mobile.spec.js` runs only on a phone: every screen of a trip — list, overview, day, map, trip
+places, bookings, to-do, budget, library, settings — has to fit 375 px without anything sticking
+out sideways (the check proves it can fail before it trusts a pass), the day's dock sits at the
+bottom with the pin count and moves between days, the route map slides up as a sheet and closes
+again, and the trip's sections live behind the hamburger.
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.

@@ -84,6 +84,7 @@ The core screen: the day's list on the left, its route on the right.
   **+ Activity**.
 - On a phone: the strip and arrows give way to a **dock** at the bottom — previous · day ·
   next, the map (with a pin count) and "add" — and the map becomes a sheet the dock slides up.
+  Every screen folds to 375 px with nothing reaching past the edge.
 
 ### Facts strip
 - How full the day is: stops, time at places (a stop without a clock borrows its saved
