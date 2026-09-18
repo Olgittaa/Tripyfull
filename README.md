@@ -117,6 +117,11 @@ another currency is shown converted.
 dated ones, swapping trades the plans while the dates stay put, only an undated day can be
 removed — and the printed book offers it rather than passing it off as day seven.
 
+`bookings.spec.js` covers what has already been paid for: every category stores and reads back
+(hotel, train, ferry, car rental, activity), a flight number nobody knows comes back empty
+rather than broken and can be typed in by hand, a ticket uploads and downloads byte for byte,
+and deleting a booking takes its payments and its files with it — the budget included.
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.
