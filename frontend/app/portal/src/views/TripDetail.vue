@@ -450,7 +450,8 @@ import {
   MODE_LABEL,
   formatDuration as fmtDur,
 } from '@tripyfull/core';
-import { buildTripDocument, collectPhotoUrls, probeImages } from '@/print/tripDocument.js';
+import { buildTripDocument } from '@/print/tripDocument.js';
+import { bakePhotos, collectPhotoUrls } from '@/print/photos.js';
 import { buildRouteMap } from '@/print/routeMap.js';
 import { collectMapPoints } from '@/plan/routePoints.js';
 import { api } from '@tripyfull/core';
@@ -771,8 +772,8 @@ const printTrip = async () => {
     w.document.write('<p style="font:14px sans-serif;padding:24px">Preparing the document…</p>');
     const apiBase = import.meta.env.VITE_API_URL || '';
     const res = await api.get(`/api/trips/${tripId}/export`);
-    const [liveUrls, map] = await Promise.all([
-      probeImages(collectPhotoUrls(res.data, apiBase)),
+    const [photos, map] = await Promise.all([
+      bakePhotos(collectPhotoUrls(res.data, apiBase)),
       buildRouteMap(collectMapPoints(res.data)).catch(() => null),
     ]);
     if (map?.tilesMissing) {
@@ -785,7 +786,7 @@ const printTrip = async () => {
     const doc = buildTripDocument(res.data, {
       apiBase,
       currency: currency.value,
-      liveUrls,
+      photos,
       mapImage: map?.dataUrl ?? null,
     });
     w.document.open();

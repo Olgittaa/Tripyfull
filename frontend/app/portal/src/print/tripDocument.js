@@ -1,4 +1,5 @@
 import { ownPhotosFirst, formatDuration as fmtDur } from '@tripyfull/core';
+import { photoUrl } from './photos.js';
 // The printed plan: one HTML document built from /api/trips/{id}/export.
 //
 // Modelled on a travel-agency route book — cover, what is in the plan, a
@@ -6,8 +7,9 @@ import { ownPhotosFirst, formatDuration as fmtDur } from '@tripyfull/core';
 // with its stops — but kept to what prints well and survives a paste into Word:
 // real headings, paragraphs and tables, no absolute positioning, no decoration
 // that only works on screen. Every photo a place has is offered, but each is
-// loaded once before the document is written — links to Google's photo hosts
-// expire, and a dead one would print as a broken box.
+// shrunk to the size the page prints it at before the document is written
+// (see photos.js) — links to Google's photo hosts expire, and a dead one would
+// print as a broken box.
 
 const TEAL = '#0e5c55';
 const INK = '#322a24';
@@ -98,63 +100,24 @@ const dayOf = (days, iso) => {
   return days.find((d) => d.date === date) || null;
 };
 
-/** Absolute URL for a stored photo, so the document works outside the app too. */
-const photoUrl = (path, apiBase) => (!path ? null : path.startsWith('/') ? apiBase + path : path);
-
 /** Photos per stop; the reference route books use one or two, never a gallery. */
 const PHOTOS_PER_STOP = 2;
 
-/**
- * Loads each URL once and resolves with the ones that actually render. A photo
- * that is slow past the timeout counts as missing — better one picture fewer
- * than a document that waits on a dead host.
- */
-export function probeImages(urls, timeoutMs = 5000) {
-  const unique = [...new Set(urls.filter(Boolean))];
-  return Promise.all(
-    unique.map(
-      (url) =>
-        new Promise((resolve) => {
-          const img = new Image();
-          const done = (ok) => resolve(ok ? url : null);
-          const timer = setTimeout(() => done(false), timeoutMs);
-          img.onload = () => {
-            clearTimeout(timer);
-            done(img.naturalWidth > 1);
-          };
-          img.onerror = () => {
-            clearTimeout(timer);
-            done(false);
-          };
-          img.src = url;
-        }),
-    ),
-  ).then((list) => new Set(list.filter(Boolean)));
-}
-
-/** Every photo URL the export mentions, absolute — feed for probeImages. */
-export function collectPhotoUrls(d, apiBase = '') {
-  const out = [];
-  for (const day of d.days || []) {
-    for (const a of day.activities || []) {
-      for (const p of a.placePhotos || []) out.push(photoUrl(p, apiBase));
-    }
-  }
-  for (const p of d.places || []) for (const u of p.photos || []) out.push(photoUrl(u, apiBase));
-  return out;
-}
-
 export function buildTripDocument(
   d,
-  { apiBase = '', currency = 'EUR', liveUrls = null, mapImage = null } = {},
+  { apiBase = '', currency = 'EUR', photos = null, mapImage = null } = {},
 ) {
-  // With no probe result, trust only what this app stores itself.
-  const usable = (url) => (liveUrls ? liveUrls.has(url) : url.startsWith(apiBase + '/api/'));
-  const livePhotos = (list) =>
+  // What to print for a photo: `photos` answers with the shrunk copy, or with
+  // the link when the host would not let it be shrunk, or with nothing when the
+  // picture does not render. Without that map, trust only what this app stores.
+  const printed = (url) =>
+    photos ? photos.get(url) : url.startsWith(apiBase + '/api/') ? url : null;
+  const bookPhotos = (list) =>
     ownPhotosFirst(list)
       .map((p) => photoUrl(p, apiBase))
-      .filter(usable);
-  const photosFor = (a) => livePhotos(a.placePhotos).slice(0, PHOTOS_PER_STOP);
+      .map(printed)
+      .filter(Boolean);
+  const photosFor = (a) => bookPhotos(a.placePhotos).slice(0, PHOTOS_PER_STOP);
   const cur = d.baseCurrency || currency;
   const days = d.days || [];
   const dated = days.filter((x) => x.date && !x.buffer);
@@ -174,12 +137,12 @@ export function buildTripDocument(
   // with a photo, then to a single picture, then to none.
   const shortlist = d.places || [];
   let collage = shortlist
-    .filter((p) => p.rating === 5 && livePhotos(p.photos).length)
-    .map((p) => ({ name: p.name, url: livePhotos(p.photos)[0] }));
+    .filter((p) => p.rating === 5 && bookPhotos(p.photos).length)
+    .map((p) => ({ name: p.name, url: bookPhotos(p.photos)[0] }));
   if (collage.length < 2) {
     const more = shortlist
-      .filter((p) => p.rating < 5 && livePhotos(p.photos).length)
-      .map((p) => ({ name: p.name, url: livePhotos(p.photos)[0] }));
+      .filter((p) => p.rating < 5 && bookPhotos(p.photos).length)
+      .map((p) => ({ name: p.name, url: bookPhotos(p.photos)[0] }));
     collage = collage.concat(more);
   }
   collage = collage.slice(0, 6);
@@ -429,7 +392,7 @@ export function buildTripDocument(
                 );
               if (a.placeVisitMinutes) meta.push(`⏱ ${a.placeVisitMinutes} min`);
               if (a.needsBooking) meta.push('🎟 book ahead');
-              const photos = photosFor(a);
+              const pics = photosFor(a);
               const next = acts[i + 1];
               const travel =
                 !isReserve && a.travelModeToNext && next && !hotel && !isTransport
@@ -441,8 +404,8 @@ export function buildTripDocument(
                 ${meta.length ? `<p class="meta">${meta.join(' &nbsp;·&nbsp; ')}</p>` : ''}
                 ${a.address ? `<p class="addr">${esc(a.address)}</p>` : ''}
                 ${
-                  photos.length
-                    ? `<div class="photos photos--${photos.length}">${photos.map((u) => `<img class="photo" src="${esc(u)}" alt="">`).join('')}</div>`
+                  pics.length
+                    ? `<div class="photos photos--${pics.length}">${pics.map((u) => `<img class="photo" src="${esc(u)}" alt="">`).join('')}</div>`
                     : ''
                 }
                 ${a.placeDescription ? `<p>${esc(a.placeDescription)}</p>` : ''}

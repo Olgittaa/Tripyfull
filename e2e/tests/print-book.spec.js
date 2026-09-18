@@ -24,6 +24,7 @@ async function signedIn(request) {
     token,
     get: (p) => request.get(`${API}${p}`, { headers }),
     post: (p, data) => request.post(`${API}${p}`, { headers, data }),
+    put: (p, data) => request.put(`${API}${p}`, { headers, data }),
     patch: (p, data) => request.patch(`${API}${p}`, { headers, data }),
   };
 }
@@ -286,4 +287,115 @@ test('the book prints to PDF, and the file is a real one', async ({
   expect(pdf.length).toBeGreaterThan(10_000);
   // Somewhere to look when a run goes wrong.
   await testInfo.attach('route-book.pdf', { body: pdf, contentType: 'application/pdf' });
+});
+
+test('the photos in the book are shrunk to what the page prints', async ({
+  page,
+  request,
+  browserName,
+}) => {
+  const api = await signedIn(request);
+  const { trip, days } = await tripOf(api, {
+    start: '2027-10-04',
+    end: '2027-10-05',
+    title: `Heavy photos ${stamp()}`,
+  });
+  const saved = await api
+    .post('/api/places', {
+      name: 'Plaza de España',
+      type: 'SIGHTSEEING',
+      city: 'Seville',
+      country: 'ES',
+      latitude: 37.3775,
+      longitude: -5.9869,
+      rating: 5,
+    })
+    .then((r) => r.json());
+  // Creating a place asks Google for pictures of it; this test is about the one
+  // photo it uploads itself, so the found ones go again.
+  await api.patch(`/api/places/${saved.id}`, { photos: [] });
+  await api.put(`/api/places/${saved.id}/trips/${trip.id}`);
+  await api.post(`/api/days/${days[0].id}/activities`, {
+    name: 'Plaza de España',
+    type: 'SIGHTSEEING',
+    placeId: saved.id,
+  });
+
+  await page.addInitScript(
+    ([token, user]) => {
+      localStorage.setItem('token', token);
+      localStorage.setItem('username', user);
+    },
+    [api.token, api.username],
+  );
+  await page.goto(`/trips/${trip.id}`);
+
+  // A photo the size a phone takes: the server keeps it at 1600 px, which is
+  // right for the screen and four times more than paper can show.
+  const stored = await page.evaluate(
+    async ([apiBase, token, placeId]) => {
+      const c = document.createElement('canvas');
+      c.width = 1600;
+      c.height = 1200;
+      const ctx = c.getContext('2d');
+      const sky = ctx.createLinearGradient(0, 0, 0, c.height);
+      sky.addColorStop(0, '#2b6cb0');
+      sky.addColorStop(1, '#f6e3c5');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, c.width, c.height);
+      for (let i = 0; i < 400; i++) {
+        ctx.fillStyle = `hsl(${(i * 37) % 360} 60% ${30 + (i % 50)}%)`;
+        ctx.beginPath();
+        ctx.arc((i * 131) % c.width, (i * 271) % c.height, 4 + (i % 40), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.92));
+      const body = new FormData();
+      body.append('file', blob, 'plaza.jpg');
+      const res = await fetch(`${apiBase}/api/places/${placeId}/photos`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body,
+      });
+      const place = await res.json();
+      const url = apiBase + place.photos[place.photos.length - 1];
+      const head = await fetch(url);
+      const bytes = (await head.blob()).size;
+      const img = new Image();
+      await new Promise((done) => {
+        img.onload = done;
+        img.src = url;
+      });
+      return { width: img.naturalWidth, bytes };
+    },
+    [API, api.token, saved.id],
+  );
+  expect(stored.width, 'the stored photo is bigger than the page needs').toBeGreaterThan(1000);
+
+  const book = await openBook(page, api, trip);
+
+  const printed = await book.evaluate(() =>
+    [...document.querySelectorAll('img.photo, table.collage img')].map((img) => ({
+      src: img.src.slice(0, 15),
+      width: img.naturalWidth,
+      // Base64 carries 3 bytes in every 4 characters.
+      bytes: Math.round(((img.src.length - img.src.indexOf(',') - 1) * 3) / 4),
+    })),
+  );
+  expect(printed.length, 'the stop and the cover both print the photo').toBeGreaterThan(0);
+  for (const p of printed) {
+    expect(p.src, 'the book carries its photos, it does not link them').toBe('data:image/jpeg');
+    expect(p.width, 'a photo is never bigger than the one on screen').toBeLessThanOrEqual(
+      stored.width,
+    );
+    expect(p.bytes, 'and never heavier').toBeLessThanOrEqual(stored.bytes);
+    // Every engine encodes a JPEG its own way, and Safari's is gentle enough that
+    // the redraw can cost more than it saves — there the original is kept, which
+    // is why the two rules above are all every browser promises. Where the redraw
+    // does win, it wins properly.
+    if (browserName === 'chromium') {
+      expect(p.width, 'no photo is larger than the page prints it').toBeLessThanOrEqual(1000);
+      expect(p.bytes, 'and it weighs less than the one on the screen').toBeLessThan(stored.bytes);
+    }
+  }
 });

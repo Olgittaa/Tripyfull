@@ -267,6 +267,12 @@ survive Word too.
   book ahead**; **Still to do**; a legend. Ratings are deliberately not printed. Kinds of stop
   are counted in words a client reads ("2 sights · 1 meal"), never in the names the database
   uses.
+- **Photos are shrunk for paper.** Every picture is loaded once, redrawn no larger than
+  1000 px on its long edge and re-encoded as a JPEG the document carries inside itself, so the
+  book is about half the file it used to be (the seeded trip: 3.5 MB → 1.8 MB) and the `.doc`
+  no longer points at `/api/place-photos/…` on a server the client cannot reach. A host that
+  will not share its bytes with a canvas keeps its link, at its own size; the route map is
+  built separately and kept sharper, because a map is mostly small lettering.
 - A **reserve day** prints as its own page, headed *Reserve day N*, with the line "Not on a
   date — ideas to swap in if the weather turns or a day frees up" under the city. Its stops are
   offers, not an order: no running numbers and no way-to-the-next-stop lines, each with its
