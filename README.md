@@ -108,6 +108,11 @@ notes and stops (and leaves the bookings on their own dates), shortening it dele
 that fall outside together with what was on them, lengthening it fills the gap — and the
 preview that asks before all this has to say what will really happen.
 
+`stops.spec.js` covers the day's own edits: a stop moved to another day arrives whole at the
+end of it and leaves nothing behind, a stop cannot be moved into a different trip, deleting one
+leaves the order of the rest alone, dragging renumbers the pins on the map, and a price in
+another currency is shown converted.
+
 They start what they need: `npm test` inside `e2e/` brings up Postgres, the backend and the
 portal when they are not already running, and reuses them when they are. The first run needs
 the browser: `npx playwright install chromium`.
