@@ -407,7 +407,8 @@ export function buildTripDocument(
                 : isTransport
                   ? 'stop stop--transport'
                   : 'stop';
-              const num = hotel || isTransport ? '' : `<span class="stop-num">${++n}</span>`;
+              const num =
+                isReserve || hotel || isTransport ? '' : `<span class="stop-num">${++n}</span>`;
               const meta = [];
               if (a.startTime)
                 meta.push(
@@ -418,7 +419,7 @@ export function buildTripDocument(
               const photos = photosFor(a);
               const next = acts[i + 1];
               const travel =
-                a.travelModeToNext && next && !hotel && !isTransport
+                !isReserve && a.travelModeToNext && next && !hotel && !isTransport
                   ? `<p class="travel">→ ${esc(next.name)} ${MODE_WORD[a.travelModeToNext] || a.travelModeToNext}${a.travelSeconds ? ` · ${fmtDur(a.travelSeconds)}` : ''}${a.travelNote ? ` · ${esc(a.travelNote)}` : ''}</p>`
                   : '';
               return `
@@ -439,7 +440,7 @@ export function buildTripDocument(
               </article>`;
             })
             .join('')
-        : '<p class="muted">Nothing planned yet.</p>';
+        : `<p class="muted">${isReserve ? 'Nothing kept in reserve yet.' : 'Nothing planned yet.'}</p>`;
       return `
     <section class="page day">
       <div class="day-head">
@@ -449,6 +450,7 @@ export function buildTripDocument(
         </div>
       </div>
       ${progress}
+      ${isReserve ? '<p class="reserve-note">Not on a date — ideas to swap in if the weather turns or a day frees up.</p>' : ''}
       ${day.notes ? `<p class="day-notes">${esc(day.notes)}</p>` : ''}
       ${stopsHtml}
       ${day.overnightStay && !acts.some((a) => a.type === 'ACCOMMODATION') ? `<p class="overnight">🏨 Overnight: ${esc(day.overnightStay)}</p>` : ''}
@@ -497,6 +499,8 @@ export function buildTripDocument(
     .progress span.done { background: #c3ddd8; }
     .progress-label { border: none !important; width: auto !important; height: auto !important; margin-left: 6px; font-size: 10pt; color: ${INK_SOFT}; }
     .day-notes { background: #f6f1e8; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; }
+    /* A day with no date reads like day 7 unless the page says otherwise. */
+    .reserve-note { font-size: 10pt; color: #6b625a; font-style: italic; margin: 0 0 12px; }
     .stop { padding: 10px 0 12px; border-bottom: 1px solid ${LINE}; break-inside: avoid; }
     .stop-num { display: inline-block; min-width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: ${TEAL}; color: #fff; font: 700 10pt/22px "Hanken Grotesk", Arial, sans-serif; margin-right: 8px; vertical-align: 2px; }
     .stop--hotel h4, .stop--transport h4 { color: ${TEAL}; font-size: 11.5pt; }

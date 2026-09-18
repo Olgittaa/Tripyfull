@@ -153,7 +153,7 @@ after_buffer = call('POST', f'/api/trips/{t}/days/buffer', None, tok) or []
 buffer_day = next((d for d in after_buffer if d.get('isBuffer') or d.get('buffer')), None)
 if buffer_day:
     call('PATCH', f'/api/days/{buffer_day["id"]}',
-         {'city': 'Chiang Rai', 'notes': 'Reserve day — if the weather turns, one of these instead.'}, tok)
+         {'city': 'Chiang Rai', 'notes': 'Rain plan: the tea rooms and the Blue Temple both work wet.'}, tok)
     call('POST', f'/api/days/{buffer_day["id"]}/activities',
          {'name': 'Blue Temple', 'type': 'SIGHTSEEING',
           'placeId': pids[1] if len(pids) > 1 else None}, tok)

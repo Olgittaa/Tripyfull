@@ -113,6 +113,10 @@ end of it and leaves nothing behind, a stop cannot be moved into a different tri
 leaves the order of the rest alone, dragging renumbers the pins on the map, and a price in
 another currency is shown converted.
 
+`reserve-days.spec.js` covers the day without a date: it joins the trip without disturbing the
+dated ones, swapping trades the plans while the dates stay put, only an undated day can be
+removed — and the printed book offers it rather than passing it off as day seven.
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.

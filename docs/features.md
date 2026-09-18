@@ -251,6 +251,11 @@ survive Word too.
   stop with its mode and time ("→ Wat Rong Khun by car · 25 min · RTC Bus" — the mode is the
   one the consultant picked, or the one the server used when nobody picked); **Booked & to
   book ahead**; **Still to do**; a legend. Ratings are deliberately not printed.
+- A **reserve day** prints as its own page, headed *Reserve day N*, with the line "Not on a
+  date — ideas to swap in if the weather turns or a day frees up" under the city. Its stops are
+  offers, not an order: no running numbers and no way-to-the-next-stop lines, each with its
+  visit time. The cover counts them apart from the dated days ("6 days + 1 reserve day") and
+  the plan table lists what they hold.
 
 Also: `GET /trips/{id}/export` returns the whole trip as JSON.
 
