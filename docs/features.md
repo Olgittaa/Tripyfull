@@ -275,6 +275,12 @@ survive Word too.
   book ahead**; **Still to do**; a legend. Ratings are deliberately not printed. Kinds of stop
   are counted in words a client reads ("2 sights · 1 meal"), never in the names the database
   uses.
+- **Each day's page opens with its own small map** — the day's stops as dots, each carrying the
+  number the list under it prints, hotels as squares, joined by the day's line. The numbers are
+  the list's numbers: a stop without a pin still counts, so the dots read "1, 3" when stop 2 has
+  no coordinates. A reserve day's ideas are dotted without numbers or a line; a day with nothing
+  pinned (a day spent flying) has no map. Tiles are fetched one map at a time, and a map most
+  of whose tiles did not arrive is left out, like the route map.
 - **Photos are shrunk for paper.** Every picture is loaded once, redrawn no larger than
   1000 px on its long edge and re-encoded as a JPEG the document carries inside itself, so the
   book is about half the file it used to be (the seeded trip: 3.5 MB → 1.8 MB) and the `.doc`

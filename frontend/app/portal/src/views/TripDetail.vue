@@ -453,7 +453,7 @@ import {
 import { buildTripDocument } from '@/print/tripDocument.js';
 import { bakePhotos, collectPhotoUrls } from '@/print/photos.js';
 import { buildRouteMap } from '@/print/routeMap.js';
-import { collectMapPoints } from '@/plan/routePoints.js';
+import { collectDayMaps, collectMapPoints } from '@/plan/routePoints.js';
 import { api } from '@tripyfull/core';
 import {
   toDateStr,
@@ -760,6 +760,30 @@ const saveEdit = async () => {
 
 const confirmReschedule = () => persistEdit(pendingEdit.value, true);
 
+/**
+ * The book's maps, one after another: the route on page two, then a small one
+ * for each day. Every map fetches its own tiles, and OpenStreetMap asks for a
+ * gentle client — six requests at once is what one map takes, and eight maps
+ * at once would be fifty. A day with nothing pinned gets no map; a reserve
+ * day's ideas are dotted without a line, because they are not an order.
+ */
+async function buildMaps(exported) {
+  const route = await buildRouteMap(collectMapPoints(exported)).catch(() => null);
+  const days = [];
+  for (const { reserve, points } of collectDayMaps(exported)) {
+    days.push(
+      points.length
+        ? await buildRouteMap(points, {
+            width: 1200,
+            height: 480,
+            route: reserve ? [] : null,
+          }).catch(() => null)
+        : null,
+    );
+  }
+  return { route, days };
+}
+
 const printTrip = async () => {
   try {
     // Open the window first: browsers only allow it in the click's own turn,
@@ -772,22 +796,30 @@ const printTrip = async () => {
     w.document.write('<p style="font:14px sans-serif;padding:24px">Preparing the document…</p>');
     const apiBase = import.meta.env.VITE_API_URL || '';
     const res = await api.get(`/api/trips/${tripId}/export`);
-    const [photos, map] = await Promise.all([
+    const [photos, maps] = await Promise.all([
       bakePhotos(collectPhotoUrls(res.data, apiBase)),
-      buildRouteMap(collectMapPoints(res.data)).catch(() => null),
+      buildMaps(res.data),
     ]);
-    if (map?.tilesMissing) {
-      const where = `${map.tilesMissing} of ${map.tilesTotal} map tiles did not load (${map.reason})`;
+    const drawn = [maps.route, ...maps.days].filter(Boolean);
+    const tilesMissing = drawn.reduce((sum, m) => sum + m.tilesMissing, 0);
+    if (tilesMissing) {
+      const tilesTotal = drawn.reduce((sum, m) => sum + m.tilesTotal, 0);
+      const reason = drawn.find((m) => m.reason)?.reason;
+      const leftOut = drawn.filter((m) => !m.dataUrl).length;
       toast.warning(
-        'Route map',
-        map.dataUrl ? `${where} — the map has gaps` : `${where} — the book goes without the map`,
+        'Maps',
+        `${tilesMissing} of ${tilesTotal} map tiles did not load (${reason})` +
+          (leftOut
+            ? ` — ${leftOut === 1 ? 'one map is' : `${leftOut} maps are`} left out of the book`
+            : ' — the maps have gaps'),
       );
     }
     const doc = buildTripDocument(res.data, {
       apiBase,
       currency: currency.value,
       photos,
-      mapImage: map?.dataUrl ?? null,
+      mapImage: maps.route?.dataUrl ?? null,
+      dayMaps: maps.days.map((m) => m?.dataUrl ?? null),
     });
     w.document.open();
     w.document.write(doc.html(true));

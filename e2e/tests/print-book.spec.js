@@ -250,6 +250,8 @@ test('when the map tiles will not come, the book goes on without them', async ({
   // The stops are all there; the map is simply missing rather than half-drawn.
   await expect(book.locator('body')).toContainText('Stop on day 1');
   await expect(book.locator('body')).toContainText('Stop on day 2');
+  // Nor is any day given a map of blank squares.
+  await expect(book.locator('img.day-map')).toHaveCount(0);
   const maps = await book.locator('img.route-map').count();
   if (maps) {
     // A map that did come out must not be a grey rectangle: it is only kept when
@@ -398,4 +400,67 @@ test('the photos in the book are shrunk to what the page prints', async ({
       expect(p.bytes, 'and it weighs less than the one on the screen').toBeLessThan(stored.bytes);
     }
   }
+});
+
+test('every day opens with a map of its own stops, numbered like its list', async ({
+  page,
+  request,
+}) => {
+  const api = await signedIn(request);
+  const { trip, days } = await tripOf(api, {
+    start: '2027-10-04',
+    end: '2027-10-06',
+    title: `Day maps ${stamp()}`,
+  });
+  // Day 1: two pinned stops around one without a pin — the dots must read 1 and 3.
+  for (const [name, lat] of [
+    ['Cathedral', 37.386],
+    ['Lunch somewhere', null],
+    ['Alcázar', 37.383],
+  ]) {
+    await api.post(`/api/days/${days[0].id}/activities`, {
+      name,
+      type: 'SIGHTSEEING',
+      latitude: lat,
+      longitude: lat ? -5.993 : null,
+    });
+  }
+  // Day 2: nothing pinned at all. Day 3: one stop.
+  await api.post(`/api/days/${days[1].id}/activities`, { name: 'A quiet day', type: 'OTHER' });
+  await api.post(`/api/days/${days[2].id}/activities`, {
+    name: 'Triana',
+    type: 'SIGHTSEEING',
+    latitude: 37.385,
+    longitude: -6.003,
+  });
+  // A reserve day with an idea on the map.
+  // Adding a reserve day answers with every day of the trip; the new one is the undated one.
+  const spare = await api
+    .post(`/api/trips/${trip.id}/days/buffer`)
+    .then((r) => r.json())
+    .then((all) => all.find((d) => !d.date));
+  await api.post(`/api/days/${spare.id}/activities`, {
+    name: 'Italica',
+    type: 'SIGHTSEEING',
+    latitude: 37.444,
+    longitude: -6.047,
+  });
+
+  const book = await openBook(page, api, trip);
+  const dayPage = (n) =>
+    book
+      .locator('section')
+      .filter({ has: book.getByRole('heading', { name: `Day ${n}`, exact: true }) });
+
+  await expect(dayPage(1).locator('img.day-map')).toHaveCount(1);
+  await expect(dayPage(1).locator('img.day-map')).toHaveAttribute('src', /^data:image\/jpeg/);
+  await expect(dayPage(2).locator('img.day-map'), 'nothing pinned, nothing to draw').toHaveCount(0);
+  await expect(dayPage(3).locator('img.day-map')).toHaveCount(1);
+  await expect(
+    book.locator('section').filter({ hasText: 'Not on a date' }).locator('img.day-map'),
+    'a reserve day shows where its ideas are',
+  ).toHaveCount(1);
+  // The list beside the map still counts the pinless lunch as stop 2.
+  await expect(dayPage(1).locator('.stop-num')).toHaveText(['1', '2', '3']);
+  await noEmptySections(book);
 });

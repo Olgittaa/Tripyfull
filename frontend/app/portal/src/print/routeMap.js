@@ -60,8 +60,10 @@ async function runPool(jobs) {
 }
 
 /**
- * @param {Array<{lat:number, lon:number, kind:'stop'|'hotel', dayNumber?:number}>} points
- *        in the order they are visited; the line follows it
+ * @param {Array<{lat:number, lon:number, kind:'stop'|'hotel', dayNumber?:number, label?:string}>} points
+ *        in the order they are visited; the line follows it. A `dayNumber` puts that
+ *        day's badge beside its first point (the trip's route map); a `label` is
+ *        written inside the dot itself (a day's own map, numbered like its list).
  * @param {Array<[number, number]>} route  optional lat/lon pairs for the line (defaults to the points)
  * @returns {Promise<{dataUrl: string|null, tilesTotal: number, tilesMissing: number, reason?: string}|null>}
  *          `dataUrl` is a JPEG; null when most tiles are missing (a map of markers on a blank
@@ -167,6 +169,13 @@ export async function buildRouteMap(points, { width = 1400, height = 1700, route
       ctx.lineWidth = 3;
       ctx.strokeStyle = '#fff';
       ctx.stroke();
+      if (p.label) {
+        ctx.font = 'bold 14px "Hanken Grotesk", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(p.label, x, y + 1);
+      }
     }
   }
   // Day numbers at each day's first stop, so the map reads with the overview.

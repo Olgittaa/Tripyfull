@@ -1,5 +1,6 @@
 import { ownPhotosFirst, formatDuration as fmtDur } from '@tripyfull/core';
 import { photoUrl } from './photos.js';
+import { stopNumbers } from '../plan/routePoints.js';
 // The printed plan: one HTML document built from /api/trips/{id}/export.
 //
 // Modelled on a travel-agency route book — cover, what is in the plan, a
@@ -105,7 +106,7 @@ const PHOTOS_PER_STOP = 2;
 
 export function buildTripDocument(
   d,
-  { apiBase = '', currency = 'EUR', photos = null, mapImage = null } = {},
+  { apiBase = '', currency = 'EUR', photos = null, mapImage = null, dayMaps = null } = {},
 ) {
   // What to print for a photo: `photos` answers with the shrunk copy, or with
   // the link when the host would not let it be shrunk, or with nothing when the
@@ -372,7 +373,11 @@ export function buildTripDocument(
             )
             .join('')}<span class="progress-label">${day.dayNumber}/${total}</span></div>`;
       const acts = day.activities;
-      let n = 0; // numbers only the places; the hotel and travel rows are not stops you chose
+      // The day's own map, numbered the way the list under it is numbered.
+      const dayMap = dayMaps?.[idx]
+        ? `<img class="day-map" src="${dayMaps[idx]}" alt="Map of the day's stops">`
+        : '';
+      const numbers = stopNumbers(acts, isReserve);
       const stopsHtml = acts.length
         ? acts
             .map((a, i) => {
@@ -383,8 +388,7 @@ export function buildTripDocument(
                 : isTransport
                   ? 'stop stop--transport'
                   : 'stop';
-              const num =
-                isReserve || hotel || isTransport ? '' : `<span class="stop-num">${++n}</span>`;
+              const num = numbers.has(a) ? `<span class="stop-num">${numbers.get(a)}</span>` : '';
               const meta = [];
               if (a.startTime)
                 meta.push(
@@ -427,6 +431,7 @@ export function buildTripDocument(
       </div>
       ${progress}
       ${isReserve ? '<p class="reserve-note">Not on a date — ideas to swap in if the weather turns or a day frees up.</p>' : ''}
+      ${dayMap}
       ${day.notes ? `<p class="day-notes">${esc(day.notes)}</p>` : ''}
       ${stopsHtml}
       ${day.overnightStay && !acts.some((a) => a.type === 'ACCOMMODATION') ? `<p class="overnight">🏨 Overnight: ${esc(day.overnightStay)}</p>` : ''}
@@ -493,6 +498,7 @@ export function buildTripDocument(
     table.collage--1 img { height: 110mm; }
     .collage-cap { font-size: 8.5pt; color: ${INK_SOFT}; margin-top: 3px; }
     .route-map { display: block; width: 100%; border-radius: 6px; border: 1px solid ${LINE}; }
+    .day-map { display: block; width: 100%; border-radius: 6px; border: 1px solid ${LINE}; margin: 0 0 14px; break-inside: avoid; page-break-inside: avoid; }
     .map-legend { font-size: 9.5pt; color: ${INK_SOFT}; margin-top: 8px; }
     .lg { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }
     .lg-s { background: #e35a38; }
