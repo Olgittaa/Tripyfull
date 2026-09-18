@@ -43,6 +43,11 @@ is waiting, or when a consultant names it in an interview.
 Wrong padding, a word that grates, an animation that stutters. Written down so it stops
 occupying the head. Never a reason to delay anything.
 
+- [ ] **A palace imported from Google comes in as a park** — importing the Real Alcázar by its
+  Google Maps link fills the name, address, pin, description and three photos correctly, then
+  types it `PARK`, presumably from the gardens in Google's own categories. One click fixes it,
+  but the type decides the icon and the counts in the printed book. *Seen:* 2026-09-18.
+
 - [ ] **Labels not tied to their controls in several dialogs** — the payment dialog's "Amount",
   the booking form's "City", the trip dialog's "Destination" and "Dates" are plain `<label>`
   elements next to a component rather than labels of the control inside it. A screen reader

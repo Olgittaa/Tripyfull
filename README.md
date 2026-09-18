@@ -139,6 +139,14 @@ pins (no map, no gap, no broken image), twelve days each on its own page, a day 
 overrun a page (no stop card may be split), and a hotel wifi that drops every map tile. In
 Chromium it also prints the real PDF and attaches it to the run.
 
+`places.spec.js` covers the library a consultant builds over years: a place saved and edited
+keeps everything the edit did not mention, five photos and a clear refusal at the sixth, folders
+made, renamed, filled, emptied and deleted without taking their places with them, a place that
+joins a trip and leaves it while staying in the library, and the screen's own select-all-and-act.
+**Not covered by the gate:** importing a place from a Google Maps link, which needs a live
+Google key — it is checked by hand (it fills the canonical name, address, pin, description and
+photos).
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.
