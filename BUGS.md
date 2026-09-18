@@ -32,6 +32,14 @@ never ends, a wrong number in the budget. **These block the launch.**
 It works if you know the trick, or it is ugly but harmless. Fixed when nothing in section 1
 is waiting, or when a consultant names it in an interview.
 
+- [ ] **Three settings that do nothing** — *Language*, *Region* and the *date & time formats*
+  are saved to the account and read by nobody. There is no translation layer in the project at
+  all, so the language can have no effect; the date helpers print "5 Aug" and "Sat 5 Aug" from
+  hard-coded month names, and one screen is pinned to `en-GB`; no formatter looks at 12h/24h.
+  Left as they are for now, deliberately — the consultant interviews may say whether a date
+  format matters to anyone, and the answer decides whether to build it or drop the controls.
+  *Seen:* 2026-09-18.
+
 - [ ] **"Failed to load day" after signing out on purpose** — choosing *Sign out* in the
   expired-session dialog lands on the sign-in page with a red error toast, because the request
   that was waiting for the sign-in is rejected and the screen it belonged to complains. Nobody
@@ -59,6 +67,23 @@ occupying the head. Never a reason to delay anything.
 ---
 
 ## Fixed
+
+- [x] **The settings screen could not load or save** — `GET` and `PATCH /api/auth/me` answered
+  401 to a perfectly good token, so opening Settings showed the load error and Save answered
+  "Failed to save settings". The account's currency, language, region and date/time formats were
+  never stored anywhere but this browser's localStorage: signing in on a second device started
+  from the defaults again. *Cause:* the JWT filter skipped the whole `/api/auth/` prefix, so for
+  those two endpoints the token was never read and the request arrived anonymous — while the
+  security rules let only `login` and `register` through unauthenticated. *Found by:* the
+  walkthrough of the settings link. *Fixed:* 2026-09-18 — only the two doors that hand out a
+  token are exempt; the app also re-reads the account on start, so a currency changed on the
+  laptop reaches the phone.
+
+- [x] **A trip's currency could not be set anywhere** — after the budget started counting in the
+  trip's own currency, nothing in the UI could choose it: the New trip dialog never sent one (so
+  every trip was EUR, whatever the account said) and the Edit drawer had no field for it.
+  *Fixed:* 2026-09-18 — New trip opens with the account's currency and can be changed, and Edit
+  trip can change it afterwards.
 
 - [x] **"1 meal_stop" in the client's own document** — the book's *What is in the plan* page
   named a kind of stop by its database word whenever the stop had no saved place behind it, and

@@ -146,7 +146,14 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { username, baseCurrency, clearAuth, formatDateRange } from '@tripyfull/core';
+import {
+  api,
+  username,
+  baseCurrency,
+  clearAuth,
+  formatDateRange,
+  refreshSettings,
+} from '@tripyfull/core';
 import { useTripStore } from '@/stores/tripStore.js';
 import { TfAvatar, TfIcon, TfPopover, TfToastHost, TfConfirmHost, TfDrawer } from '@tripyfull/ui';
 import TripNav from '@/components/TripNav.vue';
@@ -162,7 +169,11 @@ const lastTripId = ref(null);
 const sidebarTrip = ref(null);
 
 // Ask for a new sign-in the moment the token expires, not on the next request.
-onMounted(watchSessionExpiry);
+onMounted(() => {
+  watchSessionExpiry();
+  // The account's own settings, in case they were changed on another device.
+  refreshSettings(api);
+});
 
 /* Icons-only sidebar, remembered per browser: someone who works in a narrow
    window keeps the room they made. */

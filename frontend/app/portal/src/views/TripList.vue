@@ -8,7 +8,7 @@
         <p>Everything you planned — beautifully in order.</p>
       </div>
       <div class="page-head-actions">
-        <TfButton icon="pi-plus" @click="showDialog = true">New trip</TfButton>
+        <TfButton icon="pi-plus" @click="openNewTrip">New trip</TfButton>
       </div>
     </div>
 
@@ -85,7 +85,7 @@
             : 'No trips with this status.'
         }}
       </p>
-      <TfButton v-if="filterStatus === 'ALL'" icon="pi-plus" @click="showDialog = true"
+      <TfButton v-if="filterStatus === 'ALL'" icon="pi-plus" @click="openNewTrip"
         >New trip</TfButton
       >
     </div>
@@ -102,7 +102,12 @@
           <label>Dates</label>
           <TfDatePicker v-model="dateRange" mode="range" />
         </div>
-        <TfSelect label="Status" v-model="statusLabelModel" :options="statusLabels" />
+        <div class="field-pair">
+          <TfSelect label="Status" v-model="statusLabelModel" :options="statusLabels" />
+          <!-- The trip's money is counted in this; the account's currency is only
+               where it starts. A client billed in dollars gets it here. -->
+          <TfSelect label="Currency" v-model="form.baseCurrency" :options="CURRENCIES" />
+        </div>
         <div
           style="
             display: flex;
@@ -135,6 +140,8 @@ import {
   formatDateShort,
   tripStatusLabel as statusLabel,
   tripStatusTone as statusTone,
+  baseCurrency,
+  CURRENCIES,
 } from '@tripyfull/core';
 import {
   TfBadge,
@@ -156,7 +163,7 @@ const adding = ref(false);
 const showDialog = ref(false);
 const filterStatus = ref('ALL');
 const dateRange = ref(null);
-const form = ref({ title: '', destination: '', status: 'DRAFT' });
+const form = ref({ title: '', destination: '', status: 'DRAFT', baseCurrency: baseCurrency.value });
 
 const filterOptions = [
   { label: 'All', value: 'ALL' },
@@ -242,13 +249,25 @@ const deleteTrip = async (id) => {
 };
 
 const resetForm = () => {
-  form.value = { title: '', destination: '', status: 'DRAFT' };
+  form.value = {
+    title: '',
+    destination: '',
+    status: 'DRAFT',
+    baseCurrency: baseCurrency.value,
+  };
   dateRange.value = null;
 };
 
 // TfModal has no @hide; reset the form when it closes.
 const onDialogToggle = (open) => {
   if (!open) resetForm();
+};
+
+/** Opening takes the account's currency, which may have arrived from the server
+    after this screen was built. */
+const openNewTrip = () => {
+  form.value.baseCurrency = baseCurrency.value;
+  showDialog.value = true;
 };
 
 const formatDate = formatDateShort;

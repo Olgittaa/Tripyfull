@@ -153,6 +153,10 @@ out sideways (the check proves it can fail before it trusts a pass), the day's d
 bottom with the pin count and moves between days, the route map slides up as a sheet and closes
 again, and the trip's sections live behind the hamburger.
 
+`settings.spec.js` covers the one setting that reaches the rest of the app: the account's
+currency is saved and read back, a new trip starts in it and can be sold in another, and
+changing the account later leaves the trips that exist counting in what they were sold in.
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.

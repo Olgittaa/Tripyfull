@@ -24,9 +24,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Only the two doors that hand out a token are exempt. The rest of
+     * {@code /api/auth} — the account and its settings — is as authenticated as
+     * anything else, and skipping the whole prefix left those endpoints
+     * unreachable: the token was never read, so the request arrived anonymous
+     * and was refused.
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().startsWith("/api/auth/");
+        String path = request.getServletPath();
+        return path.equals("/api/auth/login") || path.equals("/api/auth/register");
     }
 
     @Override

@@ -349,6 +349,15 @@
           </small>
         </div>
         <TfSelect label="Status" v-model="editStatusLabel" :options="statusLabels" class="w-full" />
+        <!-- What this trip's money is counted in. Changing it re-reads every
+             figure from the server in the new currency; the prices themselves
+             keep the currency they were booked in. -->
+        <TfSelect
+          label="Currency"
+          v-model="editForm.baseCurrency"
+          :options="CURRENCIES"
+          class="w-full"
+        />
       </form>
       <template #footer>
         <TfButton variant="primary" style="flex: 1" @click="saveEdit" :disabled="saving">
@@ -436,6 +445,7 @@ import {
 } from '@tripyfull/ui';
 import {
   baseCurrency as accountCurrency,
+  CURRENCIES,
   bookingEmoji,
   MODE_LABEL,
   formatDuration as fmtDur,
@@ -698,6 +708,7 @@ const startEdit = () => {
     title: trip.value.title,
     destination: trip.value.destination || '',
     status: trip.value.status,
+    baseCurrency: trip.value.baseCurrency || accountCurrency.value,
   };
   editDateRange.value =
     trip.value.startDate && trip.value.endDate

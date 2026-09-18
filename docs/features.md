@@ -26,9 +26,11 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   including a half-filled form, the page stays where it is, and the requests that failed replay
   themselves after sign-in — what was typed is saved, not retyped. *Sign out* in the dialog
   clears the session and goes to `/auth`.
-- **Settings** (`/settings`): base currency (the one a new trip starts with — each trip then
-  counts in its own, see §9), language, region, date & time preferences. The currency shows in
-  the top bar.
+- **Settings** (`/settings`): base currency — the one a new trip starts with, each trip then
+  counting in its own (see §9). The screen also offers language, region and date & time
+  formats; they are stored on the account and **nothing reads them yet** (see `../BUGS.md`).
+  The currency shows in the top bar, and the account's settings are re-read when the app starts,
+  so a change made on one device reaches the others.
 - **Shell**: top bar (All trips · All places · currency · account), and inside a trip a
   sidebar with the trip's name and its sections — Overview, Itinerary, Map, Trip places,
   Bookings, To-do, Budget. The sidebar collapses to icons (remembered per browser); on a

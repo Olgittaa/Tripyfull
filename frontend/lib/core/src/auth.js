@@ -36,6 +36,22 @@ export function setAuth(token, user, settings) {
   }
 }
 
+/**
+ * Re-reads the account when the app starts with a token already in hand. Without
+ * it the settings are whatever the last sign-in wrote into this browser: changed
+ * on a laptop, they never reach the phone, and a browser that was never signed
+ * in to shows the defaults.
+ */
+export async function refreshSettings(api) {
+  if (!localStorage.getItem('token')) return;
+  try {
+    const { data } = await api.get('/api/auth/me');
+    setAuth(null, data.username, data);
+  } catch {
+    // An expired session is the session layer's business, not ours.
+  }
+}
+
 export function updateSettings(settings) {
   if (settings.baseCurrency) {
     localStorage.setItem('baseCurrency', settings.baseCurrency);
