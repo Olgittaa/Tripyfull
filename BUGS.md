@@ -95,6 +95,14 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **Deleting a place left its drawer open** — *Delete* in a place's drawer removed the place
+  from the library and said "Deleted", but the drawer stayed where it was, still showing the
+  name, the photos and an *Edit* and a *Delete* button for a place that no longer existed; only
+  the close cross got rid of it. Reported from use. *Cause:* the delete handler took the place
+  out of the list and never told the drawer, which shows whatever `viewing` still points at.
+  *Fixed:* 2026-09-18 — when the place being looked at is the one deleted, the drawer closes
+  with it; a test deletes from the drawer and fails if a dialog is left on the screen.
+
 - [x] **A place shared from a phone in Thai came in in Thai** — importing a Google Maps link
   brought the place's name, address and city in the local script: *เป็น น้ำตกวชิรธาร ·
   ตำบลบ้านหลวง · Thailand* for the Wachirathan waterfall, which is what the client's book would

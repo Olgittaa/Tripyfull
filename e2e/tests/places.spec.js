@@ -229,3 +229,30 @@ test('the library screen adds, files and bulk-edits', async ({ page, request }) 
     .poll(async () => (await api.get(`/api/places?tripId=${t.id}`).then((r) => r.json())).length)
     .toBe(3);
 });
+
+test('deleting the place you are looking at closes its drawer', async ({ page, request }) => {
+  const api = await signedIn(request);
+  await place(api, 'Alcázar of Seville');
+  await place(api, 'Cathedral');
+
+  await page.addInitScript(
+    ([token, user]) => {
+      localStorage.setItem('token', token);
+      localStorage.setItem('username', user);
+    },
+    [api.token, api.username],
+  );
+  await page.goto('/places');
+  await page.getByRole('heading', { name: 'Cathedral' }).click();
+
+  const drawer = page.getByRole('dialog').filter({ hasText: 'Cathedral' });
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Delete' }).last().click();
+
+  // The place is gone — and so is the panel that was showing it: a drawer left
+  // open on a deleted place is a screen full of stale words and dead buttons.
+  await expect(page.getByRole('heading', { name: 'Cathedral' })).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Alcázar of Seville' })).toBeVisible();
+});

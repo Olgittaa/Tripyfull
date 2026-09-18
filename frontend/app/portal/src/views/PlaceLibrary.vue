@@ -1679,6 +1679,11 @@ const confirmDelete = (p) => {
     try {
       await api.delete(`/api/places/${p.id}`);
       places.value = places.value.filter((x) => x.id !== p.id);
+      // The drawer was showing this place; there is nothing left for it to show.
+      if (viewing.value?.id === p.id) {
+        showDialog.value = false;
+        viewing.value = null;
+      }
       toast.success('Deleted');
     } catch {
       toast.danger('Error', 'Failed to delete place');
