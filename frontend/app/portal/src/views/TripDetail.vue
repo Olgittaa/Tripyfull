@@ -763,7 +763,7 @@ const printTrip = async () => {
     }
     const doc = buildTripDocument(res.data, {
       apiBase,
-      currency: accountCurrency.value,
+      currency: currency.value,
       liveUrls,
       mapImage: map?.dataUrl ?? null,
     });

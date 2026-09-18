@@ -154,15 +154,15 @@
            the estimate comes to. Live rate — an estimate is not a receipt. -->
         <div v-if="showCostRate" class="rate-box">
           <div style="flex: 1">
-            <div class="rate-label">1 {{ form.costCurrency }} = ? {{ accountCurrency }}</div>
+            <div class="rate-label">1 {{ form.costCurrency }} = ? {{ tripCurrency }}</div>
             <div class="rate-value">
               {{ costRate ? Number(costRate).toFixed(4) : '—' }}
-              <span class="rate-unit">{{ accountCurrency }}</span>
+              <span class="rate-unit">{{ tripCurrency }}</span>
             </div>
             <div v-if="form.costEstimate && costRate" class="hint">
               {{ Number(form.costEstimate).toFixed(2) }} {{ form.costCurrency }} ≈
               {{ (Number(form.costEstimate) * Number(costRate)).toFixed(2) }}
-              {{ accountCurrency }}
+              {{ tripCurrency }}
             </div>
           </div>
           <TfButton
@@ -282,8 +282,13 @@ const props = defineProps({
   places: { type: Array, default: () => [] },
   /** activity id -> a start time worked out from the previous stop, shown as a placeholder. */
   derivedTimes: { type: Object, default: () => ({}) },
+  /** The trip's currency: what a cost in another one is converted into. */
+  currency: { type: String, default: '' },
 });
 const emit = defineEmits(['saved', 'deleted', 'place-added']);
+
+/** The trip's currency, falling back to the account's for a trip without one. */
+const tripCurrency = computed(() => props.currency || accountCurrency.value);
 const router = useRouter();
 const currencyOptions = CURRENCIES;
 
@@ -329,14 +334,14 @@ watch(parsedCoords, (c) => {
 const costRate = ref(null);
 const fetchingCostRate = ref(false);
 const showCostRate = computed(
-  () => !!form.value.costCurrency && form.value.costCurrency !== accountCurrency.value,
+  () => !!form.value.costCurrency && form.value.costCurrency !== tripCurrency.value,
 );
 const fetchCostRate = async () => {
   if (!showCostRate.value) return;
   fetchingCostRate.value = true;
   try {
     const res = await api.get('/api/exchange-rate', {
-      params: { from: form.value.costCurrency, to: accountCurrency.value },
+      params: { from: form.value.costCurrency, to: tripCurrency.value },
     });
     costRate.value = res.data.rate;
   } catch {
@@ -350,7 +355,7 @@ watch(
   () => form.value.costCurrency,
   (cur) => {
     costRate.value = null;
-    if (cur && cur !== accountCurrency.value && open.value) fetchCostRate();
+    if (cur && cur !== tripCurrency.value && open.value) fetchCostRate();
   },
 );
 // The form is filled before the drawer opens, so an existing foreign-currency
@@ -503,7 +508,7 @@ const RATING_HINTS = {
 };
 
 const reset = (values) => {
-  form.value = { ...emptyForm, costCurrency: accountCurrency.value, ...values };
+  form.value = { ...emptyForm, costCurrency: tripCurrency.value, ...values };
   attempted.value = false;
   coordsText.value = '';
   pickedVenue.value = null;
@@ -542,7 +547,7 @@ const openEdit = (a) => {
     costEstimate: a.costEstimate,
     notes: a.notes || '',
     placeId: a.placeId || null,
-    costCurrency: a.costCurrency || accountCurrency.value,
+    costCurrency: a.costCurrency || tripCurrency.value,
     needsBooking: !!a.needsBooking,
     latitude: a.latitude ?? null,
     longitude: a.longitude ?? null,
@@ -568,7 +573,7 @@ const saveActivity = async () => {
       startTime: form.value.startTime || null,
       endTime: form.value.endTime || null,
       costEstimate: form.value.costEstimate || null,
-      costCurrency: form.value.costCurrency || accountCurrency.value,
+      costCurrency: form.value.costCurrency || tripCurrency.value,
       placeId: form.value.placeId || null,
       clearPlace: !form.value.placeId,
       latitude: form.value.placeId ? null : form.value.latitude,

@@ -198,3 +198,60 @@ test('a stay outside the trip is refused with the dates in the message', async (
   });
   expect(lastNight.status()).toBe(201);
 });
+
+test('a trip is counted in its own currency, whatever the account uses', async ({
+  page,
+  request,
+}) => {
+  const api = await signedIn(request);
+  // The account is set to pounds; this client is billed in dollars.
+  await api.patch('/api/auth/me', { baseCurrency: 'GBP' });
+  const trip = await api
+    .post('/api/trips', {
+      title: `Sold in dollars ${stamp()}`,
+      startDate: '2027-09-10',
+      endDate: '2027-09-12',
+      baseCurrency: 'USD',
+      status: 'PLANNED',
+    })
+    .then((r) => r.json());
+  await api.post(`/api/trips/${trip.id}/bookings`, {
+    name: 'Hotel Alfonso XIII',
+    category: 'ACCOMMODATION',
+    accommodationCity: 'Seville',
+    checkIn: '2027-09-10',
+    checkOut: '2027-09-12',
+    fullPrice: 500,
+    priceCurrency: 'USD',
+    fullPriceCurrency: 'USD',
+  });
+
+  const b = await budget(api, trip.id);
+  expect(b.baseCurrency).toBe('USD');
+  expect(Number(b.bookingsTotal)).toBe(500);
+
+  // The screens say so too: the budget page and the day both count in dollars.
+  await page.addInitScript(
+    ([token, user]) => {
+      localStorage.setItem('token', token);
+      localStorage.setItem('username', user);
+    },
+    [api.token, api.username],
+  );
+  await page.goto(`/trips/${trip.id}/budget`);
+  await expect(page.getByText('500.00').first()).toBeVisible();
+  await expect(page.locator('.budget-hero')).toContainText('USD');
+  await expect(page.locator('.budget-hero')).not.toContainText('GBP');
+
+  // And a second trip on the same account can be sold in euros.
+  const other = await api
+    .post('/api/trips', {
+      title: `Sold in euros ${stamp()}`,
+      startDate: '2027-10-01',
+      endDate: '2027-10-03',
+      baseCurrency: 'EUR',
+      status: 'PLANNED',
+    })
+    .then((r) => r.json());
+  expect((await budget(api, other.id)).baseCurrency).toBe('EUR');
+});

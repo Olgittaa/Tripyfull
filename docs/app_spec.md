@@ -514,6 +514,10 @@ model. The code has since made different — usually richer — choices. Resolut
 | G-12 | Duplicate places | Warn, allow anyway (UC-03 A3) | Geocoded find-or-create dedupes by `osmId`; repeat visits = two activities on one place | **[code wins]** — cleaner than the draft |
 | G-13 | UI kit | — (not covered by the draft) | Portal mixes PrimeVue + `Tf*` mid-migration | **[build]** — finish the migration; every overlay from §2 has a `Tf*` counterpart planned |
 
+**G-9 is decided** (2026-09-18): the **trip's** currency is the base, the account's is the
+default a new trip starts from; the server converts and the client prints what it is given.
+See `features.md` §9.
+
 **Suggested build order** (impact ÷ effort): G-8 export (differentiator #2, mostly frontend) →
 G-6 budget cap (completes differentiator #1 story) → G-7 overdue flag → G-10 trip sort →
 G-13 kit migration (ongoing). Done: G-4 (drag-and-drop + move between days), G-9 currency conversion, G-11 (auto day generation, destructive path closed).

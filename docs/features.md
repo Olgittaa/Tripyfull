@@ -26,8 +26,9 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   including a half-filled form, the page stays where it is, and the requests that failed replay
   themselves after sign-in — what was typed is saved, not retyped. *Sign out* in the dialog
   clears the session and goes to `/auth`.
-- **Settings** (`/settings`): base currency (everything in the budget is converted into it),
-  language, region, date & time preferences. The currency shows in the top bar.
+- **Settings** (`/settings`): base currency (the one a new trip starts with — each trip then
+  counts in its own, see §9), language, region, date & time preferences. The currency shows in
+  the top bar.
 - **Shell**: top bar (All trips · All places · currency · account), and inside a trip a
   sidebar with the trip's name and its sections — Overview, Itinerary, Map, Trip places,
   Bookings, To-do, Budget. The sidebar collapses to icons (remembered per browser); on a
@@ -216,8 +217,11 @@ by nobody else — there is no sharing and no public place.
 
 ## 9. Budget (`/trips/:tripId/budget`)
 
-All in the account's base currency, converted at live rates (missing rates are counted and
-shown).
+**All in the trip's own currency**, converted at live rates (missing rates are counted and
+shown). A consultant bills one client in euros and the next in pounds, so the money of a trip
+reads the way that trip is sold; the currency in **Settings** is the default a new trip starts
+from, and the fallback for a trip that has none. Nothing is converted in the browser: the
+server answers in the trip's currency and the screens print what it says.
 
 - **Hero**: the planned total — bookings plus the day plans' estimates — with how much of the
   bookings is paid and how much is still to pay.

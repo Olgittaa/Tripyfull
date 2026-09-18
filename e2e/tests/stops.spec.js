@@ -152,9 +152,11 @@ test('drag renumbers the pins, and a price in another currency is converted', as
   await expect(pinNumber(rows.first())).toHaveText('1');
   await expect(pinNumber(rows.nth(1))).toHaveText('2');
 
-  // 400 baht means nothing to a consultant billing in euros.
+  // 400 baht means nothing to a consultant billing in euros. The first lookup of
+  // a pair goes to the rate service over the network (it is cached afterwards),
+  // so this one is given room to arrive.
   await expect(rows.nth(1)).toContainText('400 THB');
-  await expect(rows.nth(1)).toContainText(/≈\s*\d+\.\d\d EUR/);
+  await expect(rows.nth(1)).toContainText(/≈\s*\d+\.\d\d EUR/, { timeout: 30_000 });
 
   // Dragging the second stop to the front makes it the first pin on the map.
   await rows.nth(1).dragTo(rows.first());

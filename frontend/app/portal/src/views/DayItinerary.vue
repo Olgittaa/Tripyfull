@@ -199,6 +199,7 @@
 
     <StopDrawer
       ref="stopDrawer"
+      :currency="currency"
       :trip-id="tripId"
       :day-id="dayId"
       :day="day"
@@ -275,7 +276,10 @@ const allDays = ref([]);
 const activities = ref([]);
 const bookings = ref([]);
 const loading = ref(false);
-const currency = accountCurrency;
+// The money on a trip is counted in the trip's own currency — the account's is
+// only the default a new trip starts from (see docs/features.md §9).
+const tripCurrency = ref(null);
+const currency = computed(() => tripCurrency.value || accountCurrency.value);
 
 // Library places for linking activities
 const placesLib = ref([]);
@@ -664,6 +668,7 @@ onMounted(async () => {
       api.get(`/api/days/${dayId.value}/itinerary`),
       api.get(`/api/trips/${tripId}/bookings`),
     ]);
+    tripCurrency.value = tripRes.data.baseCurrency || null;
     allDays.value = daysRes.data;
     day.value = daysRes.data.find((d) => d.id === dayId.value);
     activities.value = activitiesRes.data;

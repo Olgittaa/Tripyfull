@@ -6,6 +6,7 @@ import com.tripyfull.model.Booking;
 import com.tripyfull.model.BookingCategory;
 import com.tripyfull.model.Day;
 import com.tripyfull.model.Payment;
+import com.tripyfull.model.Trip;
 import com.tripyfull.model.User;
 import com.tripyfull.repository.BookingRepository;
 import com.tripyfull.repository.DayRepository;
@@ -48,8 +49,15 @@ public class BudgetService {
 
     public BudgetResponse getBudget(UUID tripId, String username) {
         User user = guard.requireUser(username);
-        guard.requireTrip(tripId, user);
-        String base = user.getBaseCurrency();
+        Trip trip = guard.requireTrip(tripId, user);
+        // The trip's own currency is the one its money is counted in: a consultant
+        // bills one client in euros and the next in pounds, and the budget has to
+        // read the way that trip is sold. The account's currency is only the
+        // default a new trip starts from, and the fallback for trips made before
+        // this was decided.
+        String base = trip.getBaseCurrency() != null && !trip.getBaseCurrency().isBlank()
+                ? trip.getBaseCurrency()
+                : user.getBaseCurrency();
 
         List<Day> days = dayRepository.findByTripIdOrderByDateAsc(tripId);
         List<Booking> bookings = bookingRepository.findByTripIdOrderByNameAsc(tripId);

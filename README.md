@@ -84,7 +84,7 @@ Personas and early flows are in [`docs/`](docs/) as well.
 ## Tests and QA
 
 ```bash
-cd backend && ./mvnw test          # unit tests: geometry, place types, the travel-leg rules
+cd backend && ./mvnw test          # unit tests: geometry, place types, travel legs, the budget
 cd frontend && npm test            # Vitest over lib/core and app/portal/src/plan
 cd e2e && npm test                 # the golden path, end to end in a browser
 python3 scripts/seed-qa.py         # a throwaway consultant with one client trip, on a running backend

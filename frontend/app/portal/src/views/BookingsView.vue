@@ -108,7 +108,7 @@
                       </div>
                       <div v-if="nextPayment(b)" class="booking-card-next-pay">
                         Next payment {{ nextPayment(b).amount }}
-                        {{ b.priceCurrency || accountCurrency }} ·
+                        {{ b.priceCurrency || currency }} ·
                         {{ formatDateShort(nextPayment(b).dueDate) }}
                       </div>
                     </div>
@@ -434,7 +434,7 @@
                       >{{ formNights }} night{{ formNights === 1 ? '' : 's'
                       }}<template v-if="formPricePerNight">
                         · {{ formPricePerNight.toFixed(2) }}
-                        {{ form.priceCurrency || accountCurrency }}/night</template
+                        {{ form.priceCurrency || currency }}/night</template
                       ></template
                     >
                     <template v-if="formNights && tripStartDate"> · </template>
@@ -529,16 +529,16 @@
                   <div v-if="showExchangeRate" class="rate-box">
                     <div style="flex: 1">
                       <div class="rate-label">
-                        1 {{ form.priceCurrency }} = ? {{ accountCurrency }}
+                        1 {{ form.priceCurrency }} = ? {{ currency }}
                       </div>
                       <div class="rate-value">
                         {{ form.exchangeRate ? Number(form.exchangeRate).toFixed(4) : '—' }}
-                        <span class="rate-unit">{{ accountCurrency }}</span>
+                        <span class="rate-unit">{{ currency }}</span>
                       </div>
                       <div v-if="form.fullPrice && form.exchangeRate" class="hint">
                         {{ Number(form.fullPrice).toFixed(2) }} {{ form.priceCurrency }} ≈
                         {{ (Number(form.fullPrice) * Number(form.exchangeRate)).toFixed(2) }}
-                        {{ accountCurrency }}
+                        {{ currency }}
                       </div>
                     </div>
                     <TfButton
@@ -874,6 +874,10 @@ const route = useRoute();
 const tripId = route.params.tripId;
 const tripTitle = ref('');
 const tripStartDate = ref(null);
+// A booking's stored rate is what the budget converts with, so it must be a rate
+// into the trip's currency — not into whatever the account happens to use.
+const tripCurrency = ref(null);
+const currency = computed(() => tripCurrency.value || accountCurrency.value);
 const tripEndDate = ref(null);
 const bookings = ref([]);
 const loading = ref(false);
@@ -1029,7 +1033,7 @@ const fetchingRate = ref(false);
 const refreshingRates = ref(false);
 
 const showExchangeRate = computed(
-  () => form.value.priceCurrency && form.value.priceCurrency !== accountCurrency.value,
+  () => form.value.priceCurrency && form.value.priceCurrency !== currency.value,
 );
 
 // Live derived values shown while editing (server recomputes them authoritatively).
@@ -1056,11 +1060,11 @@ const formDurationMin = computed(() => {
 });
 
 const fetchRate = async () => {
-  if (!form.value.priceCurrency || form.value.priceCurrency === accountCurrency.value) return;
+  if (!form.value.priceCurrency || form.value.priceCurrency === currency.value) return;
   fetchingRate.value = true;
   try {
     const res = await api.get('/api/exchange-rate', {
-      params: { from: form.value.priceCurrency, to: accountCurrency.value },
+      params: { from: form.value.priceCurrency, to: currency.value },
     });
     form.value.exchangeRate = res.data.rate;
   } catch {
@@ -1077,7 +1081,7 @@ const placeLabel = (city, name, iata) => {
 
 const onCurrencyChange = (val) => {
   form.value.priceCurrency = val;
-  if (val && val !== accountCurrency.value) {
+  if (val && val !== currency.value) {
     form.value.exchangeRate = null;
     fetchRate();
   } else {
@@ -1144,15 +1148,10 @@ const bookingIconTitle = (b) =>
     : valueToLabel(categoryMap, b.category);
 
 const dualPrice = (b) =>
-  formatDualPrice(
-    b.fullPrice,
-    b.priceCurrency || accountCurrency.value,
-    accountCurrency.value,
-    b.exchangeRate,
-  );
+  formatDualPrice(b.fullPrice, b.priceCurrency || currency.value, currency.value, b.exchangeRate);
 
 const bookingCurrency = computed(
-  () => editingBooking.value?.priceCurrency || form.value.priceCurrency || accountCurrency.value,
+  () => editingBooking.value?.priceCurrency || form.value.priceCurrency || currency.value,
 );
 
 const paymentsTotal = computed(() =>
@@ -1198,14 +1197,9 @@ const CAT_META = [
 
 /** Prices live in their own currencies; totals only make sense in one. */
 const inBase = (b, amount) =>
-  toBaseCurrency(
-    amount,
-    b.priceCurrency || accountCurrency.value,
-    accountCurrency.value,
-    b.exchangeRate,
-  );
+  toBaseCurrency(amount, b.priceCurrency || currency.value, currency.value, b.exchangeRate);
 
-const money = (v) => `${(Number(v) || 0).toFixed(2)} ${accountCurrency.value}`;
+const money = (v) => `${(Number(v) || 0).toFixed(2)} ${currency.value}`;
 
 const stats = computed(() => {
   const sums = Object.fromEntries(CAT_META.map((c) => [c.cat, { n: 0, sum: 0 }]));
@@ -1258,7 +1252,7 @@ const upcomingPayments = computed(() =>
         .map((p) => ({
           ...p,
           bookingName: b.name,
-          currency: b.priceCurrency || accountCurrency.value,
+          currency: b.priceCurrency || currency.value,
         })),
     )
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
@@ -1332,7 +1326,7 @@ const bookingMeta = (b) => {
     if (b.nights) parts.push(`${b.nights} night${b.nights === 1 ? '' : 's'}`);
     if (b.pricePerNight)
       parts.push(
-        `${Number(b.pricePerNight).toFixed(2)} ${b.priceCurrency || accountCurrency.value}/night`,
+        `${Number(b.pricePerNight).toFixed(2)} ${b.priceCurrency || currency.value}/night`,
       );
     if (b.roomType) parts.push(b.roomType);
     if (b.guests) parts.push(`${b.guests} guest${b.guests === 1 ? '' : 's'}`);
@@ -1519,7 +1513,7 @@ const openAddDialog = () => {
   editingBooking.value = null;
   drawerMode.value = 'edit';
   viewing.value = null;
-  form.value = { ...emptyForm, priceCurrency: accountCurrency.value };
+  form.value = { ...emptyForm, priceCurrency: currency.value };
   stayDateRange.value = null;
   resetLocationState();
   showDrawer.value = true;
@@ -1544,7 +1538,7 @@ const loadForm = (b) => {
     confirmationNumber: b.confirmationNumber || '',
     bookingUrl: b.bookingUrl || '',
     fullPrice: b.fullPrice,
-    priceCurrency: b.priceCurrency || accountCurrency.value,
+    priceCurrency: b.priceCurrency || currency.value,
     exchangeRate: b.exchangeRate,
     notes: b.notes || '',
     flightNumber: b.flightNumber || '',
@@ -1607,7 +1601,7 @@ const saveBooking = async () => {
   try {
     const payload = {
       ...form.value,
-      priceCurrency: form.value.priceCurrency || accountCurrency.value,
+      priceCurrency: form.value.priceCurrency || currency.value,
       exchangeRate: form.value.exchangeRate || null,
       // PATCH keeps null fields; explicitly drop a stale rate (e.g. after a currency
       // change) — the server auto-fills a fresh one for the current currency.
@@ -1790,7 +1784,7 @@ const removeAttachment = async (a) => {
 
 const refreshAllRates = async () => {
   const needsUpdate = bookings.value.filter(
-    (b) => b.priceCurrency && b.priceCurrency !== accountCurrency.value,
+    (b) => b.priceCurrency && b.priceCurrency !== currency.value,
   );
   if (!needsUpdate.length) {
     toast.info('All bookings are in your base currency');
@@ -1801,7 +1795,7 @@ const refreshAllRates = async () => {
   for (const b of needsUpdate) {
     try {
       const rateRes = await api.get('/api/exchange-rate', {
-        params: { from: b.priceCurrency, to: accountCurrency.value },
+        params: { from: b.priceCurrency, to: currency.value },
       });
       await api.patch(`/api/bookings/${b.id}`, { exchangeRate: rateRes.data.rate });
       updated++;
@@ -1843,6 +1837,7 @@ onMounted(async () => {
       loadPlanCount(),
     ]);
     tripTitle.value = tripRes.data.title;
+    tripCurrency.value = tripRes.data.baseCurrency || null;
     tripStartDate.value = tripRes.data.startDate;
     tripEndDate.value = tripRes.data.endDate;
     bookings.value = bookingsRes.data;
