@@ -66,19 +66,29 @@ const BOOKING_MODE = {
   METRO: 'Metro',
   WALK: 'Walk',
 };
-const PLACE_TYPE_WORD = {
-  SIGHTSEEING: 'sights',
-  BEACH: 'beaches',
-  NATURE: 'nature spots',
-  RESTAURANT: 'restaurants',
-  MUSEUM: 'museums',
-  VIEWPOINT: 'viewpoints',
-  PORT: 'ports',
-  AIRPORT: 'airports',
-  NEIGHBORHOOD: 'neighbourhoods',
-  PARK: 'parks',
-  SHOP: 'shops & markets',
-  OTHER: 'other places',
+/**
+ * What a stop is called in the client's own language, one and many. A stop takes
+ * its kind from the place behind it (PlaceType) or, when it has none, from the
+ * stop itself (ActivityType) — both sets are named here, because a document that
+ * says "1 meal_stop" is a document nobody hands to a client.
+ */
+const TYPE_WORD = {
+  SIGHTSEEING: ['sight', 'sights'],
+  BEACH: ['beach', 'beaches'],
+  NATURE: ['nature spot', 'nature spots'],
+  RESTAURANT: ['restaurant', 'restaurants'],
+  MEAL_STOP: ['meal', 'meals'],
+  MUSEUM: ['museum', 'museums'],
+  VIEWPOINT: ['viewpoint', 'viewpoints'],
+  PORT: ['port', 'ports'],
+  AIRPORT: ['airport', 'airports'],
+  NEIGHBORHOOD: ['neighbourhood', 'neighbourhoods'],
+  PARK: ['park', 'parks'],
+  SHOP: ['shop or market', 'shops & markets'],
+  SHOPPING: ['shop or market', 'shops & markets'],
+  TRANSPORT: ['journey', 'journeys'],
+  ACCOMMODATION: ['stay', 'stays'],
+  OTHER: ['other place', 'other places'],
 };
 
 /** Which day the booking is on, for "book ahead" lines. */
@@ -224,10 +234,13 @@ export function buildTripDocument(
     <section class="page">
       <h2>What is in the plan</h2>
       <ul class="counts">
-        <li><b>${stops.length}</b> stops over ${plural(total, 'day', 'days')}</li>
+        <li><b>${stops.length}</b> ${stops.length === 1 ? 'stop' : 'stops'} over ${plural(total, 'day', 'days')}</li>
         ${[...byType.entries()]
           .sort((a, b) => b[1] - a[1])
-          .map(([t, n]) => `<li><b>${n}</b> ${esc(PLACE_TYPE_WORD[t] || t.toLowerCase())}</li>`)
+          .map(([t, n]) => {
+            const [one, many] = TYPE_WORD[t] || [t.toLowerCase(), t.toLowerCase()];
+            return `<li><b>${n}</b> ${esc(n === 1 ? one : many)}</li>`;
+          })
           .join('')}
       </ul>
     </section>`

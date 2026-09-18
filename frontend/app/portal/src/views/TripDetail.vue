@@ -24,11 +24,21 @@
             <span class="dash-countdown-num">{{ countdown.num }}</span>
             <span class="dash-countdown-text">{{ countdown.text }}</span>
           </div>
-          <TfButton variant="secondary" title="Edit the trip" @click="startEdit">
+          <TfButton
+            variant="secondary"
+            aria-label="Edit the trip"
+            title="Edit the trip"
+            @click="startEdit"
+          >
             <i class="pi pi-pencil" style="font-size: 14px"></i>
             <span class="phone-hide">Edit</span>
           </TfButton>
-          <TfButton variant="ghost" title="Printable route book" @click="printTrip">
+          <TfButton
+            variant="ghost"
+            aria-label="Print the route book"
+            title="Printable route book"
+            @click="printTrip"
+          >
             <i class="pi pi-print" style="font-size: 14px"></i>
             <span class="phone-hide">Print</span>
           </TfButton>

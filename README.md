@@ -132,6 +132,13 @@ to more than the price (adding or raising one), ticking one paid and un-ticking 
 in full" means to the budget, and the money owed with no date on it, which is listed apart
 rather than quietly dropped. It also pins the stay dates against the trip's.
 
+`print-book.spec.js` is the one spec that runs in **every engine** — Chromium, Firefox, WebKit
+and a phone — because the book is the only thing that leaves the app and lands on someone
+else's screen or printer. It covers the awkward trips: no photos (the cover still stands), no
+pins (no map, no gap, no broken image), twelve days each on its own page, a day long enough to
+overrun a page (no stop card may be split), and a hotel wifi that drops every map tile. In
+Chromium it also prints the real PDF and attaches it to the run.
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.

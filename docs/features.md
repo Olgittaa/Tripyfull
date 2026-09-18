@@ -261,7 +261,9 @@ survive Word too.
   stops (time, name, address, photos, description, notes, cost) and the way to the next
   stop with its mode and time ("→ Wat Rong Khun by car · 25 min · RTC Bus" — the mode is the
   one the consultant picked, or the one the server used when nobody picked); **Booked & to
-  book ahead**; **Still to do**; a legend. Ratings are deliberately not printed.
+  book ahead**; **Still to do**; a legend. Ratings are deliberately not printed. Kinds of stop
+  are counted in words a client reads ("2 sights · 1 meal"), never in the names the database
+  uses.
 - A **reserve day** prints as its own page, headed *Reserve day N*, with the line "Not on a
   date — ideas to swap in if the weather turns or a day frees up" under the city. Its stops are
   offers, not an order: no running numbers and no way-to-the-next-stop lines, each with its

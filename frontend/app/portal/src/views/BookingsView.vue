@@ -34,6 +34,7 @@
         <TfButton
           class="phone-icon-btn"
           variant="secondary"
+          aria-label="Update the exchange rates"
           @click="refreshAllRates"
           :disabled="refreshingRates"
         >

@@ -55,6 +55,19 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **"1 meal_stop" in the client's own document** — the book's *What is in the plan* page
+  named a kind of stop by its database word whenever the stop had no saved place behind it, and
+  counted in plurals regardless ("1 sights"). *Found by:* reading a printed PDF of the seeded
+  trip. *Fixed:* 2026-09-18 — every kind of stop, from either list, has a word for one and a
+  word for many, and the test refuses a document containing an underscore anywhere.
+
+- [x] **Nameless buttons on a phone** — the head's *Edit* and *Print*, the library's *Find &
+  import* and the bookings' *Update rates* keep only their icon on a narrow screen: their label
+  is a `<span class="phone-hide">`, which is `display: none` there, so the accessible name was
+  empty. A screen reader on a phone announced "button". *Found by:* the print book's phone run,
+  which could not find the Print button at all. *Fixed:* 2026-09-18 — each carries an
+  `aria-label` that says what it does, whatever the width.
+
 - [x] **A cancelled booking left its stops on the itinerary** — deleting a hotel, a flight or an
   activity removed the booking, its instalments and its files, but the stops it had written into
   the days stayed: "Check in · Hotel Alfonso XIII" still on day 1, still marked *Booked*, still

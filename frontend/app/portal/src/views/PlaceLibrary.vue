@@ -16,6 +16,7 @@
               class="phone-icon-btn"
               icon="pi-search"
               variant="secondary"
+              aria-label="Find &amp; import a place"
               @click="showFindDialog = true"
               ><span class="phone-hide">Find &amp; import</span></TfButton
             >

@@ -27,7 +27,27 @@ export default defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 15_000,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // The route book is the one thing that leaves the app and lands on someone
+    // else's screen or printer, so it is the one thing checked in every engine —
+    // and on a phone, where a client reads it more often than on a laptop.
+    {
+      name: 'firefox · the book',
+      testMatch: /print-book\.spec\.js/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit · the book',
+      testMatch: /print-book\.spec\.js/,
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'phone · the book',
+      testMatch: /print-book\.spec\.js/,
+      use: { ...devices['iPhone 14'] },
+    },
+  ],
   webServer: [
     {
       command: 'node ../scripts/dev-backend.mjs',
