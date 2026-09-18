@@ -264,6 +264,17 @@ and only legs whose order, pin, mode or time moved are routed again. Reading the
 refreshes every day first, so the overview's "on the move" is right even for a day never
 opened. A day nobody touched costs nothing to open.
 
+**What it costs.** Re-routing is the expensive part, so a leg is only asked for again when
+what it was computed for changed: a day read twice routes nothing the second time, dragging one
+stop to the front of a ten-stop day asks for one leg (the new first hop), and changing a stop's
+mode asks for that leg alone. A stop with no pin is stepped over — the leg spans it to the next
+stop that has one, and the unpinned stop carries no leg of its own, so no row promises a time
+nobody can give.
+
+**Without a Google key** the free stack answers the same shapes: OSRM routes walking and
+driving for real, and a taxi, bus or train leg is scaled from the driving route and marked as an
+estimate ("~"). The route book prints its travel times either way.
+
 ## 13. API map
 
 | Area | Endpoints |

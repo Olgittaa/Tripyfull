@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -128,5 +129,122 @@ class TravelLegServiceTest {
         assertThat(local.toLocalTime()).isEqualTo(LocalTime.of(9, 0));
         assertThat(local.getDayOfWeek()).isEqualTo(DayOfWeek.MONDAY);
         assertThat(local.toLocalDate()).isAfter(LocalDate.now());
+    }
+
+    /* ---- What a day costs the router ----
+       A leg is kept on the stop it departs from, together with a key naming what
+       it was computed for. Re-routing is the expensive part — a real request to
+       Google or OSRM — so these say, in calls, what a day is allowed to cost. */
+
+    /** A router that answers instantly and remembers what it was asked. */
+    private static final class CountingRouter {
+        final RoutingService service = mock(RoutingService.class);
+        final List<String> asked = new ArrayList<>();
+
+        CountingRouter() {
+            when(service.route(any(), anyString(), any())).thenAnswer(call -> {
+                List<double[]> points = call.getArgument(0);
+                asked.add(call.getArgument(1) + " " + fmt(points.get(0)) + "->" + fmt(points.get(1)));
+                return new RoutingService.RouteResult(call.getArgument(1), 600, 4000, List.of(), List.of());
+            });
+        }
+
+        private static String fmt(double[] p) {
+            return String.format("%.3f,%.3f", p[0], p[1]);
+        }
+    }
+
+    /** A day of pinned stops, a hundred metres apart, in the order given. */
+    private static List<Activity> pinnedDay(int count) {
+        Day day = new Day();
+        day.setDate(LocalDate.of(2027, 4, 5));
+        List<Activity> stops = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Activity a = new Activity();
+            a.setDay(day);
+            a.setName("Stop " + (i + 1));
+            a.setType(ActivityType.SIGHTSEEING);
+            a.setLatitude(18.78 + i * 0.01);
+            a.setLongitude(98.99 + i * 0.01);
+            a.setTravelModeToNext("foot"); // a mode the user picked, so the day needs no car lookup
+            withId(a);
+            stops.add(a);
+        }
+        return stops;
+    }
+
+    private static TravelLegService serviceWith(CountingRouter router) {
+        return new TravelLegService(router.service, mock(ActivityRepository.class), mock(BookingRepository.class));
+    }
+
+    @Test
+    void adayIsRoutedOnceAndThenLeftAlone() {
+        CountingRouter router = new CountingRouter();
+        TravelLegService service = serviceWith(router);
+        List<Activity> day = pinnedDay(5);
+
+        service.refresh(day);
+        assertThat(router.asked).hasSize(4); // one per pair, the last stop leads nowhere
+
+        router.asked.clear();
+        service.refresh(day);
+        assertThat(router.asked).isEmpty(); // nothing moved, so nothing is asked again
+    }
+
+    @Test
+    void movingOneStopReRoutesOnlyWhatMoved() {
+        CountingRouter router = new CountingRouter();
+        TravelLegService service = serviceWith(router);
+        List<Activity> day = pinnedDay(10);
+        service.refresh(day);
+        router.asked.clear();
+
+        // The last stop is dragged to the front: the only new way to travel is
+        // from it to what used to be first. The eight legs in the middle are
+        // between the same two stops as before and must not be asked again.
+        List<Activity> reordered = new ArrayList<>();
+        reordered.add(day.get(9));
+        reordered.addAll(day.subList(0, 9));
+        service.refresh(reordered);
+
+        assertThat(router.asked).hasSize(1);
+        assertThat(router.asked.get(0)).contains("18.870,99.080->18.780,98.990");
+    }
+
+    @Test
+    void changingOneStopsModeReRoutesThatLegAlone() {
+        CountingRouter router = new CountingRouter();
+        TravelLegService service = serviceWith(router);
+        List<Activity> day = pinnedDay(4);
+        service.refresh(day);
+        router.asked.clear();
+
+        day.get(1).setTravelModeToNext("taxi");
+        service.refresh(day);
+
+        assertThat(router.asked).hasSize(1);
+        assertThat(router.asked.get(0)).startsWith("taxi ");
+    }
+
+    @Test
+    void aStopWithoutAPinIsSteppedOverRatherThanGuessedAt() {
+        CountingRouter router = new CountingRouter();
+        TravelLegService service = serviceWith(router);
+        List<Activity> day = pinnedDay(3);
+        Activity unpinned = new Activity();
+        unpinned.setDay(day.get(0).getDay());
+        unpinned.setName("Lunch somewhere in town");
+        unpinned.setType(ActivityType.MEAL_STOP);
+        withId(unpinned);
+        day.add(1, unpinned);
+
+        service.refresh(day);
+
+        // Two legs: stop 1 to stop 2 over the unpinned one, and stop 2 to stop 3.
+        assertThat(router.asked).hasSize(2);
+        // The stop nobody could place on the map carries no leg of its own — the
+        // row shows the stop, not an empty promise of a time.
+        assertThat(unpinned.getTravelKey()).isNull();
+        assertThat(unpinned.getTravelSeconds()).isNull();
     }
 }

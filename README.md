@@ -84,7 +84,7 @@ Personas and early flows are in [`docs/`](docs/) as well.
 ## Tests and QA
 
 ```bash
-cd backend && ./mvnw test          # unit tests: geometry, place types, travel-leg rules
+cd backend && ./mvnw test          # unit tests: geometry, place types, the travel-leg rules
 cd frontend && npm test            # Vitest over lib/core and app/portal/src/plan
 cd e2e && npm test                 # the golden path, end to end in a browser
 python3 scripts/seed-qa.py         # a throwaway consultant with one client trip, on a running backend
@@ -112,6 +112,10 @@ preview that asks before all this has to say what will really happen.
 end of it and leaves nothing behind, a stop cannot be moved into a different trip, deleting one
 leaves the order of the rest alone, dragging renumbers the pins on the map, and a price in
 another currency is shown converted.
+
+Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
+work against the same database, and racing them makes the browser tests fail for no reason of
+their own.
 
 They start what they need: `npm test` inside `e2e/` brings up Postgres, the backend and the
 portal when they are not already running, and reuses them when they are. The first run needs
