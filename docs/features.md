@@ -186,8 +186,11 @@ by nobody else — there is no sharing and no public place.
   - accommodation: city, address, check-in → check-out with times, room type, guests;
   - activity: where and when, tied to a day.
 - **Payments**: "paid in full" switch, or an instalment schedule (amount, due date, paid /
-  unpaid with the paid date); Σ instalments ≤ full price. **Attachments** (tickets,
-  vouchers) upload, download, delete — 10 MB each, stored per booking.
+  unpaid with the paid date, which is the day it was ticked); Σ instalments ≤ full price — on
+  adding one and on raising one, refused with both numbers in the message. **Attachments**
+  (tickets, vouchers) upload, download, delete — 10 MB each, stored per booking.
+- **Dates**: a stay may not start before the trip does, and may not end later than the morning
+  after it ends — so the last night of the trip is bookable.
 - **Deleting a booking** takes everything that belonged to it: its instalments, its attachments
   (rows, stored files and the booking's own folder) and the stops it had written into the days.
   The budget loses what it owed on it, and no day keeps a check-in for a hotel that was

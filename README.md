@@ -127,6 +127,11 @@ behalf: a three-night stay marks four days (in, both ends of the days between, o
 twice changes nothing, a hand-made stop keeps its name, time, notes and its place in the day,
 an overnight journey arrives the next morning, and a cancelled booking leaves nothing behind.
 
+`payments.spec.js` checks the money on a booking to the cent: instalments that can never add up
+to more than the price (adding or raising one), ticking one paid and un-ticking it, what "paid
+in full" means to the budget, and the money owed with no date on it, which is listed apart
+rather than quietly dropped. It also pins the stay dates against the trip's.
+
 Run the three suites one after another, not at once: the end-to-end run and `./mvnw test` both
 work against the same database, and racing them makes the browser tests fail for no reason of
 their own.
