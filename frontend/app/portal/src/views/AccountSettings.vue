@@ -17,7 +17,8 @@
         <div class="field">
           <label>Base currency</label>
           <p style="font: var(--type-small); color: var(--text-secondary); margin: 0 0 6px">
-            All prices will be converted to this currency for totals.
+            What a new trip starts in. Each trip is then counted in its own currency, which you can
+            change on the trip itself.
           </p>
           <TfSelect
             v-model="form.baseCurrency"

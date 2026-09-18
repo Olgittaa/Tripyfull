@@ -32,6 +32,33 @@ never ends, a wrong number in the budget. **These block the launch.**
 It works if you know the trick, or it is ugly but harmless. Fixed when nothing in section 1
 is waiting, or when a consultant names it in an interview.
 
+- [ ] **The printed book names the same hotel twice on a day spent in one place** — day 3 of
+  the seeded trip, a full day at the Nak Nakara Hotel with nothing else planned, prints
+  "🏨 Nak Nakara Hotel" and under it "🏨 Overnight · Nak Nakara Hotel", same address twice and
+  nothing in between. Both rows are deliberate: a stay writes a morning row ("you wake up here")
+  and an evening row ("the night is spent here") on every day it covers, and on a day with stops
+  between them they read as the day's brackets. On an empty day they read as a duplicate, and
+  the morning row is the one with no word of its own. *Fix:* in the book, a day whose only rows
+  are the two halves of the same stay prints one line. *Seen:* 2026-09-18, printed PDF.
+
+- [ ] **The route map numbers only two of six days** — the map on page 2 draws a day's number at
+  that day's first stop, but a trip that sleeps in one place puts several of those numbers on the
+  same pin: the badges are drawn one over another and only the last survives. The seeded trip
+  shows "4" at Chiang Rai (days 2 and 3 are underneath it) and "6" at Ao Nang (day 5 underneath),
+  so the client cannot read the route day by day, which is what the legend promises.
+  *Fix:* one badge per pin, listing the days it holds ("2–4"), or nudge collided badges apart.
+  *Seen:* 2026-09-18, printed PDF.
+
+- [ ] **"On the move" means two different things on two screens** — the seeded day 2, which the
+  client spends flying in from Frankfurt, reads *19 h 1 min on the move* on the day screen and
+  *46 min on the move* on the overview's day card. Both are deliberate and neither is a rounding
+  error: the day screen adds the part of a journey booking that falls inside that date (the
+  flight lands at 18:15, so 18 h 15 m of it belong to day 2) to the legs between stops, while
+  the server's `DayResponse.travelSeconds` — which the overview prints — sums the legs alone.
+  The day screen's meaning is the useful one; the overview's makes a day spent in the air look
+  empty. *Fix:* give the server the same definition (it needs the day's bookings in `DayMapper`,
+  which today only sees the day), so one number is computed once. *Seen:* 2026-09-18.
+
 - [ ] **Three settings that do nothing** — *Language*, *Region* and the *date & time formats*
   are saved to the account and read by nobody. There is no translation layer in the project at
   all, so the language can have no effect; the date helpers print "5 Aug" and "Sat 5 Aug" from
