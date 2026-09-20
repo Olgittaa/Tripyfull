@@ -95,6 +95,14 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **Place search answered without a sign-in — on a paid key** — `GET /api/geo/places?q=…`
+  (Google Places, billed per request) and the other `/api/geo/*` lookups were open to anyone
+  who knew the address; only routing was behind a token. No data was exposed — the answers are
+  public places — but anyone could spend the Google quota, and on a public URL "anyone" is a
+  matter of time. Found while asking whether the deployed app is safe for real data.
+  *Fixed:* 2026-09-20 — every geo endpoint needs a session, as the app has always had one when
+  it asks; a test tries the search with no token and expects 401.
+
 - [x] **Deleting a place left its drawer open** — *Delete* in a place's drawer removed the place
   from the library and said "Deleted", but the drawer stayed where it was, still showing the
   name, the photos and an *Edit* and a *Delete* button for a place that no longer existed; only

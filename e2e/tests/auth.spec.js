@@ -115,3 +115,23 @@ test('a session that dies asks, and the page carries on where it was', async ({ 
     expect(await page.evaluate(() => localStorage.getItem('token'))).toBeNull();
   });
 });
+
+test('place search is for signed-in users only — it spends a paid key', async ({ request }) => {
+  const API = process.env.API_URL || 'http://localhost:8080';
+  // Nobody: refused before Google is ever asked.
+  const anonymous = await request.get(`${API}/api/geo/places?q=Alcazar+Seville`);
+  expect(anonymous.status()).toBe(401);
+  expect((await request.get(`${API}/api/geo/cities?q=Sev&country=ES`)).status()).toBe(401);
+
+  // Somebody: the same search answers.
+  const { token } = await request
+    .post(`${API}/api/auth/register`, {
+      data: { username: `e2e_geo_${stamp()}`, password: PASSWORD },
+    })
+    .then((r) => r.json());
+  const cities = await request.get(`${API}/api/geo/cities?q=Sev&country=ES`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(cities.status()).toBe(200);
+  expect((await cities.json()).map((c) => c.name)).toContain('Sevilla');
+});
