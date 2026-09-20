@@ -70,6 +70,7 @@ public class Trip {
     public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
     public TripStatus getStatus() { return status; }
     public void setStatus(TripStatus status) { this.status = status; }
+    public List<Booking> getBookings() { return bookings; }
     public List<Day> getDays() { return days; }
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }

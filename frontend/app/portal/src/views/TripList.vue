@@ -8,6 +8,23 @@
         <p>Everything you planned — beautifully in order.</p>
       </div>
       <div class="page-head-actions">
+        <TfButton
+          variant="secondary"
+          icon="pi-upload"
+          aria-label="Import a trip from a file"
+          title="A trip file made by Export — here or in another account — becomes a new trip"
+          :loading="importing"
+          @click="fileInput?.click()"
+          >Import</TfButton
+        >
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".zip,application/zip"
+          hidden
+          data-testid="trip-file"
+          @change="importTrip"
+        />
         <TfButton icon="pi-plus" @click="openNewTrip">New trip</TfButton>
       </div>
     </div>
@@ -134,7 +151,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useTripStore } from '@/stores/tripStore.js';
+import { api } from '@tripyfull/core';
 import {
   toDateStr,
   formatDateShort,
@@ -271,6 +290,29 @@ const openNewTrip = () => {
 };
 
 const formatDate = formatDateShort;
+
+/** A trip file made by Export — here or in another account — becomes a new trip. */
+const router = useRouter();
+const fileInput = ref(null);
+const importing = ref(false);
+const importTrip = async (event) => {
+  const file = event.target.files?.[0];
+  event.target.value = ''; // so the same file can be chosen again after a failure
+  if (!file) return;
+  importing.value = true;
+  try {
+    const body = new FormData();
+    body.append('file', file);
+    const { data } = await api.post('/api/trips/import', body);
+    await store.fetchAll();
+    toast.success('Imported', `Trip "${data.title}" added`);
+    router.push(`/trips/${data.id}`);
+  } catch (e) {
+    toast.danger('Error', e.response?.data?.error || 'Failed to import the trip');
+  } finally {
+    importing.value = false;
+  }
+};
 
 onMounted(() => {
   store.fetchAll().catch(() => {

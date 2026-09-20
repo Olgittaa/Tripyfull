@@ -42,6 +42,8 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
 
 - Cards for every trip: cover wash, title, destination, date range, budget progress. Filter by
   status: **Draft · Planned · Active · Completed**.
+- **Import**: a trip file made by **Export** (§3) — here or in another account — becomes a
+  new trip, and the screen opens on it.
 - **New trip**: title, destination (city search), dates, status, base currency. Days are
   generated from the dates at once.
 - **Edit trip** (overview → Edit): title, destination, dates, status. Changing the dates opens
@@ -57,7 +59,8 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
 
 The dashboard; every tile opens its section.
 
-- **Head**: status eyebrow, title, destination · dates, "N days to go", Edit, **Print**.
+- **Head**: status eyebrow, title, destination · dates, "N days to go", Edit, **Print**,
+  **Export**.
 - **Four tiles**: Itinerary (planned days / total, "every day has a plan" or the gaps),
   Bookings (nights covered / total, bookings count, hotel gaps), Budget (planned total,
   % paid, still to pay), To-do (done / total, overdue or due this week).
@@ -71,6 +74,16 @@ The dashboard; every tile opens its section.
   count, time on the move between them ("5 stops · 46 min on the move"), a hotel mark when
   the night is set. Click → the day.
 - **Print**: builds the **route book** (see §11) in a new tab.
+- **Export**: downloads the whole trip as one file, `<title>.tripyfull.zip` — `trip.json` with
+  the days and their stops, the bookings with their payments, the to-dos, every place the trip
+  touches (its shortlist, what its stops point at, what its folders hold) and the folders; beside
+  it, under `files/`, the photos the app stores itself and the tickets attached to bookings.
+  Photos found elsewhere (Google) stay links. The file opens in another account or on another
+  server with nothing left behind. **Import** lives on the trips list (§2): the file always
+  becomes a *new* trip, dates and all (reschedule afterwards if needed). Places join the
+  importer's library — one it already has (same OpenStreetMap / Google id) is reused as it is,
+  the rest are created from the file, photos included. A file that is not ours is refused in
+  words; one from a newer Tripyfull asks for an update first.
 
 ## 4. Itinerary — one day (`/trips/:tripId/days/:dayId`)
 
@@ -321,7 +334,7 @@ estimate ("~"). The route book prints its travel times either way.
 | Area | Endpoints |
 |---|---|
 | Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET/PATCH /api/auth/me` (the PATCH is the settings) |
-| Trips | `GET/POST /api/trips`, `GET/PATCH/DELETE /api/trips/{id}`, `GET …/countries`, `POST …/reschedule`, `GET …/export` |
+| Trips | `GET/POST /api/trips`, `GET/PATCH/DELETE /api/trips/{id}`, `GET …/countries`, `POST …/reschedule`, `GET …/export` (JSON for the book), `GET …/file` (the trip as a .zip), `POST /api/trips/import` (multipart `file`) |
 | Days | `GET/POST /api/trips/{tripId}/days`, `POST …/days/buffer`, `PATCH/DELETE /api/days/{id}`, `POST …/days/{a}/swap/{b}` |
 | Stops | `GET /api/days/{id}/itinerary`, `POST /api/days/{id}/activities`, `PATCH …/activities/reorder`, `PATCH/DELETE /api/activities/{id}`, `GET /api/trips/{id}/planned-places` |
 | Plan from bookings | `GET/POST /api/trips/{id}/plan/from-bookings` |

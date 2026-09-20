@@ -42,6 +42,16 @@
             <i class="pi pi-print" style="font-size: 14px"></i>
             <span class="phone-hide">Print</span>
           </TfButton>
+          <TfButton
+            variant="ghost"
+            aria-label="Export the trip as a file"
+            title="The whole trip as one file — to keep, or to import into another account"
+            :disabled="exporting"
+            @click="exportTrip"
+          >
+            <i class="pi pi-download" style="font-size: 14px"></i>
+            <span class="phone-hide">Export</span>
+          </TfButton>
         </div>
       </div>
 
@@ -783,6 +793,29 @@ async function buildMaps(exported) {
   }
   return { route, days };
 }
+
+/**
+ * The whole trip as one file — days, stops, bookings with their tickets, to-dos,
+ * places with their photos — to keep, or to import into another account. The
+ * server names the file after the trip; the browser is told the same name here,
+ * because a cross-origin download does not get to read the server's header.
+ */
+const exporting = ref(false);
+const exportTrip = async () => {
+  exporting.value = true;
+  try {
+    const res = await api.get(`/api/trips/${tripId}/file`, { responseType: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(res.data);
+    a.download = `${(trip.value?.title || 'trip').replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'trip'}.tripyfull.zip`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  } catch {
+    toast.danger('Error', 'Failed to export the trip');
+  } finally {
+    exporting.value = false;
+  }
+};
 
 const printTrip = async () => {
   try {

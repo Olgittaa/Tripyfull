@@ -88,6 +88,17 @@ public class PlacePhotoService {
         return URL_PREFIX + placeId + "/" + name;
     }
 
+    /**
+     * Stores bytes this app has already prepared — a photo coming back in from a
+     * trip file, downscaled and encoded when it was first uploaded. Same key
+     * scheme as {@link #store}, so it is served and deleted the same way.
+     */
+    public String storeEncoded(byte[] jpeg, UUID placeId) {
+        String name = UUID.randomUUID() + ".jpg";
+        storage.storeBytes(jpeg, KEY_PREFIX + placeId + "/" + name);
+        return URL_PREFIX + placeId + "/" + name;
+    }
+
     /** True for photos this app stores itself (as opposed to an external URL). */
     public boolean isStoredHere(String url) {
         return url != null && url.startsWith(URL_PREFIX);

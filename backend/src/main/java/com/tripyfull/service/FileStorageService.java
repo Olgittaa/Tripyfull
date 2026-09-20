@@ -16,6 +16,9 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
+    /** One attachment: the request limit the app had before trip files needed more. */
+    private static final long MAX_ATTACHMENT_BYTES = 10L * 1024 * 1024;
+
     private final Path root;
 
     public FileStorageService(@Value("${app.upload-dir:uploads}") String uploadDir) {
@@ -31,6 +34,12 @@ public class FileStorageService {
     public String store(MultipartFile file, UUID bookingId) {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
+        // The request limit is set high enough for a whole trip file to come in;
+        // one ticket is held to what it always was.
+        if (file.getSize() > MAX_ATTACHMENT_BYTES) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+                    "File is larger than " + (MAX_ATTACHMENT_BYTES / 1024 / 1024) + " MB");
         }
         try {
             Path dir = root.resolve(bookingId.toString());
