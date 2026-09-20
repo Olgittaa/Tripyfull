@@ -1,0 +1,69 @@
+# Render Blueprint: the API and its database, declared once. Connecting this
+# repository in Render ("New → Blueprint") creates both; later pushes to main
+# redeploy the API. Secrets marked `sync: false` are typed into the dashboard
+# on first deploy and never live in this file.
+#
+# The frontend is not here — it is a static site on Cloudflare Pages, built
+# from frontend/ with VITE_API_URL pointing at this service. See docs/deploy.md.
+
+services:
+  - type: web
+    name: tripyfull-api
+    runtime: docker
+    region: frankfurt
+    # Free to look at: the instance sleeps after 15 idle minutes (the first
+    # visitor waits about a minute) and has no disk, so uploaded photos and
+    # tickets last until the next deploy or restart. For real clients: plan
+    # `starter` and a disk —
+    #   disk: { name: uploads, mountPath: /var/data, sizeGB: 1 }
+    plan: free
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=70
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: tripyfull-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: tripyfull-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: tripyfull-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: tripyfull-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: tripyfull-db
+          property: password
+      # Paid Google Maps Platform key (Places API New + Routes API). Leave empty
+      # to run on the free OpenStreetMap stack.
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      # Optional: flight lookup (RapidAPI) and Wikipedia enrichment.
+      - key: AERODATABOX_API_KEY
+        sync: false
+      - key: OPENTRIPMAP_API_KEY
+        sync: false
+
+databases:
+  - name: tripyfull-db
+    region: frankfurt
+    # Render's free database is deleted after its trial period (30 days at the
+    # time of writing) — upgrade the plan in the dashboard before then to keep it.
+    plan: free
+    postgresMajorVersion: "16"

@@ -13,10 +13,11 @@ Everything belongs to that user, so deleting the user's places, trips and the us
 removes it all again. Re-running against the same username makes a second trip — delete the
 old one first, or pass a fresh name.
 """
+import os
 import json, sys, urllib.error, urllib.request
 from datetime import date
 
-B = 'http://localhost:8080'
+B = os.environ.get('API_URL', 'http://localhost:8080')   # point it at a deployed API with API_URL=…
 U = sys.argv[1] if len(sys.argv) > 1 else 'qa_consultant'
 
 # The fiction. The consultant is the account; the client lives in the trip's title until

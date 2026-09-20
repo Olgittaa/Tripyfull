@@ -78,6 +78,7 @@ route line), computed on the server and kept until the day changes.
 | [`BUGS.md`](BUGS.md) | Known defects, in three buckets. Only *Breaks the main path* blocks a release. |
 | [`AFTER_M1.md`](AFTER_M1.md) | Ideas parked until after launch, and the ones rejected on purpose. |
 | [`docs/app_spec.md`](docs/app_spec.md) | Archived July 2026 design spec — reasoning and gap list, not current behaviour. |
+| [`docs/deploy.md`](docs/deploy.md) | How the API and the app are deployed — Render from `render.yaml`, Cloudflare Pages from `frontend/` — and what the free plans cost in behaviour. |
 
 Personas and early flows are in [`docs/`](docs/) as well.
 
