@@ -49,7 +49,7 @@ overwrite `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` with Neon's, save
 15 idle minutes, so the first visitor after a pause waits about a minute while
 Spring Boot starts. It has no disk, so uploaded photos and tickets last only
 until the next deploy or restart (places' Google photos are links and are fine)
-— object storage for uploads is the next step. A workspace gets 750 free
+— which is why uploads live in R2 (§3), not on the instance. A workspace gets 750 free
 instance hours a month; when they run out, free services are suspended until
 the next month, not deleted.
 
@@ -59,7 +59,36 @@ survive and the API stays awake.
 
 Redeploy: push to `main`. Logs: the service's **Logs** tab. Shell: **Shell** tab.
 
-## 3. The app on Cloudflare Pages
+## 3. Uploads on Cloudflare R2
+
+The free Render instance has no disk: anything written to it is gone at the
+next deploy or restart. So a place's photos and a booking's tickets live in an
+R2 bucket — S3-compatible object storage on the Cloudflare account that already
+hosts the app. Free: 10 GB stored, a million writes and ten million reads a
+month, no charge for traffic, no expiry. (Cloudflare asks for a payment method
+to switch R2 on, even to stay within the free allowance.)
+
+1. Cloudflare → **R2 Object Storage → Create bucket**: name `tripyfull-uploads`,
+   location **Automatic**, jurisdiction **EU** if offered. Leave it private.
+2. **R2 → Manage R2 API Tokens → Create API token**: name `tripyfull-api`,
+   permission **Object Read & Write**, scoped to the bucket `tripyfull-uploads`,
+   TTL forever. Copy the **Access Key ID** and **Secret Access Key** at once —
+   the secret is shown only this once. The same screen shows the endpoint,
+   `https://<account id>.r2.cloudflarestorage.com`.
+3. In Render → **tripyfull-api → Environment**, set `APP_STORAGE` = `s3`,
+   `S3_ENDPOINT`, `S3_BUCKET` = `tripyfull-uploads`, `S3_ACCESS_KEY`,
+   `S3_SECRET_KEY` (and `S3_REGION` = `auto`). Save; Render redeploys.
+
+The API checks the bucket once at start-up: a wrong key or bucket name fails
+the deploy with a sentence in the logs rather than every upload failing later.
+Photos are still served from the API's own `/api/place-photos/…` addresses and
+tickets from `/api/attachments/…/download`; only where the bytes rest changed,
+so uploads made before this step (on the vanished disk) are the only ones
+missing.
+
+Locally nothing changes: `app.storage` defaults to `local`, a folder on disk.
+
+## 4. The app on Cloudflare Pages
 
 1. Cloudflare → **Workers & Pages → Create → Pages → Connect to Git** → the
    `Tripyfull` repository, production branch `main`.
@@ -88,7 +117,7 @@ A custom domain can be added in the project's **Custom domains** tab later; the
 API needs no change for it — CORS allows any origin, and sessions are bearer
 tokens, not cookies.
 
-## 4. First run
+## 5. First run
 
 Open the Pages URL, register the first account, create a trip. To load the
 consultant's demo trip on the deployed API:

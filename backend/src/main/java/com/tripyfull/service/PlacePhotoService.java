@@ -51,9 +51,9 @@ public class PlacePhotoService {
     public static final String URL_PREFIX = "/api/place-photos/";
     private static final String KEY_PREFIX = "places/";
 
-    private final FileStorageService storage;
+    private final FileStorage storage;
 
-    public PlacePhotoService(FileStorageService storage) {
+    public PlacePhotoService(FileStorage storage) {
         this.storage = storage;
     }
 
@@ -84,7 +84,7 @@ public class PlacePhotoService {
 
         byte[] jpeg = encodeJpeg(downscale(source));
         String name = UUID.randomUUID() + ".jpg";
-        storage.storeBytes(jpeg, KEY_PREFIX + placeId + "/" + name);
+        storage.storeBytes(jpeg, KEY_PREFIX + placeId + "/" + name, "image/jpeg");
         return URL_PREFIX + placeId + "/" + name;
     }
 
@@ -95,7 +95,7 @@ public class PlacePhotoService {
      */
     public String storeEncoded(byte[] jpeg, UUID placeId) {
         String name = UUID.randomUUID() + ".jpg";
-        storage.storeBytes(jpeg, KEY_PREFIX + placeId + "/" + name);
+        storage.storeBytes(jpeg, KEY_PREFIX + placeId + "/" + name, "image/jpeg");
         return URL_PREFIX + placeId + "/" + name;
     }
 

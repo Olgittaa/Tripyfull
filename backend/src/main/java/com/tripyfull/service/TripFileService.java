@@ -29,13 +29,12 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -64,13 +63,13 @@ public class TripFileService {
     private final PlaceFolderRepository folderRepository;
     private final TodoRepository todoRepository;
     private final PlacePhotoService placePhotoService;
-    private final FileStorageService storage;
+    private final FileStorage storage;
     private final OwnershipGuard guard;
     private final ObjectMapper json;
 
     public TripFileService(TripRepository tripRepository, PlaceRepository placeRepository,
                            PlaceFolderRepository folderRepository, TodoRepository todoRepository,
-                           PlacePhotoService placePhotoService, FileStorageService storage,
+                           PlacePhotoService placePhotoService, FileStorage storage,
                            OwnershipGuard guard, ObjectMapper json) {
         this.tripRepository = tripRepository;
         this.placeRepository = placeRepository;
@@ -100,12 +99,14 @@ public class TripFileService {
             zip.write(json.writerWithDefaultPrettyPrinter().writeValueAsBytes(packed.file()));
             zip.closeEntry();
             for (Map.Entry<String, String> e : packed.entries().entrySet()) {
-                Path path = storage.resolve(e.getValue());
-                // A file gone from the disk is a gap in the archive, not a reason to
+                // A file gone from storage is a gap in the archive, not a reason to
                 // refuse the whole trip.
-                if (!Files.isRegularFile(path)) continue;
+                Optional<FileStorage.StoredFile> stored = storage.open(e.getValue());
+                if (stored.isEmpty()) continue;
                 zip.putNextEntry(new ZipEntry(e.getKey()));
-                Files.copy(path, zip);
+                try (InputStream in = stored.get().stream()) {
+                    in.transferTo(zip);
+                }
                 zip.closeEntry();
             }
         } catch (IOException e) {
@@ -174,8 +175,8 @@ public class TripFileService {
                     it.remove();   // named in the manifest, missing from the archive
                     continue;
                 }
-                String key = booking.getId() + "/" + UUID.randomUUID() + "_" + safeName(att.getFileName());
-                att.setStorageKey(storage.storeBytes(bytes, key));
+                String key = booking.getId() + "/" + UUID.randomUUID() + "_" + FileStorage.safeName(att.getFileName());
+                att.setStorageKey(storage.storeBytes(bytes, key, att.getContentType()));
             }
         }
         for (PlaceFolder folder : built.folders()) folderRepository.save(folder);
@@ -201,11 +202,6 @@ public class TripFileService {
     static String fileNameFor(String title) {
         String base = title == null ? "" : title.replaceAll("[\\\\/:*?\"<>|]+", " ").trim();
         return (base.isEmpty() ? "trip" : base) + EXTENSION;
-    }
-
-    private static String safeName(String name) {
-        String s = name == null ? "file" : name.replaceAll("[^A-Za-z0-9._-]", "_");
-        return s.isBlank() ? "file" : s;
     }
 
     /** Only so a test can read what the service would write, without a servlet upload. */

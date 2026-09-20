@@ -15,6 +15,7 @@
 	<description>Tripyfull — personal trip planner backend</description>
 	<properties>
 		<java.version>25</java.version>
+		<aws.sdk.version>2.55.1</aws.sdk.version>
 	</properties>
 	<dependencies>
 
@@ -44,6 +45,30 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.12.6</version>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Uploads in an S3-compatible bucket (Cloudflare R2) when app.storage=s3.
+		     The JDK's own HTTP client instead of the SDK's Netty and Apache ones:
+		     a few small files a day, and a smaller image. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>${aws.sdk.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>netty-nio-client</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>apache-client</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>url-connection-client</artifactId>
+			<version>${aws.sdk.version}</version>
 		</dependency>
 
 		<dependency>

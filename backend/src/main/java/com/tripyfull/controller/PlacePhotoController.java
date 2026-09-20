@@ -1,10 +1,10 @@
 package com.tripyfull.controller;
 
 import com.tripyfull.dto.PlaceResponse;
-import com.tripyfull.service.FileStorageService;
+import com.tripyfull.service.FileStorage;
 import com.tripyfull.service.PlacePhotoService;
 import com.tripyfull.service.PlaceService;
-import org.springframework.core.io.PathResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -30,13 +29,13 @@ public class PlacePhotoController {
 
     private final PlaceService placeService;
     private final PlacePhotoService placePhotoService;
-    private final FileStorageService fileStorageService;
+    private final FileStorage fileStorage;
 
     public PlacePhotoController(PlaceService placeService, PlacePhotoService placePhotoService,
-                                FileStorageService fileStorageService) {
+                                FileStorage fileStorage) {
         this.placeService = placeService;
         this.placePhotoService = placePhotoService;
-        this.fileStorageService = fileStorageService;
+        this.fileStorage = fileStorage;
     }
 
     @PostMapping("/api/places/{id}/photos")
@@ -65,15 +64,13 @@ public class PlacePhotoController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found");
         }
         String url = PlacePhotoService.URL_PREFIX + placeId + "/" + name;
-        Path path = fileStorageService.resolve(placePhotoService.keyForUrl(url));
-        Resource resource = new PathResource(path);
-        if (!resource.exists()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found");
-        }
-        return ResponseEntity.ok()
+        FileStorage.StoredFile file = fileStorage.open(placePhotoService.keyForUrl(url))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found"));
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 // Immutable content: the name changes whenever the bytes do.
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
-                .body(resource);
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic());
+        if (file.size() >= 0) response.contentLength(file.size());
+        return response.body(new InputStreamResource(file.stream()));
     }
 }

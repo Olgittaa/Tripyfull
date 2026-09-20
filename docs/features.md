@@ -194,7 +194,8 @@ by nobody else — there is no sharing and no public place.
 - **Folders** per trip: create, rename, colour, delete; drag places in or assign from the
   panel.
 - **Trips**: one checkbox per trip in the place panel, ticked where the place already is.
-- Photos of a place: uploads are scaled to 1600 px and stored on the server; imported and
+- Photos of a place: uploads are scaled to 1600 px and stored by the server — in an S3-compatible
+  bucket (Cloudflare R2) in production, in a folder on disk locally; imported and
   enriched photos are links.
 
 ## 7. Bookings (`/trips/:tripId/bookings`)

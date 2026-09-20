@@ -32,14 +32,14 @@ public class BookingService {
     private final PaymentRepository paymentRepository;
     private final ExchangeRateService exchangeRateService;
     private final GeoSearchService geoSearchService;
-    private final FileStorageService fileStorageService;
+    private final FileStorage fileStorageService;
     private final AttachmentRepository attachmentRepository;
     private final ActivityRepository activityRepository;
     private final OwnershipGuard guard;
 
     public BookingService(BookingRepository bookingRepository, PaymentRepository paymentRepository,
                           ExchangeRateService exchangeRateService, GeoSearchService geoSearchService,
-                          FileStorageService fileStorageService, AttachmentRepository attachmentRepository,
+                          FileStorage fileStorageService, AttachmentRepository attachmentRepository,
                           ActivityRepository activityRepository, OwnershipGuard guard) {
         this.bookingRepository = bookingRepository;
         this.paymentRepository = paymentRepository;
