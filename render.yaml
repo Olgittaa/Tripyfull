@@ -1,7 +1,10 @@
-# Render Blueprint: the API and its database, declared once. Connecting this
-# repository in Render ("New → Blueprint") creates both; later pushes to main
-# redeploy the API. Secrets marked `sync: false` are typed into the dashboard
-# on first deploy and never live in this file.
+# Render Blueprint: the API, declared once. Connecting this repository in
+# Render ("New → Blueprint") creates it; later pushes to main redeploy it.
+# Values marked `sync: false` are typed into the dashboard and never live here.
+#
+# The database is not on Render: it is a Neon project (free, and free of the
+# 30-day expiry Render's free database has). Its host, name, user and password
+# go into the five DB_* variables below. See docs/deploy.md.
 #
 # The frontend is not here — it is a static site on Cloudflare Pages, built
 # from frontend/ with VITE_API_URL pointing at this service. See docs/deploy.md.
@@ -30,26 +33,19 @@ services:
         value: -XX:MaxRAMPercentage=70
       - key: JWT_SECRET
         generateValue: true
+      # The Neon database — from the project's connection details. Use the
+      # direct host, not the one ending in `-pooler`: Flyway needs a plain
+      # connection, and the app keeps only a handful open.
       - key: DB_HOST
-        fromDatabase:
-          name: tripyfull-db
-          property: host
+        sync: false
       - key: DB_PORT
-        fromDatabase:
-          name: tripyfull-db
-          property: port
+        value: "5432"
       - key: DB_NAME
-        fromDatabase:
-          name: tripyfull-db
-          property: database
+        sync: false
       - key: DB_USER
-        fromDatabase:
-          name: tripyfull-db
-          property: user
+        sync: false
       - key: DB_PASSWORD
-        fromDatabase:
-          name: tripyfull-db
-          property: password
+        sync: false
       # Paid Google Maps Platform key (Places API New + Routes API). Leave empty
       # to run on the free OpenStreetMap stack.
       - key: GOOGLE_MAPS_API_KEY
@@ -59,11 +55,3 @@ services:
         sync: false
       - key: OPENTRIPMAP_API_KEY
         sync: false
-
-databases:
-  - name: tripyfull-db
-    region: frankfurt
-    # Render's free database is deleted after its trial period (30 days at the
-    # time of writing) — upgrade the plan in the dashboard before then to keep it.
-    plan: free
-    postgresMajorVersion: "16"
