@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * The emoji a booking shows: the way it travels where there is one, else its
  * category. Shared by the bookings page and the trip overview.
@@ -19,6 +20,9 @@ export const MODE_EMOJI = {
   METRO: '\u{1F687}',
   WALK: '\u{1F6B6}',
 };
+
+/** A transport mode in the app's language — read inside a computed to follow a change. */
+export const transportModeLabel = (mode) => (MODE_LABEL[mode] ? t(`mode.${mode}`) : null);
 
 export const MODE_LABEL = {
   FLIGHT: 'Flight',
