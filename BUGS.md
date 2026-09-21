@@ -66,6 +66,14 @@ is waiting, or when a consultant names it in an interview.
   interviews may say whether a date format matters to anyone, and the answer decides whether to
   build it or drop the controls. *Language* began to work on 2026-09-21. *Seen:* 2026-09-18.
 
+- [ ] **Units stay English in every language** — the words are translated, the units beside
+  them are not: durations print "1h 25m", "21 h 20 min" and distances "21.5 km" whatever the
+  language says, because `format.js` (`formatMinutes`, `formatDuration`, `formatDistance`) and
+  the bookings page's own compact duration build them from literals. They read oddly in
+  Japanese and Chinese and wrongly in Arabic and Bengali, whose digits the rest of the app
+  already localises. *Fix:* put the units behind `t()` in core and delete the page's private
+  copy, so one formatter serves every screen and the printed book. *Seen:* 2026-09-21.
+
 - [ ] **Arabic runs left to right** — the words are Arabic and each line reads right to left,
   but the layout around them does not mirror: menus stay on the left, icons before their
   labels, the back arrow pointing the wrong way. Mirroring the shell is a task of its own

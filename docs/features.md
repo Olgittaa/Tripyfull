@@ -33,10 +33,12 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   browser's language, as far as it can. Dates follow the language ("10 Dec", "10. Dez.",
   "12月10日"), plurals too. Scripts the house fonts cannot draw get a Noto companion. Translated
   so far: the shell, sign-in, the trips list, settings, the trip overview, the day with its
-  stop drawer and route map, the places library with its finder, and the design system's own
-  words — including the names of stop and place kinds, audiences and the ways between stops;
-  the other screens follow, one at a time, and the printed book keeps English until a trip can
-  name its client's language. Words a booking
+  stop drawer and route map, the places library with its finder, the bookings page with its
+  drawer and payments, and the design system's own words — including the names of stop and
+  place kinds, booking categories and transport, audiences and the ways between stops; the
+  other screens follow, one at a time, and the printed book keeps English until a trip can
+  name its client's language. Units of time and distance are still English everywhere
+  (BUGS.md §2). Words a booking
   writes into the plan ("Arrive · …", "Check in · …") are the booking's and stay as written. Arabic reads right to left within its lines but the layout is not yet
   mirrored. The screen also offers region and date & time formats; they are stored on the
   account and **nothing reads them yet** (see `../BUGS.md`).

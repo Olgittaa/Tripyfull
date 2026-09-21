@@ -3,12 +3,12 @@
     <!-- Page head -->
     <div class="page-head">
       <div>
-        <h1>Bookings</h1>
-        <p>Pre-paid bookings and payment schedules.</p>
+        <h1>{{ t('bookings.title') }}</h1>
+        <p>{{ t('bookings.subtitle') }}</p>
       </div>
       <div class="page-head-actions">
         <TfButton variant="primary" @click="openAddDialog">
-          <i class="pi pi-plus" style="font-size: 14px"></i> Booking
+          <i class="pi pi-plus" style="font-size: 14px"></i> {{ t('bookings.booking') }}
         </TfButton>
         <!-- Bookings already say what is booked and when; this writes them into
              the plan, and writes them again after a booking changes. -->
@@ -16,11 +16,7 @@
           variant="secondary"
           @click="syncPlan"
           :disabled="syncingPlan || !bookings.length"
-          v-tooltip="
-            plannedFromBookings
-              ? 'Rewrite the stops that came from bookings'
-              : 'Put hotels and travel into the day plan'
-          "
+          v-tooltip="plannedFromBookings ? t('bookings.rewriteHint') : t('bookings.addToPlanHint')"
         >
           <i
             class="pi pi-calendar-plus"
@@ -29,12 +25,14 @@
           ></i>
           <!-- "Update plan" spelled out where there is room, "Plan" on a phone. -->
           <span class="phone-hide">{{ planLabel }}</span>
-          <span class="phone-only">{{ syncingPlan ? 'Planning…' : 'Plan' }}</span>
+          <span class="phone-only">{{
+            syncingPlan ? t('bookings.planning') : t('bookings.planShort')
+          }}</span>
         </TfButton>
         <TfButton
           class="phone-icon-btn"
           variant="secondary"
-          aria-label="Update the exchange rates"
+          :aria-label="t('bookings.updateRatesAria')"
           @click="refreshAllRates"
           :disabled="refreshingRates"
         >
@@ -43,7 +41,9 @@
             :style="refreshingRates ? 'animation:spin 1s linear infinite' : ''"
             style="font-size: 14px"
           ></i>
-          <span class="phone-hide">{{ refreshingRates ? 'Updating...' : 'Update rates' }}</span>
+          <span class="phone-hide">{{
+            refreshingRates ? t('bookings.updatingRates') : t('bookings.updateRates')
+          }}</span>
         </TfButton>
       </div>
     </div>
@@ -97,7 +97,7 @@
                             font: var(--fw-medium) 11px/1 var(--font-mono);
                             color: var(--text-secondary);
                           "
-                          v-tooltip="'Attachments'"
+                          v-tooltip="t('bookings.attachments')"
                         >
                           <i class="pi pi-paperclip" style="font-size: 11px"></i
                           >{{ b.attachments.length }}
@@ -108,14 +108,18 @@
                         }}{{ bookingMeta(b) }}
                       </div>
                       <div v-if="nextPayment(b)" class="booking-card-next-pay">
-                        Next payment {{ nextPayment(b).amount }}
-                        {{ b.priceCurrency || currency }} ·
-                        {{ formatDateShort(nextPayment(b).dueDate) }}
+                        {{
+                          t('bookings.nextPayment', {
+                            amount: nextPayment(b).amount,
+                            currency: b.priceCurrency || currency,
+                            date: formatDateShort(nextPayment(b).dueDate),
+                          })
+                        }}
                       </div>
                     </div>
                     <div class="booking-card-price">
                       <span class="money money--md">{{ dualPrice(b) }}</span>
-                      <div class="booking-card-price-label">full price</div>
+                      <div class="booking-card-price-label">{{ t('bookings.fullPriceLabel') }}</div>
                     </div>
                   </div>
                 </TfCard>
@@ -126,10 +130,10 @@
           <!-- Empty state -->
           <div v-if="!bookings.length" class="empty-state">
             <div class="empty-state-icon"><i class="pi pi-ticket"></i></div>
-            <h3>No bookings yet</h3>
-            <p>Add flights, hotels, and activities.</p>
+            <h3>{{ t('bookings.empty') }}</h3>
+            <p>{{ t('bookings.emptySub') }}</p>
             <TfButton variant="primary" @click="openAddDialog">
-              <i class="pi pi-plus" style="font-size: 14px"></i> Add booking
+              <i class="pi pi-plus" style="font-size: 14px"></i> {{ t('bookings.addBooking') }}
             </TfButton>
           </div>
         </div>
@@ -138,21 +142,21 @@
              booking you opened — same idea as the place details panel. -->
         <aside v-if="bookings.length" class="bookings-side">
           <TfCard>
-            <div class="side-title">Money</div>
+            <div class="side-title">{{ t('bookings.money') }}</div>
             <div class="side-total money money--lg">{{ money(stats.total) }}</div>
-            <TfProgress label="Paid" :value="stats.paidShare" />
+            <TfProgress :label="t('bookings.paid')" :value="stats.paidShare" />
             <div class="side-row">
-              <span>Paid</span>
+              <span>{{ t('bookings.paid') }}</span>
               <span class="side-val">{{ money(stats.paid) }}</span>
             </div>
             <div class="side-row">
-              <span>Left to pay</span>
+              <span>{{ t('bookings.leftToPay') }}</span>
               <span class="side-val">{{ money(stats.left) }}</span>
             </div>
           </TfCard>
 
           <TfCard>
-            <div class="side-title">By category</div>
+            <div class="side-title">{{ t('bookings.byCategory') }}</div>
             <div v-for="c in stats.byCat" :key="c.cat" class="side-cat">
               <div class="side-row">
                 <span>{{ catEmoji(c.cat) }} {{ c.label }}</span>
@@ -162,33 +166,33 @@
                 <span :style="{ width: c.share + '%', background: c.color }"></span>
               </div>
               <div class="side-sub">
-                {{ c.n }} booking{{ c.n === 1 ? '' : 's' }} · {{ Math.round(c.share) }}%
+                {{ t('bookings.catCount', { count: c.n }) }} · {{ Math.round(c.share) }}%
               </div>
             </div>
           </TfCard>
 
           <TfCard>
-            <div class="side-title">Status</div>
+            <div class="side-title">{{ t('bookings.status') }}</div>
             <div class="side-row">
-              <span>Paid in full</span>
+              <span>{{ t('bookings.paidInFull') }}</span>
               <span class="side-val">{{ stats.status.paid }}</span>
             </div>
             <div class="side-row">
-              <span>Partly paid</span>
+              <span>{{ t('bookings.partlyPaid') }}</span>
               <span class="side-val">{{ stats.status.partial }}</span>
             </div>
             <div class="side-row">
-              <span>Not paid</span>
+              <span>{{ t('bookings.notPaid') }}</span>
               <span class="side-val">{{ stats.status.unpaid }}</span>
             </div>
             <div v-if="tripNights" class="side-row">
-              <span>Nights booked</span>
+              <span>{{ t('bookings.nightsBooked') }}</span>
               <span class="side-val">{{ stats.nights }} / {{ tripNights }}</span>
             </div>
           </TfCard>
 
           <TfCard v-if="upcomingPayments.length">
-            <div class="side-title">Next payments</div>
+            <div class="side-title">{{ t('bookings.nextPayments') }}</div>
             <div v-for="p in upcomingPayments" :key="p.id" class="side-pay">
               <div class="side-row">
                 <span class="side-pay-name">{{ p.bookingName }}</span>
@@ -204,7 +208,11 @@
           v-model="showDrawer"
           wide
           :title="
-            drawerMode === 'view' ? viewing?.name : editingBooking ? 'Edit booking' : 'New booking'
+            drawerMode === 'view'
+              ? viewing?.name
+              : editingBooking
+                ? t('bookings.edit')
+                : t('bookings.new')
           "
         >
           <!-- One template for both modes. Viewing renders the editor with its
@@ -225,42 +233,46 @@
             <!-- ============ 1. Booking: what and where ============ -->
             <template v-if="tab === 'booking'">
               <fieldset class="form-part" :disabled="ro">
-                <TfDrawerSection label="What is booked">
+                <TfDrawerSection :label="t('bookings.whatIsBooked')">
                   <TfInput
                     v-model="form.name"
-                    label="Name"
+                    :label="t('bookings.name')"
                     required
                     :error="fieldError('name')"
-                    placeholder="e.g. Athens to Santorini ferry"
+                    :placeholder="t('bookings.namePlaceholder')"
                   />
                   <div class="field">
                     <label class="label"
-                      >Category<span class="label-req" aria-hidden="true">*</span></label
+                      >{{ t('bookings.category')
+                      }}<span class="label-req" aria-hidden="true">*</span></label
                     >
                     <TfSegmentedControl v-model="categoryLabel" :options="categoryOptions" fill />
                     <span v-if="fieldError('category')" class="hint hint--error">{{
                       fieldError('category')
                     }}</span>
-                    <span v-else-if="!form.category && !ro" class="hint"
-                      >Pick one — the fields below follow the category.</span
-                    >
+                    <span v-else-if="!form.category && !ro" class="hint">{{
+                      t('bookings.pickCategory')
+                    }}</span>
                   </div>
                 </TfDrawerSection>
 
                 <!-- Transport: route -->
-                <TfDrawerSection v-if="form.category === 'TRANSPORTATION'" label="Route">
+                <TfDrawerSection
+                  v-if="form.category === 'TRANSPORTATION'"
+                  :label="t('bookings.route')"
+                >
                   <TfSelect
-                    v-model="transportModeLabel"
-                    label="Transport mode"
+                    v-model="transportModeName"
+                    :label="t('bookings.transportMode')"
                     required
                     :error="fieldError('transportMode')"
                     :options="transportOptions"
-                    placeholder="Select"
+                    :placeholder="t('bookings.select')"
                   />
                   <div class="two-col">
                     <div class="field">
                       <label class="label"
-                        >{{ isRental ? 'Pick-up location' : 'From'
+                        >{{ isRental ? t('bookings.pickUpLocation') : t('bookings.from')
                         }}<span class="label-req" aria-hidden="true">*</span></label
                       >
                       <TfPlaceSearch
@@ -269,8 +281,8 @@
                         :error="fieldError('fromPlace')"
                         :placeholder="
                           form.transportMode === 'FLIGHT'
-                            ? 'Airport or city (e.g. Bangkok)'
-                            : 'Departure city or station'
+                            ? t('bookings.airportOrCityFrom')
+                            : t('bookings.departureCity')
                         "
                         @select="onFromSelect"
                       />
@@ -279,7 +291,7 @@
                         class="input"
                         :class="{ 'is-error': fieldError('fromPlace') }"
                         v-model="form.fromPlace"
-                        placeholder="Departure city or station"
+                        :placeholder="t('bookings.departureCity')"
                       />
                       <span v-if="fieldError('fromPlace')" class="hint hint--error">{{
                         fieldError('fromPlace')
@@ -287,7 +299,7 @@
                     </div>
                     <div class="field" v-if="!isRental || !sameDropOff">
                       <label class="label"
-                        >{{ isRental ? 'Drop-off location' : 'To'
+                        >{{ isRental ? t('bookings.dropOffLocation') : t('bookings.to')
                         }}<span v-if="!isRental" class="label-req" aria-hidden="true"
                           >*</span
                         ></label
@@ -298,8 +310,8 @@
                         :error="fieldError('toPlace')"
                         :placeholder="
                           form.transportMode === 'FLIGHT'
-                            ? 'Airport or city (e.g. Krabi)'
-                            : 'Arrival city or station'
+                            ? t('bookings.airportOrCityTo')
+                            : t('bookings.arrivalCity')
                         "
                         @select="onToSelect"
                       />
@@ -308,7 +320,7 @@
                         class="input"
                         :class="{ 'is-error': fieldError('toPlace') }"
                         v-model="form.toPlace"
-                        placeholder="Arrival city or station"
+                        :placeholder="t('bookings.arrivalCity')"
                       />
                       <span v-if="fieldError('toPlace')" class="hint hint--error">{{
                         fieldError('toPlace')
@@ -317,21 +329,21 @@
                   </div>
                   <label v-if="isRental" class="paid-row" style="padding: 8px 12px">
                     <input type="checkbox" v-model="sameDropOff" :disabled="ro" />
-                    <span class="paid-row-text">Drop off where it was picked up</span>
+                    <span class="paid-row-text">{{ t('bookings.sameDropOff') }}</span>
                   </label>
                   <!-- One control for the whole journey: date and time at both ends. -->
                   <TfDatePicker
                     v-model="travelRange"
                     mode="datetime-range"
-                    :label="isRental ? 'Pick-up → drop-off' : 'Departure → arrival'"
+                    :label="isRental ? t('bookings.pickupDropoff') : t('bookings.departureArrival')"
                     :view-date="stayMinDate"
                     clearable
                   />
                   <p v-if="formDurationMin" class="hint" style="margin: -2px 0 0">
                     {{
                       isRental
-                        ? `Rental for ${rentalDays}`
-                        : `On the way ${formatDuration(formDurationMin)}`
+                        ? t('bookings.rentalFor', { days: rentalDays })
+                        : t('bookings.onTheWay', { duration: formatDuration(formDurationMin) })
                     }}
                   </p>
 
@@ -339,19 +351,27 @@
 
                   <!-- Per-mode extras: only what the ticket actually has on it. -->
                   <div v-if="form.transportMode === 'FLIGHT'" class="three-col">
-                    <TfInput v-model="form.flightNumber" label="Flight no." placeholder="QR305" />
+                    <TfInput
+                      v-model="form.flightNumber"
+                      :label="t('bookings.flightNo')"
+                      placeholder="QR305"
+                    />
                     <TfInput
                       v-model="form.departureTerminal"
-                      label="Dep. terminal"
+                      :label="t('bookings.depTerminal')"
                       placeholder="—"
                     />
-                    <TfInput v-model="form.arrivalTerminal" label="Arr. terminal" placeholder="—" />
+                    <TfInput
+                      v-model="form.arrivalTerminal"
+                      :label="t('bookings.arrTerminal')"
+                      placeholder="—"
+                    />
                   </div>
                   <TfInput
                     v-if="form.transportMode === 'FLIGHT'"
                     v-model="form.seat"
-                    label="Seat"
-                    placeholder="e.g. 14C"
+                    :label="t('bookings.seat')"
+                    :placeholder="t('bookings.seatPlaceholder')"
                   />
                   <div
                     v-if="form.transportMode === 'TRAIN' || form.transportMode === 'BUS'"
@@ -359,55 +379,75 @@
                   >
                     <TfInput
                       v-model="form.flightNumber"
-                      :label="form.transportMode === 'TRAIN' ? 'Train number' : 'Service'"
-                      :placeholder="form.transportMode === 'TRAIN' ? 'e.g. SP 926' : 'e.g. 999 VIP'"
+                      :label="
+                        form.transportMode === 'TRAIN'
+                          ? t('bookings.trainNumber')
+                          : t('bookings.service')
+                      "
+                      :placeholder="
+                        form.transportMode === 'TRAIN'
+                          ? t('bookings.trainNoPlaceholder')
+                          : t('bookings.servicePlaceholder')
+                      "
                     />
                     <TfInput
                       v-model="form.seat"
-                      :label="form.transportMode === 'TRAIN' ? 'Coach & seat' : 'Seat'"
-                      :placeholder="form.transportMode === 'TRAIN' ? 'e.g. 7 / 23' : 'e.g. 12'"
+                      :label="
+                        form.transportMode === 'TRAIN'
+                          ? t('bookings.coachSeat')
+                          : t('bookings.seat')
+                      "
+                      :placeholder="
+                        form.transportMode === 'TRAIN'
+                          ? t('bookings.coachSeatPlaceholder')
+                          : t('bookings.busSeatPlaceholder')
+                      "
                     />
                   </div>
                   <div v-if="form.transportMode === 'FERRY'" class="two-col">
                     <TfInput
                       v-model="form.vesselName"
-                      label="Vessel name"
-                      placeholder="e.g. Blue Star Delos"
+                      :label="t('bookings.vesselName')"
+                      :placeholder="t('bookings.vesselPlaceholder')"
                     />
                     <TfInput
                       v-model="form.cabin"
-                      label="Seat type / cabin"
-                      placeholder="e.g. Deck, Cabin 4B"
+                      :label="t('bookings.cabin')"
+                      :placeholder="t('bookings.cabinPlaceholder')"
                     />
                   </div>
                   <TfInput
                     v-if="form.transportMode === 'CAR_RENTAL'"
                     v-model="form.carClass"
-                    label="Car class / model"
-                    placeholder="e.g. Compact / VW Golf"
+                    :label="t('bookings.carClass')"
+                    :placeholder="t('bookings.carClassPlaceholder')"
                   />
                 </TfDrawerSection>
 
                 <!-- Accommodation: property + city + dates -->
-                <TfDrawerSection v-if="form.category === 'ACCOMMODATION'" label="Stay">
+                <TfDrawerSection
+                  v-if="form.category === 'ACCOMMODATION'"
+                  :label="t('bookings.stay')"
+                >
                   <div v-if="FEATURES.geoPlaceSearch && !ro" class="field">
-                    <label class="label">Find the property</label>
+                    <label class="label">{{ t('bookings.findProperty') }}</label>
                     <TfPlaceSearch
                       v-model="hotelSearchText"
-                      placeholder="e.g. Le Patta Resort, Marriott Bangkok…"
+                      :placeholder="t('bookings.propertyPlaceholder')"
                       @select="onHotelSelect"
                     />
-                    <span class="hint">Fills in the name, city, address and the pin.</span>
+                    <span class="hint">{{ t('bookings.propertyHint') }}</span>
                   </div>
                   <BookingMap v-if="FEATURES.geoPlaceSearch" :markers="placeMarkers" />
                   <div class="field">
                     <label class="label"
-                      >City<span class="label-req" aria-hidden="true">*</span></label
+                      >{{ t('bookings.city')
+                      }}<span class="label-req" aria-hidden="true">*</span></label
                     >
                     <TfCitySearch
                       v-model="form.accommodationCity"
                       :error="fieldError('accommodationCity')"
-                      placeholder="e.g. Krabi, Bangkok, Kyoto"
+                      :placeholder="t('bookings.cityPlaceholder')"
                     />
                     <span v-if="fieldError('accommodationCity')" class="hint hint--error">{{
                       fieldError('accommodationCity')
@@ -415,14 +455,14 @@
                   </div>
                   <TfInput
                     v-model="form.address"
-                    label="Address"
-                    placeholder="Street and number"
-                    :helper="ro ? '' : 'Geocoded from the name and city on save if left empty.'"
+                    :label="t('bookings.address')"
+                    :placeholder="t('bookings.addressPlaceholder')"
+                    :helper="ro ? '' : t('bookings.addressHelper')"
                   />
                   <TfDatePicker
                     v-model="stayDateRange"
                     mode="range"
-                    label="Check-in → check-out"
+                    :label="t('bookings.checkInOut')"
                     required
                     :error="fieldError('stay')"
                     :min="stayMinDate"
@@ -432,28 +472,35 @@
                   />
                   <p v-if="tripStartDate || formNights" class="hint" style="margin: -2px 0 0">
                     <template v-if="formNights"
-                      >{{ formNights }} night{{ formNights === 1 ? '' : 's'
+                      >{{ t('bookings.nights', { count: formNights })
                       }}<template v-if="formPricePerNight">
-                        · {{ formPricePerNight.toFixed(2) }}
-                        {{ form.priceCurrency || currency }}/night</template
+                        ·
+                        {{
+                          t('bookings.perNight', {
+                            price: formPricePerNight.toFixed(2),
+                            currency: form.priceCurrency || currency,
+                          })
+                        }}</template
                       ></template
                     >
                     <template v-if="formNights && tripStartDate"> · </template>
-                    <template v-if="tripStartDate"
-                      >trip {{ formatDateShort(tripStartDate) }} –
-                      {{ formatDateShort(tripEndDate) }}</template
-                    >
+                    <template v-if="tripStartDate">{{
+                      t('bookings.tripDates', {
+                        from: formatDateShort(tripStartDate),
+                        to: formatDateShort(tripEndDate),
+                      })
+                    }}</template>
                   </p>
                   <div class="two-col">
                     <TfTimePicker
                       v-model="form.checkInTime"
-                      label="Check-in time"
+                      :label="t('bookings.checkInTime')"
                       placeholder="14:00"
                       clearable
                     />
                     <TfTimePicker
                       v-model="form.checkOutTime"
-                      label="Check-out time"
+                      :label="t('bookings.checkOutTime')"
                       placeholder="11:00"
                       clearable
                     />
@@ -461,45 +508,53 @@
                   <div class="two-col">
                     <TfInput
                       v-model="form.roomType"
-                      label="Room type"
-                      placeholder="e.g. Double, Suite"
+                      :label="t('bookings.roomType')"
+                      :placeholder="t('bookings.roomTypePlaceholder')"
                     />
-                    <TfNumberInput v-model="form.guests" type="plain" label="Guests" :min="1" />
+                    <TfNumberInput
+                      v-model="form.guests"
+                      type="plain"
+                      :label="t('bookings.guests')"
+                      :min="1"
+                    />
                   </div>
                 </TfDrawerSection>
 
                 <!-- Activity: optional location -->
-                <TfDrawerSection v-if="form.category === 'ACTIVITY'" label="When & where">
+                <TfDrawerSection
+                  v-if="form.category === 'ACTIVITY'"
+                  :label="t('bookings.whenWhere')"
+                >
                   <!-- The same one-control range transport uses: a booked tour has
                        a start and an end, and with them the plan knows its day. -->
                   <TfDatePicker
                     v-model="travelRange"
                     mode="datetime-range"
-                    label="Starts → ends"
+                    :label="t('bookings.startsEnds')"
                     :view-date="stayMinDate"
                     clearable
                   />
                   <p v-if="formDurationMin || !ro" class="hint" style="margin: -2px 0 0">
-                    <template v-if="formDurationMin"
-                      >Takes {{ formatDuration(formDurationMin) }}</template
-                    >
-                    <template v-else>With a date it lands in the day plan on its own.</template>
+                    <template v-if="formDurationMin">{{
+                      t('bookings.takes', { duration: formatDuration(formDurationMin) })
+                    }}</template>
+                    <template v-else>{{ t('bookings.withDateHint') }}</template>
                   </p>
                   <div class="field">
-                    <label class="label">Where</label>
+                    <label class="label">{{ t('bookings.where') }}</label>
                     <TfPlaceSearch
                       v-if="FEATURES.geoPlaceSearch"
                       v-model="form.fromPlace"
-                      placeholder="e.g. Elephant Sanctuary, Central Park…"
+                      :placeholder="t('bookings.wherePlaceholder')"
                       @select="onActivityLocationSelect"
                     />
                     <input
                       v-else
                       class="input"
                       v-model="form.fromPlace"
-                      placeholder="e.g. Elephant Sanctuary, Central Park…"
+                      :placeholder="t('bookings.wherePlaceholder')"
                     />
-                    <span v-if="!ro" class="hint">Optional — puts the activity on the map.</span>
+                    <span v-if="!ro" class="hint">{{ t('bookings.whereHint') }}</span>
                   </div>
                   <BookingMap v-if="FEATURES.geoPlaceSearch" :markers="placeMarkers" />
                 </TfDrawerSection>
@@ -508,20 +563,20 @@
 
             <!-- ============ 2. Price: what it costs, what is paid ============ -->
             <template v-else-if="tab === 'price'">
-              <TfDrawerSection label="Price">
+              <TfDrawerSection :label="t('bookings.price')">
                 <fieldset class="form-part" :disabled="ro">
                   <div class="two-col two-col--wide-left">
                     <TfNumberInput
                       v-model="form.fullPrice"
                       type="plain"
-                      label="Full price"
+                      :label="t('bookings.fullPrice')"
                       required
                       :error="fieldError('fullPrice')"
                       :precision="2"
                     />
                     <TfSelect
                       v-model="form.priceCurrency"
-                      label="Currency"
+                      :label="t('bookings.currency')"
                       :options="currencySelectOptions"
                       placeholder="EUR"
                       @update:modelValue="onCurrencyChange"
@@ -530,16 +585,23 @@
                   <div v-if="showExchangeRate" class="rate-box">
                     <div style="flex: 1">
                       <div class="rate-label">
-                        1 {{ form.priceCurrency }} = ? {{ currency }}
+                        {{ t('bookings.rateQuestion', { from: form.priceCurrency, to: currency }) }}
                       </div>
                       <div class="rate-value">
                         {{ form.exchangeRate ? Number(form.exchangeRate).toFixed(4) : '—' }}
                         <span class="rate-unit">{{ currency }}</span>
                       </div>
                       <div v-if="form.fullPrice && form.exchangeRate" class="hint">
-                        {{ Number(form.fullPrice).toFixed(2) }} {{ form.priceCurrency }} ≈
-                        {{ (Number(form.fullPrice) * Number(form.exchangeRate)).toFixed(2) }}
-                        {{ currency }}
+                        {{
+                          t('bookings.approx', {
+                            amount: Number(form.fullPrice).toFixed(2),
+                            from: form.priceCurrency,
+                            converted: (Number(form.fullPrice) * Number(form.exchangeRate)).toFixed(
+                              2,
+                            ),
+                            to: currency,
+                          })
+                        }}
                       </div>
                     </div>
                     <TfButton
@@ -554,13 +616,13 @@
                         :style="fetchingRate ? 'animation:spin 1s linear infinite' : ''"
                         style="font-size: 13px"
                       ></i>
-                      {{ fetchingRate ? '' : 'Update rate' }}
+                      {{ fetchingRate ? '' : t('bookings.updateRate') }}
                     </TfButton>
                   </div>
                 </fieldset>
               </TfDrawerSection>
 
-              <TfDrawerSection label="Payment">
+              <TfDrawerSection :label="t('bookings.payment')">
                 <!-- Paid in full: live in both modes. In the details it saves at once,
                      because a box you can tick must do something when ticked. -->
                 <label class="paid-row" for="paid-simple">
@@ -570,16 +632,16 @@
                     id="paid-simple"
                     @change="onPaidSimpleChange"
                   />
-                  <span class="paid-row-text">Paid in full</span>
+                  <span class="paid-row-text">{{ t('bookings.paidInFull') }}</span>
                   <span class="hint">{{
-                    ro ? 'saved right away' : 'or schedule instalments below'
+                    ro ? t('bookings.savedRightAway') : t('bookings.orSchedule')
                   }}</span>
                 </label>
 
                 <!-- Instalments: exist only for a saved booking (they are rows of their own). -->
                 <div v-if="editingBooking && !form.paidSimple">
                   <div class="pay-head">
-                    <span class="pay-head-title">Instalments</span>
+                    <span class="pay-head-title">{{ t('bookings.instalments') }}</span>
                     <TfBadge
                       v-if="editingBooking.payments.length"
                       :tone="paymentsMatch ? 'success' : 'warning'"
@@ -587,7 +649,7 @@
                     >
                       {{
                         paymentsMatch
-                          ? 'Matches total'
+                          ? t('bookings.matchesTotal')
                           : `${paymentsTotal.toFixed(2)} / ${Number(editingBooking.fullPrice || 0).toFixed(2)}`
                       }}
                     </TfBadge>
@@ -612,13 +674,13 @@
                         <div v-if="p.dueDate" class="pay-due">{{ formatDateShort(p.dueDate) }}</div>
                       </div>
                       <TfBadge :tone="p.paid ? 'success' : 'neutral'" variant="soft">{{
-                        p.paid ? 'Paid' : 'Pending'
+                        p.paid ? t('bookings.paid') : t('bookings.pending')
                       }}</TfBadge>
                       <button
                         type="button"
                         class="del-btn"
                         @click.stop="deletePayment(p.id)"
-                        v-tooltip="'Delete'"
+                        v-tooltip="t('common.delete')"
                       >
                         <i class="pi pi-times"></i>
                       </button>
@@ -630,20 +692,24 @@
                       @click="openPaymentDialog(editingBooking, null)"
                     >
                       <i class="pi pi-plus" style="font-size: 14px"></i>
-                      Schedule payment ({{ paymentRemaining.toFixed(2) }}
-                      {{ bookingCurrency }} remaining)
+                      {{
+                        t('bookings.schedulePayment', {
+                          remaining: paymentRemaining.toFixed(2),
+                          currency: bookingCurrency,
+                        })
+                      }}
                     </button>
                     <div
                       v-else-if="editingBooking.fullPrice && editingBooking.payments.length"
                       class="pay-covered"
                     >
-                      Full amount covered
+                      {{ t('bookings.fullAmountCovered') }}
                     </div>
                   </div>
                 </div>
                 <div v-if="!editingBooking && !form.paidSimple" class="note-box">
                   <i class="pi pi-info-circle" style="font-size: 14px"></i>
-                  Save first, then schedule the instalments here.
+                  {{ t('bookings.saveFirstPayments') }}
                 </div>
               </TfDrawerSection>
             </template>
@@ -651,54 +717,56 @@
             <!-- ============ 3. Details: paperwork ============ -->
             <template v-else>
               <fieldset class="form-part" :disabled="ro">
-                <TfDrawerSection label="Confirmation">
+                <TfDrawerSection :label="t('bookings.confirmation')">
                   <div class="two-col">
                     <TfSelect
                       v-if="form.category === 'ACCOMMODATION'"
                       v-model="form.vendor"
-                      label="Booked via"
+                      :label="t('bookings.bookedVia')"
                       :options="accommodationVendorOptions"
-                      placeholder="Select platform"
+                      :placeholder="t('bookings.selectPlatform')"
                     />
                     <TfInput
                       v-else
                       v-model="form.vendor"
-                      label="Vendor"
-                      placeholder="Airline, tour operator…"
+                      :label="t('bookings.vendor')"
+                      :placeholder="t('bookings.vendorPlaceholder')"
                     />
                     <TfInput
                       v-model="form.confirmationNumber"
-                      label="Confirmation #"
+                      :label="t('bookings.confirmationNumber')"
                       placeholder="ABC-123"
                     />
                   </div>
                   <TfInput
                     v-model="form.bookingUrl"
-                    label="Booking link"
-                    placeholder="https://… (confirmation page, e-ticket)"
+                    :label="t('bookings.bookingLink')"
+                    :placeholder="t('bookings.bookingLinkPlaceholder')"
                   />
                   <TfInput
                     v-model="form.notes"
-                    label="Notes"
-                    placeholder="Conditions, cancellation, details"
+                    :label="t('bookings.notes')"
+                    :placeholder="t('bookings.notesPlaceholder')"
                   />
                 </TfDrawerSection>
               </fieldset>
 
               <!-- Attachments (PDFs, tickets, confirmation emails) — live in both modes -->
-              <TfDrawerSection label="Attachments">
+              <TfDrawerSection :label="t('bookings.attachments')">
                 <div v-if="editingBooking" style="display: flex; flex-direction: column; gap: 8px">
                   <div v-for="a in editingBooking.attachments || []" :key="a.id" class="file-row">
                     <i class="pi pi-file" style="color: var(--accent)"></i>
                     <button type="button" class="file-open" @click="downloadAttachment(a)">
                       <div class="file-name">{{ a.fileName }}</div>
-                      <div class="file-meta">{{ formatBytes(a.size) }} · download</div>
+                      <div class="file-meta">
+                        {{ formatBytes(a.size) }} · {{ t('bookings.download') }}
+                      </div>
                     </button>
                     <button
                       type="button"
                       class="del-btn"
                       @click="removeAttachment(a)"
-                      v-tooltip="'Delete'"
+                      v-tooltip="t('common.delete')"
                     >
                       <i class="pi pi-times"></i>
                     </button>
@@ -716,12 +784,12 @@
                     :disabled="uploadingAttachment"
                   >
                     <i class="pi pi-upload" style="font-size: 14px"></i>
-                    {{ uploadingAttachment ? 'Uploading…' : 'Upload PDF / file (max 10 MB)' }}
+                    {{ uploadingAttachment ? t('bookings.uploading') : t('bookings.uploadFile') }}
                   </button>
                 </div>
                 <div v-else class="note-box">
                   <i class="pi pi-info-circle" style="font-size: 14px"></i>
-                  Save first, then attach tickets and confirmations here.
+                  {{ t('bookings.saveFirstFiles') }}
                 </div>
               </TfDrawerSection>
             </template>
@@ -729,25 +797,31 @@
 
           <template #footer>
             <template v-if="drawerMode === 'view' && viewing">
-              <TfButton icon="pi-pencil" style="flex: 1" @click="editBooking(viewing)"
-                >Edit booking</TfButton
-              >
-              <TfButton variant="danger" icon="pi-trash" @click="confirmDelete(viewing)"
-                >Delete</TfButton
-              >
+              <TfButton icon="pi-pencil" style="flex: 1" @click="editBooking(viewing)">{{
+                t('bookings.edit')
+              }}</TfButton>
+              <TfButton variant="danger" icon="pi-trash" @click="confirmDelete(viewing)">{{
+                t('common.delete')
+              }}</TfButton>
             </template>
             <template v-else>
               <span class="footer-status" :class="{ 'footer-status--ok': !missingCount }">
                 <i :class="missingCount ? 'pi pi-circle' : 'pi pi-check-circle'"></i>
                 {{
                   missingCount
-                    ? `${missingCount} required field${missingCount === 1 ? '' : 's'} left`
-                    : 'Ready to save'
+                    ? t('bookings.missing', { count: missingCount })
+                    : t('bookings.readyToSave')
                 }}
               </span>
-              <TfButton variant="ghost" @click="closeDrawer">Cancel</TfButton>
+              <TfButton variant="ghost" @click="closeDrawer">{{ t('common.cancel') }}</TfButton>
               <TfButton variant="primary" @click="saveBooking" :disabled="saving">
-                {{ saving ? 'Saving...' : editingBooking ? 'Save' : 'Create booking' }}
+                {{
+                  saving
+                    ? t('settings.saving')
+                    : editingBooking
+                      ? t('common.save')
+                      : t('bookings.createBooking')
+                }}
               </TfButton>
             </template>
           </template>
@@ -760,7 +834,7 @@
     <!-- Payment Dialog (add/edit) -->
     <TfModal
       v-model="showPaymentDialog"
-      :title="editingPayment ? 'Edit payment' : 'Schedule payment'"
+      :title="editingPayment ? t('bookings.editPayment') : t('bookings.schedulePaymentTitle')"
       size="sm"
     >
       <form @submit.prevent="savePayment" class="dialog-form">
@@ -786,11 +860,16 @@
             @click="paymentForm.amount = paymentRemaining"
           >
             <i class="pi pi-check-circle" style="font-size: 14px; color: var(--accent)"></i>
-            Fill full amount: {{ paymentRemaining.toFixed(2) }} {{ bookingCurrency }}
+            {{
+              t('bookings.fillFullAmount', {
+                amount: paymentRemaining.toFixed(2),
+                currency: bookingCurrency,
+              })
+            }}
           </button>
         </div>
         <div class="field">
-          <label>Amount * ({{ bookingCurrency }})</label>
+          <label>{{ t('bookings.amount', { currency: bookingCurrency }) }}</label>
           <TfNumberInput
             v-model="paymentForm.amount"
             type="plain"
@@ -806,27 +885,34 @@
               display: block;
             "
           >
-            Remaining: {{ paymentRemaining.toFixed(2) }} {{ bookingCurrency }}
+            {{
+              t('bookings.remaining', {
+                amount: paymentRemaining.toFixed(2),
+                currency: bookingCurrency,
+              })
+            }}
           </small>
         </div>
         <div class="field">
-          <label>Due date</label>
+          <label>{{ t('bookings.dueDate') }}</label>
           <TfDatePicker v-model="paymentDueDate" mode="date" clearable />
         </div>
       </form>
       <template #footer>
         <div class="dialog-actions">
-          <TfButton v-if="editingPayment" variant="ghost" @click="deletePaymentAndClose"
-            >Delete</TfButton
-          >
+          <TfButton v-if="editingPayment" variant="ghost" @click="deletePaymentAndClose">{{
+            t('common.delete')
+          }}</TfButton>
           <span style="flex: 1"></span>
-          <TfButton variant="ghost" @click="showPaymentDialog = false">Cancel</TfButton>
+          <TfButton variant="ghost" @click="showPaymentDialog = false">{{
+            t('common.cancel')
+          }}</TfButton>
           <TfButton
             variant="primary"
             :icon="editingPayment ? 'pi-check' : 'pi-plus'"
             :loading="savingPayment"
             @click="savePayment"
-            >{{ editingPayment ? 'Save' : 'Add' }}</TfButton
+            >{{ editingPayment ? t('common.save') : t('common.add') }}</TfButton
           >
         </div>
       </template>
@@ -859,7 +945,7 @@ import {
 } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
 import { FEATURES } from '@/config.js';
-import { baseCurrency as accountCurrency, catEmoji, bookingEmoji } from '@tripyfull/core';
+import { baseCurrency as accountCurrency, catEmoji, bookingEmoji, t } from '@tripyfull/core';
 import {
   formatDualPrice,
   toBaseCurrency,
@@ -890,7 +976,11 @@ const saving = ref(false);
 const syncingPlan = ref(false);
 const plannedFromBookings = ref(0);
 const planLabel = computed(() =>
-  syncingPlan.value ? 'Planning…' : plannedFromBookings.value ? 'Update plan' : 'Add to plan',
+  syncingPlan.value
+    ? t('bookings.planning')
+    : plannedFromBookings.value
+      ? t('bookings.updatePlan')
+      : t('bookings.addToPlan'),
 );
 
 const loadPlanCount = async () => {
@@ -908,15 +998,14 @@ const syncPlan = async () => {
     const { data } = await api.post(`/api/trips/${tripId}/plan/from-bookings`);
     plannedFromBookings.value = Number(data.total || 0);
     const detail =
-      `${data.created} stop${data.created === 1 ? '' : 's'} on ` +
-      `${data.days} day${data.days === 1 ? '' : 's'}` +
-      (data.skippedBookings
-        ? ` · ${data.skippedBookings} booking${data.skippedBookings === 1 ? '' : 's'} had no date`
-        : '');
-    if (data.created) toast.success('Plan updated', detail);
-    else toast.info('Nothing to plan', 'No booking has dates that fall inside the trip.');
+      t('bookings.planDetail', {
+        stops: t('bookings.planStops', { count: data.created }),
+        days: t('bookings.planDays', { count: data.days }),
+      }) + (data.skippedBookings ? t('bookings.planSkipped', { count: data.skippedBookings }) : '');
+    if (data.created) toast.success(t('bookings.planUpdated'), detail);
+    else toast.info(t('bookings.nothingToPlan'), t('bookings.nothingToPlanMsg'));
   } catch {
-    toast.danger('Error', 'Could not write the bookings into the plan');
+    toast.danger(t('common.error'), t('bookings.planFailed'));
   } finally {
     syncingPlan.value = false;
   }
@@ -1069,7 +1158,10 @@ const fetchRate = async () => {
     });
     form.value.exchangeRate = res.data.rate;
   } catch {
-    toast.warning('Rate unavailable', `Could not fetch rate for ${form.value.priceCurrency}`);
+    toast.warning(
+      t('bookings.rateUnavailable'),
+      t('bookings.rateFailed', { currency: form.value.priceCurrency }),
+    );
   } finally {
     fetchingRate.value = false;
   }
@@ -1090,63 +1182,56 @@ const onCurrencyChange = (val) => {
   }
 };
 
-const categoryMap = [
-  { label: 'Transportation', value: 'TRANSPORTATION' },
-  { label: 'Accommodation', value: 'ACCOMMODATION' },
-  { label: 'Activity', value: 'ACTIVITY' },
-];
-const categoryOptions = categoryMap.map((o) => o.label);
+// Both pickers work in words, so their labels are read through t() inside
+// computeds — a change of language relabels them without a reload.
+const CATEGORY_VALUES = ['TRANSPORTATION', 'ACCOMMODATION', 'ACTIVITY'];
+const categoryLabelOf = (v) =>
+  ({
+    TRANSPORTATION: t('bookings.typeTransportation'),
+    ACCOMMODATION: t('bookings.typeAccommodation'),
+    ACTIVITY: t('bookings.typeActivity'),
+  })[v] ?? v;
+const categoryOptions = computed(() => CATEGORY_VALUES.map(categoryLabelOf));
 
 /**
  * A booking is something you reserve and pay for. Walking and hopping on the
  * metro are not booked, so they are not offered here — they live on the day's
  * legs in the itinerary instead. Old rows keep displaying their label.
  */
-const transportMap = [
-  { label: 'Flight', value: 'FLIGHT' },
-  { label: 'Train', value: 'TRAIN' },
-  { label: 'Bus', value: 'BUS' },
-  { label: 'Ferry', value: 'FERRY' },
-  { label: 'Taxi / transfer', value: 'TAXI' },
-  { label: 'Car rental', value: 'CAR_RENTAL' },
-  // Not offered, kept so existing bookings still read correctly:
-  { label: 'Metro', value: 'METRO', legacy: true },
-  { label: 'Walk', value: 'WALK', legacy: true },
-];
-const transportOptions = transportMap.filter((o) => !o.legacy).map((o) => o.label);
+const TRANSPORT_VALUES = ['FLIGHT', 'TRAIN', 'BUS', 'FERRY', 'TAXI', 'CAR_RENTAL'];
+// Not offered any more, kept so existing bookings still read correctly:
+const LEGACY_TRANSPORT = ['METRO', 'WALK'];
+const transportLabelOf = (v) =>
+  [...TRANSPORT_VALUES, ...LEGACY_TRANSPORT].includes(v) ? t(`bookings.mode.${v}`) : v;
+const transportOptions = computed(() => TRANSPORT_VALUES.map(transportLabelOf));
 
-const accommodationVendorOptions = [
+const accommodationVendorOptions = computed(() => [
   'Booking.com',
   'Airbnb',
   'Hotels.com',
   'Expedia',
   'Agoda',
   'Hostelworld',
-  'Direct (hotel website)',
-  'Other',
-];
+  t('bookings.vendorDirect'),
+  t('bookings.vendorOther'),
+]);
 // TfSelect works with string labels; bridge label <-> stored value for category/transport.
-const labelToValue = (map, label) => map.find((o) => o.label === label)?.value ?? label;
-const valueToLabel = (map, value) => map.find((o) => o.value === value)?.label ?? value;
-
 const categoryLabel = computed({
-  get: () => valueToLabel(categoryMap, form.value.category),
+  get: () => categoryLabelOf(form.value.category),
   set: (label) => {
-    form.value.category = labelToValue(categoryMap, label);
+    form.value.category = CATEGORY_VALUES.find((v) => categoryLabelOf(v) === label) ?? label;
   },
 });
-const transportModeLabel = computed({
-  get: () => valueToLabel(transportMap, form.value.transportMode),
+const transportModeName = computed({
+  get: () => transportLabelOf(form.value.transportMode),
   set: (label) => {
-    form.value.transportMode = labelToValue(transportMap, label);
+    form.value.transportMode = TRANSPORT_VALUES.find((v) => transportLabelOf(v) === label) ?? label;
   },
 });
 
 /** What that icon means, spelled out on hover. */
 const bookingIconTitle = (b) =>
-  b.transportMode
-    ? valueToLabel(transportMap, b.transportMode)
-    : valueToLabel(categoryMap, b.category);
+  b.transportMode ? transportLabelOf(b.transportMode) : categoryLabelOf(b.category);
 
 const dualPrice = (b) =>
   formatDualPrice(b.fullPrice, b.priceCurrency || currency.value, currency.value, b.exchangeRate);
@@ -1191,9 +1276,9 @@ const catIconStyle = (cat) =>
 
 /** Everything on the right column, derived from the bookings themselves. */
 const CAT_META = [
-  { cat: 'TRANSPORTATION', label: 'Transport', color: 'var(--primary)' },
-  { cat: 'ACCOMMODATION', label: 'Accommodation', color: 'var(--warning-500)' },
-  { cat: 'ACTIVITY', label: 'Activities', color: 'var(--accent)' },
+  { cat: 'TRANSPORTATION', key: 'bookings.catTransport', color: 'var(--primary)' },
+  { cat: 'ACCOMMODATION', key: 'bookings.catAccommodation', color: 'var(--warning-500)' },
+  { cat: 'ACTIVITY', key: 'bookings.catActivities', color: 'var(--accent)' },
 ];
 
 /** Prices live in their own currencies; totals only make sense in one. */
@@ -1218,7 +1303,7 @@ const stats = computed(() => {
       sums[b.category].n += 1;
       sums[b.category].sum += full;
     }
-    status[payStatusLabel(b).toLowerCase()] += 1;
+    status[payStatusKey(b)] += 1;
     if (b.category === 'ACCOMMODATION' && b.nights) nights += b.nights;
   }
 
@@ -1231,6 +1316,7 @@ const stats = computed(() => {
     status,
     byCat: CAT_META.map((c) => ({
       ...c,
+      label: t(c.key),
       ...sums[c.cat],
       share: total > 0 ? (sums[c.cat].sum / total) * 100 : 0,
     })).filter((c) => c.n > 0),
@@ -1261,14 +1347,11 @@ const upcomingPayments = computed(() =>
 );
 
 const bookingGroups = computed(() => {
-  const groups = [
-    { cat: 'TRANSPORTATION', label: 'Transport' },
-    { cat: 'ACCOMMODATION', label: 'Accommodation' },
-    { cat: 'ACTIVITY', label: 'Activities' },
-  ];
-  return groups
-    .map((g) => ({ ...g, items: bookings.value.filter((b) => b.category === g.cat) }))
-    .filter((g) => g.items.length > 0);
+  return CAT_META.map((g) => ({
+    cat: g.cat,
+    label: t(g.key),
+    items: bookings.value.filter((b) => b.category === g.cat),
+  })).filter((g) => g.items.length > 0);
 });
 
 const payStatusTone = (b) => {
@@ -1280,14 +1363,17 @@ const payStatusTone = (b) => {
   return 'danger';
 };
 
-const payStatusLabel = (b) => {
-  if (b.paidSimple) return 'Paid';
+/** The state itself, so the totals can count it whatever the language says. */
+const payStatusKey = (b) => {
+  if (b.paidSimple) return 'paid';
   const paid = Number(b.paidTotal) || 0;
   const total = Number(b.fullPrice) || 0;
-  if (paid >= total && total > 0) return 'Paid';
-  if (paid > 0) return 'Partial';
-  return 'Unpaid';
+  if (paid >= total && total > 0) return 'paid';
+  if (paid > 0) return 'partial';
+  return 'unpaid';
 };
+
+const payStatusLabel = (b) => t(`bookings.${payStatusKey(b)}`);
 
 const nextPayment = (b) => {
   const unpaid = (b.payments || []).filter((p) => !p.paid && p.dueDate);
@@ -1300,11 +1386,13 @@ const bookingMeta = (b) => {
     const parts = [];
     if (b.departureAt)
       parts.push(
-        `pick-up ${formatDateTime(b.departureAt)}${b.fromPlace ? ` · ${b.fromPlace}` : ''}`,
+        t('bookings.metaPickup', { when: formatDateTime(b.departureAt) }) +
+          (b.fromPlace ? ` · ${b.fromPlace}` : ''),
       );
     if (b.arrivalAt)
       parts.push(
-        `drop-off ${formatDateTime(b.arrivalAt)}${b.toPlace && b.toPlace !== b.fromPlace ? ` · ${b.toPlace}` : ''}`,
+        t('bookings.metaDropoff', { when: formatDateTime(b.arrivalAt) }) +
+          (b.toPlace && b.toPlace !== b.fromPlace ? ` · ${b.toPlace}` : ''),
       );
     if (b.carClass) parts.push(b.carClass);
     return parts.join(' · ');
@@ -1315,7 +1403,7 @@ const bookingMeta = (b) => {
     if (b.fromPlace && b.toPlace) parts.push(`${b.fromPlace} → ${b.toPlace}`);
     if (b.departureAt) parts.push(formatDateTime(b.departureAt));
     if (b.durationMinutes) parts.push(formatDuration(b.durationMinutes));
-    if (b.seat) parts.push(`seat ${b.seat}`);
+    if (b.seat) parts.push(t('bookings.metaSeat', { seat: b.seat }));
     if (b.vesselName) parts.push(b.vesselName);
     if (b.carClass) parts.push(b.carClass);
     return parts.join(' · ');
@@ -1324,13 +1412,16 @@ const bookingMeta = (b) => {
     const parts = [];
     if (b.accommodationCity) parts.push(b.accommodationCity);
     if (b.checkIn) parts.push(`${formatDateShort(b.checkIn)} → ${formatDateShort(b.checkOut)}`);
-    if (b.nights) parts.push(`${b.nights} night${b.nights === 1 ? '' : 's'}`);
+    if (b.nights) parts.push(t('bookings.nights', { count: b.nights }));
     if (b.pricePerNight)
       parts.push(
-        `${Number(b.pricePerNight).toFixed(2)} ${b.priceCurrency || currency.value}/night`,
+        t('bookings.perNight', {
+          price: Number(b.pricePerNight).toFixed(2),
+          currency: b.priceCurrency || currency.value,
+        }),
       );
     if (b.roomType) parts.push(b.roomType);
-    if (b.guests) parts.push(`${b.guests} guest${b.guests === 1 ? '' : 's'}`);
+    if (b.guests) parts.push(t('bookings.metaGuests', { count: b.guests }));
     return parts.join(' · ');
   }
   if (b.category === 'ACTIVITY') {
@@ -1341,7 +1432,7 @@ const bookingMeta = (b) => {
     if (b.confirmationNumber) parts.push(b.confirmationNumber);
     // An activity with none of that at least says what is missing, instead of
     // leaving the row blank under its name.
-    if (!parts.length) return 'No date yet';
+    if (!parts.length) return t('bookings.metaNoDate');
     return parts.join(' · ');
   }
   return '';
@@ -1388,7 +1479,7 @@ const rentalDays = computed(() => {
     1,
     Math.ceil((new Date(form.value.arrivalAt) - new Date(form.value.departureAt)) / 86400000),
   );
-  return `${d} day${d === 1 ? '' : 's'}`;
+  return t('bookings.days', { count: d });
 });
 
 /* ---- Tabs and required fields ----
@@ -1399,15 +1490,15 @@ const rentalDays = computed(() => {
 const tab = ref('booking');
 const attempted = ref(false);
 
-const REQUIRED_LABELS = {
-  name: 'Give the booking a name',
-  category: 'Choose a category',
-  transportMode: 'How do you travel?',
-  fromPlace: 'Where from?',
-  toPlace: 'Where to?',
-  accommodationCity: 'Which city?',
-  stay: 'Check-in and check-out dates',
-  fullPrice: 'What does it cost?',
+const REQUIRED_KEYS = {
+  name: 'bookings.reqName',
+  category: 'bookings.reqCategory',
+  transportMode: 'bookings.reqTransportMode',
+  fromPlace: 'bookings.reqFrom',
+  toPlace: 'bookings.reqTo',
+  accommodationCity: 'bookings.reqCity',
+  stay: 'bookings.reqStay',
+  fullPrice: 'bookings.reqPrice',
 };
 const TAB_OF = {
   name: 'booking',
@@ -1441,15 +1532,15 @@ const missing = computed(() => {
 });
 const missingCount = computed(() => missing.value.length);
 const fieldError = (key) =>
-  attempted.value && missing.value.includes(key) ? REQUIRED_LABELS[key] : '';
+  attempted.value && missing.value.includes(key) ? t(REQUIRED_KEYS[key]) : '';
 
 const tabItems = computed(() => {
   const count = (id) => missing.value.filter((k) => TAB_OF[k] === id).length;
   const badge = (id) => (ro.value ? '' : count(id) ? String(count(id)) : '');
   return [
-    { id: 'booking', label: 'Booking', badge: badge('booking') },
-    { id: 'price', label: 'Price', badge: badge('price') },
-    { id: 'details', label: 'Details', badge: '' },
+    { id: 'booking', label: t('bookings.tabBooking'), badge: badge('booking') },
+    { id: 'price', label: t('bookings.tabPrice'), badge: badge('price') },
+    { id: 'details', label: t('bookings.tabDetails'), badge: '' },
   ];
 });
 
@@ -1628,9 +1719,9 @@ const saveBooking = async () => {
       editingBooking.value = res.data;
       viewing.value = res.data;
     }
-    toast.success('Saved');
+    toast.success(t('common.saved'));
   } catch {
-    toast.danger('Error', 'Failed to save booking');
+    toast.danger(t('common.error'), t('bookings.saveFailed'));
   } finally {
     saving.value = false;
   }
@@ -1638,20 +1729,20 @@ const saveBooking = async () => {
 
 const confirmDelete = (b) => {
   confirm({
-    title: 'Confirm',
-    message: `Delete "${b.name}"?`,
+    title: t('common.confirm'),
+    message: t('bookings.deleteMsg', { name: b.name }),
     tone: 'danger',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
   }).then(async (ok) => {
     if (!ok) return;
     try {
       await api.delete(`/api/bookings/${b.id}`);
       bookings.value = bookings.value.filter((x) => x.id !== b.id);
       showDrawer.value = false;
-      toast.success('Deleted');
+      toast.success(t('common.deleted'));
     } catch {
-      toast.danger('Error', 'Failed to delete booking');
+      toast.danger(t('common.error'), t('bookings.deleteFailed'));
     }
   });
 };
@@ -1686,12 +1777,12 @@ const savePayment = async () => {
     }
     updateBookingLocal(res.data);
     showPaymentDialog.value = false;
-    toast.success(editingPayment.value ? 'Updated' : 'Added');
+    toast.success(editingPayment.value ? t('bookings.paymentUpdated') : t('bookings.paymentAdded'));
   } catch (err) {
     // GlobalExceptionHandler returns { error: "..." }; never toast a raw object.
     const data = err.response?.data;
     const msg = data?.error || (typeof data === 'string' ? data : null);
-    toast.danger('Error', msg || 'Failed to save payment');
+    toast.danger(t('common.error'), msg || t('bookings.paymentSaveFailed'));
   } finally {
     savingPayment.value = false;
   }
@@ -1703,7 +1794,7 @@ const togglePaid = async (bookingId, payment) => {
     const res = await api.patch(`/api/payments/${payment.id}/${endpoint}`);
     updateBookingLocal(res.data);
   } catch {
-    toast.danger('Error', 'Failed to update payment');
+    toast.danger(t('common.error'), t('bookings.paymentUpdateFailed'));
   }
 };
 
@@ -1711,9 +1802,9 @@ const deletePayment = async (paymentId) => {
   try {
     const res = await api.delete(`/api/payments/${paymentId}`);
     updateBookingLocal(res.data);
-    toast.success('Deleted');
+    toast.success(t('common.deleted'));
   } catch {
-    toast.danger('Error', 'Failed to delete payment');
+    toast.danger(t('common.error'), t('bookings.paymentDeleteFailed'));
   }
 };
 
@@ -1748,9 +1839,9 @@ const onAttachmentPicked = async (e) => {
     fd.append('file', file);
     const res = await api.post(`/api/bookings/${editingBooking.value.id}/attachments`, fd);
     updateBookingLocal(res.data);
-    toast.success('Uploaded', file.name);
+    toast.success(t('bookings.uploaded'), file.name);
   } catch {
-    toast.danger('Error', 'Upload failed (max 10 MB)');
+    toast.danger(t('common.error'), t('bookings.uploadFailed'));
   } finally {
     uploadingAttachment.value = false;
     e.target.value = '';
@@ -1769,7 +1860,7 @@ const downloadAttachment = async (a) => {
     link.remove();
     URL.revokeObjectURL(url);
   } catch {
-    toast.danger('Error', 'Download failed');
+    toast.danger(t('common.error'), t('bookings.downloadFailed'));
   }
 };
 
@@ -1777,9 +1868,9 @@ const removeAttachment = async (a) => {
   try {
     const res = await api.delete(`/api/attachments/${a.id}`);
     updateBookingLocal(res.data);
-    toast.success('Removed', a.fileName);
+    toast.success(t('bookings.removed'), a.fileName);
   } catch {
-    toast.danger('Error', 'Delete failed');
+    toast.danger(t('common.error'), t('bookings.deleteFileFailed'));
   }
 };
 
@@ -1788,7 +1879,7 @@ const refreshAllRates = async () => {
     (b) => b.priceCurrency && b.priceCurrency !== currency.value,
   );
   if (!needsUpdate.length) {
-    toast.info('All bookings are in your base currency');
+    toast.info(t('bookings.allBase'));
     return;
   }
   refreshingRates.value = true;
@@ -1812,7 +1903,7 @@ const refreshAllRates = async () => {
     /* ignore */
   }
   refreshingRates.value = false;
-  toast.success(`${updated} rate${updated !== 1 ? 's' : ''} updated`);
+  toast.success(t('bookings.ratesUpdated', { count: updated }));
 };
 
 const formatDateTime = (d) => {
@@ -1843,7 +1934,7 @@ onMounted(async () => {
     tripEndDate.value = tripRes.data.endDate;
     bookings.value = bookingsRes.data;
   } catch {
-    toast.danger('Error', 'Failed to load bookings');
+    toast.danger(t('common.error'), t('bookings.loadFailed'));
   } finally {
     loading.value = false;
   }
