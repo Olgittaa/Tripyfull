@@ -2,8 +2,8 @@
   <div class="page-content page-content--full">
     <div class="page-head">
       <div>
-        <h1>Budget</h1>
-        <p>What the trip costs, what is paid, and what is still to pay.</p>
+        <h1>{{ t('budget.title') }}</h1>
+        <p>{{ t('budget.subtitle') }}</p>
       </div>
     </div>
 
@@ -17,11 +17,8 @@
       <div v-if="budget.missingRates" class="budget-alert">
         <i class="pi pi-exclamation-triangle" style="font-size: 16px; flex: none"></i>
         <span
-          ><strong
-            >{{ budget.missingRates }} booking{{ budget.missingRates > 1 ? 's' : '' }} without an
-            exchange rate</strong
-          >
-          — shown in its own currency, not {{ currency }}.</span
+          ><strong>{{ t('budget.missingRates', { count: budget.missingRates }) }}</strong>
+          {{ t('budget.missingRatesTail', { currency }) }}</span
         >
         <TfButton
           size="sm"
@@ -29,7 +26,7 @@
           style="flex: none; margin-left: auto"
           @click="$router.push(`/trips/${tripId}/bookings`)"
         >
-          Update rates
+          {{ t('budget.updateRates') }}
         </TfButton>
       </div>
 
@@ -38,28 +35,32 @@
            where it only repeated these numbers. -->
       <div class="card budget-hero">
         <div class="budget-hero-main">
-          <div class="metric-label">Trip cost</div>
+          <div class="metric-label">{{ t('budget.tripCost') }}</div>
           <span class="money budget-hero-value"
             >{{ fmt(tripCost) }} <span class="money-cur">{{ currency }}</span></span
           >
           <div class="metric-sub">
-            {{ fmt(budget.bookingsTotal) }} booked · {{ fmt(budget.estimatesTotal) }} estimated in
-            the day plans
+            {{
+              t('budget.costSub', {
+                booked: fmt(budget.bookingsTotal),
+                estimated: fmt(budget.estimatesTotal),
+              })
+            }}
           </div>
         </div>
 
         <div v-if="Number(budget.bookingsTotal) > 0" class="budget-hero-pay">
-          <TfProgress label="Bookings paid" :value="paidPct" />
+          <TfProgress :label="t('budget.bookingsPaid')" :value="paidPct" />
           <div class="budget-hero-facts">
             <div class="budget-fact">
-              <span class="budget-fact-label">Paid</span>
+              <span class="budget-fact-label">{{ t('budget.paid') }}</span>
               <span class="money money--md" style="color: var(--success-500)">{{
                 fmt(budget.bookingsPaid)
               }}</span>
-              <span class="budget-fact-sub">{{ paidPct }}% of bookings</span>
+              <span class="budget-fact-sub">{{ t('budget.pctOfBookings', { pct: paidPct }) }}</span>
             </div>
             <div class="budget-fact">
-              <span class="budget-fact-label">Left to pay</span>
+              <span class="budget-fact-label">{{ t('budget.leftToPay') }}</span>
               <span
                 class="money money--md"
                 :style="{ color: remaining > 0 ? 'var(--danger-700)' : 'var(--text-primary)' }"
@@ -74,14 +75,15 @@
       <div class="budget-columns">
         <!-- What still has to be paid, and when -->
         <div class="card">
-          <h3 class="card-title">Payments</h3>
+          <h3 class="card-title">{{ t('budget.payments') }}</h3>
 
           <div v-if="!upcoming.length && !unscheduled.length" class="budget-settled">
-            <i class="pi pi-check-circle" style="font-size: 16px"></i> Nothing left to pay
+            <i class="pi pi-check-circle" style="font-size: 16px"></i>
+            {{ t('budget.nothingLeft') }}
           </div>
 
           <template v-if="upcoming.length">
-            <div class="budget-list-label">Scheduled</div>
+            <div class="budget-list-label">{{ t('budget.scheduled') }}</div>
             <div class="budget-list">
               <div v-for="p in upcoming" :key="p.paymentId" class="budget-pay-row">
                 <div class="cat-icon cat-icon--sm" :style="catStyle(p.category)">
@@ -90,12 +92,16 @@
                 <div style="flex: 1; min-width: 0">
                   <div class="budget-pay-name">{{ p.bookingName }}</div>
                   <div class="budget-pay-due" :class="{ 'is-late': isLate(p.dueDate) }">
-                    {{ p.dueDate ? 'due ' + formatDateShort(p.dueDate) : 'no date' }}
+                    {{
+                      p.dueDate
+                        ? t('budget.dueOn', { date: formatDateShort(p.dueDate) })
+                        : t('budget.noDate')
+                    }}
                   </div>
                 </div>
                 <span class="money money--sm">{{ fmt(p.amount) }} {{ currency }}</span>
                 <TfButton size="sm" variant="secondary" @click="markPaymentPaid(p)">
-                  <i class="pi pi-check" style="font-size: 12px"></i> Paid
+                  <i class="pi pi-check" style="font-size: 12px"></i> {{ t('budget.paid') }}
                 </TfButton>
               </div>
             </div>
@@ -103,10 +109,10 @@
 
           <template v-if="unscheduled.length">
             <div class="budget-list-label" style="margin-top: 14px">
-              Owed, no date yet
-              <span class="text-subtle" style="text-transform: none; letter-spacing: 0"
-                >— schedule instalments or tick «Paid in full» on the booking</span
-              >
+              {{ t('budget.owedNoDate') }}
+              <span class="text-subtle" style="text-transform: none; letter-spacing: 0">{{
+                t('budget.owedHint')
+              }}</span>
             </div>
             <div class="budget-list">
               <div
@@ -128,15 +134,15 @@
 
         <!-- Where the money goes, and how much of it is settled -->
         <div class="card">
-          <h3 class="card-title">By category</h3>
+          <h3 class="card-title">{{ t('budget.byCategory') }}</h3>
           <div v-if="!budget.byCategory.length" class="text-muted text-sm">
-            Nothing booked or planned yet.
+            {{ t('budget.nothingPlanned') }}
           </div>
           <div v-else class="budget-cats">
             <div class="budget-cat-head">
               <span style="flex: 1"></span>
-              <span class="budget-cat-col">Planned</span>
-              <span class="budget-cat-col">Paid</span>
+              <span class="budget-cat-col">{{ t('budget.planned') }}</span>
+              <span class="budget-cat-col">{{ t('budget.paid') }}</span>
             </div>
             <div v-for="c in budget.byCategory" :key="c.category" class="budget-cat">
               <div class="budget-cat-row">
@@ -177,7 +183,7 @@
                 </span>
               </div>
               <div v-else class="budget-cat-plan budget-cat-plan--none">
-                nothing planned to compare with
+                {{ t('budget.noCompare') }}
               </div>
             </div>
           </div>
@@ -187,25 +193,25 @@
       <!-- Per day: what the bookings cost for that day and what the plan estimates -->
       <div class="card budget-days-card" style="margin-top: 20px">
         <div class="card-head-row">
-          <h3 class="card-title" style="margin: 0">Day by day</h3>
-          <span v-if="!daysWithMoney.length" class="text-subtle text-sm"
-            >Amounts appear here once bookings have dates or stops carry a cost.</span
-          >
-          <span v-else class="text-subtle text-sm"
-            >{{ daysWithMoney.length }} of {{ budget.days.length }} days carry an amount</span
-          >
+          <h3 class="card-title" style="margin: 0">{{ t('budget.dayByDay') }}</h3>
+          <span v-if="!daysWithMoney.length" class="text-subtle text-sm">{{
+            t('budget.daysHint')
+          }}</span>
+          <span v-else class="text-subtle text-sm">{{
+            t('budget.daysCount', { shown: daysWithMoney.length, total: budget.days.length })
+          }}</span>
         </div>
 
         <template v-if="daysWithMoney.length">
           <div class="budget-day-header">
-            <span style="flex: 1">Day</span>
-            <span class="budget-day-col">Booked</span>
-            <span class="budget-day-col">Estimated</span>
+            <span style="flex: 1">{{ t('budget.day') }}</span>
+            <span class="budget-day-col">{{ t('budget.booked') }}</span>
+            <span class="budget-day-col">{{ t('budget.estimated') }}</span>
           </div>
           <div v-for="d in daysWithMoney" :key="d.dayId" class="budget-day">
             <div class="budget-day-row">
               <span class="budget-day-label">
-                Day {{ d.dayNumber }}
+                {{ t('overview.dayN', { n: d.dayNumber }) }}
                 <span class="text-subtle"> · {{ formatDayDate(d.date) }}</span>
                 <span v-if="d.city" class="budget-day-city text-subtle"
                   ><span class="budget-day-sep"> · </span>{{ d.city }}</span
@@ -214,14 +220,16 @@
               <!-- The label rides each amount; on a phone the header row is gone
                    and these become the only thing that names them. -->
               <span class="budget-day-col text-subtle" :class="{ 'is-empty': !Number(d.booked) }">
-                <span class="budget-day-col-label">Booked</span>{{ dash(d.booked) }}
+                <span class="budget-day-col-label">{{ t('budget.booked') }}</span
+                >{{ dash(d.booked) }}
               </span>
               <span
                 class="budget-day-col"
                 :class="{ 'is-empty': !Number(d.estimated) }"
                 style="font-weight: 600"
               >
-                <span class="budget-day-col-label">Est.</span>{{ dash(d.estimated) }}
+                <span class="budget-day-col-label">{{ t('budget.est') }}</span
+                >{{ dash(d.estimated) }}
               </span>
             </div>
           </div>
@@ -234,7 +242,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { api, formatDateShort, formatDayDate, toDateStr } from '@tripyfull/core';
+import { api, formatDateShort, formatDayDate, toDateStr, t } from '@tripyfull/core';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import { TfButton, TfProgress, toast } from '@tripyfull/ui';
 
@@ -260,13 +268,12 @@ const paidPct = computed(() => {
 const upcoming = computed(() => budget.value?.upcomingPayments || []);
 const unscheduled = computed(() => budget.value?.unscheduled || []);
 const remainingSub = computed(() => {
-  if (!(remaining.value > 0)) return 'all bookings settled';
+  if (!(remaining.value > 0)) return t('budget.allSettled');
   const parts = [];
   if (upcoming.value.length)
-    parts.push(
-      `${upcoming.value.length} scheduled payment${upcoming.value.length === 1 ? '' : 's'}`,
-    );
-  if (unscheduled.value.length) parts.push(`${unscheduled.value.length} without a date`);
+    parts.push(t('budget.scheduledPayments', { count: upcoming.value.length }));
+  if (unscheduled.value.length)
+    parts.push(t('budget.withoutDate', { count: unscheduled.value.length }));
   return parts.join(' · ');
 });
 /* ---- categories ---- */
@@ -278,14 +285,8 @@ const catEmoji = (c) =>
     ACCOMMODATION: '\u{1F3E8}',
     OTHER: '\u{1F4CC}',
   })[c] ?? '\u{1F4CC}';
-const catLabel = (c) =>
-  ({
-    FOOD: 'Food',
-    TRANSPORT: 'Transport',
-    ACTIVITY: 'Activities',
-    ACCOMMODATION: 'Accommodation',
-    OTHER: 'Other',
-  })[c] ?? c;
+const BUDGET_CATS = ['FOOD', 'TRANSPORT', 'ACTIVITY', 'ACCOMMODATION', 'OTHER'];
+const catLabel = (c) => (BUDGET_CATS.includes(c) ? t(`budget.cat.${c}`) : c);
 const catStyle = (c) =>
   ({
     FOOD: { background: 'var(--warning-100)', color: 'var(--warning-300)' },
@@ -304,7 +305,7 @@ const over = (c) => planned(c) > 0 && paidOf(c) > planned(c);
 const planLabel = (c) => {
   const plan = planned(c),
     done = paidOf(c);
-  if (done > plan) return `${fmt(done - plan)} ${currency.value} over`;
+  if (done > plan) return t('budget.over', { amount: fmt(done - plan), currency: currency.value });
   return `${Math.round((done / plan) * 100)}%`;
 };
 
@@ -321,9 +322,9 @@ const markPaymentPaid = async (p) => {
   try {
     await api.patch(`/api/payments/${p.paymentId}/paid`);
     await refreshBudget();
-    toast.success('Marked paid', p.bookingName);
+    toast.success(t('budget.markedPaid'), p.bookingName);
   } catch {
-    toast.danger('Error', 'Failed to mark payment');
+    toast.danger(t('common.error'), t('budget.markFailed'));
   }
 };
 
@@ -345,7 +346,7 @@ onMounted(async () => {
     }
     budget.value = budgetRes.data;
   } catch {
-    toast.danger('Error', 'Failed to load budget');
+    toast.danger(t('common.error'), t('budget.loadFailed'));
   } finally {
     loading.value = false;
   }

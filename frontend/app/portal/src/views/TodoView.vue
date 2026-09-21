@@ -2,19 +2,18 @@
   <div class="page-content page-content--full">
     <div class="page-head">
       <div>
-        <h1>To-do</h1>
+        <h1>{{ t('todo.title') }}</h1>
         <!-- Explanation, not data: on a phone the list gets the height. -->
-        <p class="phone-hide">
-          What has to happen before you leave, on the way, and once you are back.
-        </p>
+        <p class="phone-hide">{{ t('todo.subtitle') }}</p>
       </div>
       <div class="page-head-actions">
         <TfButton variant="secondary" @click="openSuggestions" :disabled="loadingSuggestions">
           <i class="pi pi-sparkles" style="font-size: 14px"></i>
-          Suggestions<template v-if="suggestionCount"> · {{ suggestionCount }}</template>
+          {{ t('todo.suggestions')
+          }}<template v-if="suggestionCount"> · {{ suggestionCount }}</template>
         </TfButton>
         <TfButton variant="primary" @click="openEditor(null)">
-          <i class="pi pi-plus" style="font-size: 14px"></i> To-do
+          <i class="pi pi-plus" style="font-size: 14px"></i> {{ t('todo.newBtn') }}
         </TfButton>
       </div>
     </div>
@@ -28,27 +27,29 @@
     <template v-else>
       <!-- One line of state: how far along, and whether anything is late. -->
       <div v-if="todos.length" class="todo-summary">
-        <TfProgress label="Done" :value="doneShare" style="flex: 1; min-width: 220px" />
-        <span class="todo-summary-text">{{ doneCount }} of {{ todos.length }} done</span>
-        <TfBadge v-if="overdueCount" tone="danger" variant="soft" dot
-          >{{ overdueCount }} overdue</TfBadge
-        >
-        <TfBadge v-else-if="dueSoonCount" tone="warning" variant="soft" dot
-          >{{ dueSoonCount }} due this week</TfBadge
-        >
+        <TfProgress :label="t('todo.done')" :value="doneShare" style="flex: 1; min-width: 220px" />
+        <span class="todo-summary-text">{{
+          t('todo.doneOf', { done: doneCount, total: todos.length })
+        }}</span>
+        <TfBadge v-if="overdueCount" tone="danger" variant="soft" dot>{{
+          t('todo.overdue', { count: overdueCount })
+        }}</TfBadge>
+        <TfBadge v-else-if="dueSoonCount" tone="warning" variant="soft" dot>{{
+          t('todo.dueThisWeek', { count: dueSoonCount })
+        }}</TfBadge>
       </div>
 
       <div v-if="!todos.length" class="empty-state">
         <div class="empty-state-icon"><i class="pi pi-check-square"></i></div>
-        <h3>Nothing on the list yet</h3>
-        <p>What has to happen before you leave, on the way, and once you are back.</p>
+        <h3>{{ t('todo.empty') }}</h3>
+        <p>{{ t('todo.subtitle') }}</p>
         <TfButton variant="primary" @click="openEditor(null)">
-          <i class="pi pi-plus" style="font-size: 14px"></i> Add a to-do
+          <i class="pi pi-plus" style="font-size: 14px"></i> {{ t('todo.addFirst') }}
         </TfButton>
       </div>
 
       <div v-else class="todo-groups">
-        <section v-for="g in groups" :key="g.name" class="todo-group">
+        <section v-for="g in groups" :key="g.key ?? '—'" class="todo-group">
           <header class="todo-group-head">
             <h3>{{ g.name }}</h3>
             <span class="todo-group-count">{{ g.done }}/{{ g.items.length }}</span>
@@ -56,42 +57,42 @@
 
           <ul class="todo-list">
             <li
-              v-for="t in g.items"
-              :key="t.id"
+              v-for="item in g.items"
+              :key="item.id"
               class="todo-row"
-              :class="{ 'todo-row--done': t.done }"
-              @click="openEditor(t)"
+              :class="{ 'todo-row--done': item.done }"
+              @click="openEditor(item)"
             >
               <label class="checkbox todo-check" @click.stop>
                 <input
                   class="checkbox-input"
                   type="checkbox"
-                  :checked="t.done"
-                  @change="toggleDone(t, $event.target.checked)"
+                  :checked="item.done"
+                  @change="toggleDone(item, $event.target.checked)"
                 />
               </label>
               <div class="todo-main">
-                <div class="todo-title">{{ t.title }}</div>
-                <div v-if="t.notes" class="todo-notes">{{ t.notes }}</div>
+                <div class="todo-title">{{ item.title }}</div>
+                <div v-if="item.notes" class="todo-notes">{{ item.notes }}</div>
               </div>
               <TfBadge
-                v-if="t.dueDate"
+                v-if="item.dueDate"
                 size="sm"
-                :tone="dueTone(t)"
-                :variant="t.done ? 'soft' : dueTone(t) === 'neutral' ? 'soft' : 'solid'"
-                >{{ dueLabel(t) }}</TfBadge
+                :tone="dueTone(item)"
+                :variant="item.done ? 'soft' : dueTone(item) === 'neutral' ? 'soft' : 'solid'"
+                >{{ dueLabel(item) }}</TfBadge
               >
             </li>
           </ul>
 
           <!-- Quick add straight into this group: Enter saves, the field stays for the next one. -->
-          <form class="todo-quick" @submit.prevent="quickAdd(g.name)">
+          <form class="todo-quick" @submit.prevent="quickAdd(g.key)">
             <i class="pi pi-plus"></i>
             <input
-              v-model="quick[g.name]"
+              v-model="quick[g.key ?? '']"
               class="todo-quick-input"
-              :placeholder="`Add to ${g.name}…`"
-              :disabled="savingQuick === g.name"
+              :placeholder="t('todo.addTo', { group: g.name })"
+              :disabled="savingQuick === (g.key ?? '')"
             />
           </form>
         </section>
@@ -99,53 +100,51 @@
     </template>
 
     <!-- Editor: the full shape of one to-do -->
-    <TfDrawer v-model="showEditor" :title="editing ? 'Edit to-do' : 'New to-do'">
+    <TfDrawer v-model="showEditor" :title="editing ? t('todo.edit') : t('todo.new')">
       <form @submit.prevent="saveEditor">
-        <TfDrawerSection label="To-do">
+        <TfDrawerSection :label="t('todo.section')">
           <TfInput
             v-model="form.title"
-            label="Title"
+            :label="t('todo.titleLabel')"
             required
-            :error="attempted && !form.title.trim() ? 'Say what has to be done' : ''"
-            placeholder="e.g. Buy travel insurance"
+            :error="attempted && !form.title.trim() ? t('todo.titleError') : ''"
+            :placeholder="t('todo.titlePlaceholder')"
           />
           <TfSelect
             v-model="groupChoice"
-            label="Group"
+            :label="t('todo.group')"
             :options="groupOptions"
-            placeholder="No group"
-            :helper="
-              groupChoice === NEW_GROUP ? '' : 'Groups are yours: pick one or start a new one.'
-            "
+            :placeholder="t('todo.noGroup')"
+            :helper="groupChoice === newGroupOption ? '' : t('todo.groupHelper')"
           />
           <TfInput
-            v-if="groupChoice === NEW_GROUP"
+            v-if="groupChoice === newGroupOption"
             v-model="form.newGroup"
-            label="New group"
-            placeholder="e.g. Documents, Packing, Home"
+            :label="t('todo.newGroup')"
+            :placeholder="t('todo.newGroupPlaceholder')"
           />
           <TfDatePicker
             v-model="form.dueDate"
             mode="date"
-            label="Due"
+            :label="t('todo.due')"
             :view-date="tripStart"
             clearable
           />
           <TfTextarea
             v-model="form.notes"
-            label="Notes"
-            placeholder="Details, links, who to call"
+            :label="t('todo.notes')"
+            :placeholder="t('todo.notesPlaceholder')"
           />
         </TfDrawerSection>
       </form>
       <template #footer>
-        <TfButton v-if="editing" variant="danger" icon="pi-trash" @click="removeEditing"
-          >Delete</TfButton
-        >
+        <TfButton v-if="editing" variant="danger" icon="pi-trash" @click="removeEditing">{{
+          t('common.delete')
+        }}</TfButton>
         <span style="flex: 1"></span>
-        <TfButton variant="ghost" @click="showEditor = false">Cancel</TfButton>
+        <TfButton variant="ghost" @click="showEditor = false">{{ t('common.cancel') }}</TfButton>
         <TfButton variant="primary" @click="saveEditor" :disabled="saving">
-          {{ saving ? 'Saving…' : editing ? 'Save' : 'Add' }}
+          {{ saving ? t('settings.saving') : editing ? t('common.save') : t('common.add') }}
         </TfButton>
       </template>
     </TfDrawer>
@@ -153,24 +152,26 @@
     <!-- Suggestions: ours, dated against this trip, added on request only -->
     <TfModal
       v-model="showSuggestions"
-      title="Suggested to-dos"
-      :subtitle="
-        tripStart
-          ? 'Due dates are counted from your departure and return.'
-          : 'Set the trip dates to get due dates with these.'
-      "
+      :title="t('todo.sugTitle')"
+      :subtitle="tripStart ? t('todo.sugSubWithDates') : t('todo.sugSubNoDates')"
       size="lg"
     >
       <div v-if="!suggestions.length" class="text-muted" style="padding: 12px 0">
-        Everything we know to suggest is already on your list.
+        {{ t('todo.sugEmpty') }}
       </div>
       <div v-else class="sug-groups">
         <div class="sug-toolbar">
-          <button type="button" class="link-btn" @click="selectAll(true)">Select all</button>
+          <button type="button" class="link-btn" @click="selectAll(true)">
+            {{ t('todo.selectAll') }}
+          </button>
           <span class="text-subtle">·</span>
-          <button type="button" class="link-btn" @click="selectAll(false)">None</button>
+          <button type="button" class="link-btn" @click="selectAll(false)">
+            {{ t('todo.selectNone') }}
+          </button>
           <span style="flex: 1"></span>
-          <span class="text-subtle text-sm">{{ selectedKeys.size }} selected</span>
+          <span class="text-subtle text-sm">{{
+            t('todo.selected', { count: selectedKeys.size })
+          }}</span>
         </div>
         <section v-for="g in suggestionGroups" :key="g.name" class="sug-group">
           <h4>{{ g.name }}</h4>
@@ -190,17 +191,15 @@
         </section>
       </div>
       <template #footer>
-        <TfButton variant="ghost" @click="showSuggestions = false">Close</TfButton>
+        <TfButton variant="ghost" @click="showSuggestions = false">{{
+          t('common.close')
+        }}</TfButton>
         <TfButton
           variant="primary"
           :disabled="!selectedKeys.size || addingSuggestions"
           @click="addSelected"
         >
-          {{
-            addingSuggestions
-              ? 'Adding…'
-              : `Add ${selectedKeys.size || ''} to my list`.replace('  ', ' ')
-          }}
+          {{ addingSuggestions ? t('todo.adding') : t('todo.addN', { count: selectedKeys.size }) }}
         </TfButton>
       </template>
     </TfModal>
@@ -210,7 +209,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { api, formatDateShort, formatDateRange, parseDate, toDateStr } from '@tripyfull/core';
+import { api, formatDateShort, formatDateRange, parseDate, toDateStr, t } from '@tripyfull/core';
 import {
   TfButton,
   TfBadge,
@@ -238,17 +237,19 @@ const tripDates = computed(() =>
 );
 
 const todos = ref([]);
-const NO_GROUP = 'Other';
+// The catch-all group has no name of its own: null is its key everywhere, and
+// only what the screen prints is translated.
+const otherGroupName = () => t('todo.otherGroup');
 
 /* ---- grouping ----
    Groups are whatever the owner typed; within one, open items lead, earliest
    due first, and finished ones sink to the bottom. */
 const groups = computed(() => {
   const byName = new Map();
-  for (const t of todos.value) {
-    const name = t.groupName || NO_GROUP;
-    if (!byName.has(name)) byName.set(name, []);
-    byName.get(name).push(t);
+  for (const item of todos.value) {
+    const key = item.groupName || null;
+    if (!byName.has(key)) byName.set(key, []);
+    byName.get(key).push(item);
   }
   const sortItems = (a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
@@ -256,52 +257,55 @@ const groups = computed(() => {
     if (a.dueDate || b.dueDate) return a.dueDate ? -1 : 1;
     return a.orderIndex - b.orderIndex;
   };
-  const out = [...byName.entries()].map(([name, items]) => ({
-    name,
+  const out = [...byName.entries()].map(([key, items]) => ({
+    key,
+    name: key ?? otherGroupName(),
     items: items.sort(sortItems),
-    done: items.filter((t) => t.done).length,
+    done: items.filter((item) => item.done).length,
   }));
   // Groups by their earliest open due date, the catch-all last.
-  const firstDue = (g) => g.items.find((t) => !t.done && t.dueDate)?.dueDate || '9999';
+  const firstDue = (g) => g.items.find((item) => !item.done && item.dueDate)?.dueDate || '9999';
   return out.sort((a, b) => {
-    if (a.name === NO_GROUP) return 1;
-    if (b.name === NO_GROUP) return -1;
+    if (a.key === null) return 1;
+    if (b.key === null) return -1;
     return firstDue(a).localeCompare(firstDue(b)) || a.name.localeCompare(b.name);
   });
 });
 
-const doneCount = computed(() => todos.value.filter((t) => t.done).length);
+const doneCount = computed(() => todos.value.filter((item) => item.done).length);
 const doneShare = computed(() =>
   todos.value.length ? (doneCount.value / todos.value.length) * 100 : 0,
 );
 
 /* ---- due dates ---- */
-const today = () => toDateStr(new Date());
-const daysUntil = (t) => Math.round((parseDate(t.dueDate) - parseDate(today())) / 86400000);
+const todayStr = () => toDateStr(new Date());
+const daysUntil = (item) =>
+  Math.round((parseDate(item.dueDate) - parseDate(todayStr())) / 86400000);
 const overdueCount = computed(
-  () => todos.value.filter((t) => !t.done && t.dueDate && daysUntil(t) < 0).length,
+  () => todos.value.filter((item) => !item.done && item.dueDate && daysUntil(item) < 0).length,
 );
 const dueSoonCount = computed(
   () =>
-    todos.value.filter((t) => !t.done && t.dueDate && daysUntil(t) >= 0 && daysUntil(t) <= 7)
-      .length,
+    todos.value.filter(
+      (item) => !item.done && item.dueDate && daysUntil(item) >= 0 && daysUntil(item) <= 7,
+    ).length,
 );
-const dueTone = (t) => {
-  if (t.done) return 'neutral';
-  const d = daysUntil(t);
+const dueTone = (item) => {
+  if (item.done) return 'neutral';
+  const d = daysUntil(item);
   if (d < 0) return 'danger';
   if (d <= 7) return 'warning';
   return 'neutral';
 };
-const dueLabel = (t) => {
-  const d = daysUntil(t);
-  if (t.done) return formatDateShort(t.dueDate);
-  if (d < -1) return `${-d} days late`;
-  if (d === -1) return 'Yesterday';
-  if (d === 0) return 'Today';
-  if (d === 1) return 'Tomorrow';
-  if (d <= 7) return `In ${d} days`;
-  return formatDateShort(t.dueDate);
+const dueLabel = (item) => {
+  const d = daysUntil(item);
+  if (item.done) return formatDateShort(item.dueDate);
+  if (d < -1) return t('todo.daysLate', { count: -d });
+  if (d === -1) return t('todo.yesterday');
+  if (d === 0) return t('todo.today');
+  if (d === 1) return t('todo.tomorrow');
+  if (d <= 7) return t('todo.inDays', { count: d });
+  return formatDateShort(item.dueDate);
 };
 
 /* ---- loading ---- */
@@ -317,43 +321,41 @@ const load = async () => {
 };
 
 const replaceLocal = (data) => {
-  const i = todos.value.findIndex((t) => t.id === data.id);
+  const i = todos.value.findIndex((item) => item.id === data.id);
   if (i !== -1) todos.value[i] = data;
   else todos.value.push(data);
 };
 
-const toggleDone = async (t, done) => {
+const toggleDone = async (item, done) => {
   try {
-    const res = await api.patch(`/api/todos/${t.id}`, { done });
+    const res = await api.patch(`/api/todos/${item.id}`, { done });
     replaceLocal(res.data);
   } catch {
-    toast.danger('Error', 'Could not update the to-do');
+    toast.danger(t('common.error'), t('todo.updateFailed'));
   }
 };
 
 /* ---- quick add ---- */
 const quick = ref({});
 const savingQuick = ref('');
-const quickAdd = async (groupName) => {
-  const title = (quick.value[groupName] || '').trim();
+const quickAdd = async (groupKey) => {
+  const slot = groupKey ?? '';
+  const title = (quick.value[slot] || '').trim();
   if (!title) return;
-  savingQuick.value = groupName;
+  savingQuick.value = slot;
   try {
-    const res = await api.post(`/api/trips/${tripId}/todos`, {
-      title,
-      groupName: groupName === NO_GROUP ? null : groupName,
-    });
+    const res = await api.post(`/api/trips/${tripId}/todos`, { title, groupName: groupKey });
     todos.value.push(res.data);
-    quick.value[groupName] = '';
+    quick.value[slot] = '';
   } catch {
-    toast.danger('Error', 'Could not add the to-do');
+    toast.danger(t('common.error'), t('todo.addFailed'));
   } finally {
     savingQuick.value = '';
   }
 };
 
 /* ---- editor ---- */
-const NEW_GROUP = '+ New group…';
+const newGroupOption = computed(() => t('todo.newGroupOption'));
 const showEditor = ref(false);
 const editing = ref(null);
 const saving = ref(false);
@@ -362,25 +364,25 @@ const form = ref({ title: '', notes: '', dueDate: null, newGroup: '' });
 const groupChoice = ref('');
 
 const existingGroups = computed(() =>
-  [...new Set(todos.value.map((t) => t.groupName).filter(Boolean))].sort(),
+  [...new Set(todos.value.map((item) => item.groupName).filter(Boolean))].sort(),
 );
-const groupOptions = computed(() => [...existingGroups.value, NEW_GROUP]);
+const groupOptions = computed(() => [...existingGroups.value, newGroupOption.value]);
 
-const openEditor = (t) => {
-  editing.value = t;
+const openEditor = (item) => {
+  editing.value = item;
   attempted.value = false;
   form.value = {
-    title: t?.title || '',
-    notes: t?.notes || '',
-    dueDate: t?.dueDate ? parseDate(t.dueDate) : null,
+    title: item?.title || '',
+    notes: item?.notes || '',
+    dueDate: item?.dueDate ? parseDate(item.dueDate) : null,
     newGroup: '',
   };
-  groupChoice.value = t?.groupName || '';
+  groupChoice.value = item?.groupName || '';
   showEditor.value = true;
 };
 
 const chosenGroup = () =>
-  groupChoice.value === NEW_GROUP ? form.value.newGroup.trim() : groupChoice.value;
+  groupChoice.value === newGroupOption.value ? form.value.newGroup.trim() : groupChoice.value;
 
 const saveEditor = async () => {
   attempted.value = true;
@@ -400,31 +402,31 @@ const saveEditor = async () => {
       : await api.post(`/api/trips/${tripId}/todos`, payload);
     replaceLocal(res.data);
     showEditor.value = false;
-    toast.success(editing.value ? 'Saved' : 'Added', res.data.title);
+    toast.success(editing.value ? t('common.saved') : t('common.added'), res.data.title);
   } catch {
-    toast.danger('Error', 'Could not save the to-do');
+    toast.danger(t('common.error'), t('todo.saveFailed'));
   } finally {
     saving.value = false;
   }
 };
 
 const removeEditing = async () => {
-  const t = editing.value;
-  if (!t) return;
+  const item = editing.value;
+  if (!item) return;
   const ok = await confirm({
-    title: 'Delete to-do',
-    message: `Remove "${t.title}"?`,
+    title: t('todo.deleteTitle'),
+    message: t('todo.deleteMsg', { title: item.title }),
     tone: 'danger',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
   });
   if (!ok) return;
   try {
-    await api.delete(`/api/todos/${t.id}`);
-    todos.value = todos.value.filter((x) => x.id !== t.id);
+    await api.delete(`/api/todos/${item.id}`);
+    todos.value = todos.value.filter((x) => x.id !== item.id);
     showEditor.value = false;
   } catch {
-    toast.danger('Error', 'Could not delete the to-do');
+    toast.danger(t('common.error'), t('todo.deleteFailed'));
   }
 };
 
@@ -476,14 +478,11 @@ const addSelected = async () => {
       keys: [...selectedKeys.value],
     });
     todos.value.push(...res.data);
-    toast.success(
-      'Added to your list',
-      `${res.data.length} to-do${res.data.length === 1 ? '' : 's'}`,
-    );
+    toast.success(t('todo.addedToList'), t('todo.addedCount', { count: res.data.length }));
     showSuggestions.value = false;
     await loadSuggestions();
   } catch {
-    toast.danger('Error', 'Could not add the suggestions');
+    toast.danger(t('common.error'), t('todo.sugAddFailed'));
   } finally {
     addingSuggestions.value = false;
   }
@@ -493,7 +492,7 @@ onMounted(async () => {
   try {
     await Promise.all([load(), loadSuggestions()]);
   } catch {
-    toast.danger('Error', 'Failed to load the to-do list');
+    toast.danger(t('common.error'), t('todo.loadFailed'));
   } finally {
     loading.value = false;
   }

@@ -2,11 +2,9 @@
   <div class="page-content page-content--full map-page">
     <div class="page-head">
       <div>
-        <h1>Plan map</h1>
+        <h1>{{ t('map.title') }}</h1>
         <!-- Explanation, not data: on a phone its two lines go to the map. -->
-        <p class="phone-hide">
-          The skeleton of the trip: 5★ anchors first, lower ratings only along the route.
-        </p>
+        <p class="phone-hide">{{ t('map.subtitle') }}</p>
       </div>
     </div>
 
@@ -27,10 +25,10 @@
       <!-- Planned places carry a day tag on the map; this narrows the map to them. -->
       <label class="layer-chip layer-toggle">
         <input type="checkbox" v-model="onlyPlanned" />
-        <span>Planned only · {{ plannedCount }}</span>
+        <span>{{ t('map.plannedOnly') }} · {{ plannedCount }}</span>
       </label>
       <span class="map-legend text-subtle text-sm">
-        <span class="map-legend-swatch"></span>hotels from bookings
+        <span class="map-legend-swatch"></span>{{ t('map.hotelsLegend') }}
       </span>
     </div>
 
@@ -41,8 +39,9 @@
       class="text-muted text-sm"
       style="margin-top: 10px; flex: none"
     >
-      No places with coordinates to show — add places in the
-      <router-link to="/places">library</router-link> and rate them.
+      {{ t('map.noPlacesPre') }}
+      <router-link to="/places">{{ t('map.library') }}</router-link
+      >{{ t('map.noPlacesPost') }}
     </p>
   </div>
 </template>
@@ -50,7 +49,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api, formatDayDate, placeTypeMeta } from '@tripyfull/core';
+import { api, formatDayDate, placeTypeMeta, t } from '@tripyfull/core';
 import { toast } from '@tripyfull/ui';
 
 const route = useRoute();
@@ -91,7 +90,7 @@ const plannedCount = computed(() => mapped.value.filter((p) => plansFor(p).lengt
 const dayTag = (p) =>
   [...new Set(plansFor(p).map((e) => (e.buffer ? 'R' : String(e.dayNumber))))].join(' · ');
 const dayLabel = (e) =>
-  (e.buffer ? 'Reserve day' : `Day ${e.dayNumber}`) +
+  (e.buffer ? t('map.reserveDay') : t('overview.dayN', { n: e.dayNumber })) +
   (e.date ? ` · ${formatDayDate(e.date)}` : '') +
   (e.startTime ? ` · ${String(e.startTime).slice(0, 5)}` : '');
 
@@ -199,7 +198,7 @@ function render() {
     marker.bindPopup(
       `<b>${escapeHtml(p.name)}</b><br>` +
         `${placeTypeMeta(p.type).emoji} ${'★'.repeat(p.rating || 3)}${'☆'.repeat(5 - (p.rating || 3))}` +
-        (p.visitMinutes ? ` · ~${p.visitMinutes} min` : '') +
+        (p.visitMinutes ? ` · ${t('map.approxMin', { count: p.visitMinutes })}` : '') +
         (p.ratingComment ? `<br><i>${escapeHtml(p.ratingComment)}</i>` : '') +
         plans
           .map(
@@ -207,7 +206,9 @@ function render() {
               `<br><a href="#" class="day-link" data-day="${e.dayId}">${escapeHtml(dayLabel(e))}</a>`,
           )
           .join('') +
-        (plans.length ? '' : '<br><span class="popup-muted">Not planned yet</span>'),
+        (plans.length
+          ? ''
+          : `<br><span class="popup-muted">${escapeHtml(t('map.notPlanned'))}</span>`),
     );
     marker.addTo(map);
     bounds.push([p.latitude, p.longitude]);
@@ -222,7 +223,7 @@ function render() {
       popupAnchor: [0, -10],
     });
     const marker = L.marker([h.latitude, h.longitude], { icon });
-    marker.bindPopup(`<b>${escapeHtml(h.name)}</b><br>hotel / stay`);
+    marker.bindPopup(`<b>${escapeHtml(h.name)}</b><br>${escapeHtml(t('map.hotelStay'))}`);
     marker.addTo(map);
     bounds.push([h.latitude, h.longitude]);
   }
@@ -261,7 +262,7 @@ onMounted(async () => {
       (b) => b.category === 'ACCOMMODATION' && b.latitude && b.longitude,
     );
   } catch {
-    toast.danger('Error', 'Failed to load the plan map');
+    toast.danger(t('common.error'), t('map.loadFailed'));
   } finally {
     loading.value = false;
     await initMap();

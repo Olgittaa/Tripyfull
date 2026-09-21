@@ -66,6 +66,14 @@ is waiting, or when a consultant names it in an interview.
   interviews may say whether a date format matters to anyone, and the answer decides whether to
   build it or drop the controls. *Language* began to work on 2026-09-21. *Seen:* 2026-09-18.
 
+- [ ] **The suggested to-dos are English in every language** — the to-do page is translated,
+  but the suggestions it offers ("Check passport validity", "Many countries want six months
+  left on entry.", and the group names they land in) come from the server, which writes them
+  in English only. A German client's list therefore reads half German, half English. *Fix:*
+  the suggestions are the backend's, so it has to know the language — either the account's
+  language travels with the request and the server picks a table, or the keys travel instead
+  and the app translates them. *Seen:* 2026-09-21.
+
 - [ ] **Units stay English in every language** — the words are translated, the units beside
   them are not: durations print "1h 25m", "21 h 20 min" and distances "21.5 km" whatever the
   language says, because `format.js` (`formatMinutes`, `formatDuration`, `formatDistance`) and

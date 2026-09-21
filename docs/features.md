@@ -31,14 +31,15 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   (Brasil), Русский, 日本語, 简体中文, हिन्दी, বাংলা, العربية — stored on the account, applied the
   moment it is saved and wherever that account signs in; before a sign-in the app speaks the
   browser's language, as far as it can. Dates follow the language ("10 Dec", "10. Dez.",
-  "12月10日"), plurals too. Scripts the house fonts cannot draw get a Noto companion. Translated
-  so far: the shell, sign-in, the trips list, settings, the trip overview, the day with its
-  stop drawer and route map, the places library with its finder, the bookings page with its
-  drawer and payments, and the design system's own words — including the names of stop and
-  place kinds, booking categories and transport, audiences and the ways between stops; the
-  other screens follow, one at a time, and the printed book keeps English until a trip can
-  name its client's language. Units of time and distance are still English everywhere
-  (BUGS.md §2). Words a booking
+  "12月10日"), plurals too. Scripts the house fonts cannot draw get a Noto companion. Every
+  screen of the app is translated: the shell, sign-in, the trips list, settings, the trip
+  overview, the day with its stop drawer and route map, the places library, the bookings page,
+  the to-do list, the budget and the plan map, plus the design system's own words and the
+  names of stop and place kinds, booking categories and transport, audiences and the ways
+  between stops. What is still English is not the interface: the suggested to-dos come from
+  the server in English, the stops a booking writes into the plan carry the booking's own
+  words, and the printed book stays English until a trip can name its client's language.
+  Units of time and distance are still English everywhere (BUGS.md §2). Words a booking
   writes into the plan ("Arrive · …", "Check in · …") are the booking's and stay as written. Arabic reads right to left within its lines but the layout is not yet
   mirrored. The screen also offers region and date & time formats; they are stored on the
   account and **nothing reads them yet** (see `../BUGS.md`).
