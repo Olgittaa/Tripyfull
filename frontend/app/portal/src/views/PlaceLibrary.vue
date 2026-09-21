@@ -7,7 +7,7 @@
       <div class="places-col" :class="{ 'places-col--table': viewMode === 'list' }" ref="listEl">
         <div class="page-head">
           <div>
-            <h1>{{ tripMode ? 'Trip places' : 'Places' }}</h1>
+            <h1>{{ tripMode ? t('places.titleTrip') : t('places.title') }}</h1>
           </div>
           <div class="page-head-actions">
             <!-- The search icon carries this one on a phone, so the title and
@@ -16,30 +16,30 @@
               class="phone-icon-btn"
               icon="pi-search"
               variant="secondary"
-              aria-label="Find &amp; import a place"
+              :aria-label="t('places.findImportAria')"
               @click="showFindDialog = true"
-              ><span class="phone-hide">Find &amp; import</span></TfButton
+              ><span class="phone-hide">{{ t('places.findImport') }}</span></TfButton
             >
-            <TfButton icon="pi-plus" @click="openDialog()">Add place</TfButton>
+            <TfButton icon="pi-plus" @click="openDialog()">{{ t('places.add') }}</TfButton>
           </div>
         </div>
 
         <!-- Scope chips: the global list groups by trip, a trip's list by its own folders -->
         <div class="scope-chips">
           <button :style="chipStyle(!selectedFolderId && !selectedTripId)" @click="selectScope({})">
-            {{ tripMode ? 'All trip places' : 'All places' }}
+            {{ tripMode ? t('places.allTrip') : t('places.all') }}
           </button>
 
           <template v-if="!tripMode">
             <button
-              v-for="t in trips"
-              :key="t.id"
-              :style="chipStyle(selectedTripId === t.id)"
-              @click="selectScope({ tripId: t.id })"
+              v-for="trip in trips"
+              :key="trip.id"
+              :style="chipStyle(selectedTripId === trip.id)"
+              @click="selectScope({ tripId: trip.id })"
             >
               <i class="pi pi-map" style="font-size: 11px"></i>
-              {{ t.title }}
-              <span :style="{ opacity: 0.7 }">{{ tripPlaceCount(t.id) }}</span>
+              {{ trip.title }}
+              <span :style="{ opacity: 0.7 }">{{ tripPlaceCount(trip.id) }}</span>
             </button>
           </template>
 
@@ -67,17 +67,21 @@
                 <span
                   class="chip-action"
                   @click.stop="openFolderDialog(f)"
-                  v-tooltip="'Rename folder'"
+                  v-tooltip="t('places.renameFolder')"
                 >
                   <i class="pi pi-pencil"></i>
                 </span>
-                <span class="chip-action" @click.stop="deleteFolder(f)" v-tooltip="'Delete folder'">
+                <span
+                  class="chip-action"
+                  @click.stop="deleteFolder(f)"
+                  v-tooltip="t('places.deleteFolder')"
+                >
                   <i class="pi pi-times"></i>
                 </span>
               </template>
             </button>
             <button :style="chipStyle(false)" @click="openFolderDialog()">
-              <i class="pi pi-plus" style="font-size: 12px"></i> Folder
+              <i class="pi pi-plus" style="font-size: 12px"></i> {{ t('places.newFolderBtn') }}
             </button>
           </template>
         </div>
@@ -87,7 +91,7 @@
           <div style="flex: 1 1 220px; min-width: 180px; max-width: 380px">
             <TfInput
               v-model="filterQ"
-              placeholder="Search by name, city, address…"
+              :placeholder="t('places.searchPlaceholder')"
               @keyup.enter="loadPlaces"
             >
               <template #prefix><i class="pi pi-search" /></template>
@@ -102,7 +106,7 @@
             :class="{ 'is-on': filtersOpen }"
             @click="filtersOpen = !filtersOpen"
           >
-            <i class="pi pi-filter" style="font-size: 12px"></i> Filters
+            <i class="pi pi-filter" style="font-size: 12px"></i> {{ t('places.filters') }}
             <span v-if="activeFilterCount" class="filters-count">{{ activeFilterCount }}</span>
           </button>
 
@@ -117,7 +121,7 @@
                   }
                 "
                 :options="countryLabels"
-                placeholder="Country"
+                :placeholder="t('places.country')"
               />
             </div>
             <div style="flex: 0 1 150px">
@@ -130,12 +134,12 @@
                   }
                 "
                 :options="typeLabels"
-                placeholder="Type"
+                :placeholder="t('places.type')"
               />
             </div>
             <!-- Rating filter: multi-select, any of the picked stars -->
             <div class="rating-filter">
-              <span class="rating-filter-label">Rating</span>
+              <span class="rating-filter-label">{{ t('places.rating') }}</span>
               <button
                 v-for="n in [5, 4, 3, 2, 1]"
                 :key="n"
@@ -143,7 +147,7 @@
                 class="rating-chip"
                 :class="{ on: filterRatings.has(n) }"
                 @click="toggleRating(n)"
-                v-tooltip="RATING_HINTS[n]"
+                v-tooltip="t(`rating.${n}`)"
               >
                 {{ n }}★
               </button>
@@ -152,7 +156,7 @@
                 type="button"
                 class="rating-chip rating-chip--clear"
                 @click="filterRatings = new Set()"
-                v-tooltip="'Clear rating filter'"
+                v-tooltip="t('places.clearRating')"
               >
                 <i class="pi pi-times" style="font-size: 10px"></i>
               </button>
@@ -164,9 +168,9 @@
 
         <template v-else-if="places.length">
           <div class="places-toolbar">
-            <span class="text-muted text-sm"
-              >{{ shownPlaces.length }} place{{ shownPlaces.length === 1 ? '' : 's' }}</span
-            >
+            <span class="text-muted text-sm">{{
+              t('places.count', { count: shownPlaces.length })
+            }}</span>
             <!-- Balance lives in the toolbar so it costs no row while collapsed.
                  Only for a whole trip's shortlist: the quotas say nothing about
                  a library holding other people's places, nor about one folder —
@@ -175,10 +179,10 @@
               v-if="showRatingBalance"
               class="balance-toggle"
               @click="showBalance = !showBalance"
-              v-tooltip="'How your ratings are spread vs the planning targets'"
+              v-tooltip="t('places.spreadHint')"
             >
               <i class="pi" :class="showBalance ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-              Rating spread
+              {{ t('places.ratingSpread') }}
               <span v-if="balanceWarning" class="balance-warn">{{ balanceWarning }}</span>
             </button>
             <span class="toolbar-spacer"></span>
@@ -189,7 +193,7 @@
               @click="toggleSelectMode"
             >
               <i class="pi pi-check-square" style="font-size: 13px"></i>
-              {{ selectMode ? 'Done' : 'Select' }}
+              {{ selectMode ? t('places.done') : t('places.select') }}
             </TfButton>
             <TfButton
               v-if="selectMode"
@@ -197,9 +201,9 @@
               variant="ghost"
               style="margin-right: 8px"
               @click="selectAll"
-              >Select all</TfButton
+              >{{ t('places.selectAll') }}</TfButton
             >
-            <span class="toolbar-label">Sort</span>
+            <span class="toolbar-label">{{ t('places.sort') }}</span>
             <div class="toolbar-sort">
               <TfSelect
                 size="sm"
@@ -211,7 +215,7 @@
                   }
                 "
                 :options="sortLabels"
-                placeholder="Sort"
+                :placeholder="t('places.sort')"
               />
             </div>
             <div class="segmented-control">
@@ -220,7 +224,7 @@
                 class="segmented-btn"
                 :class="{ 'segmented-btn--on': viewMode === 'grid' }"
                 @click="viewMode = 'grid'"
-                v-tooltip="'Grid'"
+                v-tooltip="t('places.grid')"
               >
                 <i class="pi pi-th-large"></i>
               </button>
@@ -229,7 +233,7 @@
                 class="segmented-btn"
                 :class="{ 'segmented-btn--on': viewMode === 'list' }"
                 @click="viewMode = 'list'"
-                v-tooltip="'List'"
+                v-tooltip="t('places.list')"
               >
                 <i class="pi pi-bars"></i>
               </button>
@@ -244,14 +248,14 @@
                 :key="q.r"
                 class="balance-seg"
                 :style="{ width: q.share + '%', background: q.color }"
-                v-tooltip="`${q.r}★ — ${q.n} of ${places.length}`"
+                v-tooltip="t('places.balanceSeg', { r: q.r, n: q.n, total: places.length })"
               ></span>
             </div>
             <div class="balance-legend">
               <span v-for="q in ratingBalance" :key="q.r" class="balance-item">
                 <span class="balance-dot" :style="{ background: q.color }"></span>
                 <b>{{ q.r }}★</b> {{ q.n }}
-                <span class="balance-aim">target {{ q.aim }}</span>
+                <span class="balance-aim">{{ t('places.target', { aim: q.aim }) }}</span>
               </span>
             </div>
           </div>
@@ -259,10 +263,12 @@
           <!-- Selection actions dock at the bottom: no layout jump, clear surface. -->
           <Transition name="dock">
             <div v-if="selectMode && selectedIds.size" class="bulk-bar">
-              <span style="font: var(--fw-semibold) 13px/1 var(--font-sans)"
-                >{{ selectedIds.size }} selected</span
-              >
-              <TfButton size="sm" variant="ghost" @click="clearSelection">Clear</TfButton>
+              <span style="font: var(--fw-semibold) 13px/1 var(--font-sans)">{{
+                t('places.selectedCount', { count: selectedIds.size })
+              }}</span>
+              <TfButton size="sm" variant="ghost" @click="clearSelection">{{
+                t('places.clear')
+              }}</TfButton>
               <span class="bulk-sep"></span>
               <!-- Only inside a trip: folders belong to a trip, and filing a place
                    into another trip's folder would not add it to that trip. -->
@@ -272,7 +278,7 @@
                   :modelValue="null"
                   @update:modelValue="(v) => bulkMoveToFolder(v)"
                   :options="folderLabels"
-                  placeholder="Move to folder…"
+                  :placeholder="t('places.moveToFolder')"
                 />
               </div>
               <!-- Everywhere but inside a trip: put the whole selection on a trip's list. -->
@@ -282,7 +288,7 @@
                   :modelValue="null"
                   @update:modelValue="(v) => bulkAddToTrip(v)"
                   :options="tripLabels"
-                  placeholder="Add to trip…"
+                  :placeholder="t('places.addToTripSelect')"
                 />
               </div>
               <div style="width: 150px">
@@ -291,14 +297,15 @@
                   :modelValue="null"
                   @update:modelValue="(v) => bulkChangeType(v)"
                   :options="typeLabels"
-                  placeholder="Set type…"
+                  :placeholder="t('places.setType')"
                 />
               </div>
               <TfButton v-if="tripMode" size="sm" variant="secondary" @click="bulkRemoveFromTrip">
-                <i class="pi pi-minus-circle" style="font-size: 12px"></i> Remove from trip
+                <i class="pi pi-minus-circle" style="font-size: 12px"></i>
+                {{ t('places.removeFromTrip') }}
               </TfButton>
               <TfButton size="sm" variant="danger" @click="bulkDelete">
-                <i class="pi pi-trash" style="font-size: 12px"></i> Delete
+                <i class="pi pi-trash" style="font-size: 12px"></i> {{ t('common.delete') }}
               </TfButton>
             </div>
           </Transition>
@@ -331,7 +338,7 @@
                     'cover-rating--top': (p.rating || 3) === 5,
                     'cover-rating--low': (p.rating || 3) <= 3,
                   }"
-                  v-tooltip="RATING_HINTS[p.rating || 3]"
+                  v-tooltip="t(`rating.${p.rating || 3}`)"
                 >
                   <i class="pi pi-star-fill"></i>{{ p.rating || 3 }}
                 </span>
@@ -340,14 +347,14 @@
                   <button
                     class="cover-nav cover-nav--prev"
                     @click.stop="shiftPhoto(p, -1)"
-                    v-tooltip="'Previous photo'"
+                    v-tooltip="t('places.prevPhoto')"
                   >
                     <i class="pi pi-chevron-left"></i>
                   </button>
                   <button
                     class="cover-nav cover-nav--next"
                     @click.stop="shiftPhoto(p, 1)"
-                    v-tooltip="'Next photo'"
+                    v-tooltip="t('places.nextPhoto')"
                   >
                     <i class="pi pi-chevron-right"></i>
                   </button>
@@ -362,16 +369,20 @@
                   <i class="pi pi-map-marker"></i> {{ placeLocation(p) }}
                 </div>
                 <div class="place-card-meta">
-                  <TfBadge size="sm" tone="neutral" variant="soft">{{ typeLabel(p.type) }}</TfBadge>
-                  <span v-if="p.visitMinutes" class="meta-fact">{{ p.visitMinutes }} min</span>
+                  <TfBadge size="sm" tone="neutral" variant="soft">{{
+                    placeTypeLabel(p.type)
+                  }}</TfBadge>
+                  <span v-if="p.visitMinutes" class="meta-fact">{{
+                    t('stop.minutes', { count: p.visitMinutes })
+                  }}</span>
                   <!-- Words, not icons: on a 280 px card a glyph was 12 px of
                        decoration that pushed the badges off the row. -->
-                  <TfBadge v-if="p.needsBooking" size="sm" tone="brand" variant="soft"
-                    >Book ahead</TfBadge
-                  >
-                  <TfBadge v-if="p.needsPreparation" size="sm" tone="danger" variant="soft"
-                    >Prep needed</TfBadge
-                  >
+                  <TfBadge v-if="p.needsBooking" size="sm" tone="brand" variant="soft">{{
+                    t('places.bookAhead')
+                  }}</TfBadge>
+                  <TfBadge v-if="p.needsPreparation" size="sm" tone="danger" variant="soft">{{
+                    t('places.prepNeeded')
+                  }}</TfBadge>
                 </div>
                 <p v-if="p.description" class="place-card-desc">{{ p.description }}</p>
               </div>
@@ -421,33 +432,35 @@
                    Weight and colour carry the emphasis instead. -->
               <template #type="{ row: p }">
                 <span class="text-muted cell-clip" style="display: block">{{
-                  typeLabel(p.type)
+                  placeTypeLabel(p.type)
                 }}</span>
               </template>
               <template #rating="{ row: p }">
                 <span
                   class="cell-rating"
                   :class="`cell-rating--${p.rating || 3}`"
-                  v-tooltip="RATING_HINTS[p.rating || 3]"
+                  v-tooltip="t(`rating.${p.rating || 3}`)"
                   >★ {{ p.rating || 3 }}</span
                 >
               </template>
               <template #visit="{ row: p }">
-                <span class="text-muted">{{ p.visitMinutes ? p.visitMinutes + ' min' : '—' }}</span>
+                <span class="text-muted">{{
+                  p.visitMinutes ? t('stop.minutes', { count: p.visitMinutes }) : '—'
+                }}</span>
               </template>
               <template #flags="{ row: p }">
                 <span class="cell-flags">
                   <span
                     v-if="p.needsBooking"
                     class="cell-flag cell-flag--book"
-                    v-tooltip="'Needs advance booking'"
-                    >Book</span
+                    v-tooltip="t('places.needsBookingHint')"
+                    >{{ t('places.book') }}</span
                   >
                   <span
                     v-if="p.needsPreparation"
                     class="cell-flag cell-flag--prep"
-                    v-tooltip="'Needs special preparation'"
-                    >Prep</span
+                    v-tooltip="t('places.needsPrepHint')"
+                    >{{ t('places.prep') }}</span
                   >
                 </span>
               </template>
@@ -462,9 +475,9 @@
 
         <div v-if="!places.length && !loading" class="empty-state">
           <div class="empty-state-icon"><i class="pi pi-map-marker"></i></div>
-          <h3>No places yet</h3>
-          <p>Search above to find & save a place, or add one manually.</p>
-          <TfButton icon="pi-plus" @click="openDialog()">Add place</TfButton>
+          <h3>{{ t('places.empty') }}</h3>
+          <p>{{ t('places.emptySub') }}</p>
+          <TfButton icon="pi-plus" @click="openDialog()">{{ t('places.add') }}</TfButton>
         </div>
       </div>
 
@@ -472,7 +485,11 @@
         v-model="showDialog"
         :inline="!isNarrow"
         :title="
-          drawerMode === 'view' ? viewing?.name : editing ? form.name || viewing?.name : 'New place'
+          drawerMode === 'view'
+            ? viewing?.name
+            : editing
+              ? form.name || viewing?.name
+              : t('places.newPlace')
         "
       >
         <!-- View mode: read-only details, grouped label → value. Editing is a
@@ -483,19 +500,19 @@
               <TfBadge
                 :tone="viewing.rating === 5 ? 'gold' : viewing.rating === 4 ? 'warning' : 'neutral'"
                 variant="soft"
-                >★ {{ viewing.rating || 3 }} · {{ RATING_HINTS[viewing.rating || 3] }}</TfBadge
+                >★ {{ viewing.rating || 3 }} · {{ t(`rating.${viewing.rating || 3}`) }}</TfBadge
               >
-              <TfBadge tone="neutral" variant="soft">{{ typeLabel(viewing.type) }}</TfBadge>
-              <TfBadge v-if="viewing.needsBooking" tone="brand" variant="soft" dot
-                >Book ahead</TfBadge
-              >
-              <TfBadge v-if="viewing.needsPreparation" tone="danger" variant="soft"
-                >Prep needed</TfBadge
-              >
+              <TfBadge tone="neutral" variant="soft">{{ placeTypeLabel(viewing.type) }}</TfBadge>
+              <TfBadge v-if="viewing.needsBooking" tone="brand" variant="soft" dot>{{
+                t('places.bookAhead')
+              }}</TfBadge>
+              <TfBadge v-if="viewing.needsPreparation" tone="danger" variant="soft">{{
+                t('places.prepNeeded')
+              }}</TfBadge>
             </div>
           </TfDrawerSection>
 
-          <TfDrawerSection label="Photos">
+          <TfDrawerSection :label="t('places.photos')">
             <div v-if="shownPhotos.length" class="photo-grid">
               <button
                 v-for="(url, i) in shownPhotos"
@@ -514,64 +531,66 @@
               icon="pi-cloud-upload"
               :loading="uploading"
               @click="pickPhotos"
-              >Upload photo</TfButton
+              >{{ t('places.uploadPhoto') }}</TfButton
             >
           </TfDrawerSection>
 
-          <TfDrawerSection label="Location">
+          <TfDrawerSection :label="t('places.location')">
             <BookingMap v-if="mapMarkers.length" :markers="mapMarkers" :height="150" />
             <p v-else class="text-subtle text-sm" style="margin: 0">
-              Not on the map yet — no coordinates.
+              {{ t('places.notOnMap') }}
             </p>
             <div class="info-row">
-              <span class="info-label">City</span>
+              <span class="info-label">{{ t('places.city') }}</span>
               <span class="info-value">{{ viewing.city || '—' }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">Country</span>
+              <span class="info-label">{{ t('places.country') }}</span>
               <span class="info-value">{{ countryName(viewing.country) || '—' }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">Address</span>
+              <span class="info-label">{{ t('places.address') }}</span>
               <span class="info-value" style="text-align: right">{{ viewing.address || '—' }}</span>
             </div>
           </TfDrawerSection>
 
-          <TfDrawerSection label="Planning">
+          <TfDrawerSection :label="t('places.planning')">
             <div class="info-row">
-              <span class="info-label">Rating</span>
+              <span class="info-label">{{ t('places.rating') }}</span>
               <span class="info-value">{{ viewing.rating || 3 }} / 5</span>
             </div>
             <div class="info-row">
-              <span class="info-label">Why this rating</span>
+              <span class="info-label">{{ t('places.whyRating') }}</span>
               <span class="info-value" style="text-align: right">{{
                 viewing.ratingComment || '—'
               }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">Time to visit</span>
+              <span class="info-label">{{ t('places.timeToVisit') }}</span>
               <span class="info-value">{{
-                viewing.visitMinutes ? viewing.visitMinutes + ' min' : '—'
+                viewing.visitMinutes ? t('stop.minutes', { count: viewing.visitMinutes }) : '—'
               }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">For whom</span>
-              <span class="info-value">{{ AUDIENCE_LABELS[viewing.audience || 'ALL'] }}</span>
+              <span class="info-label">{{ t('places.forWhom') }}</span>
+              <span class="info-value">{{ audienceLabel(viewing.audience || 'ALL') }}</span>
             </div>
           </TfDrawerSection>
 
-          <TfDrawerSection label="Organisation">
+          <TfDrawerSection :label="t('places.organisation')">
             <div v-if="tripMode" class="info-row">
-              <span class="info-label">Folder</span>
-              <span class="info-value">{{ folderLabel(viewing.folderId) || 'Unfiled' }}</span>
+              <span class="info-label">{{ t('places.folder') }}</span>
+              <span class="info-value">{{
+                folderLabel(viewing.folderId) || t('places.unfiled')
+              }}</span>
             </div>
             <div v-else class="info-row">
-              <span class="info-label">Trips</span>
+              <span class="info-label">{{ t('places.trips') }}</span>
               <span class="info-value" style="text-align: right">{{
                 (viewing.tripIds || [])
-                  .map((id) => trips.find((t) => t.id === id)?.title)
+                  .map((id) => trips.find((trip) => trip.id === id)?.title)
                   .filter(Boolean)
-                  .join(', ') || 'Not in a trip'
+                  .join(', ') || t('places.notInTrip')
               }}</span>
             </div>
             <!-- Dropping a place from the trip leaves it in the global library. -->
@@ -581,19 +600,19 @@
               variant="ghost"
               icon="pi-minus-circle"
               @click="removeFromCurrentTrip(viewing)"
-              >Remove from this trip</TfButton
+              >{{ t('places.removeFromThisTrip') }}</TfButton
             >
           </TfDrawerSection>
 
           <!-- Kept even when empty, so the section list is the same in both
                modes and nothing shifts when you switch. -->
-          <TfDrawerSection label="Description">
+          <TfDrawerSection :label="t('places.description')">
             <p style="margin: 0; font: var(--type-small); color: var(--text-secondary)">
               {{ viewing.description || '—' }}
             </p>
           </TfDrawerSection>
 
-          <TfDrawerSection label="Links">
+          <TfDrawerSection :label="t('places.links')">
             <div
               v-if="viewing.links && viewing.links.length"
               style="display: flex; gap: 6px; flex-wrap: wrap"
@@ -611,7 +630,6 @@
             </div>
             <span v-else class="info-value">—</span>
           </TfDrawerSection>
-
         </template>
 
         <!-- Edit mode keeps the details layout: same sections, same order, same
@@ -626,86 +644,86 @@
               <div class="field-stack">
                 <TfInput
                   v-model="form.name"
-                  label="Name"
+                  :label="t('places.name')"
                   required
-                  placeholder="e.g. Navagio Beach"
+                  :placeholder="t('places.namePlaceholder')"
                 />
                 <TfSelect
-                  label="Type"
+                  :label="t('places.type')"
                   :modelValue="typeLabelFromValue(form.type)"
                   @update:modelValue="(v) => (form.type = typeValueFromLabel(v))"
                   :options="typeLabels"
                 />
                 <div class="check-row">
                   <TfCheckbox v-model="form.needsBooking">
-                    <i class="pi pi-ticket" style="font-size: 12px"></i> Book ahead
+                    <i class="pi pi-ticket" style="font-size: 12px"></i>
+                    {{ t('places.bookAhead') }}
                   </TfCheckbox>
                   <TfCheckbox v-model="form.needsPreparation">
-                    <i class="pi pi-compass" style="font-size: 12px"></i> Prep needed
+                    <i class="pi pi-compass" style="font-size: 12px"></i>
+                    {{ t('places.prepNeeded') }}
                   </TfCheckbox>
                 </div>
               </div>
             </TfDrawerSection>
 
-            <TfDrawerSection label="Location">
+            <TfDrawerSection :label="t('places.location')">
               <div class="field-stack">
                 <!-- The search fills city, country and the pin, so it comes first
                      and there are no coordinates to type. -->
                 <div class="field">
-                  <label class="label">Address</label>
+                  <label class="label">{{ t('places.address') }}</label>
                   <TfPlaceSearch
                     v-if="FEATURES.geoPlaceSearch"
                     v-model="form.address"
-                    placeholder="Search an address or place"
+                    :placeholder="t('places.addressSearch')"
                     @select="onAddressSelect"
                   />
-                  <TfInput v-else v-model="form.address" aria-label="Address" />
-                  <span class="hint"
-                    >Picking a result fills the city, the country and the pin.</span
-                  >
+                  <TfInput v-else v-model="form.address" :aria-label="t('places.address')" />
+                  <span class="hint">{{ t('places.addressHint') }}</span>
                 </div>
                 <div class="field-pair">
-                  <TfInput v-model="form.city" label="City" />
+                  <TfInput v-model="form.city" :label="t('places.city')" />
                   <TfSelect
-                    label="Country"
+                    :label="t('places.country')"
                     :modelValue="countryLabel(form.country)"
                     @update:modelValue="(v) => (form.country = countryValue(v))"
                     :options="countryLabels"
-                    placeholder="Country"
+                    :placeholder="t('places.country')"
                   />
                 </div>
                 <BookingMap v-if="mapMarkers.length" :markers="mapMarkers" :height="130" />
               </div>
             </TfDrawerSection>
 
-            <TfDrawerSection label="Planning">
+            <TfDrawerSection :label="t('places.planning')">
               <div class="field-stack">
                 <div class="field">
-                  <label class="label">Rating</label>
+                  <label class="label">{{ t('places.rating') }}</label>
                   <div class="rating-row">
                     <TfRating v-model="form.rating" />
-                    <span class="hint">{{ RATING_HINTS[form.rating] }}</span>
+                    <span class="hint">{{ t(`rating.${form.rating}`) }}</span>
                   </div>
                 </div>
                 <TfInput
                   v-model="form.ratingComment"
-                  label="Why this rating"
-                  placeholder="e.g. iconic view, but 2h queue"
+                  :label="t('places.whyRating')"
+                  :placeholder="t('places.ratingCommentPlaceholder')"
                 />
                 <div class="field-pair">
                   <TfNumberInput
                     v-model="form.visitMinutes"
-                    label="Time to visit (min)"
+                    :label="t('places.visitMin')"
                     type="plain"
                     :min="0"
                     :step="15"
                   />
                   <div class="field">
-                    <label class="label">For whom</label>
+                    <label class="label">{{ t('places.forWhom') }}</label>
                     <TfSegmentedControl
-                      :modelValue="AUDIENCE_LABELS[form.audience]"
-                      @update:modelValue="(v) => (form.audience = AUDIENCE_VALUES[v])"
-                      :options="Object.values(AUDIENCE_LABELS)"
+                      :modelValue="audienceLabel(form.audience)"
+                      @update:modelValue="(v) => (form.audience = audienceValue(v))"
+                      :options="audienceLabels"
                       size="sm"
                       fill
                     />
@@ -716,7 +734,7 @@
 
             <!-- Photos are uploaded to a saved place, so a new one shows no
                  section that only says so. -->
-            <TfDrawerSection v-if="editing" label="Photos">
+            <TfDrawerSection v-if="editing" :label="t('places.photos')">
               <div v-if="shownPhotos.length" class="photo-grid">
                 <button
                   v-for="(url, i) in shownPhotos"
@@ -729,82 +747,84 @@
                   <span
                     class="photo-thumb-remove"
                     role="button"
-                    aria-label="Remove photo"
-                    v-tooltip="'Remove'"
+                    :aria-label="t('places.removePhotoAria')"
+                    v-tooltip="t('common.remove')"
                     @click.stop="removePhoto(url)"
                   >
                     <i class="pi pi-times"></i>
                   </span>
                 </button>
               </div>
-              <p v-else class="text-subtle text-sm" style="margin: 0">No photos yet.</p>
+              <p v-else class="text-subtle text-sm" style="margin: 0">
+                {{ t('places.noPhotos') }}
+              </p>
               <TfFileUpload
                 :key="uploadKey"
                 variant="compact"
                 accept="image/jpeg,image/png"
                 multiple
-                :hint="`JPEG or PNG, up to 10 MB each \u00b7 stored at ${MAX_PHOTO_EDGE} px, ${MAX_PHOTOS} per place`"
+                :hint="t('places.uploadHint', { edge: MAX_PHOTO_EDGE, max: MAX_PHOTOS })"
                 @change="uploadPhotos"
               />
             </TfDrawerSection>
 
             <!-- Folder and trip membership apply straight away (they are their own
                  endpoints, not part of the form) — the cards no longer carry them. -->
-            <TfDrawerSection v-if="editing && viewing" label="Organisation">
+            <TfDrawerSection v-if="editing && viewing" :label="t('places.organisation')">
               <div class="field-stack">
                 <template v-if="tripMode">
                   <TfSelect
                     v-if="folders.length"
-                    label="Folder"
+                    :label="t('places.folder')"
                     :modelValue="folderLabel(viewing.folderId)"
                     @update:modelValue="(v) => assignFolder(viewing, folderValueFromLabel(v))"
                     :options="folderLabels"
-                    placeholder="Unfiled"
+                    :placeholder="t('places.unfiled')"
                   />
                   <div v-else class="field">
-                    <label class="label">Folder</label>
+                    <label class="label">{{ t('places.folder') }}</label>
                     <span class="text-sm">{{
-                      folderLabel(viewing.folderId) || 'No folders yet'
+                      folderLabel(viewing.folderId) || t('places.noFolders')
                     }}</span>
                   </div>
                 </template>
                 <template v-else>
                   <!-- One box per trip, ticked where the place already is. -->
                   <div v-if="trips.length" class="field">
-                    <label class="label">Trips</label>
+                    <label class="label">{{ t('places.trips') }}</label>
                     <div class="field-stack" style="gap: 6px">
                       <TfCheckbox
-                        v-for="t in trips"
-                        :key="t.id"
-                        :modelValue="(viewing.tripIds || []).includes(t.id)"
-                        @update:modelValue="toggleTripMembership(viewing, t.id)"
-                        >{{ t.title }}</TfCheckbox
+                        v-for="trip in trips"
+                        :key="trip.id"
+                        :modelValue="(viewing.tripIds || []).includes(trip.id)"
+                        @update:modelValue="toggleTripMembership(viewing, trip.id)"
+                        >{{ trip.title }}</TfCheckbox
                       >
                     </div>
                   </div>
                   <div v-else class="field">
-                    <label class="label">Trips</label>
-                    <span class="text-sm">No trips yet</span>
+                    <label class="label">{{ t('places.trips') }}</label>
+                    <span class="text-sm">{{ t('places.noTrips') }}</span>
                   </div>
                 </template>
               </div>
             </TfDrawerSection>
 
-            <TfDrawerSection label="Description">
+            <TfDrawerSection :label="t('places.description')">
               <TfTextarea
                 v-model="form.description"
-                aria-label="Description"
+                :aria-label="t('places.description')"
                 :rows="3"
-                placeholder="What is it, why go, what to watch out for"
+                :placeholder="t('places.descPlaceholder')"
               />
             </TfDrawerSection>
 
-            <TfDrawerSection label="Links">
+            <TfDrawerSection :label="t('places.links')">
               <TfInput
                 v-model="linksText"
-                aria-label="Links"
-                placeholder="https://… , https://…"
-                helper="Comma-separated"
+                :aria-label="t('places.links')"
+                :placeholder="t('places.linksPlaceholder')"
+                :helper="t('places.linksHelper')"
               />
             </TfDrawerSection>
           </form>
@@ -812,17 +832,19 @@
 
         <template #footer>
           <template v-if="drawerMode === 'view' && viewing">
-            <TfButton icon="pi-pencil" style="flex: 1" @click="openDialog(viewing)"
-              >Edit place</TfButton
-            >
-            <TfButton variant="danger" icon="pi-trash" @click="confirmDelete(viewing)"
-              >Delete</TfButton
-            >
+            <TfButton icon="pi-pencil" style="flex: 1" @click="openDialog(viewing)">{{
+              t('places.editPlace')
+            }}</TfButton>
+            <TfButton variant="danger" icon="pi-trash" @click="confirmDelete(viewing)">{{
+              t('common.delete')
+            }}</TfButton>
           </template>
           <template v-else>
-            <TfButton variant="ghost" @click="showDialog = false">Cancel</TfButton>
+            <TfButton variant="ghost" @click="showDialog = false">{{
+              t('common.cancel')
+            }}</TfButton>
             <TfButton type="submit" form="placeForm" icon="pi-check" :loading="saving">{{
-              editing ? 'Save' : 'Add'
+              editing ? t('common.save') : t('common.add')
             }}</TfButton>
           </template>
         </template>
@@ -847,16 +869,19 @@
       @update:index="(i) => (viewerIndex = i)"
     />
 
-    <TfModal v-model="showFolderDialog" :title="editingFolder ? 'Rename folder' : 'New folder'">
+    <TfModal
+      v-model="showFolderDialog"
+      :title="editingFolder ? t('places.renameFolder') : t('places.newFolder')"
+    >
       <form id="folderForm" @submit.prevent="saveFolder" class="dialog-form">
         <TfInput
           v-model="folderForm.name"
-          label="Name *"
+          :label="t('places.folderNameLabel')"
           required
-          placeholder="e.g. Beaches, Greece 2026"
+          :placeholder="t('places.folderNamePlaceholder')"
         />
         <div class="field">
-          <label>Color</label>
+          <label>{{ t('places.color') }}</label>
           <input
             type="color"
             v-model="folderForm.color"
@@ -865,33 +890,39 @@
         </div>
       </form>
       <template #footer>
-        <TfButton variant="ghost" @click="showFolderDialog = false">Cancel</TfButton>
+        <TfButton variant="ghost" @click="showFolderDialog = false">{{
+          t('common.cancel')
+        }}</TfButton>
         <TfButton type="submit" form="folderForm" icon="pi-check">{{
-          editingFolder ? 'Save' : 'Create'
+          editingFolder ? t('common.save') : t('common.create')
         }}</TfButton>
       </template>
     </TfModal>
     <!-- Find & import: Google Maps search, link import below -->
-    <TfModal v-model="showFindDialog" title="Find a place">
+    <TfModal v-model="showFindDialog" :title="t('places.findTitle')">
       <div class="dialog-form">
         <div class="form-row" style="align-items: flex-end">
           <div style="flex: 1">
             <TfInput
               v-model="findQuery"
-              label="Search"
-              placeholder="Navagio Beach, Senso-ji…"
+              :label="t('places.searchLabel')"
+              :placeholder="t('places.findPlaceholder')"
               @keyup.enter="runFind"
             />
           </div>
-          <TfButton icon="pi-search" :loading="finding" @click="runFind">Search</TfButton>
+          <TfButton icon="pi-search" :loading="finding" @click="runFind">{{
+            t('places.searchLabel')
+          }}</TfButton>
         </div>
 
         <template v-if="searched">
           <!-- Google / map results -->
           <div class="find-section">
-            <div class="find-section-title"><i class="pi pi-map"></i> Google Maps</div>
+            <div class="find-section-title">
+              <i class="pi pi-map"></i> {{ t('places.googleMaps') }}
+            </div>
             <p v-if="!findGoogle.length" class="text-subtle text-sm" style="margin: 4px 0">
-              No results.
+              {{ t('places.noResults') }}
             </p>
             <div v-for="(r, i) in findGoogle" :key="'g' + i" class="find-row">
               <div style="min-width: 0; flex: 1">
@@ -907,28 +938,31 @@
                 :loading="savingKey === 'g' + i"
                 @click="addGoogleResult(r, 'g' + i)"
               >
-                <i class="pi pi-plus" style="font-size: 12px"></i> Add
+                <i class="pi pi-plus" style="font-size: 12px"></i> {{ t('common.add') }}
               </TfButton>
             </div>
           </div>
-
         </template>
 
         <!-- Link import -->
         <div class="find-section">
-          <div class="find-section-title"><i class="pi pi-link"></i> Or import from a link</div>
+          <div class="find-section-title">
+            <i class="pi pi-link"></i> {{ t('places.orImportLink') }}
+          </div>
           <div class="form-row" style="align-items: center">
             <div style="flex: 1">
               <TfInput
                 v-model="importUrl"
-                placeholder="https://maps.app.goo.gl/…"
+                :placeholder="t('places.importPlaceholder')"
                 @keyup.enter="runImport"
               />
             </div>
-            <TfButton icon="pi-download" :loading="importing" @click="runImport">Import</TfButton>
+            <TfButton icon="pi-download" :loading="importing" @click="runImport">{{
+              t('places.import')
+            }}</TfButton>
           </div>
           <p class="text-subtle text-xs" style="margin: 4px 0 0">
-            Paste a link to a single place (not a saved list or destination page).
+            {{ t('places.importHint') }}
           </p>
         </div>
       </div>
@@ -962,7 +996,15 @@ import { useTripStore } from '@/stores/tripStore.js';
 import { FEATURES } from '@/config.js';
 import BookingMap from '@/components/BookingMap.vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api, photoSrc, ownPhotosFirst, placeTypeMeta, PLACE_TYPE_OPTIONS } from '@tripyfull/core';
+import {
+  api,
+  photoSrc,
+  ownPhotosFirst,
+  placeTypeMeta,
+  placeTypeLabel,
+  PLACE_TYPES,
+  t,
+} from '@tripyfull/core';
 
 const tripStore = useTripStore();
 const route = useRoute();
@@ -1035,30 +1077,30 @@ const selectedTripId = ref(null); // narrow to one trip's own list
 // /trips/:tripId/places is one trip's list (grouped by folders created there).
 const tripMode = computed(() => !!route.params.tripId);
 const routeTripId = computed(() => route.params.tripId || null);
-const tripTitle = computed(() => trips.value.find((t) => t.id === routeTripId.value)?.title || '');
+const tripTitle = computed(
+  () => trips.value.find((trip) => trip.id === routeTripId.value)?.title || '',
+);
 const tripPlaceCount = (tripId) =>
   places.value.filter((p) => (p.tripIds || []).includes(tripId)).length;
 const showFolderDialog = ref(false);
 const editingFolder = ref(null);
 const folderForm = ref({ name: '', color: '#e35a38' });
 
-const sortOptions = [
-  { label: 'Name', value: 'name' },
-  { label: 'Recently added', value: 'recent' },
-  { label: 'Type', value: 'type' },
-  { label: 'Rating', value: 'rating' },
-];
+// Sort orders and audiences are offered as words, so both lists follow the
+// language: a computed re-labels them the moment it changes.
+const SORT_VALUES = ['name', 'recent', 'type', 'rating'];
+const sortLabelOf = (v) =>
+  ({
+    name: t('places.sortName'),
+    recent: t('places.sortRecent'),
+    type: t('places.sortType'),
+    rating: t('places.sortRating'),
+  })[v] ?? null;
 
-// Rating semantics from the planning strategy (see docs).
-const RATING_HINTS = {
-  5: 'worth the whole trip',
-  4: 'big detour OK',
-  3: 'small detour',
-  2: 'only if on the way',
-  1: 'maybe skip',
-};
-const AUDIENCE_LABELS = { ALL: 'Everyone', ADULTS: 'Adults', KIDS: 'Kids' };
-const AUDIENCE_VALUES = Object.fromEntries(Object.entries(AUDIENCE_LABELS).map(([v, l]) => [l, v]));
+const AUDIENCE_VALUES_LIST = ['ALL', 'ADULTS', 'KIDS'];
+const audienceLabel = (v) => (AUDIENCE_VALUES_LIST.includes(v) ? t(`audience.${v}`) : '');
+const audienceLabels = computed(() => AUDIENCE_VALUES_LIST.map(audienceLabel));
+const audienceValue = (label) => AUDIENCE_VALUES_LIST.find((v) => audienceLabel(v) === label);
 
 // ---- Multi-select + bulk actions ----
 const selectMode = ref(false);
@@ -1091,14 +1133,18 @@ const runBulk = async (op, doneMessage) => {
   }
   clearSelection();
   await Promise.all([loadPlaces(), loadFolders()]);
-  if (failed) toast.warning('Partly done', `${failed} of ${ids.length} failed`);
-  else toast.success(doneMessage, `${ids.length} place${ids.length === 1 ? '' : 's'}`);
+  if (failed)
+    toast.warning(t('places.partlyDone'), t('places.partlyDoneMsg', { failed, total: ids.length }));
+  else toast.success(doneMessage, t('places.count', { count: ids.length }));
 };
 
 const bulkChangeType = (typeLabelValue) => {
   const type = typeValueFromLabel(typeLabelValue);
   if (!type) return;
-  return runBulk((id) => api.patch(`/api/places/${id}`, { type }), `Type set to ${typeLabelValue}`);
+  return runBulk(
+    (id) => api.patch(`/api/places/${id}`, { type }),
+    t('places.typeSetTo', { type: typeLabelValue }),
+  );
 };
 
 const bulkMoveToFolder = (folderName) => {
@@ -1106,14 +1152,17 @@ const bulkMoveToFolder = (folderName) => {
   if (!folderId) return;
   return runBulk(
     (id) => api.put(`/api/folders/${folderId}/places/${id}`),
-    `Moved to ${folderName}`,
+    t('places.movedTo', { folder: folderName }),
   );
 };
 
 const bulkAddToTrip = (title) => {
   const tripId = tripValueFromLabel(title);
   if (!tripId) return;
-  return runBulk((id) => api.put(`/api/places/${id}/trips/${tripId}`), `Added to ${title}`);
+  return runBulk(
+    (id) => api.put(`/api/places/${id}/trips/${tripId}`),
+    t('places.addedToTrip', { trip: title }),
+  );
 };
 
 /** Trip list only: drop the selection from this trip, keeping the places. */
@@ -1121,7 +1170,7 @@ const bulkRemoveFromTrip = () => {
   if (!routeTripId.value) return;
   return runBulk(
     (id) => api.delete(`/api/places/${id}/trips/${routeTripId.value}`),
-    'Removed from trip',
+    t('places.removedFromTrip'),
   );
 };
 
@@ -1129,14 +1178,14 @@ const bulkDelete = async () => {
   const n = selectedIds.value.size;
   if (!n) return;
   const ok = await confirm({
-    title: 'Delete places',
-    message: `Delete ${n} place${n === 1 ? '' : 's'}? This cannot be undone.`,
+    title: t('places.deleteManyTitle'),
+    message: t('places.deleteManyMsg', { count: n }),
     tone: 'danger',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
   });
   if (!ok) return;
-  await runBulk((id) => api.delete(`/api/places/${id}`), 'Deleted');
+  await runBulk((id) => api.delete(`/api/places/${id}`), t('common.deleted'));
 };
 
 // Table view: the select column appears only in selection mode.
@@ -1154,14 +1203,16 @@ const placeColumns = computed(() => {
   const anyFolder = shownPlaces.value.some((p) => p.folderId);
   return [
     ...(selectMode.value ? [{ key: 'sel', label: '', width: '34px' }] : []),
-    { key: 'name', label: 'Place' },
-    { key: 'rating', label: 'Rating', width: '92px' },
+    { key: 'name', label: t('places.colPlace') },
+    { key: 'rating', label: t('places.rating'), width: '92px' },
     // Thresholds are "the name column still reads at ~250px after this one".
-    ...(room(460) ? [{ key: 'type', label: 'Type', width: '132px' }] : []),
+    ...(room(460) ? [{ key: 'type', label: t('places.type'), width: '132px' }] : []),
     // A column nobody in this list has filled is pure wasted width.
-    ...(room(780) && anyVisit ? [{ key: 'visit', label: 'Time', width: '78px' }] : []),
-    ...(room(660) ? [{ key: 'flags', label: 'Flags', width: '152px' }] : []),
-    ...(room(920) && anyFolder ? [{ key: 'folder', label: 'Folder', width: '140px' }] : []),
+    ...(room(780) && anyVisit ? [{ key: 'visit', label: t('places.colTime'), width: '78px' }] : []),
+    ...(room(660) ? [{ key: 'flags', label: t('places.colFlags'), width: '152px' }] : []),
+    ...(room(920) && anyFolder
+      ? [{ key: 'folder', label: t('places.colFolder'), width: '140px' }]
+      : []),
   ];
 });
 const tableRowClass = (p) => ({
@@ -1173,9 +1224,7 @@ const tableRowClass = (p) => ({
 const filterRatings = ref(new Set());
 const activeFilterCount = computed(
   () =>
-    (filterCountry.value ? 1 : 0) +
-    (filterType.value ? 1 : 0) +
-    (filterRatings.value.size ? 1 : 0),
+    (filterCountry.value ? 1 : 0) + (filterType.value ? 1 : 0) + (filterRatings.value.size ? 1 : 0),
 );
 const toggleRating = (n) => {
   const next = new Set(filterRatings.value);
@@ -1204,9 +1253,9 @@ const toggleTripMembership = async (place, tripId) => {
     // next click would toggle from a stale one.
     if (viewing.value?.id === place.id) viewing.value = res.data;
     if (editing.value?.id === place.id) editing.value = res.data;
-    toast.success(inTrip ? 'Removed from trip' : 'Added to trip', place.name);
+    toast.success(inTrip ? t('places.removedFromTrip') : t('places.addedToTripShort'), place.name);
   } catch {
-    toast.danger('Error', 'Could not update the trip list');
+    toast.danger(t('common.error'), t('places.tripListFailed'));
   }
 };
 
@@ -1219,9 +1268,9 @@ const removeFromCurrentTrip = async (place) => {
     await loadFolders();
     // The panel would otherwise keep showing a place that left the list.
     if (viewing.value?.id === place.id) showDialog.value = false;
-    toast.success('Removed from trip', place.name);
+    toast.success(t('places.removedFromTrip'), place.name);
   } catch {
-    toast.danger('Error', 'Could not remove the place');
+    toast.danger(t('common.error'), t('places.removeFailed'));
   }
 };
 
@@ -1278,7 +1327,7 @@ const ratingBalance = computed(() => {
     4: `~${Math.round(total * 0.1)}`,
     3: `~${Math.round(total * 0.2)}`,
     2: `~${Math.round(total * 0.3)}`,
-    1: 'rest',
+    1: t('places.aimRest'),
   };
   return [5, 4, 3, 2, 1].map((r) => ({
     r,
@@ -1303,8 +1352,8 @@ const balanceWarning = computed(() => {
   const total = places.value.length;
   const fives = b[0].n;
   const target = Math.max(1, Math.round(total * 0.05));
-  if (fives > target * 1.5) return `${fives} must-sees, aim for ~${target}`;
-  if (!fives && total > 10) return 'no must-sees picked yet';
+  if (fives > target * 1.5) return t('places.warnTooMany', { n: fives, target });
+  if (!fives && total > 10) return t('places.warnNone');
   return '';
 });
 const currentFolder = computed(
@@ -1323,24 +1372,21 @@ const chipStyle = (active) => ({
   gap: '6px',
 });
 
-const typeOptions = PLACE_TYPE_OPTIONS;
-const typeLabel = (v) => typeOptions.find((o) => o.value === v)?.label || v;
-
 // --- Label <-> value mapping helpers for TfSelect (string-array based) ---
-const typeLabels = typeOptions.map((o) => o.label);
-const typeLabelFromValue = (v) => typeOptions.find((o) => o.value === v)?.label ?? null;
-const typeValueFromLabel = (l) => typeOptions.find((o) => o.label === l)?.value ?? null;
+const typeLabels = computed(() => PLACE_TYPES.map(placeTypeLabel));
+const typeLabelFromValue = (v) => (PLACE_TYPES.includes(v) ? placeTypeLabel(v) : null);
+const typeValueFromLabel = (l) => PLACE_TYPES.find((v) => placeTypeLabel(v) === l) ?? null;
 
-const sortLabels = sortOptions.map((o) => o.label);
-const sortLabelFromValue = (v) => sortOptions.find((o) => o.value === v)?.label ?? null;
-const sortValueFromLabel = (l) => sortOptions.find((o) => o.label === l)?.value ?? null;
+const sortLabels = computed(() => SORT_VALUES.map(sortLabelOf));
+const sortLabelFromValue = (v) => sortLabelOf(v);
+const sortValueFromLabel = (l) => SORT_VALUES.find((v) => sortLabelOf(v) === l) ?? null;
 
 const countryLabels = computed(() => countryOptions.value.map((o) => o.label));
 const countryLabel = (v) => countryOptions.value.find((o) => o.value === v)?.label ?? null;
 const countryValue = (l) => countryOptions.value.find((o) => o.label === l)?.value ?? null;
 
-const tripLabels = computed(() => trips.value.map((t) => t.title));
-const tripValueFromLabel = (title) => trips.value.find((t) => t.title === title)?.id ?? null;
+const tripLabels = computed(() => trips.value.map((trip) => trip.title));
+const tripValueFromLabel = (title) => trips.value.find((trip) => trip.title === title)?.id ?? null;
 
 const folderLabels = computed(() => folders.value.map((f) => f.name));
 const folderLabel = (id) => folders.value.find((f) => f.id === id)?.name ?? null;
@@ -1354,9 +1400,9 @@ const linkLabel = (url) => {
 };
 
 // Per-type icon + warm color (shared via @tripyfull/core).
-const typeEmoji = (t) => placeTypeMeta(t).emoji;
-const typeStyle = (t) => {
-  const m = placeTypeMeta(t);
+const typeEmoji = (type) => placeTypeMeta(type).emoji;
+const typeStyle = (type) => {
+  const m = placeTypeMeta(type);
   return { background: m.bg, color: m.color };
 };
 const countryName = (code) => allCountries.value.find((c) => c.code === code)?.name || code || '';
@@ -1468,11 +1514,11 @@ const uploadPhotos = async (files) => {
       const res = await api.post(`/api/places/${target.id}/photos`, body);
       applyPlace(res.data);
     }
-    toast.success(files.length > 1 ? `${files.length} photos added` : 'Photo added');
+    toast.success(t('places.photosAdded', { count: files.length }));
   } catch (e) {
     // The server explains the refusal (too large, wrong type, place full);
     // it answers with {"error": …}, which is what the toast has to read.
-    toast.danger('Upload failed', e.response?.data?.error || 'Could not store the image');
+    toast.danger(t('places.uploadFailed'), e.response?.data?.error || t('places.storeFailed'));
   } finally {
     uploading.value = false;
     uploadKey.value += 1; // remounts the dropzone, clearing its staged list
@@ -1483,18 +1529,18 @@ const removePhoto = (url) => {
   const target = editing.value || viewing.value;
   if (!target) return;
   confirm({
-    title: 'Confirm',
-    message: 'Remove this photo?',
+    title: t('common.confirm'),
+    message: t('places.removePhotoMsg'),
     tone: 'danger',
-    confirmLabel: 'Remove',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.remove'),
+    cancelLabel: t('common.cancel'),
   }).then(async (ok) => {
     if (!ok) return;
     try {
       const res = await api.delete(`/api/places/${target.id}/photos`, { params: { url } });
       applyPlace(res.data);
     } catch {
-      toast.danger('Error', 'Failed to remove photo');
+      toast.danger(t('common.error'), t('places.photoRemoveFailed'));
     }
   });
 };
@@ -1558,9 +1604,9 @@ const save = async () => {
       viewing.value = created;
       drawerMode.value = 'view';
     }
-    toast.success('Saved');
+    toast.success(t('common.saved'));
   } catch {
-    toast.danger('Error', 'Failed to save place');
+    toast.danger(t('common.error'), t('places.saveFailed'));
   } finally {
     saving.value = false;
   }
@@ -1623,10 +1669,7 @@ const attachToScope = async (place) => {
       loadFolders();
     }
   } catch {
-    toast.warning(
-      'Saved, not filed',
-      'The place is in your library, but not in this folder or trip',
-    );
+    toast.warning(t('places.savedNotFiled'), t('places.savedNotFiledMsg'));
   }
   return p;
 };
@@ -1640,9 +1683,9 @@ const addGoogleResult = async (r, key) => {
       country: null,
     });
     showSaved(res.data);
-    toast.success('Place saved', res.data.name);
+    toast.success(t('places.placeSaved'), res.data.name);
   } catch {
-    toast.warning('Not found', 'Could not save this place');
+    toast.warning(t('places.notFound'), t('places.couldNotSave'));
   } finally {
     savingKey.value = '';
   }
@@ -1658,10 +1701,10 @@ const runImport = async () => {
     const res = await api.post('/api/places/import', { url: importUrl.value.trim() });
     showSaved(res.data);
     importUrl.value = '';
-    toast.success('Imported', res.data.name);
+    toast.success(t('places.imported'), res.data.name);
   } catch (e) {
-    const msg = e.response?.status === 400 ? "Couldn't read that link" : 'Import failed';
-    toast.warning('Import', msg);
+    const msg = e.response?.status === 400 ? t('places.badLink') : t('places.importFailed');
+    toast.warning(t('places.import'), msg);
   } finally {
     importing.value = false;
   }
@@ -1669,11 +1712,11 @@ const runImport = async () => {
 
 const confirmDelete = (p) => {
   confirm({
-    title: 'Confirm',
-    message: `Delete "${p.name}"?`,
+    title: t('common.confirm'),
+    message: t('places.deleteMsg', { name: p.name }),
     tone: 'danger',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
   }).then(async (ok) => {
     if (!ok) return;
     try {
@@ -1684,9 +1727,9 @@ const confirmDelete = (p) => {
         showDialog.value = false;
         viewing.value = null;
       }
-      toast.success('Deleted');
+      toast.success(t('common.deleted'));
     } catch {
-      toast.danger('Error', 'Failed to delete place');
+      toast.danger(t('common.error'), t('places.deleteFailed'));
     }
   });
 };
@@ -1720,7 +1763,7 @@ const loadPlaces = async () => {
     };
     places.value = (await api.get('/api/places', { params })).data;
   } catch {
-    toast.danger('Error', 'Failed to load places');
+    toast.danger(t('common.error'), t('places.loadFailed'));
   } finally {
     loading.value = false;
   }
@@ -1767,19 +1810,22 @@ const saveFolder = async () => {
     }
     showFolderDialog.value = false;
     await loadFolders();
-    toast.success(editingFolder.value ? 'Folder saved' : 'Folder created', folderForm.value.name);
+    toast.success(
+      editingFolder.value ? t('places.folderSaved') : t('places.folderCreated'),
+      folderForm.value.name,
+    );
   } catch {
-    toast.danger('Error', 'Failed to save folder');
+    toast.danger(t('common.error'), t('places.folderSaveFailed'));
   }
 };
 
 const deleteFolder = (f) => {
   confirm({
-    title: 'Confirm',
-    message: `Delete folder "${f.name}"? Places stay in the library.`,
+    title: t('common.confirm'),
+    message: t('places.deleteFolderMsg', { name: f.name }),
     tone: 'danger',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
   }).then(async (ok) => {
     if (!ok) return;
     try {
@@ -1787,9 +1833,9 @@ const deleteFolder = (f) => {
       if (selectedFolderId.value === f.id) selectedFolderId.value = null;
       await loadFolders();
       await loadPlaces();
-      toast.success('Deleted');
+      toast.success(t('common.deleted'));
     } catch {
-      toast.danger('Error', 'Failed to delete folder');
+      toast.danger(t('common.error'), t('places.folderDeleteFailed'));
     }
   });
 };
@@ -1810,7 +1856,7 @@ const assignFolder = async (place, folderId) => {
       places.value = places.value.filter((p) => p.id !== place.id);
     }
   } catch {
-    toast.danger('Error', 'Failed to update folder');
+    toast.danger(t('common.error'), t('places.folderUpdateFailed'));
   }
 };
 
