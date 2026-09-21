@@ -6,7 +6,7 @@
       <div class="tour-shade" @click.self=""></div>
       <div v-if="spot" class="tour-spot" :style="spotStyle"></div>
 
-      <div class="tour-card" :style="cardStyle">
+      <div v-if="!resolving" class="tour-card" :style="cardStyle">
         <div class="tour-head">
           <span class="tour-count">{{
             t('guide.step', { n: index + 1, total: steps.length })
@@ -65,17 +65,40 @@ const PLAN = [
 ];
 
 const tripId = computed(() => store.trips[0]?.id || null);
-const steps = computed(() =>
-  PLAN.filter((s) => !s.trip || tripId.value).map((s) => ({
+
+/* A step names the buttons it points at. Taking those names from the very keys
+   that label the buttons is the only way they cannot drift apart — spelling
+   them out again inside the sentence is how a German word ended up in the
+   Russian text. */
+const labels = () => ({
+  new: t('trips.new'),
+  import: t('trips.import'),
+  all: t('nav.allPlaces'),
+  find: t('places.findImport'),
+  itinerary: t('nav.itinerary'),
+  update: t('bookings.updatePlan'),
+  suggestions: t('todo.suggestions'),
+  planned: t('map.plannedOnly'),
+  print: t('overview.print'),
+  export: t('overview.export'),
+});
+
+const steps = computed(() => {
+  const names = labels();
+  return PLAN.filter((s) => !s.trip || tripId.value).map((s) => ({
     ...s,
     title: t(`guide.s${s.key}.title`),
-    body: t(`guide.s${s.key}.body`),
-  })),
-);
+    body: t(`guide.s${s.key}.body`, names),
+  }));
+});
 
 const index = ref(0);
 const current = computed(() => steps.value[index.value] || null);
 const spot = ref(null);
+/* While a step is being set up — the route changes, the view mounts, the page
+   scrolls — the card stays away rather than appear in the middle and then jump
+   to the element. The shade alone says the tour is still there. */
+const resolving = ref(false);
 
 /** Waits for the step's element to exist — a route change mounts it late. */
 const findTarget = async (name, tries = 30) => {
@@ -99,19 +122,33 @@ const measure = (el) => {
 };
 
 let target = null;
+// Clicking Next twice quickly would otherwise leave two set-ups racing, and
+// the slower one would place the card against the wrong element.
+let run = 0;
 const show = async () => {
+  const mine = ++run;
   spot.value = null;
-  const step = current.value;
-  if (!step) return;
-  const path = step.path(tripId.value);
-  if (path && router.currentRoute.value.path !== path) {
-    await router.push(path).catch(() => {});
+  target = null;
+  resolving.value = true;
+  try {
+    const step = current.value;
+    if (!step) return;
+    const path = step.path(tripId.value);
+    if (path && router.currentRoute.value.path !== path) {
+      await router.push(path).catch(() => {});
+    }
+    if (mine !== run) return;
+    const el = await findTarget(step.tour);
+    if (mine !== run) return;
+    if (!el) return; // the card still stands, centred, with its words
+    target = el;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    await new Promise((r) => setTimeout(r, 320));
+    if (mine !== run) return;
+    measure(el);
+  } finally {
+    if (mine === run) resolving.value = false;
   }
-  target = await findTarget(step.tour);
-  if (!target) return; // the callout still stands, centred, with its words
-  target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  await new Promise((r) => setTimeout(r, 350));
-  measure(target);
 };
 
 const go = (i) => {
@@ -128,8 +165,10 @@ watch(
       index.value = 0;
       show();
     } else {
+      run++;
       spot.value = null;
       target = null;
+      resolving.value = false;
     }
   },
 );

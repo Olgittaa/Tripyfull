@@ -931,29 +931,29 @@ export default {
   'guide.done': 'Entendi',
   'guide.s1.title': 'Suas viagens',
   'guide.s1.body':
-    'Cada viagem é um cartão na primeira página. «Nova viagem» pede um nome, as datas e uma moeda; «Importar» abre uma viagem que alguém enviou como arquivo.',
+    'Cada viagem é um cartão na primeira página. «{new}» pede um nome, as datas e uma moeda; «{import}» abre uma viagem que alguém enviou como arquivo.',
   'guide.s2.title': 'Lugares que valem a pena',
   'guide.s2.body':
-    '«Todos os lugares» é a sua biblioteca, a mesma para todas as viagens. «Buscar e importar» procura no mapa ou aceita um link; avalie cada lugar de 1 a 5 e diga quanto tempo leva a visita.',
+    '«{all}» é a sua biblioteca, a mesma para todas as viagens. «{find}» procura no mapa ou aceita um link; avalie cada lugar de 1 a 5 e diga quanto tempo leva a visita.',
   'guide.s3.title': 'O dia em si',
   'guide.s3.body':
-    'O roteiro mostra um dia de cada vez. Adicione uma parada à mão ou tire uma do mapa do dia; arraste para reordenar, defina um horário de início — a linha entre duas paradas é o caminho.',
+    '«{itinerary}» mostra um dia de cada vez, e esta faixa passa de um para outro. Adicione uma parada à mão ou pelo mapa do dia; arraste para reordenar — a linha entre duas paradas é o caminho.',
   'guide.s4.title': 'Reservas e pagamentos',
   'guide.s4.body':
-    'Voos, hospedagens e atividades, cada um com preço e parcelas. «Atualizar plano» os escreve nos dias, e os bilhetes podem ser anexados à própria reserva.',
+    'Voos, hospedagens e atividades, cada um com preço e parcelas. «{update}» os escreve nos dias, e os bilhetes ficam na própria reserva.',
   'guide.s5.title': 'A lista de tarefas',
   'guide.s5.body':
-    'O que precisa acontecer antes de sair, no caminho e depois de voltar. «Sugestões» oferece as de sempre, com prazos contados a partir da viagem.',
+    'O que precisa acontecer antes de sair, no caminho e depois de voltar. «{suggestions}» oferece as de sempre, com prazos contados a partir da viagem.',
   'guide.s6.title': 'Quanto custa',
   'guide.s6.body':
     'O total da viagem, o que está pago e o que falta — das reservas e dos custos que você põe nas paradas.',
   'guide.s7.title': 'A viagem inteira no mapa',
   'guide.s7.body':
-    'Cada lugar salvo é um ponto: a cor é a avaliação, a etiqueta é o dia em que está planejado. «Só os planejados» deixa apenas esses.',
-  'guide.s8.title': 'O livrinho do cliente',
+    'Cada lugar salvo é um ponto: a cor é a avaliação, a etiqueta é o dia em que está planejado. «{planned}» deixa no mapa apenas esses.',
+  'guide.s8.title': 'Imprimir e exportar',
   'guide.s8.body':
-    '«Imprimir» na página da viagem monta cada dia com o mapa, as fotos, as reservas e as notas. A caixa de impressão do navegador salva em PDF.',
-  'guide.s9.title': 'Idioma, moeda, backup',
+    '«{print}» monta o livrinho do cliente: cada dia com o mapa, as fotos e as reservas. «{export}» empacota a viagem inteira — bilhetes e fotos — em um único arquivo.',
+  'guide.s9.title': 'Idioma e moeda',
   'guide.s9.body':
-    'A pastilha na barra de cima troca o idioma a qualquer momento. «Exportar» na página da viagem empacota tudo — fotos e bilhetes — em um único arquivo.',
+    'Esta pastilha troca o idioma a qualquer momento, dez deles. O selo ao lado é a moeda da conta — aquela com que uma viagem nova começa.',
 };
