@@ -16,6 +16,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { TfIcon } from '@tripyfull/ui';
@@ -35,36 +36,36 @@ const at = (path) => route.path.replace(/\/$/, '') === path.replace(/\/$/, '');
 const items = computed(() => {
   const base = `/trips/${props.tripId}`;
   return [
-    { to: base, icon: 'dashboard', label: 'Overview', active: at(base) },
+    { to: base, icon: 'dashboard', label: t('nav.overview'), active: at(base) },
     {
       to: `${base}/itinerary`,
       icon: 'route',
-      label: 'Itinerary',
+      label: t('nav.itinerary'),
       active: route.path.includes('/days/') || at(`${base}/itinerary`),
     },
-    { to: `${base}/map`, icon: 'map', label: 'Map', active: route.path.includes('/map') },
+    { to: `${base}/map`, icon: 'map', label: t('nav.map'), active: route.path.includes('/map') },
     {
       to: `${base}/places`,
       icon: 'location_on',
-      label: 'Trip places',
+      label: t('nav.tripPlaces'),
       active: at(`${base}/places`),
     },
     {
       to: `${base}/bookings`,
       icon: 'confirmation_number',
-      label: 'Bookings',
+      label: t('nav.bookings'),
       active: route.path.includes('/bookings'),
     },
     {
       to: `${base}/todos`,
       icon: 'checklist',
-      label: 'To-do',
+      label: t('nav.todo'),
       active: route.path.includes('/todos'),
     },
     {
       to: `${base}/budget`,
       icon: 'account_balance_wallet',
-      label: 'Budget',
+      label: t('nav.budget'),
       active: route.path.includes('/budget'),
     },
   ];

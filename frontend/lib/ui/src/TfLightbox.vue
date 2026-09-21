@@ -6,10 +6,10 @@
         class="lightbox"
         role="dialog"
         aria-modal="true"
-        aria-label="Photo viewer"
+        :aria-label="t('ui.photoViewer')"
         @click.self="close"
       >
-        <button type="button" class="lightbox-close" aria-label="Close" @click="close">
+        <button type="button" class="lightbox-close" :aria-label="t('ui.close')" @click="close">
           <i class="pi pi-times" />
         </button>
 
@@ -17,7 +17,7 @@
           v-if="photos.length > 1"
           type="button"
           class="lightbox-nav lightbox-nav--prev"
-          aria-label="Previous photo"
+          :aria-label="t('ui.prevPhoto')"
           @click.stop="step(-1)"
         >
           <i class="pi pi-chevron-left" />
@@ -37,7 +37,7 @@
           v-if="photos.length > 1"
           type="button"
           class="lightbox-nav lightbox-nav--next"
-          aria-label="Next photo"
+          :aria-label="t('ui.nextPhoto')"
           @click.stop="step(1)"
         >
           <i class="pi pi-chevron-right" />
@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { pushOverlay, popOverlay, isTopOverlay } from './overlayStack.js';
 

@@ -18,7 +18,7 @@
             </button>
           </span>
         </div>
-        <span v-else class="multiselect-placeholder">{{ placeholder }}</span>
+        <span v-else class="multiselect-placeholder">{{ placeholder || t('ui.select') }}</span>
         <i class="pi pi-chevron-down multiselect-chevron" />
       </div>
       <ul v-if="open" class="select-menu" role="listbox">
@@ -38,11 +38,12 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
   label: String,
-  placeholder: { type: String, default: 'Select…' },
+  placeholder: { type: String, default: '' }, // empty: the app's language decides
   options: { type: Array, default: () => [] },
   modelValue: { type: Array, default: () => [] },
   disabled: Boolean,

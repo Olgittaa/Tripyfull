@@ -17,7 +17,7 @@
               v-if="dismissible"
               type="button"
               class="modal-close"
-              aria-label="Close"
+              :aria-label="t('ui.close')"
               @click="close"
             >
               <i class="pi pi-times" />
@@ -32,6 +32,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { watch, onBeforeUnmount } from 'vue';
 import { pushOverlay, popOverlay, isTopOverlay } from './overlayStack.js';
 

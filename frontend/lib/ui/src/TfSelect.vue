@@ -28,7 +28,7 @@
               ref="searchEl"
               v-model="query"
               type="text"
-              :placeholder="searchPlaceholder"
+              :placeholder="searchPlaceholder || t('ui.typeToFilter')"
               @keydown.esc.stop="open = false"
               @keydown.enter.prevent="chooseFirst"
             />
@@ -46,7 +46,7 @@
               <span>{{ opt }}</span>
               <i v-if="opt === modelValue" class="pi pi-check select-check" />
             </li>
-            <li v-if="!filtered.length" class="select-empty">No matches</li>
+            <li v-if="!filtered.length" class="select-empty">{{ t('ui.noMatches') }}</li>
           </ul>
         </div>
       </Teleport>
@@ -57,6 +57,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
@@ -72,7 +73,7 @@ const props = defineProps({
   size: { type: String, default: '' },
   // Filter field: 'auto' shows it once the list is long enough to need one.
   searchable: { type: [Boolean, String], default: 'auto' },
-  searchPlaceholder: { type: String, default: 'Type to filter…' },
+  searchPlaceholder: { type: String, default: '' }, // empty: the app's language decides
 });
 const emit = defineEmits(['update:modelValue']);
 

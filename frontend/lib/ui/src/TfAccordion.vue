@@ -1,11 +1,6 @@
 <template>
   <div class="accordion">
-    <div
-      v-for="(it, i) in items"
-      :key="i"
-      class="accordion-item"
-      :class="{ 'is-open': isOpen(i) }"
-    >
+    <div v-for="(it, i) in items" :key="i" class="accordion-item" :class="{ 'is-open': isOpen(i) }">
       <button type="button" class="accordion-head" @click="toggle(i)">
         <span>{{ it.title }}</span>
         <i class="pi pi-chevron-down accordion-caret" />

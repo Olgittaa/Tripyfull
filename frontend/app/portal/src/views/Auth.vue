@@ -4,26 +4,33 @@
       <div class="auth-card">
         <h1 class="auth-title">Tripyfull</h1>
         <p class="auth-sub">
-          {{
-            isLogin ? 'Welcome back — your trips are waiting' : 'Start planning your next adventure'
-          }}
+          {{ isLogin ? t('auth.welcomeBack') : t('auth.startPlanning') }}
         </p>
 
         <div class="tab-switch">
-          <button :class="{ active: isLogin }" @click="isLogin = true">Sign in</button>
-          <button :class="{ active: !isLogin }" @click="isLogin = false">Register</button>
+          <button :class="{ active: isLogin }" @click="isLogin = true">
+            {{ t('auth.signIn') }}
+          </button>
+          <button :class="{ active: !isLogin }" @click="isLogin = false">
+            {{ t('auth.register') }}
+          </button>
         </div>
 
         <form @submit.prevent="submit" class="auth-form">
-          <TfInput v-model="username" label="Username" placeholder="username" />
-          <TfInput v-model="password" label="Password" type="password" placeholder="••••••••" />
+          <TfInput v-model="username" :label="t('auth.username')" placeholder="username" />
+          <TfInput
+            v-model="password"
+            :label="t('auth.password')"
+            type="password"
+            placeholder="••••••••"
+          />
           <Transition name="fade">
             <p v-if="error" class="auth-error">
               <i class="pi pi-exclamation-circle"></i> {{ error }}
             </p>
           </Transition>
           <TfButton type="submit" variant="primary" class="w-full submit-btn" :loading="loading">
-            {{ isLogin ? 'Sign in' : 'Register' }} <i class="pi pi-arrow-right"></i>
+            {{ isLogin ? t('auth.signIn') : t('auth.register') }} <i class="pi pi-arrow-right"></i>
           </TfButton>
         </form>
       </div>
@@ -35,7 +42,7 @@
 import { ref } from 'vue';
 import { api } from '@tripyfull/core';
 import { useRouter, useRoute } from 'vue-router';
-import { setAuth } from '@tripyfull/core';
+import { setAuth, t } from '@tripyfull/core';
 import { TfInput, TfButton } from '@tripyfull/ui';
 import { armSessionExpiry } from '@/session.js';
 
@@ -59,10 +66,7 @@ const submit = async () => {
   } catch (err) {
     // The API returns errors as { error: "..." } (or occasionally plain text).
     const data = err.response?.data;
-    error.value =
-      data?.error ||
-      (typeof data === 'string' && data) ||
-      'Something went wrong. Please try again.';
+    error.value = data?.error || (typeof data === 'string' && data) || t('auth.genericError');
   } finally {
     loading.value = false;
   }

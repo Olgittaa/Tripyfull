@@ -21,7 +21,7 @@
         v-if="clearable && modelValue && !disabled"
         type="button"
         class="dp-clear"
-        aria-label="Clear time"
+        :aria-label="t('ui.clearTime')"
         @click.stop="$emit('update:modelValue', '')"
       >
         <i class="pi pi-times" />
@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import TfTimeWheel from './TfTimeWheel.vue';
 

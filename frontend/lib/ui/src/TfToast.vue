@@ -9,7 +9,7 @@
       v-if="closable"
       type="button"
       class="toast-close"
-      aria-label="Dismiss"
+      :aria-label="t('ui.dismiss')"
       @click="$emit('close')"
     >
       <i class="pi pi-times" />
@@ -18,6 +18,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { computed } from 'vue';
 
 const props = defineProps({

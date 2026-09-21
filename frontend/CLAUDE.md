@@ -47,7 +47,13 @@ Utility classes exist too: `.type-*`, `.tf-eyebrow`, `.section-title`, `.text-mu
   `z-index: 20`, close on outside click (document listener in `onMounted`/`onBeforeUnmount`).
 - Icons: primeicons (`pi pi-*`).
 - Reuse what exists (e.g. the date picker reuses `.select` trigger and `.btn` for nav).
-- Keep it lean: **no form library, no i18n/locale, no third-party widgets** — plain `Date`/JS.
+- Keep it lean: **no form library, no i18n library, no third-party widgets** — plain `Date`/JS.
+  Languages are in-house: `t('key')` from `@tripyfull/core` (`lib/core/src/i18n.js`, one table
+  per language under `i18n/`), plurals through `Intl.PluralRules`, dates through
+  `Intl.DateTimeFormat` (`date.js`). Every visible string in a component or view goes through
+  `t()`; a label built in the script is a `computed`, so it re-labels itself when the language
+  changes. A new key is added to `en.js` and to every other table — the tests refuse a table
+  that lacks one.
 
 ## Styleguide (`app/dev`)
 

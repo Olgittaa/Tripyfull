@@ -7,7 +7,7 @@
         @input="onInput"
         @focus="onFocus"
         @keydown="onKeydown"
-        :placeholder="placeholder"
+        :placeholder="placeholder || t('ui.searchPlace')"
         autocomplete="off"
         class="tf-place-input"
         :class="{ 'is-error': error }"
@@ -77,11 +77,11 @@
 
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
-import { api } from '@tripyfull/core';
+import { api, t } from '@tripyfull/core';
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  placeholder: { type: String, default: 'Search place, hotel, airport...' },
+  placeholder: { type: String, default: '' }, // empty: the app's language decides
   error: String,
 });
 

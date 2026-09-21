@@ -7,15 +7,16 @@
   >
     <p v-if="message" style="margin: 0">{{ message }}</p>
     <template #footer>
-      <TfButton variant="secondary" @click="cancel">{{ cancelLabel }}</TfButton>
+      <TfButton variant="secondary" @click="cancel">{{ cancelLabel || t('ui.cancel') }}</TfButton>
       <TfButton :variant="tone === 'danger' ? 'danger' : 'primary'" @click="confirm">
-        {{ confirmLabel }}
+        {{ confirmLabel || t('ui.confirm') }}
       </TfButton>
     </template>
   </TfModal>
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import TfModal from './TfModal.vue';
 import TfButton from './TfButton.vue';
 
@@ -24,8 +25,8 @@ const props = defineProps({
   title: String,
   message: String,
   tone: { type: String, default: 'primary' }, // primary | danger
-  confirmLabel: { type: String, default: 'Confirm' },
-  cancelLabel: { type: String, default: 'Cancel' },
+  confirmLabel: { type: String, default: '' }, // empty: the app's language decides
+  cancelLabel: { type: String, default: '' },
 });
 const emit = defineEmits(['update:modelValue', 'confirm', 'cancel']);
 

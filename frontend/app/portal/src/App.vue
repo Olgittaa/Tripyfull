@@ -27,7 +27,7 @@
         v-if="currentTrip"
         type="button"
         class="topbar-menu-btn"
-        aria-label="Trip menu"
+        :aria-label="t('nav.tripMenu')"
         @click="showTripMenu = true"
       >
         <i class="pi pi-bars"></i>
@@ -48,7 +48,8 @@
 
       <nav class="topbar-nav">
         <router-link to="/trips" class="topbar-link" :class="{ active: $route.path === '/trips' }">
-          <TfIcon name="map" style="font-size: 18px" /> <span class="topbar-label">All trips</span>
+          <TfIcon name="map" style="font-size: 18px" />
+          <span class="topbar-label">{{ t('nav.allTrips') }}</span>
         </router-link>
         <router-link
           to="/places"
@@ -56,7 +57,7 @@
           :class="{ active: $route.path === '/places' }"
         >
           <TfIcon name="place" style="font-size: 18px" />
-          <span class="topbar-label">All places</span>
+          <span class="topbar-label">{{ t('nav.allPlaces') }}</span>
         </router-link>
 
         <TfPopover position="bottom-end">
@@ -68,10 +69,10 @@
             <div class="topbar-menu">
               <div class="topbar-user-name" style="padding: 10px 12px 8px">{{ username }}</div>
               <router-link to="/settings" class="topbar-link">
-                <i class="pi pi-cog" style="font-size: 13px"></i> Settings
+                <i class="pi pi-cog" style="font-size: 13px"></i> {{ t('nav.settings') }}
               </router-link>
               <button type="button" class="topbar-link" @click="logout">
-                <i class="pi pi-sign-out" style="font-size: 13px"></i> Sign out
+                <i class="pi pi-sign-out" style="font-size: 13px"></i> {{ t('nav.signOut') }}
               </button>
             </div>
           </template>
@@ -97,18 +98,18 @@
         </template>
 
         <p v-else class="sidebar-caption" style="padding-top: 12px">
-          Pick a trip to see its menu here.
+          {{ t('nav.pickTrip') }}
         </p>
 
         <!-- Sits at the bottom of the column, whatever is above it. -->
         <button
           type="button"
           class="sidebar-collapse-btn"
-          :title="sidebarCollapsed ? 'Expand the menu' : 'Collapse the menu'"
+          :title="sidebarCollapsed ? t('nav.expand') : t('nav.collapse')"
           @click="toggleSidebar"
         >
           <i :class="sidebarCollapsed ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'"></i>
-          <span class="nav-label">Collapse</span>
+          <span class="nav-label">{{ t('nav.collapseShort') }}</span>
         </button>
       </aside>
 
@@ -144,6 +145,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import {

@@ -1,14 +1,16 @@
+import { t } from './i18n.js';
 // Shared domain constants — single source for labels/tones/icons that were
 // previously copy-pasted per view. Values mirror the backend enums.
 
 export const TRIP_STATUS_META = {
-  DRAFT: { label: 'Draft', tone: 'neutral' },
-  PLANNED: { label: 'Planned', tone: 'gold' },
-  ACTIVE: { label: 'Active', tone: 'brand' },
-  COMPLETED: { label: 'Completed', tone: 'success' },
+  DRAFT: { tone: 'neutral' },
+  PLANNED: { tone: 'gold' },
+  ACTIVE: { tone: 'brand' },
+  COMPLETED: { tone: 'success' },
 };
 
-export const tripStatusLabel = (s) => TRIP_STATUS_META[s]?.label ?? s;
+/** The status in the app's language — read inside a computed to follow a change. */
+export const tripStatusLabel = (s) => (TRIP_STATUS_META[s] ? t(`status.${s}`) : s);
 export const tripStatusTone = (s) => TRIP_STATUS_META[s]?.tone ?? 'neutral';
 
 // Per-place-type label + icon + warm color, matching the Tripyfull category styling.

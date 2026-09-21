@@ -115,3 +115,34 @@ test('changing the account currency leaves the trips that exist alone', async ({
     'EUR',
   );
 });
+
+test('the app speaks the language the account chose, and remembers it', async ({
+  page,
+  request,
+}) => {
+  const api = await signedIn(request);
+  await signIn(page, api);
+  await page.goto('/settings');
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+
+  await page
+    .getByRole('button', { name: /English/ })
+    .first()
+    .click();
+  await page.getByRole('option', { name: 'Deutsch' }).click();
+  await page.getByRole('button', { name: /Save/ }).click();
+
+  // Saved on the account, and the screen has switched without a reload —
+  // the settings page itself, the top bar and the page's declared language.
+  await expect
+    .poll(async () => (await api.get('/api/auth/me').then((r) => r.json())).language)
+    .toBe('de');
+  await expect(page.getByRole('heading', { name: 'Einstellungen' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Alle Reisen/ })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+
+  // It survives a reload and reaches the trips list.
+  await page.goto('/trips');
+  await expect(page.getByRole('heading', { name: 'Meine Reisen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Neue Reise' }).first()).toBeVisible();
+});

@@ -2,9 +2,9 @@
   <div class="page-content" style="max-width: 640px">
     <div class="page-head">
       <div>
-        <div class="tf-eyebrow" style="margin-bottom: 8px">Account</div>
-        <h1>Settings</h1>
-        <p>Your preferences for currency, language, and formats.</p>
+        <div class="tf-eyebrow" style="margin-bottom: 8px">{{ t('settings.eyebrow') }}</div>
+        <h1>{{ t('settings.title') }}</h1>
+        <p>{{ t('settings.subtitle') }}</p>
       </div>
     </div>
 
@@ -13,12 +13,11 @@
     <template v-else>
       <!-- Currency -->
       <div class="card" style="margin-bottom: 20px">
-        <h3 style="font: var(--type-h3); margin: 0 0 16px">Currency</h3>
+        <h3 style="font: var(--type-h3); margin: 0 0 16px">{{ t('settings.currency') }}</h3>
         <div class="field">
-          <label>Base currency</label>
+          <label>{{ t('settings.baseCurrency') }}</label>
           <p style="font: var(--type-small); color: var(--text-secondary); margin: 0 0 6px">
-            What a new trip starts in. Each trip is then counted in its own currency, which you can
-            change on the trip itself.
+            {{ t('settings.baseCurrencyHelp') }}
           </p>
           <TfSelect
             v-model="form.baseCurrency"
@@ -31,25 +30,28 @@
 
       <!-- Language -->
       <div class="card" style="margin-bottom: 20px">
-        <h3 style="font: var(--type-h3); margin: 0 0 16px">Language</h3>
+        <h3 style="font: var(--type-h3); margin: 0 0 16px">{{ t('settings.language') }}</h3>
         <div class="field">
-          <label>Interface language</label>
+          <label>{{ t('settings.interfaceLanguage') }}</label>
+          <p style="font: var(--type-small); color: var(--text-secondary); margin: 0 0 6px">
+            {{ t('settings.languageHelp') }}
+          </p>
           <TfSelect v-model="languageLabel" :options="languageLabels" class="w-full" />
         </div>
       </div>
 
       <!-- Region -->
       <div class="card" style="margin-bottom: 20px">
-        <h3 style="font: var(--type-h3); margin: 0 0 16px">Region</h3>
+        <h3 style="font: var(--type-h3); margin: 0 0 16px">{{ t('settings.region') }}</h3>
         <div class="field">
-          <label>Home region</label>
+          <label>{{ t('settings.homeRegion') }}</label>
           <p style="font: var(--type-small); color: var(--text-secondary); margin: 0 0 6px">
-            Optional. Used for suggestions and defaults.
+            {{ t('settings.regionHelp') }}
           </p>
           <TfSelect
             v-model="regionLabel"
             :options="regionLabels"
-            placeholder="Not set"
+            :placeholder="t('settings.notSet')"
             class="w-full"
           />
         </div>
@@ -57,14 +59,14 @@
 
       <!-- Date & Time -->
       <div class="card" style="margin-bottom: 20px">
-        <h3 style="font: var(--type-h3); margin: 0 0 16px">Date & time</h3>
+        <h3 style="font: var(--type-h3); margin: 0 0 16px">{{ t('settings.dateTime') }}</h3>
         <div class="field-pair">
           <div class="field">
-            <label>Date format</label>
+            <label>{{ t('settings.dateFormat') }}</label>
             <TfSelect v-model="dateFormatLabel" :options="dateFormatLabels" class="w-full" />
           </div>
           <div class="field">
-            <label>Time format</label>
+            <label>{{ t('settings.timeFormat') }}</label>
             <TfSelect v-model="timeFormatLabel" :options="timeFormatLabels" class="w-full" />
           </div>
         </div>
@@ -78,16 +80,17 @@
             color: var(--text-secondary);
           "
         >
-          Preview: <strong style="color: var(--text-primary)">{{ datePreview }}</strong> ·
+          {{ t('settings.preview') }}:
+          <strong style="color: var(--text-primary)">{{ datePreview }}</strong> ·
           <strong style="color: var(--text-primary)">{{ timePreview }}</strong>
         </div>
       </div>
 
       <!-- Save -->
       <div style="display: flex; gap: 10px; justify-content: flex-end">
-        <TfButton variant="ghost" @click="resetForm">Reset</TfButton>
+        <TfButton variant="ghost" @click="resetForm">{{ t('common.reset') }}</TfButton>
         <TfButton variant="primary" @click="save" :disabled="saving">
-          {{ saving ? 'Saving...' : 'Save settings' }}
+          {{ saving ? t('settings.saving') : t('settings.save') }}
         </TfButton>
       </div>
     </template>
@@ -96,7 +99,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { prefs, baseCurrency, updateSettings } from '@tripyfull/core';
+import { prefs, baseCurrency, updateSettings, t, LOCALES } from '@tripyfull/core';
 import { CURRENCIES, MONTHS_SHORT } from '@tripyfull/core';
 import { TfButton, TfSelect, toast } from '@tripyfull/ui';
 import { api } from '@tripyfull/core';
@@ -114,83 +117,74 @@ const form = ref({
 
 const currencyOptions = CURRENCIES;
 
-const languageOptions = [
-  { label: 'English', value: 'en' },
-  { label: 'Ukrainian', value: 'uk' },
-  { label: 'Spanish', value: 'es' },
-  { label: 'French', value: 'fr' },
-  { label: 'German', value: 'de' },
-  { label: 'Italian', value: 'it' },
-  { label: 'Portuguese', value: 'pt' },
-  { label: 'Japanese', value: 'ja' },
-  { label: 'Korean', value: 'ko' },
-  { label: 'Chinese', value: 'zh' },
-  { label: 'Polish', value: 'pl' },
-  { label: 'Czech', value: 'cs' },
-  { label: 'Turkish', value: 'tr' },
-  { label: 'Dutch', value: 'nl' },
-  { label: 'Swedish', value: 'sv' },
-];
+// The languages the app speaks, each named in itself — that is how you find
+// yours when the screen is in a language you cannot read.
+const languageOptions = computed(() => LOCALES.map((l) => ({ label: l.label, value: l.code })));
 
-const regionOptions = [
+// Option labels are computeds: they are written in the app's language, and
+// they re-label themselves when it changes.
+const regionOptions = computed(() => [
   // Region is optional — the null option lets the user clear it again
   // (PATCH /me stores an explicit null).
-  { label: 'Not set', value: null },
-  { label: 'Western Europe', value: 'Western Europe' },
-  { label: 'Eastern Europe', value: 'Eastern Europe' },
-  { label: 'Northern Europe', value: 'Northern Europe' },
-  { label: 'Southern Europe', value: 'Southern Europe' },
-  { label: 'North America', value: 'North America' },
-  { label: 'South America', value: 'South America' },
-  { label: 'Central America', value: 'Central America' },
-  { label: 'East Asia', value: 'East Asia' },
-  { label: 'Southeast Asia', value: 'Southeast Asia' },
-  { label: 'South Asia', value: 'South Asia' },
-  { label: 'Middle East', value: 'Middle East' },
-  { label: 'Africa', value: 'Africa' },
-  { label: 'Oceania', value: 'Oceania' },
-];
+  { label: t('settings.notSet'), value: null },
+  { label: t('settings.region.westernEurope'), value: 'Western Europe' },
+  { label: t('settings.region.easternEurope'), value: 'Eastern Europe' },
+  { label: t('settings.region.northernEurope'), value: 'Northern Europe' },
+  { label: t('settings.region.southernEurope'), value: 'Southern Europe' },
+  { label: t('settings.region.northAmerica'), value: 'North America' },
+  { label: t('settings.region.southAmerica'), value: 'South America' },
+  { label: t('settings.region.centralAmerica'), value: 'Central America' },
+  { label: t('settings.region.eastAsia'), value: 'East Asia' },
+  { label: t('settings.region.southeastAsia'), value: 'Southeast Asia' },
+  { label: t('settings.region.southAsia'), value: 'South Asia' },
+  { label: t('settings.region.middleEast'), value: 'Middle East' },
+  { label: t('settings.region.africa'), value: 'Africa' },
+  { label: t('settings.region.oceania'), value: 'Oceania' },
+]);
 
-const dateFormatOptions = [
+// Date formats read the same in every language: the pattern and an example.
+const dateFormatOptions = computed(() => [
   { label: 'DD/MM/YYYY — 18/06/2026', value: 'DD/MM/YYYY' },
   { label: 'MM/DD/YYYY — 06/18/2026', value: 'MM/DD/YYYY' },
   { label: 'YYYY-MM-DD — 2026-06-18', value: 'YYYY-MM-DD' },
   { label: 'DD.MM.YYYY — 18.06.2026', value: 'DD.MM.YYYY' },
   { label: 'D MMM YYYY — 18 Jun 2026', value: 'D MMM YYYY' },
-];
+]);
 
-const timeFormatOptions = [
-  { label: '24-hour — 14:30', value: '24h' },
-  { label: '12-hour — 2:30 PM', value: '12h' },
-];
+const timeFormatOptions = computed(() => [
+  { label: t('settings.time24'), value: '24h' },
+  { label: t('settings.time12'), value: '12h' },
+]);
 
 // TfSelect works with string options; map label <-> stored value.
 function makeLabelProxy(options, key) {
-  const labels = options.map((o) => o.label);
+  const labels = computed(() => options.value.map((o) => o.label));
   const proxy = computed({
     get() {
-      const opt = options.find((o) => o.value === form.value[key]);
+      const opt = options.value.find((o) => o.value === form.value[key]);
       return opt ? opt.label : '';
     },
     set(label) {
-      const opt = options.find((o) => o.label === label);
+      const opt = options.value.find((o) => o.label === label);
       form.value[key] = opt ? opt.value : label;
     },
   });
   return { labels, proxy };
 }
 
-const languageLabels = languageOptions.map((o) => o.label);
-const languageLabel = makeLabelProxy(languageOptions, 'language').proxy;
-
-const regionLabels = regionOptions.map((o) => o.label);
-const regionLabel = makeLabelProxy(regionOptions, 'region').proxy;
-
-const dateFormatLabels = dateFormatOptions.map((o) => o.label);
-const dateFormatLabel = makeLabelProxy(dateFormatOptions, 'dateFormat').proxy;
-
-const timeFormatLabels = timeFormatOptions.map((o) => o.label);
-const timeFormatLabel = makeLabelProxy(timeFormatOptions, 'timeFormat').proxy;
+const { labels: languageLabels, proxy: languageLabel } = makeLabelProxy(
+  languageOptions,
+  'language',
+);
+const { labels: regionLabels, proxy: regionLabel } = makeLabelProxy(regionOptions, 'region');
+const { labels: dateFormatLabels, proxy: dateFormatLabel } = makeLabelProxy(
+  dateFormatOptions,
+  'dateFormat',
+);
+const { labels: timeFormatLabels, proxy: timeFormatLabel } = makeLabelProxy(
+  timeFormatOptions,
+  'timeFormat',
+);
 
 const datePreview = computed(() => {
   const d = new Date();
@@ -236,10 +230,12 @@ const save = async () => {
   saving.value = true;
   try {
     const res = await api.patch('/api/auth/me', form.value);
+    // The app switches language here, through the settings, before the toast is
+    // written — so the toast already speaks the new one.
     updateSettings(res.data);
-    toast.success('Saved', 'Settings updated');
+    toast.success(t('common.saved'), t('settings.savedMsg'));
   } catch {
-    toast.danger('Error', 'Failed to save settings');
+    toast.danger(t('common.error'), t('settings.saveFailed'));
   } finally {
     saving.value = false;
   }

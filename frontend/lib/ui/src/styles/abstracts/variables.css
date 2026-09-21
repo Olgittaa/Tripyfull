@@ -147,8 +147,13 @@
   --wash-ocean: linear-gradient(150deg, #1d7a6f 0%, #0e5c55 60%, #073531 100%);
 
   /* -- Typography -- */
-  --font-display: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
-  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  /* --font-script is the companion for a script the Latin faces cannot draw
+     (Devanagari, Bengali, Arabic, Japanese, Chinese); the app sets it on <html>
+     with the language, and the browser falls to it glyph by glyph. */
+  --font-script: sans-serif;
+  --font-display:
+    'Bricolage Grotesque', 'Hanken Grotesk', var(--font-script), system-ui, sans-serif;
+  --font-sans: 'Hanken Grotesk', var(--font-script), system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
 
   /* Type scale (Figma) */

@@ -9,3 +9,4 @@ export * from './media.js';
 export * from './bookingIcons.js';
 export * from './format.js';
 export * from './geo.js';
+export * from './i18n.js';

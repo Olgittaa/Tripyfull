@@ -1,4 +1,5 @@
 import { ref, reactive } from 'vue';
+import { setLocale, matchLocale } from './i18n.js';
 
 export const username = ref(localStorage.getItem('username'));
 export const baseCurrency = ref(localStorage.getItem('baseCurrency') || 'EUR');
@@ -15,6 +16,14 @@ function loadPrefs() {
 
 export const prefs = reactive(loadPrefs());
 
+// The language the app opens in: the account's, once one has signed in here;
+// otherwise the browser's, as far as we speak it.
+setLocale(
+  localStorage.getItem('userPrefs')
+    ? prefs.language
+    : matchLocale(typeof navigator !== 'undefined' ? navigator.language : 'en'),
+);
+
 function savePrefs() {
   localStorage.setItem('userPrefs', JSON.stringify(prefs));
 }
@@ -28,7 +37,7 @@ export function setAuth(token, user, settings) {
       localStorage.setItem('baseCurrency', settings.baseCurrency);
       baseCurrency.value = settings.baseCurrency;
     }
-    if (settings.language) prefs.language = settings.language;
+    if (settings.language) prefs.language = setLocale(settings.language);
     if (settings.region != null) prefs.region = settings.region || '';
     if (settings.dateFormat) prefs.dateFormat = settings.dateFormat;
     if (settings.timeFormat) prefs.timeFormat = settings.timeFormat;
@@ -57,7 +66,7 @@ export function updateSettings(settings) {
     localStorage.setItem('baseCurrency', settings.baseCurrency);
     baseCurrency.value = settings.baseCurrency;
   }
-  if (settings.language) prefs.language = settings.language;
+  if (settings.language) prefs.language = setLocale(settings.language);
   if (settings.region != null) prefs.region = settings.region || '';
   if (settings.dateFormat) prefs.dateFormat = settings.dateFormat;
   if (settings.timeFormat) prefs.timeFormat = settings.timeFormat;
@@ -91,4 +100,6 @@ export function clearAuth() {
   username.value = null;
   baseCurrency.value = 'EUR';
   Object.assign(prefs, defaultPrefs);
+  // Signed out, the app speaks the browser's language again.
+  setLocale(matchLocale(typeof navigator !== 'undefined' ? navigator.language : 'en'));
 }

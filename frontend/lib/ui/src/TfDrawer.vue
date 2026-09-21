@@ -25,7 +25,7 @@
               <h2>{{ title }}</h2>
             </div>
           </slot>
-          <button type="button" class="drawer-close" aria-label="Close" @click="close">
+          <button type="button" class="drawer-close" :aria-label="t('ui.close')" @click="close">
             <i class="pi pi-times"></i>
           </button>
         </div>
@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { pushOverlay, popOverlay, isTopOverlay, hasOverlays } from './overlayStack.js';
 

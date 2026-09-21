@@ -59,13 +59,17 @@ is waiting, or when a consultant names it in an interview.
   empty. *Fix:* give the server the same definition (it needs the day's bookings in `DayMapper`,
   which today only sees the day), so one number is computed once. *Seen:* 2026-09-18.
 
-- [ ] **Three settings that do nothing** — *Language*, *Region* and the *date & time formats*
-  are saved to the account and read by nobody. There is no translation layer in the project at
-  all, so the language can have no effect; the date helpers print "5 Aug" and "Sat 5 Aug" from
-  hard-coded month names, and one screen is pinned to `en-GB`; no formatter looks at 12h/24h.
-  Left as they are for now, deliberately — the consultant interviews may say whether a date
-  format matters to anyone, and the answer decides whether to build it or drop the controls.
-  *Seen:* 2026-09-18.
+- [ ] **Two settings that do nothing** — *Region* and the *date & time formats* are saved to
+  the account and read by nobody: no screen looks at the region, and no formatter looks at
+  12h/24h or the date pattern (dates are now written by the language — "10 Dec", "10. Dez.",
+  "12月10日" — not by this setting). Left as they are for now, deliberately — the consultant
+  interviews may say whether a date format matters to anyone, and the answer decides whether to
+  build it or drop the controls. *Language* began to work on 2026-09-21. *Seen:* 2026-09-18.
+
+- [ ] **Arabic runs left to right** — the words are Arabic and each line reads right to left,
+  but the layout around them does not mirror: menus stay on the left, icons before their
+  labels, the back arrow pointing the wrong way. Mirroring the shell is a task of its own
+  (`dir="rtl"` on `<html>` and a pass over the layouts that assume a side). *Seen:* 2026-09-21.
 
 - [ ] **"Failed to load day" after signing out on purpose** — choosing *Sign out* in the
   expired-session dialog lands on the sign-in page with a red error toast, because the request

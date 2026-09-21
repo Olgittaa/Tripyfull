@@ -8,7 +8,7 @@
         @input="onInput($event.target.value)"
         @focus="onFocus"
         @keydown.escape="open = false"
-        :placeholder="placeholder"
+        :placeholder="placeholder || t('ui.searchCity')"
         autocomplete="off"
       />
       <i
@@ -70,11 +70,11 @@
 
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
-import { api } from '@tripyfull/core';
+import { api, t } from '@tripyfull/core';
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  placeholder: { type: String, default: 'Search city...' },
+  placeholder: { type: String, default: '' }, // empty: the app's language decides
   country: { type: String, default: '' },
   error: String,
 });

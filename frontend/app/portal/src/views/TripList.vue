@@ -4,18 +4,18 @@
     <div class="page-head">
       <div>
         <div class="tf-eyebrow" style="margin-bottom: 8px">Tripyfull</div>
-        <h1>My trips</h1>
-        <p>Everything you planned — beautifully in order.</p>
+        <h1>{{ t('trips.title') }}</h1>
+        <p>{{ t('trips.subtitle') }}</p>
       </div>
       <div class="page-head-actions">
         <TfButton
           variant="secondary"
           icon="pi-upload"
-          aria-label="Import a trip from a file"
-          title="A trip file made by Export — here or in another account — becomes a new trip"
+          :aria-label="t('trips.importAria')"
+          :title="t('trips.importHint')"
           :loading="importing"
           @click="fileInput?.click()"
-          >Import</TfButton
+          >{{ t('trips.import') }}</TfButton
         >
         <input
           ref="fileInput"
@@ -25,7 +25,7 @@
           data-testid="trip-file"
           @change="importTrip"
         />
-        <TfButton icon="pi-plus" @click="openNewTrip">New trip</TfButton>
+        <TfButton icon="pi-plus" @click="openNewTrip">{{ t('trips.new') }}</TfButton>
       </div>
     </div>
 
@@ -74,7 +74,7 @@
             <h3>{{ trip.title }}</h3>
             <p v-if="trip.destination">{{ trip.destination }}</p>
           </div>
-          <TfTooltip text="Delete">
+          <TfTooltip :text="t('trips.deleteTooltip')">
             <button class="trip-card-del" @click.stop="confirmDelete(trip)">
               <i class="pi pi-times"></i>
             </button>
@@ -94,36 +94,47 @@
     <!-- Empty state -->
     <div v-if="!filteredTrips.length && !store.loading" class="empty-state">
       <div class="empty-state-icon"><i class="pi pi-compass"></i></div>
-      <h3>{{ filterStatus === 'ALL' ? 'No trips yet' : 'No trips here' }}</h3>
+      <h3>{{ filterStatus === 'ALL' ? t('trips.noneYet') : t('trips.noneHere') }}</h3>
       <p>
-        {{
-          filterStatus === 'ALL'
-            ? 'Add your first trip and start planning.'
-            : 'No trips with this status.'
-        }}
+        {{ filterStatus === 'ALL' ? t('trips.addFirst') : t('trips.noneWithStatus') }}
       </p>
-      <TfButton v-if="filterStatus === 'ALL'" icon="pi-plus" @click="openNewTrip"
-        >New trip</TfButton
-      >
+      <TfButton v-if="filterStatus === 'ALL'" icon="pi-plus" @click="openNewTrip">{{
+        t('trips.new')
+      }}</TfButton>
     </div>
 
     <!-- Add Trip Dialog -->
-    <TfModal v-model="showDialog" title="New trip" @update:model-value="onDialogToggle">
+    <TfModal v-model="showDialog" :title="t('trips.new')" @update:model-value="onDialogToggle">
       <form @submit.prevent="addTrip" class="dialog-form">
-        <TfInput label="Title *" v-model="form.title" placeholder="e.g. Greece 2026" />
+        <TfInput
+          :label="t('trips.form.title')"
+          v-model="form.title"
+          :placeholder="t('trips.form.titlePlaceholder')"
+        />
         <div class="field">
-          <label>Destination</label>
-          <TfCitySearch v-model="form.destination" placeholder="City or country" />
+          <label>{{ t('trips.form.destination') }}</label>
+          <TfCitySearch
+            v-model="form.destination"
+            :placeholder="t('trips.form.destinationPlaceholder')"
+          />
         </div>
         <div class="field">
-          <label>Dates</label>
+          <label>{{ t('trips.form.dates') }}</label>
           <TfDatePicker v-model="dateRange" mode="range" />
         </div>
         <div class="field-pair">
-          <TfSelect label="Status" v-model="statusLabelModel" :options="statusLabels" />
+          <TfSelect
+            :label="t('trips.form.status')"
+            v-model="statusLabelModel"
+            :options="statusLabels"
+          />
           <!-- The trip's money is counted in this; the account's currency is only
                where it starts. A client billed in dollars gets it here. -->
-          <TfSelect label="Currency" v-model="form.baseCurrency" :options="CURRENCIES" />
+          <TfSelect
+            :label="t('trips.form.currency')"
+            v-model="form.baseCurrency"
+            :options="CURRENCIES"
+          />
         </div>
         <div
           style="
@@ -141,8 +152,12 @@
           dates.
         </div>
         <div class="dialog-actions">
-          <TfButton type="button" variant="ghost" @click="showDialog = false">Cancel</TfButton>
-          <TfButton type="submit" icon="pi-plus" :loading="adding">Create</TfButton>
+          <TfButton type="button" variant="ghost" @click="showDialog = false">{{
+            t('common.cancel')
+          }}</TfButton>
+          <TfButton type="submit" icon="pi-plus" :loading="adding">{{
+            t('common.create')
+          }}</TfButton>
         </div>
       </form>
     </TfModal>
@@ -153,6 +168,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTripStore } from '@/stores/tripStore.js';
+import { t } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 import {
   toDateStr,
@@ -184,35 +200,29 @@ const filterStatus = ref('ALL');
 const dateRange = ref(null);
 const form = ref({ title: '', destination: '', status: 'DRAFT', baseCurrency: baseCurrency.value });
 
-const filterOptions = [
-  { label: 'All', value: 'ALL' },
-  { label: 'Draft', value: 'DRAFT' },
-  { label: 'Planned', value: 'PLANNED' },
-  { label: 'Active', value: 'ACTIVE' },
-  { label: 'Completed', value: 'COMPLETED' },
-];
-
-const statusOptions = [
-  { label: 'Draft', value: 'DRAFT' },
-  { label: 'Planned', value: 'PLANNED' },
-  { label: 'Active', value: 'ACTIVE' },
-  { label: 'Completed', value: 'COMPLETED' },
-];
-
+// Labels are read in computeds so a change of language re-labels them.
+const STATUSES = ['DRAFT', 'PLANNED', 'ACTIVE', 'COMPLETED'];
+const statusOptions = computed(() =>
+  STATUSES.map((value) => ({ label: statusLabel(value), value })),
+);
+const filterOptions = computed(() => [
+  { label: t('trips.filterAll'), value: 'ALL' },
+  ...statusOptions.value,
+]);
 // TfSegmentedControl / TfSelect use string options; map label <-> value here.
-const filterLabels = filterOptions.map((o) => o.label);
+const filterLabels = computed(() => filterOptions.value.map((o) => o.label));
 const filterLabel = computed({
-  get: () => filterOptions.find((o) => o.value === filterStatus.value)?.label ?? filterLabels[0],
+  get: () =>
+    filterOptions.value.find((o) => o.value === filterStatus.value)?.label ?? filterLabels.value[0],
   set: (label) => {
-    filterStatus.value = filterOptions.find((o) => o.label === label)?.value ?? 'ALL';
+    filterStatus.value = filterOptions.value.find((o) => o.label === label)?.value ?? 'ALL';
   },
 });
-
-const statusLabels = statusOptions.map((o) => o.label);
+const statusLabels = computed(() => statusOptions.value.map((o) => o.label));
 const statusLabelModel = computed({
-  get: () => statusOptions.find((o) => o.value === form.value.status)?.label,
+  get: () => statusOptions.value.find((o) => o.value === form.value.status)?.label,
   set: (label) => {
-    form.value.status = statusOptions.find((o) => o.label === label)?.value ?? 'DRAFT';
+    form.value.status = statusOptions.value.find((o) => o.label === label)?.value ?? 'DRAFT';
   },
 });
 
@@ -236,9 +246,9 @@ const addTrip = async () => {
     };
     const trip = await store.create(payload);
     showDialog.value = false;
-    toast.success('Created', `Trip "${trip.title}" added`);
+    toast.success(t('trips.created'), t('trips.createdMsg', { title: trip.title }));
   } catch {
-    toast.danger('Error', 'Failed to create trip');
+    toast.danger(t('common.error'), t('trips.createFailed'));
   } finally {
     adding.value = false;
   }
@@ -246,11 +256,11 @@ const addTrip = async () => {
 
 const confirmDelete = (trip) => {
   confirm({
-    title: 'Confirm Delete',
-    message: `Delete trip "${trip.title}"? This cannot be undone.`,
+    title: t('trips.confirmDeleteTitle'),
+    message: t('trips.confirmDeleteMsg', { title: trip.title }),
     tone: 'danger',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
   }).then((ok) => {
     if (ok) {
       deleteTrip(trip.id);
@@ -261,9 +271,9 @@ const confirmDelete = (trip) => {
 const deleteTrip = async (id) => {
   try {
     await store.remove(id);
-    toast.success('Deleted', 'Trip deleted');
+    toast.success(t('common.deleted'), t('trips.deletedMsg'));
   } catch {
-    toast.danger('Error', 'Failed to delete trip');
+    toast.danger(t('common.error'), t('trips.deleteFailed'));
   }
 };
 
@@ -305,10 +315,10 @@ const importTrip = async (event) => {
     body.append('file', file);
     const { data } = await api.post('/api/trips/import', body);
     await store.fetchAll();
-    toast.success('Imported', `Trip "${data.title}" added`);
+    toast.success(t('trips.imported'), t('trips.createdMsg', { title: data.title }));
     router.push(`/trips/${data.id}`);
   } catch (e) {
-    toast.danger('Error', e.response?.data?.error || 'Failed to import the trip');
+    toast.danger(t('common.error'), e.response?.data?.error || t('trips.importFailed'));
   } finally {
     importing.value = false;
   }
@@ -316,7 +326,7 @@ const importTrip = async (event) => {
 
 onMounted(() => {
   store.fetchAll().catch(() => {
-    toast.danger('Error', 'Failed to load trips');
+    toast.danger(t('common.error'), t('trips.loadFailed'));
   });
 });
 </script>

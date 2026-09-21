@@ -27,8 +27,16 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   themselves after sign-in — what was typed is saved, not retyped. *Sign out* in the dialog
   clears the session and goes to `/auth`.
 - **Settings** (`/settings`): base currency — the one a new trip starts with, each trip then
-  counting in its own (see §9). The screen also offers language, region and date & time
-  formats; they are stored on the account and **nothing reads them yet** (see `../BUGS.md`).
+  counting in its own (see §9). **Interface language** — English, Deutsch, Español, Português
+  (Brasil), Русский, 日本語, 简体中文, हिन्दी, বাংলা, العربية — stored on the account, applied the
+  moment it is saved and wherever that account signs in; before a sign-in the app speaks the
+  browser's language, as far as it can. Dates follow the language ("10 Dec", "10. Dez.",
+  "12月10日"), plurals too. Scripts the house fonts cannot draw get a Noto companion. Translated
+  so far: the shell, sign-in, the trips list, settings and the design system's own words; the
+  other screens follow, one at a time, and the printed book keeps English until a trip can name
+  its client's language. Arabic reads right to left within its lines but the layout is not yet
+  mirrored. The screen also offers region and date & time formats; they are stored on the
+  account and **nothing reads them yet** (see `../BUGS.md`).
   The currency shows in the top bar, and the account's settings are re-read when the app starts,
   so a change made on one device reaches the others.
 - **Shell**: top bar (All trips · All places · currency · account), and inside a trip a

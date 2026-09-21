@@ -19,7 +19,7 @@
         v-if="clearable && hasValue && !disabled"
         type="button"
         class="dp-clear"
-        aria-label="Clear date"
+        :aria-label="t('ui.clearDate')"
         @click.stop="clearValue"
       >
         <i class="pi pi-times" />
@@ -84,14 +84,16 @@
             </button>
           </div>
 
-          <div v-if="isRange && rangeDays" class="dp-foot">{{ rangeDays }} days</div>
+          <div v-if="isRange && rangeDays" class="dp-foot">
+            {{ t('ui.days', { count: rangeDays }) }}
+          </div>
         </div>
 
         <!-- time -->
         <div v-if="hasTime" class="dp-time">
           <template v-if="isRange">
             <div v-for="grp in ['start', 'end']" :key="grp" class="dp-time-group">
-              <div class="dp-time-label">{{ grp === 'start' ? 'Start' : 'End' }}</div>
+              <div class="dp-time-label">{{ grp === 'start' ? t('ui.start') : t('ui.end') }}</div>
               <TfTimeWheel :model-value="timeOf(grp)" @update="(h, m) => setTime(grp, h, m)" />
             </div>
           </template>
@@ -106,7 +108,7 @@
 
 <script setup>
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
-import { MONTHS_SHORT } from '@tripyfull/core';
+import { monthNames, weekdayNames, t } from '@tripyfull/core';
 import TfTimeWheel from './TfTimeWheel.vue';
 
 const props = defineProps({
@@ -127,8 +129,9 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:modelValue']);
 
-const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-const MONTHS = MONTHS_SHORT;
+// In the app's language, and following it when it changes.
+const weekdays = computed(() => weekdayNames('short'));
+const MONTHS = computed(() => monthNames('short'));
 
 const isRange = computed(() => props.mode.includes('range'));
 const hasTime = computed(() => props.mode.includes('datetime'));
@@ -167,7 +170,7 @@ const emptyView = () => startOfMonth(props.viewDate || props.min || new Date());
 const view = ref(
   startDate.value || single.value ? startOfMonth(startDate.value || single.value) : emptyView(),
 );
-const title = computed(() => `${MONTHS[view.value.getMonth()]} ${view.value.getFullYear()}`);
+const title = computed(() => `${MONTHS.value[view.value.getMonth()]} ${view.value.getFullYear()}`);
 
 const grid = computed(() => {
   const first = startOfMonth(view.value);

@@ -1,17 +1,17 @@
 <template>
   <TfModal
     :modelValue="askToSignIn"
-    title="Session expired"
-    subtitle="Signed out after a day. Sign in and carry on from the same page."
+    :title="t('auth.sessionExpired')"
+    :subtitle="t('auth.sessionExpiredSub')"
     size="sm"
     :dismissible="false"
     topmost
   >
     <form class="field-stack" @submit.prevent="submit">
-      <TfInput v-model="user" label="Username" autocomplete="username" />
+      <TfInput v-model="user" :label="t('auth.username')" autocomplete="username" />
       <TfInput
         v-model="password"
-        label="Password"
+        :label="t('auth.password')"
         type="password"
         placeholder="••••••••"
         autocomplete="current-password"
@@ -21,13 +21,18 @@
       <button type="submit" hidden></button>
     </form>
     <template #footer>
-      <TfButton variant="ghost" :disabled="loading" @click="signOut">Sign out</TfButton>
-      <TfButton variant="primary" :loading="loading" @click="submit">Sign in</TfButton>
+      <TfButton variant="ghost" :disabled="loading" @click="signOut">{{
+        t('nav.signOut')
+      }}</TfButton>
+      <TfButton variant="primary" :loading="loading" @click="submit">{{
+        t('auth.signIn')
+      }}</TfButton>
     </template>
   </TfModal>
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { ref, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { api, setAuth, clearAuth, username } from '@tripyfull/core';

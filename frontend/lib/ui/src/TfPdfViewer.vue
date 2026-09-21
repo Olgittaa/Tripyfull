@@ -3,18 +3,19 @@
     <div v-if="url" class="pdf-frame">
       <iframe class="pdf-iframe" :src="url" :title="title" loading="lazy" />
     </div>
-    <div v-else class="pdf-empty">{{ emptyText }}</div>
+    <div v-else class="pdf-empty">{{ emptyText || t('ui.noDocument') }}</div>
   </div>
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { ref, watch, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
   src: String, // URL string
   source: { default: null }, // Blob / File
   title: { type: String, default: 'PDF' },
-  emptyText: { type: String, default: 'No document to preview' },
+  emptyText: { type: String, default: '' }, // empty: the app's language decides
 });
 
 const url = ref('');

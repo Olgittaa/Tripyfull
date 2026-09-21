@@ -17,7 +17,9 @@
       />
       <span v-if="variant === 'full'" class="dropzone-badge"><i class="pi pi-cloud-upload" /></span>
       <i v-else class="pi pi-cloud-upload dropzone-cicon" />
-      <div class="dropzone-title">Drag &amp; drop or <span class="dropzone-link">browse</span></div>
+      <div class="dropzone-title">
+        {{ t('ui.dragDrop') }} <span class="dropzone-link">{{ t('ui.browse') }}</span>
+      </div>
       <div v-if="hint && variant === 'full'" class="hint">{{ hint }}</div>
     </label>
     <div v-if="hint && variant === 'compact'" class="hint" style="margin-top: 6px">{{ hint }}</div>
@@ -47,7 +49,12 @@
           <i class="pi dropzone-file-mini" :class="iconFor(it.file)" />
           <span class="dropzone-file-name">{{ it.file.name }}</span>
         </template>
-        <button type="button" class="dropzone-file-remove" aria-label="Remove" @click="remove(it.id)">
+        <button
+          type="button"
+          class="dropzone-file-remove"
+          :aria-label="t('ui.remove')"
+          @click="remove(it.id)"
+        >
           <i class="pi pi-times" />
         </button>
       </li>
@@ -56,6 +63,7 @@
 </template>
 
 <script setup>
+import { t } from '@tripyfull/core';
 import { ref } from 'vue';
 
 const props = defineProps({
