@@ -99,6 +99,19 @@
   .topbar-nav .topbar-link {
     padding: 11px;
   }
+  /* Four controls plus the logo on a 320px bar: the gaps close up and the
+     language chip keeps its two letters but loses the caret, which the menu
+     opening makes plain anyway. */
+  .topbar-nav {
+    gap: var(--space-1);
+  }
+  .topbar-lang {
+    gap: 0;
+    padding: 5px 7px;
+  }
+  .topbar-lang .pi {
+    display: none;
+  }
 
   /* The trip menu as a drawer: a panel beside the page, not a takeover — the
      page stays visible behind it and tapping it closes the menu. It is a list

@@ -14,6 +14,7 @@ export default {
   'nav.tripMenu': 'Menu da viagem',
   'nav.allTrips': 'Todas as viagens',
   'nav.allPlaces': 'Todos os lugares',
+  'nav.language': 'Idioma',
   'nav.settings': 'Configurações',
   'nav.signOut': 'Sair',
   'nav.pickTrip': 'Escolha uma viagem para ver o menu dela aqui.',

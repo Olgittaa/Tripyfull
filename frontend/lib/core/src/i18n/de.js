@@ -13,6 +13,7 @@ export default {
   'nav.tripMenu': 'Reisemenü',
   'nav.allTrips': 'Alle Reisen',
   'nav.allPlaces': 'Alle Orte',
+  'nav.language': 'Sprache',
   'nav.settings': 'Einstellungen',
   'nav.signOut': 'Abmelden',
   'nav.pickTrip': 'Wähle eine Reise, um hier ihr Menü zu sehen.',

@@ -45,7 +45,11 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   account and **nothing reads them yet** (see `../BUGS.md`).
   The currency shows in the top bar, and the account's settings are re-read when the app starts,
   so a change made on one device reaches the others.
-- **Shell**: top bar (All trips · All places · currency · account), and inside a trip a
+- **Language in the top bar**: a two-letter chip beside the currency opens the ten languages,
+  each named in itself and the current one ticked. Choosing one saves it to the account — the
+  same change the settings page makes — and every word on screen follows at once, without a
+  reload. On a phone the chip keeps its letters and drops its caret.
+- **Shell**: top bar (All trips · All places · language · currency · account), and inside a trip a
   sidebar with the trip's name and its sections — Overview, Itinerary, Map, Trip places,
   Bookings, To-do, Budget. The sidebar collapses to icons (remembered per browser); on a
   phone it becomes a drawer behind a hamburger, and the top bar shows the trip's name.

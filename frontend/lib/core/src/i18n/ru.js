@@ -13,6 +13,7 @@ export default {
   'nav.tripMenu': 'Меню поездки',
   'nav.allTrips': 'Все поездки',
   'nav.allPlaces': 'Все места',
+  'nav.language': 'Язык',
   'nav.settings': 'Настройки',
   'nav.signOut': 'Выйти',
   'nav.pickTrip': 'Выберите поездку — здесь появится её меню.',

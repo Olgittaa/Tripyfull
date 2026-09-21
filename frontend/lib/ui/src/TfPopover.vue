@@ -2,7 +2,9 @@
   <div ref="root" class="menu-wrap">
     <span @click="open = !open"><slot /></span>
     <div v-if="open" class="popover" :class="`popover--${position}`">
-      <slot name="content" />
+      <!-- A menu row that acts has to be able to shut the menu; a caller that
+           does not take `close` is unaffected. -->
+      <slot name="content" :close="() => (open = false)" />
     </div>
   </div>
 </template>

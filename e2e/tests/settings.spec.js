@@ -116,6 +116,32 @@ test('changing the account currency leaves the trips that exist alone', async ({
   );
 });
 
+test('the language chip in the top bar switches the whole app, and sticks', async ({
+  page,
+  request,
+}) => {
+  const api = await signedIn(request);
+  await signIn(page, api);
+  await page.goto('/trips');
+  await expect(page.getByRole('heading', { name: 'My trips' })).toBeVisible();
+
+  // The chip says which language is on; its menu names each one in itself.
+  await page.getByRole('button', { name: 'Language' }).click();
+  await page.getByRole('button', { name: 'Русский' }).click();
+
+  // The page relabels itself at once, and the account carries the choice.
+  await expect(page.getByRole('heading', { name: 'Мои поездки' })).toBeVisible();
+  await expect(page.locator('.topbar-lang')).toHaveText(/RU/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
+  await expect
+    .poll(async () => (await api.get('/api/auth/me').then((r) => r.json())).language)
+    .toBe('ru');
+
+  // A reload lands in the same language, and the settings page agrees.
+  await page.goto('/settings');
+  await expect(page.getByRole('heading', { name: 'Настройки' })).toBeVisible();
+});
+
 test('the app speaks the language the account chose, and remembers it', async ({
   page,
   request,

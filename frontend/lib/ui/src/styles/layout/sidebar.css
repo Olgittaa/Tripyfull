@@ -334,6 +334,49 @@
   color: var(--text-primary);
   white-space: nowrap;
 }
+/* Language switcher: the currency badge's pill, but it opens a menu. */
+.topbar-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--fw-medium) 11px/1 var(--font-mono);
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: none;
+  padding: 5px 9px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.topbar-lang:hover,
+.topbar-lang:focus-visible {
+  color: var(--text-primary);
+  background: var(--input-select-focus-bg);
+}
+.lang-menu {
+  min-width: 180px;
+  margin: -8px;
+  display: flex;
+  flex-direction: column;
+  /* Ten languages are taller than a short screen. */
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.lang-menu .topbar-link {
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+.lang-row--on {
+  color: var(--text-primary);
+}
+/* Holds the tick's width whether or not the row carries one, so the names
+   line up. */
+.lang-check {
+  width: 13px;
+  flex: none;
+  font-size: 11px;
+  color: var(--success-700);
+}
+
 .topbar-user-cur {
   font: var(--fw-medium) 11px/1 var(--font-mono);
   color: var(--text-secondary);

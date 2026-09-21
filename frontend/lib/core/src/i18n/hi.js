@@ -14,6 +14,7 @@ export default {
   'nav.tripMenu': 'यात्रा मेनू',
   'nav.allTrips': 'सभी यात्राएँ',
   'nav.allPlaces': 'सभी स्थान',
+  'nav.language': 'भाषा',
   'nav.settings': 'सेटिंग्स',
   'nav.signOut': 'साइन आउट',
   'nav.pickTrip': 'किसी यात्रा को चुनें — उसका मेनू यहाँ दिखेगा।',

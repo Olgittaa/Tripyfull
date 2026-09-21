@@ -16,6 +16,7 @@ export default {
   'nav.tripMenu': 'Trip menu',
   'nav.allTrips': 'All trips',
   'nav.allPlaces': 'All places',
+  'nav.language': 'Language',
   'nav.settings': 'Settings',
   'nav.signOut': 'Sign out',
   'nav.pickTrip': 'Pick a trip to see its menu here.',

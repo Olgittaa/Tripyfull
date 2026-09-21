@@ -14,6 +14,7 @@ export default {
   'nav.tripMenu': '行程菜单',
   'nav.allTrips': '所有行程',
   'nav.allPlaces': '所有地点',
+  'nav.language': '语言',
   'nav.settings': '设置',
   'nav.signOut': '退出登录',
   'nav.pickTrip': '选择一个行程，这里会显示它的菜单。',

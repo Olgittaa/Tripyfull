@@ -60,6 +60,8 @@
           <span class="topbar-label">{{ t('nav.allPlaces') }}</span>
         </router-link>
 
+        <LanguageMenu />
+
         <TfPopover position="bottom-end">
           <span class="topbar-user">
             <span class="topbar-user-cur">{{ baseCurrency }}</span>
@@ -159,6 +161,7 @@ import {
 import { useTripStore } from '@/stores/tripStore.js';
 import { TfAvatar, TfIcon, TfPopover, TfToastHost, TfConfirmHost, TfDrawer } from '@tripyfull/ui';
 import TripNav from '@/components/TripNav.vue';
+import LanguageMenu from '@/components/LanguageMenu.vue';
 import SessionExpiredDialog from '@/components/SessionExpiredDialog.vue';
 import { watchSessionExpiry } from '@/session.js';
 import logoMark from '@/assets/logo-mark.svg';

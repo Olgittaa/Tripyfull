@@ -14,6 +14,7 @@ export default {
   'nav.tripMenu': 'ভ্রমণ মেনু',
   'nav.allTrips': 'সব ভ্রমণ',
   'nav.allPlaces': 'সব স্থান',
+  'nav.language': 'ভাষা',
   'nav.settings': 'সেটিংস',
   'nav.signOut': 'সাইন আউট',
   'nav.pickTrip': 'একটি ভ্রমণ বেছে নিন — এখানে তার মেনু দেখা যাবে।',

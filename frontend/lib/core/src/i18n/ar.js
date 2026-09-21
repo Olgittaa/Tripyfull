@@ -15,6 +15,7 @@ export default {
   'nav.tripMenu': 'قائمة الرحلة',
   'nav.allTrips': 'كل الرحلات',
   'nav.allPlaces': 'كل الأماكن',
+  'nav.language': 'اللغة',
   'nav.settings': 'الإعدادات',
   'nav.signOut': 'تسجيل الخروج',
   'nav.pickTrip': 'اختر رحلة لتظهر قائمتها هنا.',
