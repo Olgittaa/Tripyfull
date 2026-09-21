@@ -6,7 +6,7 @@
         <!-- Explanation, not data: on a phone the list gets the height. -->
         <p class="phone-hide">{{ t('todo.subtitle') }}</p>
       </div>
-      <div class="page-head-actions">
+      <div class="page-head-actions" data-tour="todo-actions">
         <TfButton variant="secondary" @click="openSuggestions" :disabled="loadingSuggestions">
           <i class="pi pi-sparkles" style="font-size: 14px"></i>
           {{ t('todo.suggestions')

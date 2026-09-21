@@ -14,6 +14,7 @@ export default {
   'nav.allTrips': 'Alle Reisen',
   'nav.allPlaces': 'Alle Orte',
   'nav.language': 'Sprache',
+  'nav.howTo': 'So geht’s',
   'nav.settings': 'Einstellungen',
   'nav.signOut': 'Abmelden',
   'nav.pickTrip': 'Wähle eine Reise, um hier ihr Menü zu sehen.',
@@ -928,4 +929,38 @@ export default {
   'map.hotelStay': 'Hotel / Unterkunft',
   'map.approxMin': '~{count} Min.',
   'map.loadFailed': 'Die Reisekarte konnte nicht geladen werden',
+
+  // The how-to: nine steps you page through
+  'guide.step': 'Schritt {n} von {total}',
+  'guide.skip': 'Überspringen',
+  'guide.back': 'Zurück',
+  'guide.next': 'Weiter',
+  'guide.done': 'Alles klar',
+  'guide.s1.title': 'Deine Reisen',
+  'guide.s1.body':
+    'Jede Reise ist eine Karte auf der ersten Seite. „Neue Reise“ fragt nach Name, Daten und Währung; „Import“ öffnet eine Reise, die dir jemand als Datei geschickt hat.',
+  'guide.s2.title': 'Orte, die sich lohnen',
+  'guide.s2.body':
+    '„Alle Orte“ ist deine Sammlung über alle Reisen hinweg. „Suchen & importieren“ durchsucht die Karte oder nimmt einen Link; bewerte jeden Ort von 1 bis 5 und sag, wie lange ein Besuch dauert.',
+  'guide.s3.title': 'Der Tag selbst',
+  'guide.s3.body':
+    'Der Tagesplan zeigt einen Tag nach dem anderen. Füge einen Stopp von Hand hinzu oder nimm einen von der Tageskarte; zieh sie in die richtige Reihenfolge, setz eine Startzeit — die Zeile zwischen zwei Stopps ist der Weg dorthin.',
+  'guide.s4.title': 'Buchungen und Zahlungen',
+  'guide.s4.body':
+    'Flüge, Unterkünfte und Aktivitäten, jede mit Preis und Raten. „Plan aktualisieren“ schreibt sie in die Tage, und Tickets kannst du direkt an die Buchung hängen.',
+  'guide.s5.title': 'Die Aufgabenliste',
+  'guide.s5.body':
+    'Was vor der Abreise, unterwegs und nach der Rückkehr zu erledigen ist. „Vorschläge“ bietet die üblichen an, mit Fristen ab den Reisedaten.',
+  'guide.s6.title': 'Was es kostet',
+  'guide.s6.body':
+    'Die Summe der Reise, was bezahlt ist und was aussteht — aus den Buchungen und aus den Kosten, die du an den Stopps einträgst.',
+  'guide.s7.title': 'Die ganze Reise auf einer Karte',
+  'guide.s7.body':
+    'Jeder gespeicherte Ort als Punkt: die Farbe ist die Bewertung, das Schild der Tag, für den er geplant ist. „Nur geplante“ zeigt nur diese.',
+  'guide.s8.title': 'Das Büchlein für den Kunden',
+  'guide.s8.body':
+    '„Drucken“ auf der Reiseseite setzt jeden Tag mit seiner Karte, den Fotos, den Buchungen und den Notizen. Der Druckdialog des Browsers speichert es als PDF.',
+  'guide.s9.title': 'Sprache, Währung, Sicherung',
+  'guide.s9.body':
+    'Der Chip oben in der Leiste wechselt jederzeit die Sprache. „Export“ auf der Reiseseite packt die ganze Reise — samt Fotos und Tickets — in eine einzige Datei.',
 };

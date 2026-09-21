@@ -9,7 +9,7 @@
     </div>
 
     <!-- What the colours mean, and how many places carry each rating -->
-    <div class="layer-row">
+    <div class="layer-row" data-tour="map-legend">
       <span v-for="l in RATING_DOTS" :key="l.r" class="layer-chip">
         <span
           :style="{

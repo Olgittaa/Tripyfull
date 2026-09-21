@@ -14,6 +14,7 @@ export default {
   'nav.allTrips': 'Todos los viajes',
   'nav.allPlaces': 'Todos los lugares',
   'nav.language': 'Idioma',
+  'nav.howTo': 'Cómo se usa',
   'nav.settings': 'Ajustes',
   'nav.signOut': 'Cerrar sesión',
   'nav.pickTrip': 'Elige un viaje para ver aquí su menú.',
@@ -927,4 +928,38 @@ export default {
   'map.hotelStay': 'alojamiento',
   'map.approxMin': '~{count} min',
   'map.loadFailed': 'No se pudo cargar el mapa del plan',
+
+  // The how-to: nine steps you page through
+  'guide.step': 'Paso {n} de {total}',
+  'guide.skip': 'Saltar',
+  'guide.back': 'Atrás',
+  'guide.next': 'Siguiente',
+  'guide.done': 'Entendido',
+  'guide.s1.title': 'Tus viajes',
+  'guide.s1.body':
+    'Cada viaje es una tarjeta en la primera página. «Nuevo viaje» pide un nombre, las fechas y una moneda; «Importar» abre un viaje que alguien te envió como archivo.',
+  'guide.s2.title': 'Lugares que merecen la pena',
+  'guide.s2.body':
+    '«Todos los lugares» es tu biblioteca, la misma para todos los viajes. «Buscar e importar» busca en el mapa o acepta un enlace; valora cada lugar del 1 al 5 y di cuánto dura la visita.',
+  'guide.s3.title': 'El día en sí',
+  'guide.s3.body':
+    'El itinerario muestra un día cada vez. Añade una parada a mano o tómala del mapa del día; arrastra para reordenar, pon una hora de inicio, y la fila entre dos paradas es el camino.',
+  'guide.s4.title': 'Reservas y pagos',
+  'guide.s4.body':
+    'Vuelos, alojamientos y actividades, cada uno con su precio y sus plazos. «Actualizar plan» los escribe en los días, y los billetes se adjuntan a la propia reserva.',
+  'guide.s5.title': 'La lista de tareas',
+  'guide.s5.body':
+    'Lo que hay que hacer antes de salir, por el camino y al volver. «Sugerencias» ofrece las habituales, con fechas contadas desde el viaje.',
+  'guide.s6.title': 'Lo que cuesta',
+  'guide.s6.body':
+    'El total del viaje, lo pagado y lo que queda — de las reservas y de los costes que pones en las paradas.',
+  'guide.s7.title': 'Todo el viaje en un mapa',
+  'guide.s7.body':
+    'Cada lugar guardado es un punto: el color es su valoración, la etiqueta es el día en que está planificado. «Solo planificados» deja solo esos.',
+  'guide.s8.title': 'El librito del cliente',
+  'guide.s8.body':
+    '«Imprimir» en la página del viaje compone cada día con su mapa, las fotos, las reservas y las notas. El diálogo de impresión del navegador lo guarda en PDF.',
+  'guide.s9.title': 'Idioma, moneda, copia',
+  'guide.s9.body':
+    'La pastilla de la barra superior cambia el idioma en cualquier momento. «Exportar» en la página del viaje lo empaqueta entero — fotos y billetes incluidos — en un solo archivo.',
 };

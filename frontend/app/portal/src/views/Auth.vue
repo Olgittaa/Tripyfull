@@ -42,7 +42,7 @@
 import { ref } from 'vue';
 import { api } from '@tripyfull/core';
 import { useRouter, useRoute } from 'vue-router';
-import { setAuth, t } from '@tripyfull/core';
+import { setAuth, justRegistered, t } from '@tripyfull/core';
 import { TfInput, TfButton } from '@tripyfull/ui';
 import { armSessionExpiry } from '@/session.js';
 
@@ -60,6 +60,9 @@ const submit = async () => {
   const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register';
   try {
     const res = await api.post(endpoint, { username: username.value, password: password.value });
+    // A brand-new account is the one moment we know is a first: the shell picks
+    // this up and opens the how-to once.
+    justRegistered.value = !isLogin.value;
     setAuth(res.data.token, res.data.username, res.data);
     armSessionExpiry();
     router.push(route.query.redirect || '/trips');

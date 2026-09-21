@@ -47,6 +47,8 @@ test('a consultant builds a trip and prints the book', async ({ page }) => {
     await page.getByLabel('Password').fill(PASSWORD);
     await page.locator('form').getByRole('button', { name: 'Register' }).click();
     await expect(page).toHaveURL(/\/trips/);
+    // A new account meets the how-to; the consultant skips it and gets to work.
+    await page.getByRole('button', { name: 'Skip' }).click();
   });
 
   await test.step('create a three-day trip', async () => {

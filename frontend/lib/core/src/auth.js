@@ -2,6 +2,10 @@ import { ref, reactive } from 'vue';
 import { setLocale, matchLocale } from './i18n.js';
 
 export const username = ref(localStorage.getItem('username'));
+/* Set by the sign-in form when the account is brand new; the shell watches it
+   to open the how-to once, and clears it. Not stored: "just registered" is a
+   moment, and a reload has already passed it. */
+export const justRegistered = ref(false);
 export const baseCurrency = ref(localStorage.getItem('baseCurrency') || 'EUR');
 
 const defaultPrefs = { language: 'en', region: '', dateFormat: 'DD/MM/YYYY', timeFormat: '24h' };

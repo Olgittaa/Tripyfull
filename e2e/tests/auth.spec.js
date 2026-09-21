@@ -58,6 +58,8 @@ test('a session that dies asks, and the page carries on where it was', async ({ 
   await page.locator('.tab-switch').getByRole('button', { name: 'Register' }).click();
   await signIn(page, user, PASSWORD);
   await expect(page).toHaveURL(/\/trips/);
+  // A new account meets the how-to; past it first.
+  await page.getByRole('button', { name: 'Skip' }).click();
 
   // Something to come back to.
   await page.getByRole('button', { name: 'New trip' }).first().click();

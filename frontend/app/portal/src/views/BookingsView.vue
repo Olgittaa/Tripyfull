@@ -6,7 +6,7 @@
         <h1>{{ t('bookings.title') }}</h1>
         <p>{{ t('bookings.subtitle') }}</p>
       </div>
-      <div class="page-head-actions">
+      <div class="page-head-actions" data-tour="booking-actions">
         <TfButton variant="primary" @click="openAddDialog">
           <i class="pi pi-plus" style="font-size: 14px"></i> {{ t('bookings.booking') }}
         </TfButton>

@@ -33,7 +33,7 @@
       <!-- The figure the page leads with, and the payment story under it. The
            bookings' own progress lives here rather than in a card of its own,
            where it only repeated these numbers. -->
-      <div class="card budget-hero">
+      <div class="card budget-hero" data-tour="budget-hero">
         <div class="budget-hero-main">
           <div class="metric-label">{{ t('budget.tripCost') }}</div>
           <span class="money budget-hero-value"

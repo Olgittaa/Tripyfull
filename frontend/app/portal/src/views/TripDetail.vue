@@ -19,7 +19,7 @@
             }}{{ formatDateRange(trip.startDate, trip.endDate) }}
           </p>
         </div>
-        <div class="page-head-actions">
+        <div class="page-head-actions" data-tour="trip-head-actions">
           <div v-if="countdown" class="dash-countdown" :class="`dash-countdown--${phase}`">
             <span class="dash-countdown-num">{{ countdown.num }}</span>
             <span class="dash-countdown-text">{{ countdown.text }}</span>

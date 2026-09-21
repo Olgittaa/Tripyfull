@@ -30,6 +30,7 @@
         @updated="updateDayLocal"
       />
       <DayStrip
+        data-tour="day-strip"
         v-if="allDays.length > 1"
         :days="allDays"
         :current-id="dayId"

@@ -17,6 +17,7 @@ export default {
   'nav.allTrips': 'All trips',
   'nav.allPlaces': 'All places',
   'nav.language': 'Language',
+  'nav.howTo': 'How to use',
   'nav.settings': 'Settings',
   'nav.signOut': 'Sign out',
   'nav.pickTrip': 'Pick a trip to see its menu here.',
@@ -920,4 +921,38 @@ export default {
   'map.hotelStay': 'hotel / stay',
   'map.approxMin': '~{count} min',
   'map.loadFailed': 'Failed to load the plan map',
+
+  // The how-to: nine steps you page through
+  'guide.step': 'Step {n} of {total}',
+  'guide.skip': 'Skip',
+  'guide.back': 'Back',
+  'guide.next': 'Next',
+  'guide.done': 'Got it',
+  'guide.s1.title': 'Your trips',
+  'guide.s1.body':
+    'Every trip is a card on the first page. New trip asks for a name, the dates and a currency; Import opens a trip someone sent you as a file.',
+  'guide.s2.title': 'Places worth going to',
+  'guide.s2.body':
+    'All places is your library, kept across trips. Find & import searches the map or takes a link; rate each place from 1 to 5 and say how long a visit takes.',
+  'guide.s3.title': 'The day itself',
+  'guide.s3.body':
+    'Itinerary shows one day at a time. Add a stop by hand or take one from the day’s map; drag to reorder, set a start time, and the row between two stops is the way there.',
+  'guide.s4.title': 'Bookings and payments',
+  'guide.s4.body':
+    'Flights, stays and activities, each with its price and instalments. Update plan writes them into the days, and tickets can be attached to the booking itself.',
+  'guide.s5.title': 'The to-do list',
+  'guide.s5.body':
+    'What has to happen before you leave, on the way and once you are back. Suggestions offers the usual ones, with dates counted from the trip.',
+  'guide.s6.title': 'What it costs',
+  'guide.s6.body':
+    'The trip’s total, what is paid and what is left — from the bookings and from the costs you put on the stops.',
+  'guide.s7.title': 'The whole trip on a map',
+  'guide.s7.body':
+    'Every saved place as a dot: the colour is its rating, the tag is the day it is planned on. Planned only narrows the map to those.',
+  'guide.s8.title': 'The client’s book',
+  'guide.s8.body':
+    'Print on the trip’s page lays out every day with its map, the photos, the bookings and the notes. Your browser’s print dialog saves it as a PDF.',
+  'guide.s9.title': 'Language, currency, backup',
+  'guide.s9.body':
+    'The chip in the top bar changes the language at any moment. Export on a trip’s page packs the whole trip — photos and tickets included — into one file.',
 };

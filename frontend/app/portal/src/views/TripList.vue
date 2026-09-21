@@ -7,7 +7,7 @@
         <h1>{{ t('trips.title') }}</h1>
         <p>{{ t('trips.subtitle') }}</p>
       </div>
-      <div class="page-head-actions">
+      <div class="page-head-actions" data-tour="trip-actions">
         <TfButton
           variant="secondary"
           icon="pi-upload"

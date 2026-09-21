@@ -116,6 +116,39 @@ test('changing the account currency leaves the trips that exist alone', async ({
   );
 });
 
+test('the how-to walks the app: it highlights, and it moves between screens', async ({
+  page,
+  request,
+}) => {
+  const api = await signedIn(request);
+  const trip = await api
+    .post('/api/trips', { title: 'Tour trip', startDate: '2026-05-01', endDate: '2026-05-03' })
+    .then((r) => r.json());
+  await signIn(page, api);
+  await page.goto('/trips');
+  await expect(page.getByRole('heading', { name: 'My trips' })).toBeVisible();
+
+  // The column carries it; a trip on the account means every step applies.
+  await page.getByRole('button', { name: 'How to use' }).first().click();
+  await expect(page.getByText('Step 1 of 9')).toBeVisible();
+  // The lit element is the one the step is about.
+  await expect(page.locator('.tour-spot')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your trips' })).toBeVisible();
+
+  // Next takes the app with it: the second step lives on another screen.
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page).toHaveURL(/\/places$/);
+  await expect(page.getByText('Step 2 of 9')).toBeVisible();
+
+  // The third is inside the trip, so the menu switches too.
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${trip.id}/days/`));
+  await expect(page.getByText('Step 3 of 9')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await expect(page.locator('.tour-spot')).toHaveCount(0);
+});
+
 test('the language chip in the top bar switches the whole app, and sticks', async ({
   page,
   request,

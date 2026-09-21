@@ -9,7 +9,7 @@
           <div>
             <h1>{{ tripMode ? t('places.titleTrip') : t('places.title') }}</h1>
           </div>
-          <div class="page-head-actions">
+          <div class="page-head-actions" data-tour="place-actions">
             <!-- The search icon carries this one on a phone, so the title and
                  both buttons share a single line. -->
             <TfButton

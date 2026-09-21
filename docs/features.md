@@ -45,6 +45,13 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   account and **nothing reads them yet** (see `../BUGS.md`).
   The currency shows in the top bar, and the account's settings are re-read when the app starts,
   so a change made on one device reaches the others.
+- **How to use** (the guided tour): the `?` at the foot of the menu column — and, where a
+  phone has no column, a row in the account menu — walks the app. Each step dims the page,
+  lights one thing up (the two buttons that start a trip, the day strip, *Update plan*, the
+  language chip …) and explains it in a sentence or two beside it; moving on navigates to the
+  screen the next step is about, so the menu follows along. Nine steps with a trip on the
+  account, three without — the ones that need a trip drop out rather than point at nothing.
+  It opens by itself once, right after registering, and any time from the `?` after that.
 - **Language in the top bar**: a two-letter chip beside the currency opens the ten languages,
   each named in itself and the current one ticked. Choosing one saves it to the account — the
   same change the settings page makes — and every word on screen follows at once, without a

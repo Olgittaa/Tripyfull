@@ -2,6 +2,7 @@
   <TfToastHost />
   <TfConfirmHost />
   <SessionExpiredDialog />
+  <TourOverlay v-model="showGuide" />
 
   <!-- Auth page renders without sidebar -->
   <template v-if="!username">
@@ -47,29 +48,47 @@
       >
 
       <nav class="topbar-nav">
-        <router-link to="/trips" class="topbar-link" :class="{ active: $route.path === '/trips' }">
+        <router-link
+          to="/trips"
+          class="topbar-link"
+          data-tour="nav-trips"
+          :class="{ active: $route.path === '/trips' }"
+        >
           <TfIcon name="map" style="font-size: 18px" />
           <span class="topbar-label">{{ t('nav.allTrips') }}</span>
         </router-link>
         <router-link
           to="/places"
           class="topbar-link"
+          data-tour="nav-places"
           :class="{ active: $route.path === '/places' }"
         >
           <TfIcon name="place" style="font-size: 18px" />
           <span class="topbar-label">{{ t('nav.allPlaces') }}</span>
         </router-link>
 
-        <LanguageMenu />
+        <LanguageMenu data-tour="lang" />
 
         <TfPopover position="bottom-end">
           <span class="topbar-user">
             <span class="topbar-user-cur">{{ baseCurrency }}</span>
             <TfAvatar :name="username" size="sm" />
           </span>
-          <template #content>
+          <template #content="{ close }">
             <div class="topbar-menu">
               <div class="topbar-user-name" style="padding: 10px 12px 8px">{{ username }}</div>
+              <!-- The column carries this too, but a phone has no column. -->
+              <button
+                type="button"
+                class="topbar-link"
+                @click="
+                  close();
+                  showGuide = true;
+                "
+              >
+                <i class="pi pi-question-circle" style="font-size: 13px"></i>
+                {{ t('nav.howTo') }}
+              </button>
               <router-link to="/settings" class="topbar-link">
                 <i class="pi pi-cog" style="font-size: 13px"></i> {{ t('nav.settings') }}
               </router-link>
@@ -96,17 +115,26 @@
               {{ formatDateRange(currentTrip.startDate, currentTrip.endDate) }}
             </div>
           </div>
-          <TripNav :tripId="currentTrip.id" :collapsed="sidebarCollapsed" />
+          <TripNav data-tour="trip-nav" :tripId="currentTrip.id" :collapsed="sidebarCollapsed" />
         </template>
 
         <p v-else class="sidebar-caption" style="padding-top: 12px">
           {{ t('nav.pickTrip') }}
         </p>
 
-        <!-- Sits at the bottom of the column, whatever is above it. -->
+        <!-- Both sit at the bottom of the column, whatever is above them. -->
         <button
           type="button"
           class="sidebar-collapse-btn"
+          :title="t('nav.howTo')"
+          @click="showGuide = true"
+        >
+          <i class="pi pi-question-circle"></i>
+          <span class="nav-label">{{ t('nav.howTo') }}</span>
+        </button>
+        <button
+          type="button"
+          class="sidebar-collapse-btn sidebar-collapse-btn--last"
           :title="sidebarCollapsed ? t('nav.expand') : t('nav.collapse')"
           @click="toggleSidebar"
         >
@@ -155,6 +183,7 @@ import {
   username,
   baseCurrency,
   clearAuth,
+  justRegistered,
   formatDateRange,
   refreshSettings,
 } from '@tripyfull/core';
@@ -162,6 +191,7 @@ import { useTripStore } from '@/stores/tripStore.js';
 import { TfAvatar, TfIcon, TfPopover, TfToastHost, TfConfirmHost, TfDrawer } from '@tripyfull/ui';
 import TripNav from '@/components/TripNav.vue';
 import LanguageMenu from '@/components/LanguageMenu.vue';
+import TourOverlay from '@/components/TourOverlay.vue';
 import SessionExpiredDialog from '@/components/SessionExpiredDialog.vue';
 import { watchSessionExpiry } from '@/session.js';
 import logoMark from '@/assets/logo-mark.svg';
@@ -173,11 +203,23 @@ const store = useTripStore();
 const lastTripId = ref(null);
 const sidebarTrip = ref(null);
 
+/* The how-to: on the "?" at the bottom of the menu at any time, and by itself
+   once — right after registering, which is the only moment we know is a first
+   one. Signing in on a new browser does not re-open it. */
+const showGuide = ref(false);
+
 // Ask for a new sign-in the moment the token expires, not on the next request.
 onMounted(() => {
   watchSessionExpiry();
   // The account's own settings, in case they were changed on another device.
   refreshSettings(api);
+});
+
+// Registering opens it once, the moment the shell shows the trips list.
+watch(justRegistered, (yes) => {
+  if (!yes) return;
+  justRegistered.value = false;
+  showGuide.value = true;
 });
 
 /* Icons-only sidebar, remembered per browser: someone who works in a narrow

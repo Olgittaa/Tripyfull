@@ -69,6 +69,119 @@
   justify-content: center;
   padding: 12px 0;
 }
+/* Two rows share the bottom: the first one takes the auto margin, the second
+   follows it without a second line above itself. */
+.sidebar-collapse-btn--last {
+  margin-top: 0;
+}
+
+/* The guided tour: the page dims, one thing stays lit, and a card explains it. */
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+.tour-shade {
+  position: absolute;
+  inset: 0;
+}
+/* The cut-out is the shade: a ring of shadow wide enough to cover any screen,
+   so there is one element to move instead of four panels to fit around it. */
+.tour-spot {
+  position: fixed;
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 0 0 9999px rgb(12 10 9 / 55%);
+  pointer-events: none;
+  transition:
+    top var(--dur-mid) var(--ease-out),
+    left var(--dur-mid) var(--ease-out),
+    width var(--dur-mid) var(--ease-out),
+    height var(--dur-mid) var(--ease-out);
+}
+/* No highlight yet: the shade still has to darken the page on its own. */
+.tour:not(:has(.tour-spot)) .tour-shade {
+  background: rgb(12 10 9 / 55%);
+}
+.tour-card {
+  position: fixed;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-3);
+  padding: var(--space-4);
+}
+.tour-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.tour-count {
+  font: var(--fw-medium) 11px/1 var(--font-mono);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tour-skip {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: var(--type-small);
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+.tour-skip:hover,
+.tour-skip:focus-visible {
+  color: var(--text-primary);
+}
+.tour-title {
+  font: var(--type-h3);
+  margin: 0 0 6px;
+  color: var(--text-primary);
+}
+.tour-body {
+  font: var(--type-small);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0;
+  /* Steps of different lengths would jog the card about as you page. */
+  min-height: 4.4em;
+}
+.tour-dots {
+  display: flex;
+  gap: 5px;
+  margin: var(--space-3) 0;
+}
+.tour-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-default);
+}
+.tour-dot--on {
+  background: var(--accent);
+}
+.tour-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+@media (max-width: 560px) {
+  /* A phone has no room beside anything: the card takes the bottom edge. */
+  .tour-card {
+    top: auto !important;
+    bottom: 12px;
+    left: 12px !important;
+    right: 12px;
+    width: auto;
+    transform: none !important;
+  }
+}
 
 .sidebar-logo {
   padding: 20px 20px 14px;
