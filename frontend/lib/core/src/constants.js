@@ -51,6 +51,34 @@ export const PLACE_TYPE_META = {
 
 export const placeTypeMeta = (t) => PLACE_TYPE_META[t] || PLACE_TYPE_META.OTHER;
 
+/** A place's kind in the app's language — read inside a computed to follow a change. */
+export const placeTypeLabel = (type) =>
+  PLACE_TYPE_META[type] ? t(`placeType.${type}`) : type || '';
+
+/** What kinds of stop there are, in the order the type picker offers them. */
+export const ACTIVITY_TYPES = [
+  'SIGHTSEEING',
+  'BEACH',
+  'NATURE',
+  'NEIGHBORHOOD',
+  'RESTAURANT',
+  'MEAL_STOP',
+  'SHOPPING',
+  'TRANSPORT',
+  'ACCOMMODATION',
+  'OTHER',
+];
+
+/** A stop's kind in the app's language — read inside a computed to follow a change. */
+export const activityTypeLabel = (type) =>
+  ACTIVITY_TYPES.includes(type) ? t(`activityType.${type}`) : type || '';
+
+/** The ways from one stop to the next, as the leg row offers them; words come from t(). */
+export const TRAVEL_MODE_KEYS = ['foot', 'taxi', 'bus', 'train', 'car'];
+export const travelModeLabel = (key) => (TRAVEL_MODE_KEYS.includes(key) ? t(`travel.${key}`) : '');
+export const travelModeHint = (key) =>
+  TRAVEL_MODE_KEYS.includes(key) ? t(`travel.hint.${key}`) : '';
+
 export const PLACE_TYPE_OPTIONS = Object.entries(PLACE_TYPE_META).map(([value, m]) => ({
   label: m.label,
   value,

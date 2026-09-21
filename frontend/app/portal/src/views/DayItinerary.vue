@@ -67,15 +67,11 @@
               @dragend="onDragEnd"
             >
               <div class="timeline-gutter">
-                <i class="pi pi-bars drag-grip" title="Drag to reorder"></i>
+                <i class="pi pi-bars drag-grip" :title="t('day.dragToReorder')"></i>
                 <span
                   class="timeline-time"
                   :class="{ 'timeline-time--derived': !a.startTime && derivedTimes[a.id] }"
-                  :title="
-                    !a.startTime && derivedTimes[a.id]
-                      ? 'Worked out from the previous stop and the way there — set a time to fix it'
-                      : ''
-                  "
+                  :title="!a.startTime && derivedTimes[a.id] ? t('day.derivedTime') : ''"
                   >{{
                     a.startTime
                       ? a.startTime.slice(0, 5)
@@ -109,15 +105,16 @@
           <template v-else>
             <div class="empty-state">
               <div class="empty-state-icon"><i class="pi pi-directions"></i></div>
-              <h3>Nothing planned yet</h3>
-              <p>Add an activity manually, or quickly from this city's saved places.</p>
+              <h3>{{ t('day.nothingPlanned') }}</h3>
+              <p>{{ t('day.nothingPlannedSub') }}</p>
             </div>
 
             <!-- Candidates now live beside the map, next to the geography
                  they belong to; this stays as the manual way in. -->
             <div style="text-align: center; margin-top: 16px">
               <TfButton variant="primary" @click="openAddDialog"
-                ><i class="pi pi-plus" style="font-size: 13px"></i> Add activity</TfButton
+                ><i class="pi pi-plus" style="font-size: 13px"></i>
+                {{ t('day.addActivity') }}</TfButton
               >
             </div>
           </template>
@@ -149,7 +146,7 @@
                     font: var(--fw-medium) 13px/1 var(--font-sans);
                     color: var(--text-secondary);
                   "
-                  >{{ typeLabel(type) }}</span
+                  >{{ activityTypeLabel(type) }}</span
                 >
                 <span class="money money--sm">{{ amount.toFixed(2) }} {{ currency }}</span>
               </div>
@@ -157,7 +154,7 @@
             <div style="display: flex; align-items: center; gap: 10px">
               <span
                 style="font: var(--fw-medium) 13px/1 var(--font-sans); color: var(--text-secondary)"
-                >Day total</span
+                >{{ t('day.total') }}</span
               >
               <span class="money money--md">{{ dayTotal.toFixed(2) }} {{ currency }}</span>
             </div>
@@ -212,22 +209,19 @@
     />
 
     <!-- Swap-days modal -->
-    <TfModal v-model="showSwapModal" title="Swap days">
-      <p class="text-muted text-sm" style="margin: 0 0 12px">
-        The two days trade their plans — activities, cities, stays and notes. The linked
-        overnight booking stays on its date.
-      </p>
+    <TfModal v-model="showSwapModal" :title="t('day.swapTitle')">
+      <p class="text-muted text-sm" style="margin: 0 0 12px">{{ t('day.swapIntro') }}</p>
       <TfSelect
-        label="Swap this day with"
+        :label="t('day.swapWith')"
         v-model="swapTargetLabel"
         :options="swapDayLabels"
-        placeholder="Pick a day"
+        :placeholder="t('day.pickDay')"
         class="w-full"
       />
       <div class="dialog-actions" style="margin-top: 16px">
-        <TfButton variant="ghost" @click="showSwapModal = false">Cancel</TfButton>
+        <TfButton variant="ghost" @click="showSwapModal = false">{{ t('common.cancel') }}</TfButton>
         <TfButton variant="primary" :disabled="!swapTargetLabel || swapping" @click="doSwap">
-          {{ swapping ? 'Swapping…' : 'Swap' }}
+          {{ swapping ? t('day.swapping') : t('day.swap') }}
         </TfButton>
       </div>
     </TfModal>
@@ -246,11 +240,8 @@ import StopDrawer from '@/components/StopDrawer.vue';
 import DayRouteAside from '@/components/DayRouteAside.vue';
 import DayHead from '@/components/DayHead.vue';
 import DayFacts from '@/components/DayFacts.vue';
-import {
-  typeIcon,
-  typeLabel,
-  catStyle,
-} from '@/plan/activityTypes.js';
+import { typeIcon, catStyle } from '@/plan/activityTypes.js';
+import { activityTypeLabel, t } from '@tripyfull/core';
 import { baseCurrency as accountCurrency } from '@tripyfull/core';
 import { formatDayDate } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
@@ -375,7 +366,7 @@ const persistOrder = async () => {
     });
     activities.value = res.data;
   } catch {
-    toast.danger('Error', 'Failed to save the order');
+    toast.danger(t('common.error'), t('day.orderFailed'));
     loadDay(dayId.value); // restore the server's order
   }
 };
@@ -493,7 +484,7 @@ const activityMarkers = computed(() => {
     });
     if (landsSameDay(a)) {
       const [lat, lon] = legStart(a);
-      out.push({ lat, lon, label: `Arrive · ${a.name}`, n: '✈' });
+      out.push({ lat, lon, label: t('day.arrive', { name: a.name }), n: '✈' });
     }
   }
   return out;
@@ -541,9 +532,9 @@ const addBufferDay = async () => {
   try {
     const res = await api.post(`/api/trips/${tripId}/days/buffer`);
     allDays.value = res.data || [];
-    toast.success('Buffer day added', 'It sits outside the trip dates until you swap it in');
+    toast.success(t('day.bufferAdded'), t('day.bufferAddedMsg'));
   } catch {
-    toast.danger('Error', 'Failed to add a buffer day');
+    toast.danger(t('common.error'), t('day.bufferFailed'));
   } finally {
     addingBuffer.value = false;
   }
@@ -551,11 +542,11 @@ const addBufferDay = async () => {
 
 const removeReserveDay = async (d) => {
   const ok = await confirm({
-    title: 'Remove reserve day',
-    message: 'Anything planned on it is removed too. Continue?',
+    title: t('day.removeReserveTitle'),
+    message: t('day.removeReserveMsg'),
     tone: 'danger',
-    confirmLabel: 'Remove',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.remove'),
+    cancelLabel: t('common.cancel'),
   });
   if (!ok) return;
   try {
@@ -563,9 +554,9 @@ const removeReserveDay = async (d) => {
     allDays.value = allDays.value.filter((x) => x.id !== d.id);
     // Standing on the day that just went away: fall back to the first real one.
     if (d.id === dayId.value && datedDays.value.length) switchDay(datedDays.value[0].id);
-    toast.success('Removed');
+    toast.success(t('day.removed'));
   } catch {
-    toast.danger('Error', 'Failed to remove the day');
+    toast.danger(t('common.error'), t('day.removeFailed'));
   }
 };
 
@@ -599,7 +590,10 @@ const swapTargetLabel = ref(null);
 const swapDayOptions = computed(() =>
   allDays.value
     .filter((d) => d.id !== dayId.value)
-    .map((d) => ({ label: `Day ${d.dayNumber} · ${formatDayDate(d.date)}`, value: d.id })),
+    .map((d) => ({
+      label: t('day.label', { n: d.dayNumber, date: formatDayDate(d.date) }),
+      value: d.id,
+    })),
 );
 const swapDayLabels = computed(() => swapDayOptions.value.map((o) => o.label));
 const openSwapModal = () => {
@@ -614,9 +608,9 @@ const doSwap = async () => {
     await api.post(`/api/trips/${tripId}/days/${dayId.value}/swap/${target}`);
     showSwapModal.value = false;
     await loadDay(dayId.value);
-    toast.success('Swapped', `Plans traded with ${swapTargetLabel.value}`);
+    toast.success(t('day.swapped'), t('day.swappedMsg', { day: swapTargetLabel.value }));
   } catch {
-    toast.danger('Error', 'Failed to swap days');
+    toast.danger(t('common.error'), t('day.swapFailed'));
   } finally {
     swapping.value = false;
   }
@@ -639,7 +633,6 @@ const goToDay = (idx) => {
     switchDay(allDays.value[idx].id);
   }
 };
-
 
 const loadDay = async (id) => {
   try {
@@ -675,7 +668,7 @@ onMounted(async () => {
     autoSortByTime(); // stops appended out of time order (bookings first, hand-made after) fall into place
     bookings.value = bookingsRes.data;
   } catch {
-    toast.danger('Error', 'Failed to load day');
+    toast.danger(t('common.error'), t('day.loadFailed'));
   } finally {
     loading.value = false;
   }

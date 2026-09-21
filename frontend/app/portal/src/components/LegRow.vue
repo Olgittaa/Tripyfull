@@ -10,7 +10,7 @@
         :key="m.key"
         class="leg-mode"
         :class="{ 'is-on': info.mode === m.key }"
-        v-tooltip="m.hint"
+        v-tooltip="travelModeHint(m.key)"
         @click="$emit('change', m.key)"
       >
         {{ m.icon }}
@@ -19,17 +19,24 @@
     <span v-if="info.data">
       <template v-if="info.data.estimated">~</template>{{ fmtDur(info.data.durationSec) }} ·
       {{ fmtDist(info.data.distanceM) }}
-      {{ modeLabel(info.mode) }}<template v-if="info.data.note"> · {{ info.data.note }}</template>
-      <span v-if="info.data.estimated" class="leg-estimate">estimate</span>
+      {{ travelModeLabel(info.mode)
+      }}<template v-if="info.data.note"> · {{ info.data.note }}</template>
+      <span v-if="info.data.estimated" class="leg-estimate">{{ t('day.leg.estimate') }}</span>
     </span>
-    <span v-else-if="info.data === null">no route found</span>
+    <span v-else-if="info.data === null">{{ t('day.leg.noRoute') }}</span>
     <span v-else>…</span>
   </div>
 </template>
 
 <script setup>
-import { formatDistance as fmtDist, formatDuration as fmtDur } from '@tripyfull/core';
-import { modeLabel, TRAVEL_MODES } from '@/plan/stops.js';
+import {
+  formatDistance as fmtDist,
+  formatDuration as fmtDur,
+  travelModeHint,
+  travelModeLabel,
+  t,
+} from '@tripyfull/core';
+import { TRAVEL_MODES } from '@/plan/stops.js';
 
 defineProps({
   /** { mode, data } — data: undefined while unknown, null when there is no route. */

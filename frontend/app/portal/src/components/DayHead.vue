@@ -7,7 +7,7 @@
         class="phone-hide"
         variant="outline"
         size="sm"
-        label="Previous day"
+        :label="t('day.prev')"
         :disabled="dayIndex <= 0"
         @click="$emit('prev')"
       >
@@ -17,17 +17,19 @@
         <!-- The dock and the strip already name the day on a phone; the head
              keeps the city alone there. -->
         <div class="tf-eyebrow phone-hide" style="margin-bottom: 4px">
-          <template v-if="day && !day.date"
-            >Reserve day {{ reserveIndex }} · outside the trip dates</template
-          >
-          <template v-else>Day {{ day?.dayNumber }} · {{ formatDayDate(day?.date) }}</template>
+          <template v-if="day && !day.date">{{
+            t('day.reserveEyebrow', { n: reserveIndex })
+          }}</template>
+          <template v-else>{{
+            t('day.label', { n: day?.dayNumber, date: formatDayDate(day?.date) })
+          }}</template>
         </div>
         <h1 v-if="!editingCity" class="day-h1">
-          <span class="day-h1-text">{{ day?.city || 'No city set' }}</span>
+          <span class="day-h1-text">{{ day?.city || t('day.noCity') }}</span>
           <button
             type="button"
             class="day-h1-edit"
-            aria-label="Change the city"
+            :aria-label="t('day.changeCity')"
             @click="
               editingCity = true;
               cityDraft = day?.city || '';
@@ -39,14 +41,18 @@
         <div v-else class="day-h1-form">
           <TfCitySearch
             v-model="cityDraft"
-            placeholder="e.g. Tokyo, Kamakura"
+            :placeholder="t('day.cityPlaceholder')"
             style="flex: 1"
             @select="onCitySelected"
           />
-          <TfIconButton variant="ghost" size="sm" label="Save" @click="saveCity"
+          <TfIconButton variant="ghost" size="sm" :label="t('common.save')" @click="saveCity"
             ><i class="pi pi-check"></i
           ></TfIconButton>
-          <TfIconButton variant="ghost" size="sm" label="Cancel" @click="editingCity = false"
+          <TfIconButton
+            variant="ghost"
+            size="sm"
+            :label="t('common.cancel')"
+            @click="editingCity = false"
             ><i class="pi pi-times"></i
           ></TfIconButton>
         </div>
@@ -55,7 +61,7 @@
         class="phone-hide"
         variant="outline"
         size="sm"
-        label="Next day"
+        :label="t('day.next')"
         :disabled="dayIndex >= dayCount - 1"
         @click="$emit('next')"
       >
@@ -68,10 +74,10 @@
         variant="ghost"
         size="sm"
         @click="$emit('sort')"
-        title="Reorder activities by their start time"
+        :title="t('day.sortHint')"
       >
         <i class="pi pi-sort-amount-down" style="font-size: 13px"></i>
-        <span>Sort by time</span>
+        <span>{{ t('day.sortByTime') }}</span>
       </TfButton>
       <!-- Buffer days are their own reserve days now (the "+ Buffer" chip in
            the strip), so a dated day has nothing to toggle. -->
@@ -80,23 +86,23 @@
         variant="ghost"
         size="sm"
         @click="$emit('remove-reserve')"
-        title="Remove this reserve day"
+        :title="t('day.removeReserveHint')"
       >
         <i class="pi pi-trash" style="font-size: 13px"></i>
-        <span>Remove reserve</span>
+        <span>{{ t('day.removeReserve') }}</span>
       </TfButton>
       <TfButton
         v-if="dayCount > 1"
         variant="ghost"
         size="sm"
         @click="$emit('swap')"
-        title="Swap this day's plan with another day"
+        :title="t('day.swapHint')"
       >
         <i class="pi pi-arrow-right-arrow-left" style="font-size: 13px"></i>
-        <span>Swap</span>
+        <span>{{ t('day.swap') }}</span>
       </TfButton>
       <TfButton class="phone-hide" variant="primary" @click="$emit('add')">
-        <i class="pi pi-plus" style="font-size: 14px"></i> Activity
+        <i class="pi pi-plus" style="font-size: 14px"></i> {{ t('day.activity') }}
       </TfButton>
     </div>
   </div>
@@ -104,7 +110,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { api, formatDayDate } from '@tripyfull/core';
+import { api, formatDayDate, t } from '@tripyfull/core';
 import { TfButton, TfCitySearch, TfIconButton, toast } from '@tripyfull/ui';
 
 const props = defineProps({
@@ -117,15 +123,7 @@ const props = defineProps({
   /** More than one stop: "Sort by time" has something to do. */
   canSort: { type: Boolean, default: false },
 });
-const emit = defineEmits([
-  'prev',
-  'next',
-  'sort',
-  'remove-reserve',
-  'swap',
-  'add',
-  'updated',
-]);
+const emit = defineEmits(['prev', 'next', 'sort', 'remove-reserve', 'swap', 'add', 'updated']);
 
 // The city, edited in place of the title.
 const editingCity = ref(false);
@@ -146,7 +144,7 @@ const saveCity = async () => {
     emit('updated', res.data);
     editingCity.value = false;
   } catch {
-    toast.danger('Error', 'Failed to update city');
+    toast.danger(t('common.error'), t('day.cityFailed'));
   }
 };
 </script>

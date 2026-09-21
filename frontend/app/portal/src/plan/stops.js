@@ -40,30 +40,16 @@ export const legStart = (a) =>
  * is an estimate — the row says so. A flight is a booking with its own row and
  * its real times, not a way between two stops.
  */
+// The ways from one stop to the next, with the icon each is drawn with. Their
+// words are core's (travelModeLabel, travelModeHint), in the app's language.
 export const TRAVEL_MODES = [
-  { key: 'foot', icon: '🚶', label: 'on foot', hint: 'Walk to the next stop' },
-  {
-    key: 'taxi',
-    icon: '🚕',
-    label: 'by taxi',
-    hint: 'Taxi / ride-hailing — road time plus hailing',
-  },
-  {
-    key: 'bus',
-    icon: '🚌',
-    label: 'by bus',
-    hint: 'Bus — by timetable where Google has one, else road time plus stops (estimate)',
-  },
-  {
-    key: 'train',
-    icon: '🚆',
-    label: 'by train',
-    hint: 'Train — by timetable where Google has one, else an estimate',
-  },
-  { key: 'car', icon: '🚗', label: 'by car', hint: 'Drive yourself to the next stop' },
+  { key: 'foot', icon: '🚶' },
+  { key: 'taxi', icon: '🚕' },
+  { key: 'bus', icon: '🚌' },
+  { key: 'train', icon: '🚆' },
+  { key: 'car', icon: '🚗' },
 ];
 const MODE_KEYS = TRAVEL_MODES.map((m) => m.key);
-export const modeLabel = (key) => TRAVEL_MODES.find((m) => m.key === key)?.label || '';
 
 /* The way the leg was computed for — the chosen mode, or the day's default
    (a short hop on foot, a longer one by car when a rental is at hand, else by

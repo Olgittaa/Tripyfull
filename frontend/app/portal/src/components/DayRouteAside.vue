@@ -4,14 +4,14 @@
        it, and back to the list. -->
   <aside class="itin-map" :class="{ 'is-open': open }">
     <div class="itin-map-head">
-      <h3 style="font: var(--type-h3); margin: 0">Day route</h3>
-      <span class="text-subtle text-sm"
-        >{{ markers.length }} point{{ markers.length === 1 ? '' : 's' }}</span
-      >
+      <h3 style="font: var(--type-h3); margin: 0">{{ t('day.route.title') }}</h3>
+      <span class="text-subtle text-sm">{{
+        t('day.route.points', { count: markers.length })
+      }}</span>
       <button
         type="button"
         class="itin-map-close"
-        aria-label="Close the map"
+        :aria-label="t('day.route.close')"
         @click="$emit('update:open', false)"
       >
         <i class="pi pi-times"></i>
@@ -29,30 +29,29 @@
     <div class="itin-map-legend">
       <span v-if="libraryDots.length">
         <i class="pi pi-circle-fill" style="font-size: 8px; color: var(--warning-500)"></i>
-        {{ libraryDots.length }} saved place{{ libraryDots.length === 1 ? '' : 's' }} on the map —
-        colour is the rating; click one for details, to add or to hide it.
+        {{ t('day.route.savedOnMap', { count: libraryDots.length }) }}
       </span>
       <button v-if="hiddenIds.size" type="button" class="link-btn" @click="unhideAll">
-        show {{ hiddenIds.size }} hidden
+        {{ t('day.route.showHidden', { count: hiddenIds.size }) }}
       </button>
     </div>
     <div v-if="routeTotal" class="itin-route-total">
       <i class="pi pi-directions"></i>
       <span
         >{{ fmtDur(routeTotal.durationSec) }} · {{ fmtDist(routeTotal.distanceM) }} ·
-        {{ stopCount }} stops</span
+        {{ t('overview.stops', { count: stopCount }) }}</span
       >
     </div>
     <div v-if="!markers.length" class="itin-map-empty">
       <i class="pi pi-map" style="font-size: 22px"></i>
-      <span>No places with coordinates yet</span>
+      <span>{{ t('day.route.noCoords') }}</span>
     </div>
 
     <!-- Candidates for this day: best-rated first, nearest first among
          equals, and never something already on the timeline. -->
     <div class="itin-picks">
       <div class="itin-picks-head">
-        <h3>Places to consider</h3>
+        <h3>{{ t('day.route.consider') }}</h3>
         <span class="text-subtle text-sm">{{ candidatePlaces.length }}</span>
       </div>
       <div class="itin-picks-controls">
@@ -102,7 +101,11 @@
             type="button"
             class="pick-add"
             :disabled="quickAddingId === p.id"
-            v-tooltip="p.nearStop ? `Add after ${p.nearStop.name}` : 'Add to this day'"
+            v-tooltip="
+              p.nearStop
+                ? t('day.route.addAfter', { name: p.nearStop.name })
+                : t('day.route.addToDay')
+            "
             @click="quickAdd(p)"
           >
             <i class="pi" :class="quickAddingId === p.id ? 'pi-spinner pi-spin' : 'pi-plus'"></i>
@@ -110,18 +113,14 @@
           <button
             type="button"
             class="pick-more"
-            v-tooltip="'Add with times and notes'"
+            v-tooltip="t('day.route.addWithTimes')"
             @click="$emit('open-place', p)"
           >
             <i class="pi pi-sliders-h"></i>
           </button>
         </div>
         <p v-if="!candidatePlaces.length" class="text-subtle text-sm" style="margin: 6px 0">
-          {{
-            pickScope === 'city'
-              ? 'Nothing from the trip list is in this city — try Trip list.'
-              : 'Everything on the trip list is already planned — add places to the trip on the Places page.'
-          }}
+          {{ pickScope === 'city' ? t('day.route.noneInCity') : t('day.route.allPlanned') }}
         </p>
         <button
           v-if="plannedCount"
@@ -129,7 +128,11 @@
           class="link-btn itin-picks-planned"
           @click="showPlanned = !showPlanned"
         >
-          {{ showPlanned ? 'hide' : 'show' }} {{ plannedCount }} already in the plan
+          {{
+            t(showPlanned ? 'day.route.hidePlanned' : 'day.route.showPlanned', {
+              count: plannedCount,
+            })
+          }}
         </button>
       </div>
     </div>
@@ -143,7 +146,8 @@ import {
   distanceMeters,
   formatDistance as fmtDist,
   formatDuration as fmtDur,
-  PLACE_TYPE_META,
+  placeTypeLabel,
+  t,
 } from '@tripyfull/core';
 import { toast } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
@@ -196,8 +200,8 @@ onBeforeUnmount(() => window.removeEventListener('resize', measureMap));
 const distanceKm = (aLat, aLon, bLat, bLon) => distanceMeters([aLat, aLon], [bLat, bLon]) / 1000;
 
 // Untyped places read better as "Place" than "Other" on the cards.
-const placeTypeLabel = (t) =>
-  t && t !== 'OTHER' && PLACE_TYPE_META[t] ? PLACE_TYPE_META[t].label : 'Place';
+const cardTypeLabel = (type) =>
+  type && type !== 'OTHER' ? placeTypeLabel(type) : t('day.route.place');
 
 /** "Not today" — hiding declutters both the map and the list. It is a view
  *  choice, so it lives in the browser per trip, not in the trip's data. */
@@ -223,8 +227,8 @@ const hidePlace = (id) => {
   next.add(id);
   hiddenIds.value = next;
   persistHidden();
-  const name = props.places.find((p) => p.id === id)?.name || 'Place';
-  toast.success('Hidden', `${name} — "show hidden" brings it back`);
+  const name = props.places.find((p) => p.id === id)?.name || t('day.route.place');
+  toast.success(t('day.route.hidden'), t('day.route.hiddenMsg', { name }));
 };
 const unhideAll = () => {
   hiddenIds.value = new Set();
@@ -233,14 +237,15 @@ const unhideAll = () => {
 
 // The candidates are the trip's own shortlist — the whole library is what the
 // Places page is for.
-const PICK_SCOPES = [
-  { key: 'city', label: 'This city' },
-  { key: 'trip', label: 'Trip list' },
-];
-const PICK_SORTS = [
-  { key: 'rating', label: 'Best first', hint: 'Must-sees first, nearest among equals' },
-  { key: 'near', label: 'Nearest', hint: 'Closest to what is already planned today' },
-];
+// Labels are read in computeds so a change of language re-labels them.
+const PICK_SCOPES = computed(() => [
+  { key: 'city', label: t('day.route.scopeCity') },
+  { key: 'trip', label: t('day.route.scopeTrip') },
+]);
+const PICK_SORTS = computed(() => [
+  { key: 'rating', label: t('day.route.sortBest'), hint: t('day.route.sortBestHint') },
+  { key: 'near', label: t('day.route.sortNear'), hint: t('day.route.sortNearHint') },
+]);
 const pickScope = ref('trip');
 const pickSort = ref('rating');
 
@@ -350,15 +355,19 @@ const fmtKm = (km) => (km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`)
 /** Type, how long it takes, and what it sits next to today. */
 const pickSub = (p) =>
   [
-    p.plannedDay != null ? `in the plan · Day ${p.plannedDay}` : null,
-    placeTypeLabel(p.type),
-    p.visitMinutes ? `${p.visitMinutes} min` : null,
+    p.plannedDay != null ? t('day.route.inPlanDay', { n: p.plannedDay }) : null,
+    cardTypeLabel(p.type),
+    p.visitMinutes ? t('stop.minutes', { count: p.visitMinutes }) : null,
     p.nearStop
-      ? `${fmtKm(p.nearStop.km)} from ${p.nearStop.n}. ${p.nearStop.name}`
+      ? t('day.route.fromStop', {
+          km: fmtKm(p.nearStop.km),
+          n: p.nearStop.n,
+          name: p.nearStop.name,
+        })
       : p.km != null
-        ? `${fmtKm(p.km)} away`
+        ? t('day.route.away', { km: fmtKm(p.km) })
         : null,
-    p.needsBooking ? 'book ahead' : null,
+    p.needsBooking ? t('day.route.bookAhead') : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -392,9 +401,14 @@ const quickAdd = async (p) => {
       list = ordered.data;
     }
     emit('updated', list);
-    toast.success('Added', near ? `After ${near.n}. ${near.name}` : `${p.name} is in the day`);
+    toast.success(
+      t('stop.added'),
+      near
+        ? t('day.route.addedAfter', { n: near.n, name: near.name })
+        : t('day.route.inTheDay', { name: p.name }),
+    );
   } catch {
-    toast.danger('Error', 'Failed to add the place');
+    toast.danger(t('common.error'), t('day.route.addFailed'));
   } finally {
     quickAddingId.value = null;
   }

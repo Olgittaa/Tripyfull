@@ -4,20 +4,19 @@
   <div class="card day-facts">
     <!-- How full the day is: places you go to, and time spent getting there -->
     <div v-if="load" class="fact">
-      <i class="pi pi-clock fact-icon" title="Day"></i>
+      <i class="pi pi-clock fact-icon" :title="t('day.facts.day')"></i>
       <div class="day-load">
+        <span>{{ t('overview.stops', { count: load.stops }) }}</span>
         <span
-          ><b>{{ load.stops }}</b> stop{{ load.stops === 1 ? '' : 's' }}</span
+          ><span class="day-load-dot day-load-dot--visit"></span
+          >{{ t('day.facts.atPlaces', { time: fmtMin(load.visitMin) })
+          }}<span v-if="load.untimed" class="text-subtle">{{
+            t('day.facts.withoutTime', { count: load.untimed })
+          }}</span></span
         >
         <span
-          ><span class="day-load-dot day-load-dot--visit"></span>{{ fmtMin(load.visitMin) }} at
-          places<span v-if="load.untimed" class="text-subtle">
-            · {{ load.untimed }} without a time</span
-          ></span
-        >
-        <span
-          ><span class="day-load-dot day-load-dot--travel"></span>{{ fmtMin(load.travelMin) }} on
-          the move</span
+          ><span class="day-load-dot day-load-dot--travel"></span
+          >{{ t('day.facts.onTheMove', { time: fmtMin(load.travelMin) }) }}</span
         >
       </div>
     </div>
@@ -25,7 +24,7 @@
     <!-- Overnight stay — only when the plan does not show it already: a
          hotel's own row or an overnight flight says where the night is. -->
     <div v-if="!nightInPlan" class="fact">
-      <i class="pi pi-moon fact-icon" title="Overnight"></i>
+      <i class="pi pi-moon fact-icon" :title="t('day.facts.overnight')"></i>
 
       <!-- Not editing -->
       <div v-if="!editingOvernight">
@@ -59,7 +58,7 @@
               {{ linkedBooking.name
               }}{{ linkedBooking.accommodationCity ? ' · ' + linkedBooking.accommodationCity : '' }}
             </TfBadge>
-            <TfTooltip text="Unlink booking">
+            <TfTooltip :text="t('day.facts.unlinkBooking')">
               <button
                 style="
                   background: none;
@@ -116,7 +115,7 @@
                     margin-top: 2px;
                   "
                 >
-                  {{ overnightSuggestion.accommodationCity }} · from booking
+                  {{ t('day.facts.fromBooking', { city: overnightSuggestion.accommodationCity }) }}
                 </div>
               </div>
             </button>
@@ -132,7 +131,7 @@
                 overnightDraft = '';
               "
             >
-              or enter manually...
+              {{ t('day.facts.orManually') }}
             </div>
           </div>
           <!-- No suggestion -->
@@ -149,7 +148,7 @@
                 font: var(--fw-regular) 14px/1.2 var(--font-sans);
                 color: var(--text-secondary);
               "
-              >Not set — click to add</span
+              >{{ t('day.facts.notSet') }}</span
             >
           </div>
         </template>
@@ -159,7 +158,7 @@
       <div v-else style="display: flex; gap: 6px; align-items: center">
         <TfInput
           v-model="overnightDraft"
-          placeholder="e.g. Friend's apartment, Airbnb..."
+          :placeholder="t('day.facts.overnightPlaceholder')"
           style="flex: 1"
           @keyup.enter="saveOvernightManual"
           @keyup.escape="editingOvernight = false"
@@ -177,7 +176,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { api, formatMinutes as fmtMin } from '@tripyfull/core';
+import { api, formatMinutes as fmtMin, t } from '@tripyfull/core';
 import { TfBadge, TfIconButton, TfInput, TfTooltip, toast } from '@tripyfull/ui';
 
 const props = defineProps({
@@ -231,7 +230,7 @@ const saveOvernightManual = async () => {
     emit('updated', res.data);
     editingOvernight.value = false;
   } catch {
-    toast.danger('Error', 'Failed to update overnight');
+    toast.danger(t('common.error'), t('day.facts.overnightFailed'));
   }
 };
 
@@ -247,7 +246,7 @@ const applyOvernightSuggestion = async () => {
     });
     emit('updated', res.data);
   } catch {
-    toast.danger('Error', 'Failed to link booking');
+    toast.danger(t('common.error'), t('day.facts.linkFailed'));
   }
 };
 
@@ -257,7 +256,7 @@ const unlinkBooking = async () => {
     const res = await api.patch(`/api/days/${props.dayId}`, { clearLinkedBooking: true });
     emit('updated', res.data);
   } catch {
-    toast.danger('Error', 'Failed to unlink');
+    toast.danger(t('common.error'), t('day.facts.unlinkFailed'));
   }
 };
 </script>

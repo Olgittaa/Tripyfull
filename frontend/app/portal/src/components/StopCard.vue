@@ -9,17 +9,19 @@
         <div class="stop-title-row">
           <span class="stop-name">{{ activity.name }}</span>
           <TfBadge v-if="activity.type" tone="neutral" variant="soft">{{
-            typeLabel(activity.type)
+            activityTypeLabel(activity.type)
           }}</TfBadge>
-          <TfBadge v-if="activity.needsBooking" tone="gold" variant="soft" dot>Book ahead</TfBadge>
+          <TfBadge v-if="activity.needsBooking" tone="gold" variant="soft" dot>{{
+            t('day.card.bookAhead')
+          }}</TfBadge>
           <!-- Written by the booking sync, which owns it: the next
                    run rewrites it, so edits here do not survive. -->
           <TfBadge
             v-if="activity.fromBooking"
             tone="success"
             variant="soft"
-            v-tooltip="'From a booking — rewritten when you update the plan'"
-            >Booked</TfBadge
+            v-tooltip="t('day.card.bookedHint')"
+            >{{ t('day.card.booked') }}</TfBadge
           >
         </div>
         <div
@@ -51,7 +53,7 @@
             {{ activity.placeName }}
           </span>
           <span v-if="mapNumber" class="onmap-pill">
-            <span class="onmap-dot">{{ mapNumber }}</span> on map
+            <span class="onmap-dot">{{ mapNumber }}</span> {{ t('day.card.onMap') }}
           </span>
         </div>
         <div
@@ -78,7 +80,8 @@
 
 <script setup>
 import { TfBadge, TfCard } from '@tripyfull/ui';
-import { catStyle, stopIcon, typeLabel } from '@/plan/activityTypes.js';
+import { catStyle, stopIcon } from '@/plan/activityTypes.js';
+import { activityTypeLabel, t } from '@tripyfull/core';
 
 defineProps({
   activity: { type: Object, required: true },

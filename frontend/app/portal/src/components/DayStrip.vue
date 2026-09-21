@@ -32,24 +32,24 @@
         <i class="pi pi-times"></i>
       </span>
       <div class="day-picker-label">R{{ i + 1 }}</div>
-      <div class="day-picker-date">reserve</div>
-      <div class="day-picker-note">{{ d.city || 'no date' }}</div>
+      <div class="day-picker-date">{{ t('day.strip.reserve') }}</div>
+      <div class="day-picker-note">{{ d.city || t('day.strip.noDate') }}</div>
     </button>
     <button
       class="day-picker-add"
-      v-tooltip="'Add a buffer day outside the trip dates'"
+      v-tooltip="t('day.strip.addBuffer')"
       :disabled="adding"
       @click="$emit('add')"
     >
       <i class="pi pi-plus"></i>
-      <span>Buffer</span>
+      <span>{{ t('day.strip.buffer') }}</span>
     </button>
   </div>
 </template>
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue';
-import { formatDayDate } from '@tripyfull/core';
+import { formatDayDate, t } from '@tripyfull/core';
 
 const props = defineProps({
   /** All of the trip's days, dated and reserve. */

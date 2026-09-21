@@ -1,6 +1,6 @@
 <template>
   <!-- Phones only (CSS): previous · day · next, then the map and "add", within a thumb's reach. -->
-  <nav class="day-dock" aria-label="Day controls">
+  <nav class="day-dock" :aria-label="t('day.controls')">
     <button
       type="button"
       class="dock-btn"
@@ -47,7 +47,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { formatDayDate } from '@tripyfull/core';
+import { formatDayDate, t } from '@tripyfull/core';
 
 const props = defineProps({
   day: { type: Object, default: null },
@@ -63,8 +63,8 @@ defineEmits(['prev', 'next', 'add', 'update:mapOpen']);
 
 const title = computed(() =>
   props.day && !props.day.date
-    ? `Reserve ${props.reserveIndex}`
-    : `Day ${props.day?.dayNumber ?? ''}`,
+    ? t('day.reserveN', { n: props.reserveIndex })
+    : t('overview.dayN', { n: props.day?.dayNumber ?? '' }),
 );
 </script>
 

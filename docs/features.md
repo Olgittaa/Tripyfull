@@ -32,9 +32,11 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   moment it is saved and wherever that account signs in; before a sign-in the app speaks the
   browser's language, as far as it can. Dates follow the language ("10 Dec", "10. Dez.",
   "12月10日"), plurals too. Scripts the house fonts cannot draw get a Noto companion. Translated
-  so far: the shell, sign-in, the trips list, settings, the trip overview and the design
-  system's own words; the other screens follow, one at a time, and the printed book keeps English until a trip can name
-  its client's language. Arabic reads right to left within its lines but the layout is not yet
+  so far: the shell, sign-in, the trips list, settings, the trip overview, the day with its
+  stop drawer and route map, and the design system's own words — including the names of stop
+  and place kinds and of the ways between stops; the other screens follow, one at a time, and
+  the printed book keeps English until a trip can name its client's language. Words a booking
+  writes into the plan ("Arrive · …", "Check in · …") are the booking's and stay as written. Arabic reads right to left within its lines but the layout is not yet
   mirrored. The screen also offers region and date & time formats; they are stored on the
   account and **nothing reads them yet** (see `../BUGS.md`).
   The currency shows in the top bar, and the account's settings are re-read when the app starts,

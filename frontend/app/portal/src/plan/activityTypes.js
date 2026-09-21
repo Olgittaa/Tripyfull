@@ -1,20 +1,8 @@
 import { MODE_EMOJI } from '@tripyfull/core';
 
-/** What kind of stop it is: the list the type picker offers, and how each kind is drawn. */
-export const ACTIVITY_TYPES = [
-  { label: 'Sightseeing', value: 'SIGHTSEEING' },
-  { label: 'Beach', value: 'BEACH' },
-  { label: 'Nature', value: 'NATURE' },
-  { label: 'Neighborhood', value: 'NEIGHBORHOOD' },
-  { label: 'Restaurant', value: 'RESTAURANT' },
-  { label: 'Meal stop', value: 'MEAL_STOP' },
-  { label: 'Shopping', value: 'SHOPPING' },
-  { label: 'Transport', value: 'TRANSPORT' },
-  { label: 'Hotel', value: 'ACCOMMODATION' },
-  { label: 'Other', value: 'OTHER' },
-];
-
-export const typeLabel = (t) => ACTIVITY_TYPES.find((o) => o.value === t)?.label ?? t ?? '';
+// How each kind of stop is drawn. The kinds themselves, and their names in the
+// app's language, are core's (ACTIVITY_TYPES, activityTypeLabel) — this module
+// stays free of Vue and of words.
 
 export const typeIcon = (t) =>
   ({

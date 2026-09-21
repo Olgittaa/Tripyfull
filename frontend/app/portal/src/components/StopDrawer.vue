@@ -1,13 +1,15 @@
 <template>
   <TfDrawer
     v-model="open"
-    :title="isBookingStop ? 'From a booking' : editingActivity ? 'Edit stop' : 'New stop'"
-    :eyebrow="day ? `Day ${day.dayNumber} · ${day.city || ''}` : ''"
+    :title="
+      isBookingStop ? t('stop.fromBooking') : editingActivity ? t('stop.edit') : t('stop.new')
+    "
+    :eyebrow="day ? t('stop.eyebrow', { n: day.dayNumber, city: day.city || '' }) : ''"
   >
     <!-- A stop written by the booking sync belongs to its booking: the next
        "Update plan" rewrites it, so there is nothing to edit here. -->
     <template v-if="isBookingStop">
-      <TfDrawerSection label="Stop">
+      <TfDrawerSection :label="t('stop.section')">
         <div class="booking-stop">
           <div class="booking-stop-name">{{ editingActivity.name }}</div>
           <div v-if="editingActivity.startTime" class="booking-stop-line">
@@ -24,22 +26,21 @@
           </div>
         </div>
         <p class="hint" style="margin: 4px 0 0">
-          This stop comes from a booking. Times, names and places are taken from there — change the
-          booking and press <strong>Update plan</strong> on the Bookings page; editing it here would
-          be undone by the next update.
+          {{ t('stop.bookingHint1') }} <strong>{{ t('stop.updatePlan') }}</strong>
+          {{ t('stop.bookingHint2') }}
         </p>
       </TfDrawerSection>
     </template>
 
     <form v-else @submit.prevent="saveActivity">
       <!-- What: a name is enough; a place adds the map pin and the library's facts -->
-      <TfDrawerSection label="What">
+      <TfDrawerSection :label="t('stop.what')">
         <TfInput
           v-model="form.name"
-          label="Name"
+          :label="t('stop.name')"
           required
-          :error="attempted && !form.name.trim() ? 'Say what the stop is' : ''"
-          placeholder="e.g. White Temple, lunch at the market, beach afternoon"
+          :error="attempted && !form.name.trim() ? t('stop.nameError') : ''"
+          :placeholder="t('stop.namePlaceholder')"
           class="w-full"
         />
 
@@ -47,9 +48,9 @@
           <i class="pi pi-bookmark" style="color: var(--accent)"></i>
           <span class="linked-name">{{ linkedPlaceName }}</span>
           <button type="button" class="link-edit" @click="goEditPlace">
-            Edit place <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
+            {{ t('stop.editPlace') }} <i class="pi pi-arrow-up-right" style="font-size: 10px"></i>
           </button>
-          <TfTooltip text="Unlink the place (the stop stays)">
+          <TfTooltip :text="t('stop.unlinkPlace')">
             <button type="button" class="del-btn" @click="unlinkPlace">
               <i class="pi pi-times"></i>
             </button>
@@ -57,36 +58,39 @@
         </div>
         <template v-else>
           <TfSelect
-            label="Place"
+            :label="t('stop.place')"
             :modelValue="selectedPlaceLabel"
             @update:modelValue="onPlaceLabelPicked"
             :options="placeLabelOptions"
-            placeholder="Pick one of your places…"
-            helper="Optional. Links the stop to a place: it gets a pin on the map and its rating, time and notes."
+            :placeholder="t('stop.pickPlace')"
+            :helper="t('stop.placeHelper')"
             class="w-full"
           />
           <div v-if="FEATURES.geoPlaceSearch" class="field">
-            <label class="label">Not saved yet? Search a place or an address</label>
+            <label class="label">{{ t('stop.searchLabel') }}</label>
             <TfPlaceSearch
-              placeholder="A landmark, a café… or a street address"
+              :placeholder="t('stop.searchPlaceholder')"
               @select="onActivityGeoPicked"
             />
-            <span class="hint">Pins this stop on the map. Nothing is added to your places.</span>
+            <span class="hint">{{ t('stop.searchHint') }}</span>
             <!-- A venue (not a street or a town) can also go to the library, but only if asked. -->
             <TfCheckbox v-if="pickedVenue" v-model="saveVenueToPlaces" style="margin-top: 8px">
-              Also save “{{ pickedVenue.name || pickedVenue.displayName }}” to my places
+              {{ t('stop.alsoSave', { name: pickedVenue.name || pickedVenue.displayName }) }}
             </TfCheckbox>
           </div>
           <!-- When the map search draws a blank: a pin can still be placed by hand. -->
           <TfInput
             v-model="coordsText"
-            label="Coordinates"
-            placeholder="19.906, 99.835 — if the search can't find it"
-            :error="coordsText.trim() && !parsedCoords ? 'Two numbers: latitude, longitude' : ''"
+            :label="t('stop.coordinates')"
+            :placeholder="t('stop.coordsPlaceholder')"
+            :error="coordsText.trim() && !parsedCoords ? t('stop.coordsError') : ''"
             :helper="
               parsedCoords
-                ? `Pinned at ${parsedCoords.lat.toFixed(5)}, ${parsedCoords.lon.toFixed(5)}`
-                : 'Right-click a spot in Google Maps and copy what it shows.'
+                ? t('stop.pinnedAt', {
+                    lat: parsedCoords.lat.toFixed(5),
+                    lon: parsedCoords.lon.toFixed(5),
+                  })
+                : t('stop.coordsHelper')
             "
             class="w-full"
           />
@@ -95,33 +99,35 @@
         <BookingMap v-if="stopPreviewMarkers.length" :markers="stopPreviewMarkers" :height="160" />
 
         <TfSelect
-          label="Type"
+          :label="t('stop.type')"
           :modelValue="selectedTypeLabel"
           @update:modelValue="onTypeLabelPicked"
           :options="typeLabelOptions"
-          placeholder="Select type"
+          :placeholder="t('stop.selectType')"
           class="w-full"
         />
         <p v-if="!linkedPlace && form.address" class="stop-address">
           <i class="pi pi-map-marker"></i> {{ form.address }}
-          <button type="button" class="link-btn" @click="form.address = ''">clear</button>
+          <button type="button" class="link-btn" @click="form.address = ''">
+            {{ t('stop.clear') }}
+          </button>
         </p>
       </TfDrawerSection>
 
       <!-- When -->
-      <TfDrawerSection label="When">
+      <TfDrawerSection :label="t('stop.when')">
         <TfSelect
           v-if="editingActivity && moveDayLabels.length > 1"
-          label="Day"
+          :label="t('stop.day')"
           v-model="moveDayLabel"
           :options="moveDayLabels"
           class="w-full"
-          helper="Pick another day to move this stop there"
+          :helper="t('stop.moveHelper')"
         />
         <div class="field-pair">
           <TfTimePicker
             v-model="form.startTime"
-            label="Start"
+            :label="t('ui.start')"
             :placeholder="
               editingActivity && derivedTimes[editingActivity.id]
                 ? `≈ ${derivedTimes[editingActivity.id]}`
@@ -129,22 +135,22 @@
             "
             clearable
           />
-          <TfTimePicker v-model="form.endTime" label="End" placeholder="11:00" clearable />
+          <TfTimePicker v-model="form.endTime" :label="t('ui.end')" placeholder="11:00" clearable />
         </div>
       </TfDrawerSection>
 
       <!-- Details -->
-      <TfDrawerSection label="Details">
+      <TfDrawerSection :label="t('stop.details')">
         <div class="field-pair field-pair--wide">
           <TfNumberInput
             v-model="form.costEstimate"
             type="plain"
             :precision="2"
-            label="Cost estimate"
+            :label="t('stop.costEstimate')"
             class="w-full"
           />
           <TfSelect
-            label="Currency"
+            :label="t('trips.form.currency')"
             v-model="form.costCurrency"
             :options="currencyOptions"
             class="w-full"
@@ -176,43 +182,46 @@
               :style="fetchingCostRate ? 'animation:spin 1s linear infinite' : ''"
               style="font-size: 13px"
             ></i>
-            {{ fetchingCostRate ? '' : 'Update rate' }}
+            {{ fetchingCostRate ? '' : t('stop.updateRate') }}
           </TfButton>
         </div>
         <TfTextarea
-          label="Notes"
+          :label="t('stop.notes')"
           v-model="form.notes"
           :rows="4"
-          placeholder="What to see here, tickets, opening hours, what to watch out for"
+          :placeholder="t('stop.notesPlaceholder')"
           class="w-full"
         />
         <label class="save-place-toggle">
           <input type="checkbox" v-model="form.needsBooking" />
           <span
-            ><i class="pi pi-ticket" style="font-size: 13px"></i> Needs advance booking (tour, show,
-            popular spot)</span
+            ><i class="pi pi-ticket" style="font-size: 13px"></i> {{ t('stop.needsBooking') }}</span
           >
         </label>
         <!-- What you already wrote about this place in the library, so the day
            can be planned without leaving for the place editor. -->
         <div v-if="linkedPlace" class="linked-facts">
           <div class="linked-facts-head">
-            <span>From your places</span>
-            <button type="button" class="link-edit" @click="goEditPlace">Edit place</button>
+            <span>{{ t('stop.fromYourPlaces') }}</span>
+            <button type="button" class="link-edit" @click="goEditPlace">
+              {{ t('stop.editPlace') }}
+            </button>
           </div>
           <div class="linked-facts-row">
-            <span>Rating</span>
+            <span>{{ t('stop.rating') }}</span>
             <span class="linked-facts-val"
               >★ {{ linkedPlace.rating || 3 }}
-              <span class="text-subtle">{{ RATING_HINTS[linkedPlace.rating || 3] }}</span></span
+              <span class="text-subtle">{{ t(`rating.${linkedPlace.rating || 3}`) }}</span></span
             >
           </div>
           <div v-if="linkedPlace.visitMinutes" class="linked-facts-row">
-            <span>Time to visit</span>
-            <span class="linked-facts-val">{{ linkedPlace.visitMinutes }} min</span>
+            <span>{{ t('stop.timeToVisit') }}</span>
+            <span class="linked-facts-val">{{
+              t('stop.minutes', { count: linkedPlace.visitMinutes })
+            }}</span>
           </div>
           <div v-if="linkedPlace.ratingComment" class="linked-facts-row">
-            <span>Why this rating</span>
+            <span>{{ t('stop.whyRating') }}</span>
             <span class="linked-facts-val">{{ linkedPlace.ratingComment }}</span>
           </div>
           <p v-if="linkedPlace.description" class="linked-facts-desc">
@@ -224,20 +233,20 @@
     <template #footer>
       <template v-if="isBookingStop">
         <TfButton variant="secondary" @click="$router.push(`/trips/${tripId}/bookings`)">
-          <i class="pi pi-ticket" style="font-size: 13px"></i> Open bookings
+          <i class="pi pi-ticket" style="font-size: 13px"></i> {{ t('stop.openBookings') }}
         </TfButton>
         <span style="flex: 1"></span>
-        <TfButton variant="ghost" @click="confirmDelete(editingActivity)"
-          >Remove from this day</TfButton
-        >
+        <TfButton variant="ghost" @click="confirmDelete(editingActivity)">{{
+          t('stop.removeFromDay')
+        }}</TfButton>
       </template>
       <template v-else>
         <TfButton variant="primary" style="flex: 1" @click="saveActivity" :disabled="saving">
-          {{ saving ? 'Saving...' : editingActivity ? 'Save' : 'Add stop' }}
+          {{ saving ? t('settings.saving') : editingActivity ? t('common.save') : t('stop.add') }}
         </TfButton>
-        <TfButton v-if="editingActivity" variant="ghost" @click="confirmDelete(editingActivity)"
-          >Delete</TfButton
-        >
+        <TfButton v-if="editingActivity" variant="ghost" @click="confirmDelete(editingActivity)">{{
+          t('common.delete')
+        }}</TfButton>
       </template>
     </template>
   </TfDrawer>
@@ -246,7 +255,15 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { api, baseCurrency as accountCurrency, CURRENCIES, formatDayDate } from '@tripyfull/core';
+import {
+  api,
+  baseCurrency as accountCurrency,
+  CURRENCIES,
+  formatDayDate,
+  ACTIVITY_TYPES,
+  activityTypeLabel,
+  t,
+} from '@tripyfull/core';
 import {
   TfButton,
   TfCheckbox,
@@ -264,7 +281,7 @@ import {
 } from '@tripyfull/ui';
 import BookingMap from '@/components/BookingMap.vue';
 import { FEATURES } from '@/config.js';
-import { ACTIVITY_TYPES as typeOptions, placeToActivityType } from '@/plan/activityTypes.js';
+import { placeToActivityType } from '@/plan/activityTypes.js';
 
 /**
  * The stop editor: a new stop, an existing one, or one started from a saved
@@ -346,7 +363,10 @@ const fetchCostRate = async () => {
     costRate.value = res.data.rate;
   } catch {
     costRate.value = null;
-    toast.warning('Rate unavailable', `Could not fetch a rate for ${form.value.costCurrency}`);
+    toast.warning(
+      t('stop.rateUnavailable'),
+      t('stop.rateFailed', { currency: form.value.costCurrency }),
+    );
   } finally {
     fetchingCostRate.value = false;
   }
@@ -385,7 +405,7 @@ const isBookingStop = computed(() => !!editingActivity.value?.fromBooking);
 
 const linkedPlaceName = computed(() => {
   const p = props.places.find((x) => x.id === form.value.placeId);
-  return p?.name || form.value.name || 'Linked place';
+  return p?.name || form.value.name || t('stop.linkedPlace');
 });
 const unlinkPlace = () => {
   form.value.placeId = null;
@@ -470,24 +490,24 @@ const savePickedVenue = async () => {
     emit('place-added', place); // the library is the screen's to keep
     return place.id;
   } catch {
-    toast.warning('Place not saved', 'The stop is saved with its pin only');
+    toast.warning(t('stop.placeNotSaved'), t('stop.placeNotSavedMsg'));
     return null;
   }
 };
 
-// TfSelect works with string options; map label <-> type value.
-const typeLabelOptions = typeOptions.map((o) => o.label);
-const selectedTypeLabel = computed(
-  () => typeOptions.find((o) => o.value === form.value.type)?.label || '',
+// The picker works in words; labels follow the language, so they are computeds.
+const typeLabelOptions = computed(() => ACTIVITY_TYPES.map(activityTypeLabel));
+const selectedTypeLabel = computed(() =>
+  form.value.type ? activityTypeLabel(form.value.type) : '',
 );
 const onTypeLabelPicked = (label) => {
-  form.value.type = typeOptions.find((o) => o.label === label)?.value ?? null;
+  form.value.type = ACTIVITY_TYPES.find((v) => activityTypeLabel(v) === label) ?? null;
 };
 
 const moveTargetDayId = ref(null);
 const moveDayOptions = computed(() =>
   props.days.map((d) => ({
-    label: `Day ${d.dayNumber} · ${formatDayDate(d.date)}`,
+    label: t('day.label', { n: d.dayNumber, date: formatDayDate(d.date) }),
     value: d.id,
   })),
 );
@@ -498,14 +518,6 @@ const moveDayLabel = computed({
     moveTargetDayId.value = moveDayOptions.value.find((o) => o.label === label)?.value ?? null;
   },
 });
-
-const RATING_HINTS = {
-  5: 'worth the whole trip',
-  4: 'big detour OK',
-  3: 'small detour',
-  2: 'only if on the way',
-  1: 'maybe skip',
-};
 
 const reset = (values) => {
   form.value = { ...emptyForm, costCurrency: tripCurrency.value, ...values };
@@ -586,17 +598,17 @@ const saveActivity = async () => {
     if (editingActivity.value) {
       const res = await api.patch(`/api/activities/${editingActivity.value.id}`, payload);
       const moved = !!moveTargetDayId.value && moveTargetDayId.value !== props.dayId;
-      if (moved) toast.success('Moved', `Activity moved to ${moveDayLabel.value}`);
-      else toast.success('Updated', 'Activity updated');
+      if (moved) toast.success(t('stop.moved'), t('stop.movedMsg', { day: moveDayLabel.value }));
+      else toast.success(t('stop.updated'), t('stop.updatedMsg'));
       emit('saved', { activity: res.data, created: false, moved });
     } else {
       const res = await api.post(`/api/days/${props.dayId}/activities`, payload);
-      toast.success('Added', `"${res.data.name}" added`);
+      toast.success(t('stop.added'), t('stop.addedMsg', { name: res.data.name }));
       emit('saved', { activity: res.data, created: true, moved: false });
     }
     open.value = false;
   } catch {
-    toast.danger('Error', 'Failed to save activity');
+    toast.danger(t('common.error'), t('stop.saveFailed'));
   } finally {
     saving.value = false;
   }
@@ -604,20 +616,20 @@ const saveActivity = async () => {
 
 const confirmDelete = (a) => {
   confirm({
-    title: 'Confirm',
-    message: `Delete "${a.name}"?`,
+    title: t('common.confirm'),
+    message: t('stop.deleteMsg', { name: a.name }),
     tone: 'danger',
-    confirmLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    confirmLabel: t('common.delete'),
+    cancelLabel: t('common.cancel'),
   }).then(async (ok) => {
     if (!ok) return;
     try {
       await api.delete(`/api/activities/${a.id}`);
       open.value = false;
-      toast.success('Deleted', 'Activity deleted');
+      toast.success(t('common.deleted'), t('stop.deletedMsg'));
       emit('deleted', a);
     } catch {
-      toast.danger('Error', 'Failed to delete');
+      toast.danger(t('common.error'), t('stop.deleteFailed'));
     }
   });
 };
