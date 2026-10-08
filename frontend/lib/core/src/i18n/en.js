@@ -373,6 +373,9 @@ export default {
     'This stop comes from a booking. Times, names and places are taken from there — change the booking and press',
   'stop.updatePlan': 'Update plan',
   'stop.bookingHint2': 'on the Bookings page; editing it here would be undone by the next update.',
+  'stop.hotelTime': 'Your time this day',
+  'stop.hotelTimeHint':
+    "The hotel's own hours stay in the note. This is when you plan to leave — or arrive — on this day, and {update} keeps it.",
   'stop.what': 'What',
   'stop.name': 'Name',
   'stop.nameError': 'Say what the stop is',

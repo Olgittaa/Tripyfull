@@ -369,6 +369,9 @@ export default {
   'stop.updatePlan': 'Actualizar plan',
   'stop.bookingHint2':
     'en la página Reservas; editarla aquí se perdería en la próxima actualización.',
+  'stop.hotelTime': 'Tu hora este día',
+  'stop.hotelTimeHint':
+    'El horario del hotel queda en la nota. Aquí va cuándo piensas salir —o llegar— este día, y «{update}» la conserva.',
   'stop.what': 'Qué',
   'stop.name': 'Nombre',
   'stop.nameError': 'Di qué es la parada',

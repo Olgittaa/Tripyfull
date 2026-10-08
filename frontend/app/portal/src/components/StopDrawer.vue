@@ -7,7 +7,8 @@
     :eyebrow="day ? t('stop.eyebrow', { n: day.dayNumber, city: day.city || '' }) : ''"
   >
     <!-- A stop written by the booking sync belongs to its booking: the next
-       "Update plan" rewrites it, so there is nothing to edit here. -->
+       "Update plan" rewrites it. Only a hotel stop's own time is yours to set —
+       leaving at 7:30 on the last morning — and the update keeps it. -->
     <template v-if="isBookingStop">
       <TfDrawerSection :label="t('stop.section')">
         <div class="booking-stop">
@@ -28,6 +29,17 @@
         <p class="hint" style="margin: 4px 0 0">
           {{ t('stop.bookingHint1') }} <strong>{{ t('stop.updatePlan') }}</strong>
           {{ t('stop.bookingHint2') }}
+        </p>
+      </TfDrawerSection>
+      <TfDrawerSection v-if="isHotelStop" :label="t('stop.when')">
+        <TfTimePicker
+          v-model="form.startTime"
+          :label="t('stop.hotelTime')"
+          placeholder="07:30"
+          clearable
+        />
+        <p class="hint" style="margin: 4px 0 0">
+          {{ t('stop.hotelTimeHint', { update: t('stop.updatePlan') }) }}
         </p>
       </TfDrawerSection>
     </template>
@@ -234,6 +246,9 @@
     </form>
     <template #footer>
       <template v-if="isBookingStop">
+        <TfButton v-if="isHotelStop" variant="primary" @click="saveHotelTime" :disabled="saving">
+          {{ saving ? t('settings.saving') : t('common.save') }}
+        </TfButton>
         <TfButton variant="secondary" @click="$router.push(`/trips/${tripId}/bookings`)">
           <i class="pi pi-ticket" style="font-size: 13px"></i> {{ t('stop.openBookings') }}
         </TfButton>
@@ -407,6 +422,9 @@ const stopPreviewMarkers = computed(() => {
 const attempted = ref(false);
 /** A stop the booking sync wrote; it is shown, not edited. */
 const isBookingStop = computed(() => !!editingActivity.value?.fromBooking);
+const isHotelStop = computed(
+  () => isBookingStop.value && editingActivity.value?.type === 'ACCOMMODATION',
+);
 
 const linkedPlaceName = computed(() => {
   const p = props.places.find((x) => x.id === form.value.placeId);
@@ -613,6 +631,25 @@ const saveActivity = async () => {
       toast.success(t('stop.added'), t('stop.addedMsg', { name: res.data.name }));
       emit('saved', { activity: res.data, created: true, moved: false });
     }
+    open.value = false;
+  } catch {
+    toast.danger(t('common.error'), t('stop.saveFailed'));
+  } finally {
+    saving.value = false;
+  }
+};
+
+/** A hotel stop from a booking: only its time is set here, and nothing else is sent. */
+const saveHotelTime = async () => {
+  saving.value = true;
+  try {
+    const res = await api.patch(`/api/activities/${editingActivity.value.id}`, {
+      startTime: form.value.startTime || null,
+      endTime: null,
+      replaceAll: true,
+    });
+    toast.success(t('stop.updated'), t('stop.updatedMsg'));
+    emit('saved', { activity: res.data, created: false, moved: false });
     open.value = false;
   } catch {
     toast.danger(t('common.error'), t('stop.saveFailed'));

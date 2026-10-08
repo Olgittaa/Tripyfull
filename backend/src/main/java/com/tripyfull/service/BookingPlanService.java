@@ -84,6 +84,7 @@ public class BookingPlanService {
         }
 
         List<Activity> stale = activityRepository.findByDayTripIdAndSourceBookingIdIsNotNull(tripId);
+        Map<String, LocalTime> ownTimes = hotelTimes(stale);
         activityRepository.deleteAll(stale);
         activityRepository.flush();
 
@@ -98,6 +99,8 @@ public class BookingPlanService {
                 continue;
             }
             for (Planned p : stops) {
+                LocalTime own = ownTimes.get(hotelKey(p.activity));
+                if (own != null) p.activity.setStartTime(own);
                 perDay.computeIfAbsent(p.day.getId(), k -> new ArrayList<>()).add(p);
             }
         }
@@ -116,6 +119,26 @@ public class BookingPlanService {
 
         return new PlanSyncResult(created, stale.size(), perDay.size(), skipped,
                 activityRepository.countByDayTripIdAndSourceBookingIdIsNotNull(tripId));
+    }
+
+    /**
+     * The times set by hand on hotel stops — leaving at 7:30 on the last
+     * morning. The hotel's own hours are only a note, so a clock on such a stop
+     * is always the traveller's, and the rewrite gives it back to the same stop.
+     */
+    static Map<String, LocalTime> hotelTimes(List<Activity> stale) {
+        Map<String, LocalTime> out = new HashMap<>();
+        for (Activity a : stale) {
+            if (a.getType() == ActivityType.ACCOMMODATION && a.getStartTime() != null) {
+                out.put(hotelKey(a), a.getStartTime());
+            }
+        }
+        return out;
+    }
+
+    /** The same booking, the same day, the same kind of stop (check-out, overnight, check-in). */
+    static String hotelKey(Activity a) {
+        return a.getSourceBookingId() + "|" + a.getDay().getId() + "|" + a.getName();
     }
 
     /** The stops one booking contributes, already attached to their days. */

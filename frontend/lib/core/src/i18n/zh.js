@@ -339,6 +339,9 @@ export default {
   'stop.bookingHint1': '此站点来自预订。时间、名称和地点均取自预订——请修改预订，然后在“预订”页点击',
   'stop.updatePlan': '更新计划',
   'stop.bookingHint2': '；在此处编辑会在下次更新时被撤销。',
+  'stop.hotelTime': '当天你的时间',
+  'stop.hotelTimeHint':
+    '酒店规定的时间保留在备注里。这里填写你当天打算离开（或到达）的时间，“{update}”会保留它。',
   'stop.what': '内容',
   'stop.name': '名称',
   'stop.nameError': '请写明这是什么站点',

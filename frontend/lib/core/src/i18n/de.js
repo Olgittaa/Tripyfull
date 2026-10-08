@@ -372,6 +372,9 @@ export default {
   'stop.updatePlan': 'Plan aktualisieren',
   'stop.bookingHint2':
     'auf der Seite „Buchungen“; eine Änderung hier würde beim nächsten Aktualisieren verloren gehen.',
+  'stop.hotelTime': 'Ihre Uhrzeit an diesem Tag',
+  'stop.hotelTimeHint':
+    'Die Zeiten des Hotels bleiben in der Notiz. Hier steht, wann Sie an diesem Tag abreisen – oder ankommen; „{update}“ behält sie.',
   'stop.what': 'Was',
   'stop.name': 'Name',
   'stop.nameError': 'Sag, was der Stopp ist',

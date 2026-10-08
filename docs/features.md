@@ -173,7 +173,9 @@ The core screen: the day's list on the left, its route on the right.
 - A linked place shows its rating, why, time to visit and description; *Edit place* jumps to
   the library.
 - A stop written from a booking is shown read-only with a link to the booking — the next
-  *Update plan* would overwrite edits.
+  *Update plan* would overwrite edits. One exception: a hotel stop takes **your time that
+  day** (leaving at 7:30 on the last morning). The hotel's own check-in / check-out hours stay
+  in its note, and *Update plan* gives the time back to the same stop on the same day.
 
 ### The route aside (right column / phone sheet)
 - Leaflet map: numbered pins for the day's stops, the legs drawn as routed lines (straight
