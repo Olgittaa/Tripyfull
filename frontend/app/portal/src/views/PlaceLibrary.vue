@@ -676,6 +676,8 @@
                   <TfPlaceSearch
                     v-if="FEATURES.geoPlaceSearch"
                     v-model="form.address"
+                    :near="searchNear"
+                    :country="searchCountry"
                     :placeholder="t('places.addressSearch')"
                     @select="onAddressSelect"
                   />
@@ -1077,6 +1079,13 @@ const selectedTripId = ref(null); // narrow to one trip's own list
 // /trips/:tripId/places is one trip's list (grouped by folders created there).
 const tripMode = computed(() => !!route.params.tripId);
 const routeTripId = computed(() => route.params.tripId || null);
+/* Where the open trip is, for the place searches: its destination and its first
+   country. Outside a trip the searches lean nowhere. */
+const scopeTripId = computed(() => routeTripId.value || selectedTripId.value || null);
+const searchNear = computed(
+  () => trips.value.find((trip) => trip.id === scopeTripId.value)?.destination || '',
+);
+const searchCountry = computed(() => (routeTripId.value ? tripCountryCodes.value[0] || '' : ''));
 const tripTitle = computed(
   () => trips.value.find((trip) => trip.id === routeTripId.value)?.title || '',
 );
@@ -1625,7 +1634,15 @@ const runFind = async () => {
   finding.value = true;
   try {
     try {
-      findGoogle.value = (await api.get('/api/geo/places', { params: { q } })).data;
+      findGoogle.value = (
+        await api.get('/api/geo/places', {
+          params: {
+            q,
+            near: searchNear.value || undefined,
+            country: searchCountry.value || undefined,
+          },
+        })
+      ).data;
     } catch {
       findGoogle.value = [];
     }

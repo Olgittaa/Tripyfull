@@ -53,9 +53,14 @@ public class GeoController {
 
 
     @GetMapping("/places")
-    public List<Map<String, Object>> searchPlaces(@RequestParam(defaultValue = "") String q) {
+    public List<Map<String, Object>> searchPlaces(
+            @RequestParam(defaultValue = "") String q,
+            // Where the trip is — a city ("Chiang Rai"), a destination ("Thailand"),
+            // and/or a country code. Optional: it only tilts the ranking.
+            @RequestParam(required = false) String near,
+            @RequestParam(required = false) String country) {
         if (q.length() < 2) return List.of();
-        return geoSearchService.searchPlaces(q).stream()
+        return geoSearchService.searchPlaces(q, near, country).stream()
                 .map(p -> {
                     Map<String, Object> m = new java.util.LinkedHashMap<>();
                     m.put("name", p.name());

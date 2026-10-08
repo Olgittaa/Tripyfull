@@ -69,6 +69,7 @@
           <div v-if="FEATURES.geoPlaceSearch" class="field">
             <label class="label">{{ t('stop.searchLabel') }}</label>
             <TfPlaceSearch
+              :near="near"
               :placeholder="t('stop.searchPlaceholder')"
               @select="onActivityGeoPicked"
             />
@@ -301,6 +302,8 @@ const props = defineProps({
   derivedTimes: { type: Object, default: () => ({}) },
   /** The trip's currency: what a cost in another one is converted into. */
   currency: { type: String, default: '' },
+  /** Where the day is (its city or the trip's destination): the place search leans there. */
+  near: { type: String, default: '' },
 });
 const emit = defineEmits(['saved', 'deleted', 'place-added']);
 

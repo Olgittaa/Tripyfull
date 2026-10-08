@@ -27,4 +27,7 @@ public interface CityRepository extends JpaRepository<City, Long> {
     List<City> searchByCountry(String q, String countryCode, org.springframework.data.domain.Pageable pageable);
 
     List<City> findByCountryCodeOrderByPopularDescNameAsc(String countryCode);
+
+    /** The country's largest city: where a search leans when all it knows is the country. */
+    java.util.Optional<City> findFirstByCountryCodeOrderByPopulationDesc(String countryCode);
 }

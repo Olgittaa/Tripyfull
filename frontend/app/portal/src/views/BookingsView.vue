@@ -279,6 +279,7 @@
                         v-if="FEATURES.geoPlaceSearch"
                         v-model="form.fromPlace"
                         :error="fieldError('fromPlace')"
+                        :near="tripDestination"
                         :placeholder="
                           form.transportMode === 'FLIGHT'
                             ? t('bookings.airportOrCityFrom')
@@ -308,6 +309,7 @@
                         v-if="FEATURES.geoPlaceSearch"
                         v-model="form.toPlace"
                         :error="fieldError('toPlace')"
+                        :near="tripDestination"
                         :placeholder="
                           form.transportMode === 'FLIGHT'
                             ? t('bookings.airportOrCityTo')
@@ -433,6 +435,7 @@
                     <label class="label">{{ t('bookings.findProperty') }}</label>
                     <TfPlaceSearch
                       v-model="hotelSearchText"
+                      :near="form.accommodationCity || tripDestination"
                       :placeholder="t('bookings.propertyPlaceholder')"
                       @select="onHotelSelect"
                     />
@@ -546,6 +549,7 @@
                       v-if="FEATURES.geoPlaceSearch"
                       v-model="form.fromPlace"
                       :placeholder="t('bookings.wherePlaceholder')"
+                      :near="tripDestination"
                       @select="onActivityLocationSelect"
                     />
                     <input
@@ -960,6 +964,8 @@ const route = useRoute();
 
 const tripId = route.params.tripId;
 const tripTitle = ref('');
+// Where the trip is: every place search in the drawer leans towards it.
+const tripDestination = ref('');
 const tripStartDate = ref(null);
 // A booking's stored rate is what the budget converts with, so it must be a rate
 // into the trip's currency — not into whatever the account happens to use.
@@ -1929,6 +1935,7 @@ onMounted(async () => {
       loadPlanCount(),
     ]);
     tripTitle.value = tripRes.data.title;
+    tripDestination.value = tripRes.data.destination || '';
     tripCurrency.value = tripRes.data.baseCurrency || null;
     tripStartDate.value = tripRes.data.startDate;
     tripEndDate.value = tripRes.data.endDate;

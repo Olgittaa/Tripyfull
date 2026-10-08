@@ -83,6 +83,11 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   placeholder: { type: String, default: '' }, // empty: the app's language decides
   error: String,
+  // Where the trip is: a city or destination name, and/or a country code. The
+  // server turns it into a point the free geocoder leans towards — a hint for
+  // the ranking, never a filter.
+  near: { type: String, default: '' },
+  country: { type: String, default: '' },
 });
 
 const emit = defineEmits(['update:modelValue', 'select']);
@@ -137,7 +142,9 @@ const doSearch = async (q) => {
   const seq = ++searchSeq;
   searching.value = true;
   try {
-    const res = await api.get('/api/geo/places', { params: { q } });
+    const res = await api.get('/api/geo/places', {
+      params: { q, near: props.near || undefined, country: props.country || undefined },
+    });
     if (seq !== searchSeq) return; // a newer search superseded this one
     results.value = res.data;
     open.value = true;

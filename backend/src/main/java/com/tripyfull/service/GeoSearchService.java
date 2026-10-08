@@ -157,8 +157,58 @@ public class GeoSearchService {
         return results.isEmpty() ? null : results.get(0);
     }
 
-    @SuppressWarnings("unchecked")
     public List<PlaceResult> searchPlaces(String query) {
+        return searchPlaces(query, null, null);
+    }
+
+    /**
+     * Where the trip is, as a point the free geocoder can lean towards. Photon
+     * ranks by name alone otherwise, and a famous name is famous in many places:
+     * "Sagrada Familia" came back as towns in Brazil and Chile. The lean is soft —
+     * Frankfurt Airport is still found from a trip to Thailand — so a hint can
+     * only help the ranking, never hide a place.
+     *
+     * A destination that is exactly a country's name leans on that country's
+     * largest city; otherwise a city whose name is, or starts with, what the trip
+     * says wins; a country code alone falls back to its largest city. Containment
+     * is not enough for a city: "Spain" is inside "Port of Spain", which sent a
+     * trip to Spain leaning on Trinidad.
+     */
+    double[] biasFor(String near, String country) {
+        String code = country == null || country.isBlank() ? null : country.trim().toUpperCase(Locale.ROOT);
+        // A day's city may name two ("Tokyo, Kamakura"): the first one is where it is.
+        String place = near == null ? "" : near.split(",")[0].trim();
+        if (place.length() >= 2) {
+            String wanted = place.toLowerCase(Locale.ROOT);
+            String named = countryRepository.search(place).stream()
+                    .filter(c -> c.getName() != null && c.getName().equalsIgnoreCase(place))
+                    .map(Country::getCode)
+                    .findFirst().orElse(null);
+            if (named != null) {
+                if (code == null) code = named;
+            } else {
+                var one = org.springframework.data.domain.PageRequest.of(0, 1);
+                List<City> cities = code != null
+                        ? cityRepository.searchByCountry(place, code, one)
+                        : cityRepository.search(place, one);
+                if (!cities.isEmpty()) {
+                    City c = cities.get(0);
+                    String name = c.getName() == null ? "" : c.getName().toLowerCase(Locale.ROOT);
+                    if (name.startsWith(wanted) && c.getLatitude() != null && c.getLongitude() != null) {
+                        return new double[] {c.getLatitude(), c.getLongitude()};
+                    }
+                }
+            }
+        }
+        if (code == null) return null;
+        return cityRepository.findFirstByCountryCodeOrderByPopulationDesc(code)
+                .filter(c -> c.getLatitude() != null && c.getLongitude() != null)
+                .map(c -> new double[] {c.getLatitude(), c.getLongitude()})
+                .orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<PlaceResult> searchPlaces(String query, String near, String country) {
         if (query == null || query.length() < 2) return List.of();
         // Google first when configured; Photon stays as the free fallback.
         if (googlePlaces.isEnabled()) {
@@ -170,8 +220,11 @@ public class GeoSearchService {
             }
         }
         try {
-            Map<String, Object> body = restClient.get()
-                    .uri("https://photon.komoot.io/api?q={q}&limit=8&lang=en", query)
+            double[] bias = biasFor(near, country);
+            Map<String, Object> body = (bias == null
+                    ? restClient.get().uri("https://photon.komoot.io/api?q={q}&limit=8&lang=en", query)
+                    : restClient.get().uri("https://photon.komoot.io/api?q={q}&limit=8&lang=en&lat={lat}&lon={lon}",
+                            query, bias[0], bias[1]))
                     .retrieve()
                     .body(MAP_TYPE);
             List<Map<String, Object>> features = body != null ? (List<Map<String, Object>>) body.get("features") : null;

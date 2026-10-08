@@ -60,6 +60,13 @@ places. It runs on a laptop, a tablet and a phone; every screen folds to a phone
   sidebar with the trip's name and its sections — Overview, Itinerary, Map, Trip places,
   Bookings, To-do, Budget. The sidebar collapses to icons (remembered per browser); on a
   phone it becomes a drawer behind a hamburger, and the top bar shows the trip's name.
+- **Place search leans towards the trip**: every place search (the stop drawer, the place
+  drawer and the Find dialog, the booking drawer's from/to, stay and activity fields) tells
+  the server where the trip is — the day's city, the stay's city or the trip's destination,
+  and the trip's country where known. The server turns that into a point from its own city
+  table and the free geocoder (Photon) leans its ranking towards it: "Sagrada Familia" on a
+  trip to Spain is the basilica, not a town in Chile. The lean only orders results; a place
+  far from the trip (the departure airport) is still found.
 - **Feature flag** `FEATURES.geoPlaceSearch` (frontend `config.js`) switches every external
   place search on or off at once.
 
