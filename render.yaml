@@ -15,7 +15,8 @@ services:
     runtime: docker
     region: frankfurt
     # Free to look at: the instance sleeps after 15 idle minutes (the first
-    # visitor waits about a minute) and has no disk, so uploaded photos and
+    # visitor waits about a minute; .github/workflows/keep-api-awake.yml pings
+    # it every ten minutes so that wait is rare) and has no disk, so uploaded photos and
     # tickets last until the next deploy or restart. For real clients: plan
     # `starter` and a disk —
     #   disk: { name: uploads, mountPath: /var/data, sizeGB: 1 }

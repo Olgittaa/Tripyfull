@@ -20,6 +20,11 @@ setUnauthorizedHandler(() => {
   return false;
 });
 
+/* The free API host sleeps when nobody uses it. Knock as the page opens, so it
+   is starting while the page draws and the user signs in; the answer is not
+   needed, and no-cors keeps a sleeping host's reply out of the console. */
+fetch(`${import.meta.env.VITE_API_URL || ''}/actuator/health`, { mode: 'no-cors' }).catch(() => {});
+
 const app = createApp(App);
 
 app.use(createPinia());

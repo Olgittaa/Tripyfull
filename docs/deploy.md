@@ -47,7 +47,14 @@ overwrite `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` with Neon's, save
 
 **The free plan, and what it costs in behaviour.** The API instance sleeps after
 15 idle minutes, so the first visitor after a pause waits about a minute while
-Spring Boot starts. It has no disk, so uploaded photos and tickets last only
+Spring Boot starts. Two things keep that wait away: the workflow
+`.github/workflows/keep-api-awake.yml` asks the health check every ten minutes
+(GitHub runs it late when busy, and pauses it after 60 days without a push —
+*Actions → Keep the API awake → Run workflow* restarts it), and the app knocks on
+the health check the moment its page opens, so a sleeping API is already starting
+while the sign-in form is filled in. Awake all month is about 744 of the
+workspace's 750 free hours — enough for this one service, not for a second one
+kept awake beside it. It has no disk, so uploaded photos and tickets last only
 until the next deploy or restart (places' found photos are links and are fine)
 — which is why uploads live in R2 (§3), not on the instance. A workspace gets 750 free
 instance hours a month; when they run out, free services are suspended until
