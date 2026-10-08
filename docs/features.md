@@ -309,6 +309,11 @@ Everything above is free and needs no key; OpenTripMap and AeroDataBox are optio
 with free tiers. These services ask for light, fair use, which is one reason they are only
 reachable after sign-in.
 
+**Names in Latin letters.** Every geocoder is asked for English; where OSM has no English name
+it answers in the local script. A place's town is then taken from the first of town, district
+and locality that can be read ("Ko Pha-ngan" rather than "ตำบลเกาะพะงัน"), and a town search
+typed in Latin letters does not offer towns named only in another script.
+
 ## 11. Print — the route book
 
 From the overview's Print button; a document for the browser's print-to-PDF, laid out to

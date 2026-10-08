@@ -1,6 +1,7 @@
 package com.tripyfull.service;
 
 import com.tripyfull.util.GeoMath;
+import com.tripyfull.util.LatinNames;
 import com.tripyfull.util.PlaceTypes;
 import com.tripyfull.dto.PlaceGeocodeRequest;
 import com.tripyfull.dto.PlaceImportRequest;
@@ -271,7 +272,7 @@ public class PlaceService {
         // and so would the client's book. OpenStreetMap keeps an English name
         // beside the local one, so the same words go to the OSM geocoders and
         // their naming is taken — never their pin.
-        if (!hasLatinLetters(linked.name()) && parsed.name() != null) {
+        if (!LatinNames.hasLatinLetters(linked.name()) && parsed.name() != null) {
             linked = inLatinLetters(linked, geocodingService.geocode(parsed.name(), null));
         }
 
@@ -385,20 +386,6 @@ public class PlaceService {
     static final double SAME_PLACE_METRES = 300;
 
     /**
-     * Letters a client can read without a keyboard they do not own. A name with
-     * any Latin letter in it — "Café Kyoto 京都" — is left alone; one with none is
-     * the case this asks about.
-     */
-    static boolean hasLatinLetters(String s) {
-        if (s == null) return false;
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) return true;
-        }
-        return false;
-    }
-
-    /**
      * The naming of {@code found} in Latin letters, when it needs one and a second
      * opinion offers it for the same spot. Only the words change — the pin, the id
      * and the category stay with the record that was found first, so a wrong match
@@ -409,8 +396,8 @@ public class PlaceService {
      */
     static GeocodingService.GeocodeResult inLatinLetters(GeocodingService.GeocodeResult found,
                                                          GeocodingService.GeocodeResult other) {
-        if (found == null || hasLatinLetters(found.name())) return found;
-        if (other == null || !hasLatinLetters(other.name())) return found;
+        if (found == null || LatinNames.hasLatinLetters(found.name())) return found;
+        if (other == null || !LatinNames.hasLatinLetters(other.name())) return found;
         if (found.latitude() == null || found.longitude() == null
                 || other.latitude() == null || other.longitude() == null) return found;
         double metres = GeoMath.distanceMetres(

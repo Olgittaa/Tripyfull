@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.LatinNames;
 import com.tripyfull.model.City;
 import com.tripyfull.model.Country;
 import com.tripyfull.repository.CityRepository;
@@ -97,6 +98,9 @@ public class GeoSearchService {
 
             String name = props.get("name") != null ? props.get("name").toString() : null;
             if (name == null || name.isBlank()) continue;
+            // A town OSM names only in its own script answers a search typed in Latin
+            // letters by accident — and would then be cached and offered as found.
+            if (LatinNames.hasLatinLetters(query) && !LatinNames.hasLatinLetters(name)) continue;
 
             String countryCode = props.get("countrycode") != null
                     ? props.get("countrycode").toString().toUpperCase() : "";
@@ -250,7 +254,8 @@ public class GeoSearchService {
             lat = parseDouble(coords.get(1));
         }
 
-        String city = extractProp(props, "city", "district", "locality");
+        String city = LatinNames.firstReadable(extractProp(props, "city"), extractProp(props, "district"),
+                extractProp(props, "locality"));
         String state = extractProp(props, "state");
         String country = extractProp(props, "country");
         String street = extractProp(props, "street");

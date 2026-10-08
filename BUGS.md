@@ -122,6 +122,14 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **Town names came in Thai letters next to Latin ones** — Ao Nang showed as «อ่าวนาง» on
+  some days and in a hotel's city ("ตำบล อ่าวนาง"), while the neighbouring days read in Latin.
+  Reported from use. *Cause:* OSM gives some Thai subdistricts no English name, and the geocoders
+  then answer with the local one; the app took the first town-like field whatever its script.
+  *Fixed:* 2026-10-08 — the town is the first readable one of town, district and locality, and
+  a Latin town search skips script-only towns. Names already saved stay as they are: retype the
+  day's city (pencil by the title) and the hotel booking's city once.
+
 - [x] **A long note ended in a server error** — a memo of about a thousand characters on a day
   was refused with "Something went wrong on the server" instead of anything a person could act
   on, so the Railay memo had to be cut down. Reported from use. *Cause:* a day's note was a

@@ -35,18 +35,6 @@ class PlaceServiceTest {
     }
 
     @Test
-    @DisplayName("a name with no Latin letters in it is the one this asks about")
-    void latinLettersAreWhatAClientCanRead() {
-        assertThat(PlaceService.hasLatinLetters("เป็น น้ำตกวชิรธาร")).isFalse();
-        assertThat(PlaceService.hasLatinLetters("Wachirathan Waterfall")).isTrue();
-        // One Latin letter is enough: the client has something to go on.
-        assertThat(PlaceService.hasLatinLetters("Café Kyoto 京都")).isTrue();
-        assertThat(PlaceService.hasLatinLetters("東京")).isFalse();
-        assertThat(PlaceService.hasLatinLetters(null)).isFalse();
-        assertThat(PlaceService.hasLatinLetters("  ")).isFalse();
-    }
-
-    @Test
     @DisplayName("a waterfall the link names only in Thai is named from OpenStreetMap")
     void aThaiOnlyListingTakesTheEnglishNameFromOsm() {
         GeocodeResult found = linked("เป็น น้ำตกวชิรธาร", "ตำบลบ้านหลวง");

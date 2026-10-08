@@ -1,5 +1,6 @@
 package com.tripyfull.service;
 
+import com.tripyfull.util.LatinNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -105,7 +106,7 @@ public class GeocodingService {
         if (lat == null || lon == null) return null;
 
         String name = str(props.get("name"));
-        String city = firstNonBlank(str(props.get("city")), str(props.get("district")), str(props.get("locality")));
+        String city = LatinNames.firstReadable(str(props.get("city")), str(props.get("district")), str(props.get("locality")));
         // Photon has no preformatted address — compose one from its parts.
         String street = joinNonBlank(" ", str(props.get("street")), str(props.get("housenumber")));
         String address = joinNonBlank(", ", name, street, city, str(props.get("state")), str(props.get("country")));
@@ -146,9 +147,8 @@ public class GeocodingService {
         Map<String, Object> addr = (Map<String, Object>) item.get("address");
         String city = null, countryCode = null;
         if (addr != null) {
-            for (String k : List.of("city", "town", "village", "municipality", "hamlet")) {
-                if (addr.get(k) != null) { city = addr.get(k).toString(); break; }
-            }
+            city = LatinNames.firstReadable(str(addr.get("city")), str(addr.get("town")), str(addr.get("village")),
+                    str(addr.get("municipality")), str(addr.get("hamlet")));
             if (addr.get("country_code") != null) countryCode = addr.get("country_code").toString().toUpperCase();
         }
         String displayName = str(item.get("display_name"));
@@ -194,11 +194,6 @@ public class GeocodingService {
             default -> "";
         };
         return prefix + osmId;
-    }
-
-    private String firstNonBlank(String... vals) {
-        for (String v : vals) if (v != null && !v.isBlank()) return v;
-        return null;
     }
 
     private String joinNonBlank(String sep, String... parts) {
