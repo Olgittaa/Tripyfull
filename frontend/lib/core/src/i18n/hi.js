@@ -452,9 +452,8 @@ export default {
   'travel.car': 'कार से',
   'travel.hint.foot': 'अगले ठहराव तक पैदल',
   'travel.hint.taxi': 'टैक्सी / राइड-हेलिंग — सड़क का समय और इंतज़ार',
-  'travel.hint.bus':
-    'बस — जहाँ Google के पास समय-सारणी हो उससे, वरना सड़क का समय और ठहराव (अनुमान)',
-  'travel.hint.train': 'ट्रेन — जहाँ Google के पास समय-सारणी हो उससे, वरना अनुमान',
+  'travel.hint.bus': 'बस — सड़क का समय, ठहराव और इंतज़ार (अनुमान)',
+  'travel.hint.train': 'ट्रेन — सड़क के समय और स्टेशन तक के रास्ते से अनुमान',
   'travel.hint.car': 'अगले ठहराव तक खुद गाड़ी चलाएँ',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -558,7 +557,7 @@ export default {
   'places.findTitle': 'कोई स्थान खोजें',
   'places.searchLabel': 'खोज',
   'places.findPlaceholder': 'नवाजियो बीच, सेंसो-जी…',
-  'places.googleMaps': 'Google Maps',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': 'कोई नतीजा नहीं।',
   'places.orImportLink': 'या किसी लिंक से लाएँ',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

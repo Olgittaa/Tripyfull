@@ -12,7 +12,6 @@ import org.springframework.web.client.RestClientResponseException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -54,11 +53,6 @@ public class RoutingService {
 
 
     private final RestClient restClient = buildClient();
-    private final GoogleRoutesService googleRoutes;
-
-    public RoutingService(GoogleRoutesService googleRoutes) {
-        this.googleRoutes = googleRoutes;
-    }
 
     private static RestClient buildClient() {
         // Explicit timeouts — a hung upstream must not park a servlet thread forever.
@@ -103,29 +97,6 @@ public class RoutingService {
     /** Waypoints are valid but unroutable (or beyond {@link #MAX_DISTANCE_M}). Cached like a hit. */
     public static final RouteResult NO_ROUTE = new RouteResult("none", 0, 0, List.of(), List.of());
 
-    /**
-     * Like {@link #route(List, String)}, but a bus or train leg that has a
-     * departure time is first asked of Google's transit timetables — the real
-     * service, its line and its time. Where no service is listed (a songthaew
-     * route, a country bus), the road-based estimate stays the answer.
-     */
-    public RouteResult route(List<double[]> points, String mode, Instant departAt) {
-        if (departAt != null && GoogleRoutesService.TRANSIT_MODES.containsKey(mode)
-                && googleRoutes.isEnabled() && points != null && points.size() >= 2) {
-            String key = "transit-" + mode + "|" + departAt.getEpochSecond() / 60 + "|" + coords(points);
-            CachedRoute cached = cache.get(key);
-            RouteResult transit;
-            if (cached != null && System.currentTimeMillis() - cached.timestamp < CACHE_TTL_MS) {
-                transit = cached.route;
-            } else {
-                transit = googleRoutes.transit(points, mode, departAt);
-                if (transit != null) remember(key, transit); // NO_ROUTE too: "no service here" is an answer
-            }
-            if (transit != null && transit != NO_ROUTE) return transit;
-        }
-        return route(points, mode);
-    }
-
     /** points are [lat, lon]; returns null when the route can't be computed. */
     public RouteResult route(List<double[]> points, String mode) {
         if (points == null || points.size() < 2) return null;
@@ -147,9 +118,7 @@ public class RoutingService {
             return cached.route;
         }
 
-        // Google Routes first when configured; the public OSRM instance stays as fallback.
-        RouteResult result = googleRoutes.isEnabled() ? googleRoutes.route(points, mode) : null;
-        if (result == null) result = fetchFromOsrm(profile, coords, mode, points.size());
+        RouteResult result = fetchFromOsrm(profile, coords, mode, points.size());
         if (result != null) remember(key, result);
         return result;
     }

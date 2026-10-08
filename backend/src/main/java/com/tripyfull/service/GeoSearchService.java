@@ -22,14 +22,11 @@ public class GeoSearchService {
 
     private final CityRepository cityRepository;
     private final CountryRepository countryRepository;
-    private final GooglePlacesService googlePlaces;
     private final RestClient restClient;
 
-    public GeoSearchService(CityRepository cityRepository, CountryRepository countryRepository,
-                            GooglePlacesService googlePlaces) {
+    public GeoSearchService(CityRepository cityRepository, CountryRepository countryRepository) {
         this.cityRepository = cityRepository;
         this.countryRepository = countryRepository;
-        this.googlePlaces = googlePlaces;
         this.restClient = RestClient.builder()
                 .defaultHeader("User-Agent", "Tripyfull/1.0 (travel planner app)")
                 .defaultHeader("Accept-Language", "en")   // return Latin/English place names
@@ -173,8 +170,17 @@ public class GeoSearchService {
      * says wins; a country code alone falls back to its largest city. Containment
      * is not enough for a city: "Spain" is inside "Port of Spain", which sent a
      * trip to Spain leaning on Trinidad.
+     *
+     * How hard to lean follows how much is known. A city: lean close, so "khao
+     * soi" in Chiang Rai is a soup kitchen there. Only a country: lean wide and
+     * let a place's prominence count for more, because the country's largest
+     * city is a stand-in, not where the trip is — leaning hard on Madrid made
+     * "Sagrada Familia" a Madrid parish, and Paris made "Mont Saint-Michel" a
+     * street in its suburbs.
      */
-    double[] biasFor(String near, String country) {
+    record Bias(double lat, double lon, boolean broad) {}
+
+    Bias biasFor(String near, String country) {
         String code = country == null || country.isBlank() ? null : country.trim().toUpperCase(Locale.ROOT);
         // A day's city may name two ("Tokyo, Kamakura"): the first one is where it is.
         String place = near == null ? "" : near.split(",")[0].trim();
@@ -195,7 +201,7 @@ public class GeoSearchService {
                     City c = cities.get(0);
                     String name = c.getName() == null ? "" : c.getName().toLowerCase(Locale.ROOT);
                     if (name.startsWith(wanted) && c.getLatitude() != null && c.getLongitude() != null) {
-                        return new double[] {c.getLatitude(), c.getLongitude()};
+                        return new Bias(c.getLatitude(), c.getLongitude(), false);
                     }
                 }
             }
@@ -203,28 +209,19 @@ public class GeoSearchService {
         if (code == null) return null;
         return cityRepository.findFirstByCountryCodeOrderByPopulationDesc(code)
                 .filter(c -> c.getLatitude() != null && c.getLongitude() != null)
-                .map(c -> new double[] {c.getLatitude(), c.getLongitude()})
+                .map(c -> new Bias(c.getLatitude(), c.getLongitude(), true))
                 .orElse(null);
     }
 
     @SuppressWarnings("unchecked")
     public List<PlaceResult> searchPlaces(String query, String near, String country) {
         if (query == null || query.length() < 2) return List.of();
-        // Google first when configured; Photon stays as the free fallback.
-        if (googlePlaces.isEnabled()) {
-            try {
-                List<PlaceResult> results = googlePlaces.searchText(query, null, 8);
-                if (!results.isEmpty()) return results;
-            } catch (Exception e) {
-                log.warn("Google places search failed for '{}', falling back to Photon: {}", query, e.getMessage());
-            }
-        }
         try {
-            double[] bias = biasFor(near, country);
-            Map<String, Object> body = (bias == null
-                    ? restClient.get().uri("https://photon.komoot.io/api?q={q}&limit=8&lang=en", query)
-                    : restClient.get().uri("https://photon.komoot.io/api?q={q}&limit=8&lang=en&lat={lat}&lon={lon}",
-                            query, bias[0], bias[1]))
+            Bias bias = biasFor(near, country);
+            String url = "https://photon.komoot.io/api?q={q}&limit=8&lang=en";
+            if (bias != null) url += "&lat=" + bias.lat() + "&lon=" + bias.lon()
+                    + (bias.broad() ? "&zoom=5&location_bias_scale=0.8" : "");
+            Map<String, Object> body = restClient.get().uri(url, query)
                     .retrieve()
                     .body(MAP_TYPE);
             List<Map<String, Object>> features = body != null ? (List<Map<String, Object>>) body.get("features") : null;

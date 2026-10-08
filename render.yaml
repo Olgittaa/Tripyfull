@@ -58,10 +58,6 @@ services:
         sync: false
       - key: S3_REGION
         value: auto
-      # Paid Google Maps Platform key (Places API New + Routes API). Leave empty
-      # to run on the free OpenStreetMap stack.
-      - key: GOOGLE_MAPS_API_KEY
-        sync: false
       # Optional: flight lookup (RapidAPI) and Wikipedia enrichment.
       - key: AERODATABOX_API_KEY
         sync: false

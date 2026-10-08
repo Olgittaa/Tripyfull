@@ -54,10 +54,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                // Place and city search, geocoding and routing sit behind a paid Google
-                // key and rate-limited public services; the app only asks for them after
-                // sign-in, so nobody else gets to spend that quota — they fall under
-                // anyRequest().authenticated() below.
+                // Place and city search, geocoding and routing lean on free public
+                // services that ask for light, fair use; the app only asks them after
+                // sign-in, so nobody else can spend that goodwill through us — they
+                // fall under anyRequest().authenticated() below.
                 .requestMatchers("/actuator/health").permitAll()
                 // <img> can't send the bearer token: the random per-file URL is
                 // the capability (see PlacePhotoController#serve).

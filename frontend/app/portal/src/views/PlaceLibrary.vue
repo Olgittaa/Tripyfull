@@ -900,7 +900,7 @@
         }}</TfButton>
       </template>
     </TfModal>
-    <!-- Find & import: Google Maps search, link import below -->
+    <!-- Find & import: a map search (OpenStreetMap), link import below -->
     <TfModal v-model="showFindDialog" :title="t('places.findTitle')">
       <div class="dialog-form">
         <div class="form-row" style="align-items: flex-end">
@@ -918,15 +918,15 @@
         </div>
 
         <template v-if="searched">
-          <!-- Google / map results -->
+          <!-- Map results -->
           <div class="find-section">
             <div class="find-section-title">
-              <i class="pi pi-map"></i> {{ t('places.googleMaps') }}
+              <i class="pi pi-map"></i> {{ t('places.mapSearch') }}
             </div>
-            <p v-if="!findGoogle.length" class="text-subtle text-sm" style="margin: 4px 0">
+            <p v-if="!findResults.length" class="text-subtle text-sm" style="margin: 4px 0">
               {{ t('places.noResults') }}
             </p>
-            <div v-for="(r, i) in findGoogle" :key="'g' + i" class="find-row">
+            <div v-for="(r, i) in findResults" :key="'g' + i" class="find-row">
               <div style="min-width: 0; flex: 1">
                 <div class="find-row-name">{{ r.name }}</div>
                 <div class="text-muted text-sm" style="overflow: hidden; text-overflow: ellipsis">
@@ -938,7 +938,7 @@
                 size="sm"
                 variant="soft"
                 :loading="savingKey === 'g' + i"
-                @click="addGoogleResult(r, 'g' + i)"
+                @click="addMapResult(r, 'g' + i)"
               >
                 <i class="pi pi-plus" style="font-size: 12px"></i> {{ t('common.add') }}
               </TfButton>
@@ -1443,7 +1443,7 @@ const splitList = (s) =>
     .filter(Boolean);
 
 // The drawer shows details first; editing is an explicit step from its footer.
-// ---- Location: one map for both modes, filled by the Google-backed search ----
+// ---- Location: one map for both modes, filled by the map search ----
 const mapMarkers = computed(() => {
   const src = drawerMode.value === 'edit' ? form.value : viewing.value;
   if (!src?.latitude || !src?.longitude) return [];
@@ -1621,11 +1621,11 @@ const save = async () => {
   }
 };
 
-// ---- Find & import dialog: Google search ----
+// ---- Find & import dialog: map search ----
 const findQuery = ref('');
 const finding = ref(false);
 const searched = ref(false);
-const findGoogle = ref([]);
+const findResults = ref([]);
 const savingKey = ref(''); // which result row is being saved
 
 const runFind = async () => {
@@ -1634,7 +1634,7 @@ const runFind = async () => {
   finding.value = true;
   try {
     try {
-      findGoogle.value = (
+      findResults.value = (
         await api.get('/api/geo/places', {
           params: {
             q,
@@ -1644,7 +1644,7 @@ const runFind = async () => {
         })
       ).data;
     } catch {
-      findGoogle.value = [];
+      findResults.value = [];
     }
     searched.value = true;
   } finally {
@@ -1691,8 +1691,8 @@ const attachToScope = async (place) => {
   return p;
 };
 
-// Google result: geocode-create by its precise display name (dedupes by place id).
-const addGoogleResult = async (r, key) => {
+// Map result: geocode-create by its precise display name (dedupes by place id).
+const addMapResult = async (r, key) => {
   savingKey.value = key;
   try {
     const res = await api.post('/api/places/geocode', {

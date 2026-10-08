@@ -518,9 +518,8 @@ export default {
   'travel.car': 'на машине',
   'travel.hint.foot': 'Пешком до следующей остановки',
   'travel.hint.taxi': 'Такси / каршеринг — время в пути плюс ожидание',
-  'travel.hint.bus':
-    'Автобус — по расписанию, где оно есть у Google, иначе время в пути плюс остановки (оценка)',
-  'travel.hint.train': 'Поезд — по расписанию, где оно есть у Google, иначе оценка',
+  'travel.hint.bus': 'Автобус — время в пути плюс остановки и ожидание (оценка)',
+  'travel.hint.train': 'Поезд — оценка по времени в пути и дороге до вокзала',
   'travel.hint.car': 'За рулём до следующей остановки',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -628,7 +627,7 @@ export default {
   'places.findTitle': 'Найти место',
   'places.searchLabel': 'Поиск',
   'places.findPlaceholder': 'Навайо, Сэнсо-дзи…',
-  'places.googleMaps': 'Google Maps',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': 'Ничего не найдено.',
   'places.orImportLink': 'Или импортировать по ссылке',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

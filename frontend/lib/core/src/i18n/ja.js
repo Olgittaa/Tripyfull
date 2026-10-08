@@ -438,8 +438,8 @@ export default {
   'travel.car': '車',
   'travel.hint.foot': '次の目的地まで歩く',
   'travel.hint.taxi': 'タクシー／配車 — 走行時間と待ち時間',
-  'travel.hint.bus': 'バス — Googleに時刻表があれば時刻表通り、なければ走行時間と停車（概算）',
-  'travel.hint.train': '電車 — Googleに時刻表があれば時刻表通り、なければ概算',
+  'travel.hint.bus': 'バス — 走行時間に停車と待ち時間を加えた概算',
+  'travel.hint.train': '電車 — 走行時間と駅までの移動からの概算',
   'travel.hint.car': '自分で運転して次の目的地へ',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -542,7 +542,7 @@ export default {
   'places.findTitle': '場所を探す',
   'places.searchLabel': '検索',
   'places.findPlaceholder': 'ナヴァイオビーチ、浅草寺…',
-  'places.googleMaps': 'Google マップ',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': '結果がありません。',
   'places.orImportLink': 'またはリンクからインポート',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

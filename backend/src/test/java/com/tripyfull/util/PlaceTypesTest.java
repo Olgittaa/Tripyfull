@@ -8,9 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PlaceTypesTest {
 
     @Test
-    void readsOsmAndGoogleWords() {
+    void readsOsmAndSharePageWords() {
         assertThat(PlaceTypes.infer("tourism:museum")).isEqualTo(PlaceType.MUSEUM);
-        assertThat(PlaceTypes.infer("place_of_worship,tourist_attraction")).isEqualTo(PlaceType.SIGHTSEEING);
         assertThat(PlaceTypes.infer("Buddhist temple")).isEqualTo(PlaceType.SIGHTSEEING);
         assertThat(PlaceTypes.infer("amenity:restaurant")).isEqualTo(PlaceType.RESTAURANT);
         assertThat(PlaceTypes.infer("natural:beach")).isEqualTo(PlaceType.BEACH);

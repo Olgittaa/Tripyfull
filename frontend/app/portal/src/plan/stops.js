@@ -34,11 +34,10 @@ export const legStart = (a) =>
     : [Number(stopLat(a)), Number(stopLon(a))];
 
 /**
- * How you get to the next stop. Walking and driving are routed for real; a bus
- * or train leg is looked up in Google's timetables for the stop's own time and
- * names its line, and is an estimate only where no service is listed; a taxi
- * is an estimate — the row says so. A flight is a booking with its own row and
- * its real times, not a way between two stops.
+ * How you get to the next stop. Walking and driving are routed for real; a
+ * taxi, bus or train leg is an estimate scaled from the driving route — the row
+ * says so. A flight is a booking with its own row and its real times, not a way
+ * between two stops.
  */
 // The ways from one stop to the next, with the icon each is drawn with. Their
 // words are core's (travelModeLabel, travelModeHint), in the app's language.

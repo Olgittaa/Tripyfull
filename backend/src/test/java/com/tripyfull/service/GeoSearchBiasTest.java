@@ -26,8 +26,7 @@ class GeoSearchBiasTest {
 
     private final CityRepository cities = mock(CityRepository.class);
     private final CountryRepository countries = mock(CountryRepository.class);
-    private final GeoSearchService service =
-            new GeoSearchService(cities, countries, new GooglePlacesService(""));
+    private final GeoSearchService service = new GeoSearchService(cities, countries);
 
     private static City city(String name, String code, double lat, double lon) {
         Country country = new Country();
@@ -44,7 +43,7 @@ class GeoSearchBiasTest {
     @DisplayName("a city the trip names is where the search leans")
     void cityWins() {
         when(cities.search(eq("Chiang Rai"), any())).thenReturn(List.of(city("Chiang Rai", "TH", 19.91, 99.84)));
-        assertThat(service.biasFor("Chiang Rai", null)).containsExactly(19.91, 99.84);
+        assertThat(service.biasFor("Chiang Rai", null)).isEqualTo(new GeoSearchService.Bias(19.91, 99.84, false));
     }
 
     @Test
@@ -52,7 +51,7 @@ class GeoSearchBiasTest {
     void cityInsideCountry() {
         when(cities.searchByCountry(eq("Valencia"), eq("ES"), any()))
                 .thenReturn(List.of(city("Valencia", "ES", 39.47, -0.38)));
-        assertThat(service.biasFor("Valencia", "es")).containsExactly(39.47, -0.38);
+        assertThat(service.biasFor("Valencia", "es")).isEqualTo(new GeoSearchService.Bias(39.47, -0.38, false));
     }
 
     @Test
@@ -64,7 +63,8 @@ class GeoSearchBiasTest {
         when(countries.search("Thailand")).thenReturn(List.of(th));
         when(cities.findFirstByCountryCodeOrderByPopulationDesc("TH"))
                 .thenReturn(Optional.of(city("Bangkok", "TH", 13.75, 100.5)));
-        assertThat(service.biasFor("Thailand", null)).containsExactly(13.75, 100.5);
+        // A country only stands in for where the trip is: the lean is wide.
+        assertThat(service.biasFor("Thailand", null)).isEqualTo(new GeoSearchService.Bias(13.75, 100.5, true));
     }
 
     @Test
@@ -78,7 +78,7 @@ class GeoSearchBiasTest {
         when(cities.search(eq("Spain"), any())).thenReturn(List.of(city("Port of Spain", "TT", 10.65, -61.5)));
         when(cities.findFirstByCountryCodeOrderByPopulationDesc("ES"))
                 .thenReturn(Optional.of(city("Madrid", "ES", 40.42, -3.70)));
-        assertThat(service.biasFor("Spain", null)).containsExactly(40.42, -3.70);
+        assertThat(service.biasFor("Spain", null)).isEqualTo(new GeoSearchService.Bias(40.42, -3.70, true));
     }
 
     @Test
@@ -92,7 +92,7 @@ class GeoSearchBiasTest {
     @DisplayName("a day that names two cities leans on the first")
     void firstOfTwoCities() {
         when(cities.search(eq("Tokyo"), any())).thenReturn(List.of(city("Tokyo", "JP", 35.68, 139.76)));
-        assertThat(service.biasFor("Tokyo, Kamakura", null)).containsExactly(35.68, 139.76);
+        assertThat(service.biasFor("Tokyo, Kamakura", null)).isEqualTo(new GeoSearchService.Bias(35.68, 139.76, false));
     }
 
     @Test
@@ -100,7 +100,7 @@ class GeoSearchBiasTest {
     void codeAlone() {
         when(cities.findFirstByCountryCodeOrderByPopulationDesc("ES"))
                 .thenReturn(Optional.of(city("Madrid", "ES", 40.42, -3.70)));
-        assertThat(service.biasFor(null, "ES")).containsExactly(40.42, -3.70);
+        assertThat(service.biasFor(null, "ES")).isEqualTo(new GeoSearchService.Bias(40.42, -3.70, true));
     }
 
     @Test

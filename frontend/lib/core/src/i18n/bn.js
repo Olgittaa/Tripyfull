@@ -450,8 +450,8 @@ export default {
   'travel.car': 'গাড়িতে',
   'travel.hint.foot': 'পরের স্টপ পর্যন্ত হাঁটুন',
   'travel.hint.taxi': 'ট্যাক্সি / রাইড-হেইলিং — রাস্তার সময় ও অপেক্ষা',
-  'travel.hint.bus': 'বাস — Google-এর সময়সূচি থাকলে সেটি, না হলে রাস্তার সময় ও থামা (আনুমানিক)',
-  'travel.hint.train': 'ট্রেন — Google-এর সময়সূচি থাকলে সেটি, না হলে আনুমানিক',
+  'travel.hint.bus': 'বাস — রাস্তার সময়, থামা ও অপেক্ষা (আনুমানিক)',
+  'travel.hint.train': 'ট্রেন — রাস্তার সময় ও স্টেশনে যাওয়ার পথ থেকে আনুমানিক',
   'travel.hint.car': 'নিজে গাড়ি চালিয়ে পরের স্টপে',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -555,7 +555,7 @@ export default {
   'places.findTitle': 'একটি স্থান খুঁজুন',
   'places.searchLabel': 'খোঁজ',
   'places.findPlaceholder': 'নাভাজিও সৈকত, সেনসো-জি…',
-  'places.googleMaps': 'Google Maps',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': 'কোনো ফল নেই।',
   'places.orImportLink': 'অথবা লিঙ্ক থেকে আনুন',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

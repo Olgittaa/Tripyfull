@@ -544,8 +544,8 @@ export default {
   'travel.car': 'بالسيارة',
   'travel.hint.foot': 'امشِ إلى المحطة التالية',
   'travel.hint.taxi': 'تاكسي / تطبيق توصيل — وقت الطريق مع الانتظار',
-  'travel.hint.bus': 'حافلة — بالجدول حيث يملكه Google، وإلا وقت الطريق مع التوقفات (تقدير)',
-  'travel.hint.train': 'قطار — بالجدول حيث يملكه Google، وإلا تقدير',
+  'travel.hint.bus': 'حافلة — وقت الطريق مع التوقفات والانتظار (تقدير)',
+  'travel.hint.train': 'قطار — تقدير من وقت الطريق والوصول إلى المحطة',
   'travel.hint.car': 'قُد بنفسك إلى المحطة التالية',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -655,7 +655,7 @@ export default {
   'places.findTitle': 'ابحث عن مكان',
   'places.searchLabel': 'بحث',
   'places.findPlaceholder': 'شاطئ نافايو، سينسو-جي…',
-  'places.googleMaps': 'خرائط Google',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': 'لا نتائج.',
   'places.orImportLink': 'أو استورد من رابط',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

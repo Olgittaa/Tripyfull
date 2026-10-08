@@ -56,7 +56,6 @@ npm run dev                 # http://localhost:5173, proxies to the API on :8080
 |---|---|---|
 | `spring.datasource.*` | `application-local.properties` | PostgreSQL connection |
 | `jwt.secret` | `application-local.properties` | JWT signing (≥ 32 characters) |
-| `GOOGLE_MAPS_API_KEY` | env / local props | optional: Google Places (search, import, photos, descriptions) and Google Routes (driving, walking, transit timetables); without it the free OSM stack (Photon, Nominatim, OSRM) is used |
 | `AERODATABOX_API_KEY` | env / local props | optional: flight lookup by number and date (RapidAPI) |
 | `OPENTRIPMAP_API_KEY` | env / local props | optional: attraction descriptions & photos on saved places (free key at dev.opentripmap.org) |
 | `VITE_API_URL` | `frontend/.env.development` | API address for the frontend |
@@ -144,9 +143,9 @@ Chromium it also prints the real PDF and attaches it to the run.
 keeps everything the edit did not mention, five photos and a clear refusal at the sixth, folders
 made, renamed, filled, emptied and deleted without taking their places with them, a place that
 joins a trip and leaves it while staying in the library, and the screen's own select-all-and-act.
-**Not covered by the gate:** importing a place from a Google Maps link, which needs a live
-Google key — it is checked by hand (it fills the canonical name, address, pin, description and
-photos).
+**Not covered by the gate:** importing a place from a Google Maps link, which reads a live
+Google Maps page — it is checked by hand (it fills the name, pin, address, and from Wikipedia the
+description and photos).
 
 `mobile.spec.js` runs only on a phone: every screen of a trip — list, overview, day, map, trip
 places, bookings, to-do, budget, library, settings — has to fit 375 px without anything sticking

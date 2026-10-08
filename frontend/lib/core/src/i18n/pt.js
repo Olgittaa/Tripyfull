@@ -454,9 +454,8 @@ export default {
   'travel.car': 'de carro',
   'travel.hint.foot': 'Caminhar até a próxima parada',
   'travel.hint.taxi': 'Táxi / aplicativo — tempo de viagem mais a espera',
-  'travel.hint.bus':
-    'Ônibus — por horário onde o Google tiver um, senão tempo de viagem mais paradas (estimativa)',
-  'travel.hint.train': 'Trem — por horário onde o Google tiver um, senão uma estimativa',
+  'travel.hint.bus': 'Ônibus — tempo de viagem mais paradas e espera (estimativa)',
+  'travel.hint.train': 'Trem — estimativa pelo tempo de viagem e o caminho até a estação',
   'travel.hint.car': 'Dirigir até a próxima parada',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -559,7 +558,7 @@ export default {
   'places.findTitle': 'Encontrar um lugar',
   'places.searchLabel': 'Busca',
   'places.findPlaceholder': 'Praia de Navagio, Senso-ji…',
-  'places.googleMaps': 'Google Maps',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': 'Nenhum resultado.',
   'places.orImportLink': 'Ou importar de um link',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

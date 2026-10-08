@@ -32,9 +32,9 @@ to come.
    Render reads `render.yaml` and proposes the web service `tripyfull-api`
    (Docker, `backend/Dockerfile`, Frankfurt).
 2. It asks for the values marked `sync: false`: the four Neon details
-   (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`), `GOOGLE_MAPS_API_KEY` (the
-   paid Places + Routes key — leave empty to run on OpenStreetMap only),
-   `AERODATABOX_API_KEY` and `OPENTRIPMAP_API_KEY` (optional). `JWT_SECRET` is
+   (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`), and the optional
+   `AERODATABOX_API_KEY` and `OPENTRIPMAP_API_KEY`. Search, maps, routing,
+   descriptions and photos need no key at all. `JWT_SECRET` is
    generated.
 3. **Apply.** The first build takes several minutes (Maven downloads its
    dependencies inside the image). The service is up when
@@ -48,7 +48,7 @@ overwrite `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` with Neon's, save
 **The free plan, and what it costs in behaviour.** The API instance sleeps after
 15 idle minutes, so the first visitor after a pause waits about a minute while
 Spring Boot starts. It has no disk, so uploaded photos and tickets last only
-until the next deploy or restart (places' Google photos are links and are fine)
+until the next deploy or restart (places' found photos are links and are fine)
 — which is why uploads live in R2 (§3), not on the instance. A workspace gets 750 free
 instance hours a month; when they run out, free services are suspended until
 the next month, not deleted.

@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -41,7 +42,6 @@ public class PlaceService {
     private final PlaceFolderRepository folderRepository;
     private final MapLinkService mapLinkService;
     private final OpenTripMapService openTripMapService;
-    private final GooglePlacesService googlePlacesService;
     private final WikipediaService wikipediaService;
     private final TripRepository tripRepository;
     private final PlacePhotoService placePhotoService;
@@ -50,7 +50,7 @@ public class PlaceService {
 
     public PlaceService(PlaceRepository placeRepository, GeocodingService geocodingService,
                         PlaceFolderRepository folderRepository, MapLinkService mapLinkService,
-                        OpenTripMapService openTripMapService, GooglePlacesService googlePlacesService,
+                        OpenTripMapService openTripMapService,
                         WikipediaService wikipediaService, TripRepository tripRepository, PlacePhotoService placePhotoService,
                         com.tripyfull.repository.ActivityRepository activityRepository,
                         OwnershipGuard guard) {
@@ -59,7 +59,6 @@ public class PlaceService {
         this.folderRepository = folderRepository;
         this.mapLinkService = mapLinkService;
         this.openTripMapService = openTripMapService;
-        this.googlePlacesService = googlePlacesService;
         this.wikipediaService = wikipediaService;
         this.tripRepository = tripRepository;
         this.placePhotoService = placePhotoService;
@@ -68,12 +67,11 @@ public class PlaceService {
     }
 
     /**
-     * Description and photos for a new place: Google first while a key is set,
-     * then Wikipedia/Commons (free, no key) and OpenTripMap fill what is still
-     * empty. Each one leaves alone anything already there.
+     * Description and photos for a new place: Wikipedia and Commons (free, no key)
+     * first, OpenTripMap where it is keyed for what is still empty. Each leaves
+     * alone anything already there.
      */
     private void enrichPlace(Place place) {
-        if (googlePlacesService.isEnabled()) googlePlacesService.enrich(place);
         wikipediaService.enrich(place);
         openTripMapService.enrich(place);
     }
@@ -250,34 +248,35 @@ public class PlaceService {
                     "That link opens a list or destination page, not a single place. Open a specific place and share its link.");
         }
 
-        // The link names the place and marks the spot; Google turns the two into
-        // the place itself — its id, canonical name, address, type — and later the
-        // id fetches its description and photos. Without Google, or when Google
-        // finds nothing there, the OSM geocoder reads the spot as before.
+        // The link names the place and marks the spot. OpenStreetMap reads the spot
+        // (the object at the pin), or the name when the link carries no pin.
         GeocodingService.GeocodeResult r = null;
-        boolean fromGoogle = false;
-        if (googlePlacesService.isEnabled() && parsed.name() != null) {
-            r = googlePlacesService.locate(parsed.name(), parsed.lat(), parsed.lon());
-            fromGoogle = r != null;
-        }
-        if (r == null && parsed.lat() != null && parsed.lon() != null) {
+        if (parsed.lat() != null && parsed.lon() != null) {
             r = geocodingService.reverseGeocode(parsed.lat(), parsed.lon());
         }
         if (r == null && parsed.name() != null) {
             r = geocodingService.geocode(parsed.name(), null);
         }
+
+        // The place as the link has it: its name, its exact marker.
+        BigDecimal lat = parsed.lat() != null ? parsed.lat() : (r != null ? r.latitude() : null);
+        BigDecimal lon = parsed.lon() != null ? parsed.lon() : (r != null ? r.longitude() : null);
+        GeocodingService.GeocodeResult linked = new GeocodingService.GeocodeResult(lat, lon,
+                r != null ? r.address() : null, r != null ? r.osmId() : null,
+                r != null ? r.country() : null, r != null ? r.city() : null,
+                parsed.name() != null ? parsed.name() : (r != null && r.name() != null ? r.name() : "Imported place"),
+                r != null ? r.category() : null);
         // A link shared from a phone in Thailand carries the place's Thai name in
-        // its own path, and Google, asked in English, answers with the listing that
-        // name belongs to — which for many places is the only one Google has. The
-        // card then reads "เป็น น้ำตกวชิรธาร · ตำบลบ้านหลวง", and so does the client's
-        // book. OpenStreetMap keeps an English name beside the local one, so the
-        // same words go to the OSM geocoders and their naming is taken instead.
-        if (fromGoogle && !hasLatinLetters(r.name())) {
-            r = inLatinLetters(r, geocodingService.geocodeOsm(parsed.name(), null));
+        // its own path. The card would then read "เป็น น้ำตกวชิรธาร · ตำบลบ้านหลวง",
+        // and so would the client's book. OpenStreetMap keeps an English name
+        // beside the local one, so the same words go to the OSM geocoders and
+        // their naming is taken — never their pin.
+        if (!hasLatinLetters(linked.name()) && parsed.name() != null) {
+            linked = inLatinLetters(linked, geocodingService.geocode(parsed.name(), null));
         }
 
-        if (r != null && r.osmId() != null) {
-            Place existing = placeRepository.findByOwnerIdAndOsmId(user.getId(), r.osmId()).orElse(null);
+        if (linked.osmId() != null) {
+            Place existing = placeRepository.findByOwnerIdAndOsmId(user.getId(), linked.osmId()).orElse(null);
             if (existing != null) {
                 // Re-import of a known place — still remember the Google Maps link on it.
                 if (addSourceLink(existing, request.url())) placeRepository.save(existing);
@@ -286,46 +285,28 @@ public class PlaceService {
         }
 
         // Type from the geocoder's category, falling back to the place description (e.g. "Buddhist temple").
-        PlaceType type = PlaceTypes.infer(r != null ? r.category() : null);
+        PlaceType type = PlaceTypes.infer(linked.category());
         if (type == PlaceType.OTHER && parsed.description() != null) type = PlaceTypes.infer(parsed.description());
 
         Place place = new Place();
         place.setOwner(user);
         place.setSource(PlaceSource.IMPORTED);
         place.setType(type);
-        if (fromGoogle) {
-            // Google's own record of the place: its name as listed, its pin.
-            place.setName(r.name() != null ? r.name() : parsed.name());
-            place.setLatitude(r.latitude());
-            place.setLongitude(r.longitude());
-        } else {
-            place.setName(parsed.name() != null ? parsed.name()
-                    : (r != null && r.name() != null ? r.name() : "Imported place"));
-            // Prefer the link's exact marker coordinates; fall back to the geocoder's.
-            place.setLatitude(parsed.lat() != null ? parsed.lat() : (r != null ? r.latitude() : null));
-            place.setLongitude(parsed.lon() != null ? parsed.lon() : (r != null ? r.longitude() : null));
-        }
-        if (r != null) {
-            place.setAddress(r.address());
-            place.setOsmId(r.osmId());
-            place.setCity(r.city());
-            place.setCountry(r.country());
-        }
-        // The share page's own snippet ("★★★★★ · Buddhist temple") and preview
-        // image are the fallback: Google's editorial summary and photos, fetched
-        // by id in enrichPlace, come first when the place was found there.
-        if (!fromGoogle) {
-            if (parsed.description() != null) place.setDescription(parsed.description());
-            if (parsed.photo() != null) place.getPhotos().add(parsed.photo());
-        }
+        place.setName(linked.name());
+        place.setLatitude(linked.latitude());
+        place.setLongitude(linked.longitude());
+        place.setAddress(linked.address());
+        place.setOsmId(linked.osmId());
+        place.setCity(linked.city());
+        place.setCountry(linked.country());
         addSourceLink(place, request.url());   // keep the Google Maps link the place came from
-        enrichPlace(place);   // fills whatever the link didn't provide
-        if (fromGoogle) {
-            if ((place.getDescription() == null || place.getDescription().isBlank()) && parsed.description() != null) {
-                place.setDescription(parsed.description());
-            }
-            if (place.getPhotos().isEmpty() && parsed.photo() != null) place.getPhotos().add(parsed.photo());
+        // Wikipedia's paragraph and photos first; the share page's own snippet
+        // ("★★★★★ · Buddhist temple") and preview image only where it had none.
+        enrichPlace(place);
+        if ((place.getDescription() == null || place.getDescription().isBlank()) && parsed.description() != null) {
+            place.setDescription(parsed.description());
         }
+        if (place.getPhotos().isEmpty() && parsed.photo() != null) place.getPhotos().add(parsed.photo());
         return toResponse(placeRepository.save(place), user, null);
     }
 

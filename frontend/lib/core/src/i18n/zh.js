@@ -427,8 +427,8 @@ export default {
   'travel.car': '驾车',
   'travel.hint.foot': '步行前往下一站',
   'travel.hint.taxi': '出租车／网约车——行车时间加候车',
-  'travel.hint.bus': '巴士——有 Google 时刻表时按时刻表，否则行车时间加停靠（估算）',
-  'travel.hint.train': '火车——有 Google 时刻表时按时刻表，否则估算',
+  'travel.hint.bus': '巴士——行车时间加上停靠和候车（估算）',
+  'travel.hint.train': '火车——按行车时间和去车站的路程估算',
   'travel.hint.car': '自己驾车前往下一站',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -531,7 +531,7 @@ export default {
   'places.findTitle': '查找地点',
   'places.searchLabel': '搜索',
   'places.findPlaceholder': '沉船湾、浅草寺…',
-  'places.googleMaps': 'Google 地图',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': '没有结果。',
   'places.orImportLink': '或从链接导入',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

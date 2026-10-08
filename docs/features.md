@@ -110,10 +110,10 @@ The dashboard; every tile opens its section.
   the days and their stops, the bookings with their payments, the to-dos, every place the trip
   touches (its shortlist, what its stops point at, what its folders hold) and the folders; beside
   it, under `files/`, the photos the app stores itself and the tickets attached to bookings.
-  Photos found elsewhere (Google) stay links. The file opens in another account or on another
+  Photos found elsewhere (Wikimedia, a share page) stay links. The file opens in another account or on another
   server with nothing left behind. **Import** lives on the trips list (§2): the file always
   becomes a *new* trip, dates and all (reschedule afterwards if needed). Places join the
-  importer's library — one it already has (same OpenStreetMap / Google id) is reused as it is,
+  importer's library — one it already has (same OpenStreetMap id, or the Google id older places carry) is reused as it is,
   the rest are created from the file, photos included. A file that is not ours is refused in
   words; one from a newer Tripyfull asks for an update first.
 
@@ -152,10 +152,9 @@ The core screen: the day's list on the left, its route on the right.
   (see §12); the row lights the mode the leg was computed for.
   - No mode chosen → a sensible default: a hop of up to 1.5 km is walked; a longer one is
     driven when a car-rental booking covers that day, else taken by taxi.
-  - Bus and train ask Google's transit timetables for the stop's own departure time; where a
-    service is listed the leg gets its real time and names the line
-    ("46 min · 5.1 km by bus · RTC Bus Chiang Mai"); where none is, an estimate marked "~".
-  - Walking and driving are routed for real (Google Routes, OSRM as the fallback).
+  - Bus and train have no open timetable to ask: the leg is the driving route scaled for stops,
+    waiting and stations, and is marked as an estimate ("~").
+  - Walking and driving are routed for real (OSRM, the router behind openstreetmap.org).
   - A flight is not a leg — it is a booking with its own row and its real times.
 - **Day total** by category at the bottom (converted into the trip's currency).
 
@@ -209,17 +208,17 @@ by nobody else — there is no sharing and no public place.
 - **Add place** (form): name, type, country/city/address search, coordinates,
   description, rating 1–5 and why, time to visit, audience (everyone / adults / kids),
   needs preparation, needs booking, photos (upload up to 5, own photos shown first), links.
-- **Find & import**: search Google Maps, or paste a Google Maps link. The link imports
-  Google's own record of the place — name, address, type, editorial description and up to
-  three photos. The saved place opens at once.
+- **Find & import**: search the map (OpenStreetMap, leaning towards the trip), or paste a
+  Google Maps link. The link gives the place's name and its exact pin; OpenStreetMap reads the
+  spot for its address, city and id, and Wikipedia gives the description and photos. Only where
+  Wikipedia has nothing does the share page's own snippet ("★★★★★ · Buddhist temple") and
+  preview picture stand in. The saved place opens at once.
   - **In letters the client can read.** A link shared from a phone abroad carries the place's
-    local name in its own path, and Google answers with the listing that name belongs to —
-    for many places the only one it keeps, in the local script whatever language is asked for.
-    When the name that comes back has no Latin letter in it, the same words go to the OSM
-    geocoders, which carry an English name beside the local one, and their name, address and
-    city are taken instead. Only the words change: the pin, the Google id, the type, the
-    description and the photos stay as they were, and nothing is taken from an answer more
-    than 300 m away. *(เป็น น้ำตกวชิรธาร · ตำบลบ้านหลวง → Wachirathan Waterfall · Ban Sop Hat.)*
+    local name in its own path. When that name has no Latin letter in it, the same words go to
+    the OSM geocoders, which carry an English name beside the local one, and their name,
+    address and city are taken instead. Only the words change — the pin stays the link's — and
+    nothing is taken from an answer more than 300 m away.
+    *(เป็น น้ำตกวชิรธาร · ตำบลบ้านหลวง → Wachirathan Waterfall · Ban Sop Hat.)*
 - A place made while a **folder or a trip is open joins it** (a folder brings its trip along).
 - **Selection mode** for bulk actions: move to folder (in a trip), **add to trip**, set type,
   remove from trip, delete.
@@ -295,17 +294,18 @@ spending. See [`../AFTER_M1.md`](../AFTER_M1.md).
 
 | Need | Primary | Fallback / note |
 |---|---|---|
-| Place & address search | Google Places (New) | Photon (OSM), leaning towards the trip's city or country; Nominatim |
+| Place & address search | Photon (OSM), leaning towards the trip's city or country | Nominatim |
 | City / country pick-lists | seeded database | — |
-| Import from a link | Google Places by name near the link's pin; page metadata | OSM reverse geocoding; OSM naming when Google's is not in Latin letters |
-| Description & photos | Google Place Details (editorial summary, 3 photos), while a key is set | Wikipedia + Wikimedia Commons, free and keyless: the subject is the Wikidata item OSM links the place to, else a Wikipedia article within 600 m whose title matches the name; its opening paragraph (marked "(Wikipedia)"), its lead image and photos from its Commons category, three in all. Then OpenTripMap, if keyed |
-| Routing between stops | Google Routes (drive, walk, transit) | OSRM (drive, walk); road-based estimates for taxi/bus/train |
+| Import from a link | the link's own name and pin; page metadata | OSM reverse geocoding; OSM naming when the link's is not in Latin letters |
+| Description & photos | Wikipedia + Wikimedia Commons: the Wikidata item OSM links the place to, else a Wikipedia article within 600 m whose title matches the name; its opening paragraph (marked "(Wikipedia)"), its lead image and photos from its Commons category, three in all | OpenTripMap, if keyed |
+| Routing between stops | OSRM (drive, walk) | road-based estimates for taxi/bus/train |
 | Flight lookup | AeroDataBox | — |
-| Exchange rates | Frankfurter | — |
+| Exchange rates | Frankfurter | open.er-api |
 | Map tiles | OpenStreetMap | — |
 
-Without a Google key the free OSM stack runs everywhere; OpenTripMap and AeroDataBox are
-optional too.
+Everything above is free and needs no key; OpenTripMap and AeroDataBox are optional extras
+with free tiers. These services ask for light, fair use, which is one reason they are only
+reachable after sign-in.
 
 ## 11. Print — the route book
 
@@ -358,9 +358,8 @@ mode asks for that leg alone. A stop with no pin is stepped over — the leg spa
 stop that has one, and the unpinned stop carries no leg of its own, so no row promises a time
 nobody can give.
 
-**Without a Google key** the free stack answers the same shapes: OSRM routes walking and
-driving for real, and a taxi, bus or train leg is scaled from the driving route and marked as an
-estimate ("~"). The route book prints its travel times either way.
+OSRM routes walking and driving for real; a taxi, bus or train leg is scaled from the driving
+route and marked as an estimate ("~"). The route book prints its travel times either way.
 
 ## 13. API map
 

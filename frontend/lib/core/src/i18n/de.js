@@ -462,9 +462,8 @@ export default {
   'travel.car': 'mit dem Auto',
   'travel.hint.foot': 'Zu Fuß zum nächsten Stopp',
   'travel.hint.taxi': 'Taxi / Fahrdienst — Fahrzeit plus Warten',
-  'travel.hint.bus':
-    'Bus — nach Fahrplan, wo Google einen hat, sonst Fahrzeit plus Halte (Schätzung)',
-  'travel.hint.train': 'Zug — nach Fahrplan, wo Google einen hat, sonst eine Schätzung',
+  'travel.hint.bus': 'Bus — Fahrzeit plus Halte und Warten (Schätzung)',
+  'travel.hint.train': 'Zug — Schätzung aus der Fahrzeit und dem Weg zum Bahnhof',
   'travel.hint.car': 'Selbst zum nächsten Stopp fahren',
 
   // The places library: its filters, cards, table, drawer and the finder
@@ -567,7 +566,7 @@ export default {
   'places.findTitle': 'Einen Ort finden',
   'places.searchLabel': 'Suche',
   'places.findPlaceholder': 'Navagio Beach, Senso-ji …',
-  'places.googleMaps': 'Google Maps',
+  'places.mapSearch': 'OpenStreetMap',
   'places.noResults': 'Keine Treffer.',
   'places.orImportLink': 'Oder aus einem Link importieren',
   'places.importPlaceholder': 'https://maps.app.goo.gl/…',

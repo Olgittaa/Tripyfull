@@ -4,7 +4,7 @@ import com.tripyfull.model.PlaceType;
 
 /**
  * A place's type from the words a data source used for it — an OSM class:type,
- * a Google type list, a share page's "Buddhist temple". The one place that rule
+ * a share page's "Buddhist temple". The one place that rule
  * lives; the importer and the geocoder both ask here.
  */
 public final class PlaceTypes {

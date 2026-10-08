@@ -56,22 +56,6 @@ class TravelLegServiceTest {
         assertThat(TravelLegService.legStart(flight, null)).containsExactly(50.0379, 8.5622);
     }
 
-    @Test
-    void departureKeepsTheStopsTimeAndNeverLiesInThePast() {
-        Day day = new Day();
-        day.setDate(LocalDate.of(2020, 1, 6)); // a Monday long gone
-        Activity stop = new Activity();
-        stop.setDay(day);
-        stop.setStartTime(LocalTime.of(9, 0));
-        stop.setEndTime(LocalTime.of(10, 30));
-
-        Instant at = TravelLegService.departureOf(stop, OLD_TOWN);
-        ZonedDateTime local = at.atZone(ZoneOffset.ofHours(7)); // Thailand, from the longitude
-        assertThat(local.toLocalTime()).isEqualTo(LocalTime.of(10, 30));
-        assertThat(local.getDayOfWeek()).isEqualTo(DayOfWeek.MONDAY);
-        assertThat(local.toLocalDate()).isAfterOrEqualTo(LocalDate.now());
-    }
-
     /**
      * Regression: a day whose stops came from no booking at all — the ordinary case for a trip
      * before anything is booked. The lookup of a stop's source booking must simply come back
@@ -83,7 +67,7 @@ class TravelLegServiceTest {
         RoutingService routing = mock(RoutingService.class);
         ActivityRepository activities = mock(ActivityRepository.class);
         TravelLegService service = new TravelLegService(routing, activities, mock(BookingRepository.class));
-        when(routing.route(any(), anyString(), any()))
+        when(routing.route(any(), anyString()))
                 .thenReturn(new RoutingService.RouteResult("taxi", 900, 4200, List.of(), List.of()));
 
         Day day = new Day();
@@ -121,20 +105,10 @@ class TravelLegServiceTest {
         }
     }
 
-    @Test
-    void aDayWithoutADateOrTimeAsksForNineOnTheComingMonday() {
-        Activity stop = new Activity();
-        stop.setDay(new Day());
-        ZonedDateTime local = TravelLegService.departureOf(stop, OLD_TOWN).atZone(ZoneOffset.ofHours(7));
-        assertThat(local.toLocalTime()).isEqualTo(LocalTime.of(9, 0));
-        assertThat(local.getDayOfWeek()).isEqualTo(DayOfWeek.MONDAY);
-        assertThat(local.toLocalDate()).isAfter(LocalDate.now());
-    }
-
     /* ---- What a day costs the router ----
        A leg is kept on the stop it departs from, together with a key naming what
        it was computed for. Re-routing is the expensive part — a real request to
-       Google or OSRM — so these say, in calls, what a day is allowed to cost. */
+       OSRM — so these say, in calls, what a day is allowed to cost. */
 
     /** A router that answers instantly and remembers what it was asked. */
     private static final class CountingRouter {
@@ -142,7 +116,7 @@ class TravelLegServiceTest {
         final List<String> asked = new ArrayList<>();
 
         CountingRouter() {
-            when(service.route(any(), anyString(), any())).thenAnswer(call -> {
+            when(service.route(any(), anyString())).thenAnswer(call -> {
                 List<double[]> points = call.getArgument(0);
                 asked.add(call.getArgument(1) + " " + fmt(points.get(0)) + "->" + fmt(points.get(1)));
                 return new RoutingService.RouteResult(call.getArgument(1), 600, 4000, List.of(), List.of());
