@@ -122,6 +122,14 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **A stop's time could not be taken away** — once a stop had a start or an end time,
+  emptying the field and saving brought the time back; the only way to a stop "without a time"
+  was to delete it and make it again. The cost estimate behaved the same. Reported from use.
+  *Cause:* the server read an empty field as "not sent" and kept the old value — right for the
+  leg row, which sends only the way of travel, wrong for the editor, which sends the whole stop.
+  *Fixed:* 2026-10-08 — the editor says it sends the whole stop, and then an empty time or cost
+  is removed; a one-field change still leaves the rest alone. A test covers both.
+
 - [x] **Place search answered without a sign-in — on a paid key** — `GET /api/geo/places?q=…`
   (Google Places, billed per request) and the other `/api/geo/*` lookups were open to anyone
   who knew the address; only routing was behind a token. No data was exposed — the answers are

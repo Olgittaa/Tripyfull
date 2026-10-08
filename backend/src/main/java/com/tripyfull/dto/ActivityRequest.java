@@ -24,5 +24,8 @@ public record ActivityRequest(
         // map or coordinates typed in. Ignored while a place is linked.
         Double latitude,
         Double longitude,
-        Boolean clearCoords
+        Boolean clearCoords,
+        // The editor sends the whole stop: a time or a cost it leaves empty is
+        // removed, not kept. Callers that patch one field leave this out.
+        Boolean replaceAll
 ) {}

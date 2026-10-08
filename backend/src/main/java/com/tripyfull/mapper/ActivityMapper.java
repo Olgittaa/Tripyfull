@@ -40,8 +40,9 @@ public final class ActivityMapper {
     public static void updateEntity(Activity a, ActivityRequest req) {
         if (req.name() != null) a.setName(req.name());
         if (req.type() != null) a.setType(ActivityType.valueOf(req.type()));
-        if (req.startTime() != null) a.setStartTime(req.startTime());
-        if (req.endTime() != null) a.setEndTime(req.endTime());
+        boolean all = Boolean.TRUE.equals(req.replaceAll());
+        if (all || req.startTime() != null) a.setStartTime(req.startTime());
+        if (all || req.endTime() != null) a.setEndTime(req.endTime());
         if (req.address() != null) a.setAddress(req.address());
         if (Boolean.TRUE.equals(req.clearCoords())) {
             a.setLatitude(null);
@@ -50,7 +51,7 @@ public final class ActivityMapper {
             if (req.latitude() != null) a.setLatitude(req.latitude());
             if (req.longitude() != null) a.setLongitude(req.longitude());
         }
-        if (req.costEstimate() != null) a.setCostEstimate(req.costEstimate());
+        if (all || req.costEstimate() != null) a.setCostEstimate(req.costEstimate());
         if (req.costCurrency() != null) a.setCostCurrency(req.costCurrency());
         if (req.notes() != null) a.setNotes(req.notes());
         if (req.travelModeToNext() != null) a.setTravelModeToNext(validTravelMode(req.travelModeToNext()));

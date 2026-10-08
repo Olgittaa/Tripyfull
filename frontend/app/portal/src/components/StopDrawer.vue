@@ -594,6 +594,8 @@ const saveActivity = async () => {
       latitude: form.value.placeId ? null : form.value.latitude,
       longitude: form.value.placeId ? null : form.value.longitude,
       clearCoords: !!form.value.placeId || form.value.latitude == null,
+      // The form is the whole stop: an emptied time or cost is removed.
+      replaceAll: true,
       // On edit: a different day here moves the activity (appended at its end).
       dayId: editingActivity.value ? moveTargetDayId.value || undefined : undefined,
     };

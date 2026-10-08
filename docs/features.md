@@ -162,7 +162,8 @@ The core screen: the day's list on the left, its route on the right.
 - **What**: name; a place from the library (adds the pin and the library's facts), or a
   search for a place or an address (pins the stop; a venue can also be saved to the library
   on request), or coordinates typed by hand; a preview map of the pin; type.
-- **When**: start / end times; on an existing stop, **move to another day**.
+- **When**: start / end times — either can be emptied again, and the stop goes back to
+  having no clock; on an existing stop, **move to another day**.
 - **Details**: cost estimate + currency with the live rate into the home currency, notes,
   "needs advance booking".
 - A linked place shows its rating, why, time to visit and description; *Edit place* jumps to
