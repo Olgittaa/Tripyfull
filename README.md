@@ -25,7 +25,7 @@ Tripyfull/
 ### 1. Database
 
 ```bash
-docker compose up -d        # from the root; PostgreSQL 16 on :5432 (db=tripdb, user/pass=postgres)
+docker compose up -d        # from the root; PostgreSQL 16 on :5433 (db=tripdb, user/pass=postgres)
 ```
 
 ### 2. Backend

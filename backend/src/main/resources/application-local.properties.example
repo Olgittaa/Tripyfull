@@ -1,7 +1,7 @@
 # Copy this file to `application-local.properties` and fill in your own values.
 # The real file is gitignored — never commit secrets.
 
-spring.datasource.url=jdbc:postgresql://localhost:5432/tripdb
+spring.datasource.url=jdbc:postgresql://localhost:5433/tripdb
 spring.datasource.username=postgres
 spring.datasource.password=CHANGE_ME
 
