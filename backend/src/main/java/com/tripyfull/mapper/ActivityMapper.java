@@ -16,7 +16,7 @@ import java.util.Set;
 public final class ActivityMapper {
 
     // A flight is a booking, not a way between two stops.
-    private static final Set<String> TRAVEL_MODES = Set.of("foot", "taxi", "bus", "train", "car");
+    private static final Set<String> TRAVEL_MODES = Set.of("foot", "taxi", "bus", "train", "car", "boat");
 
     private ActivityMapper() {}
 

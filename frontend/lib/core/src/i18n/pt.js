@@ -452,11 +452,14 @@ export default {
   'travel.bus': 'de ônibus',
   'travel.train': 'de trem',
   'travel.car': 'de carro',
+  'travel.boat': 'de barco',
   'travel.hint.foot': 'Caminhar até a próxima parada',
   'travel.hint.taxi': 'Táxi / aplicativo — tempo de viagem mais a espera',
   'travel.hint.bus': 'Ônibus — tempo de viagem mais paradas e espera (estimativa)',
   'travel.hint.train': 'Trem — estimativa pelo tempo de viagem e o caminho até a estação',
   'travel.hint.car': 'Dirigir até a próxima parada',
+  'travel.hint.boat':
+    'Barco — um longtail ou uma balsa pela água (estimativa: a travessia mais a espera pelo barco)',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': 'Adicionar',

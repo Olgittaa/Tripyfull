@@ -448,11 +448,13 @@ export default {
   'travel.bus': 'বাসে',
   'travel.train': 'ট্রেনে',
   'travel.car': 'গাড়িতে',
+  'travel.boat': 'নৌকায়',
   'travel.hint.foot': 'পরের স্টপ পর্যন্ত হাঁটুন',
   'travel.hint.taxi': 'ট্যাক্সি / রাইড-হেইলিং — রাস্তার সময় ও অপেক্ষা',
   'travel.hint.bus': 'বাস — রাস্তার সময়, থামা ও অপেক্ষা (আনুমানিক)',
   'travel.hint.train': 'ট্রেন — রাস্তার সময় ও স্টেশনে যাওয়ার পথ থেকে আনুমানিক',
   'travel.hint.car': 'নিজে গাড়ি চালিয়ে পরের স্টপে',
+  'travel.hint.boat': 'নৌকা — লংটেল বা ফেরিতে জলপথে (আনুমানিক: পারাপারের সময় ও নৌকার অপেক্ষা)',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': 'যোগ করুন',

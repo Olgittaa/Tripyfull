@@ -542,11 +542,14 @@ export default {
   'travel.bus': 'بالحافلة',
   'travel.train': 'بالقطار',
   'travel.car': 'بالسيارة',
+  'travel.boat': 'بالقارب',
   'travel.hint.foot': 'امشِ إلى المحطة التالية',
   'travel.hint.taxi': 'تاكسي / تطبيق توصيل — وقت الطريق مع الانتظار',
   'travel.hint.bus': 'حافلة — وقت الطريق مع التوقفات والانتظار (تقدير)',
   'travel.hint.train': 'قطار — تقدير من وقت الطريق والوصول إلى المحطة',
   'travel.hint.car': 'قُد بنفسك إلى المحطة التالية',
+  'travel.hint.boat':
+    'قارب — قارب ذيل طويل أو عبّارة عبر الماء (تقدير: مدة العبور مع انتظار القارب)',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': 'إضافة',

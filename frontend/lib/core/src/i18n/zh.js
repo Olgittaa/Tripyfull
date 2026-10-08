@@ -425,11 +425,13 @@ export default {
   'travel.bus': '乘巴士',
   'travel.train': '乘火车',
   'travel.car': '驾车',
+  'travel.boat': '乘船',
   'travel.hint.foot': '步行前往下一站',
   'travel.hint.taxi': '出租车／网约车——行车时间加候车',
   'travel.hint.bus': '巴士——行车时间加上停靠和候车（估算）',
   'travel.hint.train': '火车——按行车时间和去车站的路程估算',
   'travel.hint.car': '自己驾车前往下一站',
+  'travel.hint.boat': '船——长尾船或渡轮走水路（估算：航行时间加候船）',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': '添加',

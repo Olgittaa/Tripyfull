@@ -450,11 +450,14 @@ export default {
   'travel.bus': 'बस से',
   'travel.train': 'ट्रेन से',
   'travel.car': 'कार से',
+  'travel.boat': 'नाव से',
   'travel.hint.foot': 'अगले ठहराव तक पैदल',
   'travel.hint.taxi': 'टैक्सी / राइड-हेलिंग — सड़क का समय और इंतज़ार',
   'travel.hint.bus': 'बस — सड़क का समय, ठहराव और इंतज़ार (अनुमान)',
   'travel.hint.train': 'ट्रेन — सड़क के समय और स्टेशन तक के रास्ते से अनुमान',
   'travel.hint.car': 'अगले ठहराव तक खुद गाड़ी चलाएँ',
+  'travel.hint.boat':
+    'नाव — लॉन्गटेल या फ़ेरी से पानी के रास्ते (अनुमान: पार करने का समय और नाव का इंतज़ार)',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': 'जोड़ें',

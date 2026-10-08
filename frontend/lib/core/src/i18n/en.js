@@ -459,11 +459,14 @@ export default {
   'travel.bus': 'by bus',
   'travel.train': 'by train',
   'travel.car': 'by car',
+  'travel.boat': 'by boat',
   'travel.hint.foot': 'Walk to the next stop',
   'travel.hint.taxi': 'Taxi / ride-hailing — road time plus hailing',
   'travel.hint.bus': 'Bus — road time plus stops and the wait (an estimate)',
   'travel.hint.train': 'Train — an estimate from the road time and the way to the station',
   'travel.hint.car': 'Drive yourself to the next stop',
+  'travel.hint.boat':
+    'Boat — a longtail or a ferry over the water (an estimate: the crossing plus waiting for the boat)',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': 'Add',

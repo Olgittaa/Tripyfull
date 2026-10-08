@@ -74,7 +74,7 @@ export const activityTypeLabel = (type) =>
 // The longest note the server keeps on a stop, a booking or a to-do (varchar(5000)).
 export const NOTE_MAX = 5000;
 
-export const TRAVEL_MODE_KEYS = ['foot', 'taxi', 'bus', 'train', 'car'];
+export const TRAVEL_MODE_KEYS = ['foot', 'taxi', 'bus', 'train', 'car', 'boat'];
 export const travelModeLabel = (key) => (TRAVEL_MODE_KEYS.includes(key) ? t(`travel.${key}`) : '');
 export const travelModeHint = (key) =>
   TRAVEL_MODE_KEYS.includes(key) ? t(`travel.hint.${key}`) : '';

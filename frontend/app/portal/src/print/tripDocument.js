@@ -57,6 +57,7 @@ const MODE_WORD = {
   bus: 'by bus',
   train: 'by train',
   car: 'by car',
+  boat: 'by boat',
   plane: 'by plane',
 };
 const BOOKING_MODE = {

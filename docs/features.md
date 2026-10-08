@@ -147,7 +147,7 @@ The core screen: the day's list on the left, its route on the right.
   conversion when the currency differs from the trip's.
 - **Drag to reorder**; the numbered map pins follow. Times not set are shown as **≈ derived**
   from the previous stop and the way there.
-- **Between stops — the leg**: five ways to get there — walk, taxi, bus, train, car — with the
+- **Between stops — the leg**: six ways to get there — walk, taxi, bus, train, car, boat — with the
   time and distance for the chosen one. Legs are computed on the server and kept on the stop
   (see §12); the row lights the mode the leg was computed for.
   - No mode chosen → a sensible default: a hop of up to 1.5 km is walked; a longer one is
@@ -155,6 +155,9 @@ The core screen: the day's list on the left, its route on the right.
   - Bus and train have no open timetable to ask: the leg is the driving route scaled for stops,
     waiting and stations, and is marked as an estimate ("~").
   - Walking and driving are routed for real (OSRM, the router behind openstreetmap.org).
+  - A boat — a longtail to Railay, a ferry between islands — crosses the water where no router
+    has roads: the straight line stretched by 30 % for headlands and piers, at 25 km/h, plus
+    15 minutes' wait for the boat; drawn straight on the map and marked as an estimate.
   - A flight is not a leg — it is a booking with its own row and its real times.
 - **Day total** by category at the bottom (converted into the trip's currency).
 
@@ -300,7 +303,7 @@ spending. See [`../AFTER_M1.md`](../AFTER_M1.md).
 | City / country pick-lists | seeded database | — |
 | Import from a link | the link's own name and pin; page metadata | OSM reverse geocoding; OSM naming when the link's is not in Latin letters |
 | Description & photos | Wikipedia + Wikimedia Commons: the Wikidata item OSM links the place to, else a Wikipedia article within 600 m whose title matches the name; its opening paragraph (marked "(Wikipedia)"), its lead image and photos from its Commons category, three in all | OpenTripMap, if keyed |
-| Routing between stops | OSRM (drive, walk) | road-based estimates for taxi/bus/train |
+| Routing between stops | OSRM (drive, walk) | road-based estimates for taxi/bus/train; a straight-line estimate for a boat |
 | Flight lookup | AeroDataBox | — |
 | Exchange rates | Frankfurter | open.er-api |
 | Map tiles | OpenStreetMap | — |
@@ -352,7 +355,7 @@ Also: `GET /trips/{id}/export` returns the whole trip as JSON.
 
 Every stop with a pin carries the leg to the next pinned stop — seconds, metres, the line
 for the map, whether it is an estimate, the transit line's name — together with a key naming
-what it was computed for (mode, both endpoints, and for bus/train the departure minute).
+what it was computed for (mode and both endpoints).
 On every read of a day and after every edit the keys are compared with the day as it stands
 and only legs whose order, pin, mode or time moved are routed again. Reading the trip's days
 refreshes every day first, so the overview's "on the move" is right even for a day never
@@ -366,7 +369,8 @@ stop that has one, and the unpinned stop carries no leg of its own, so no row pr
 nobody can give.
 
 OSRM routes walking and driving for real; a taxi, bus or train leg is scaled from the driving
-route and marked as an estimate ("~"). The route book prints its travel times either way.
+route and marked as an estimate ("~"), and so is a boat, which crosses in a straight line. The
+route book prints its travel times either way.
 
 ## 13. API map
 

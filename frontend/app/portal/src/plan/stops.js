@@ -35,18 +35,19 @@ export const legStart = (a) =>
 
 /**
  * How you get to the next stop. Walking and driving are routed for real; a
- * taxi, bus or train leg is an estimate scaled from the driving route — the row
- * says so. A flight is a booking with its own row and its real times, not a way
- * between two stops.
+ * taxi, bus or train leg is an estimate scaled from the driving route, and a
+ * boat crosses the water in a straight line — the row says so. A flight is a
+ * booking with its own row and its real times, not a way between two stops.
+ * Each mode carries the icon it is drawn with; its words are core's
+ * (travelModeLabel, travelModeHint), in the app's language.
  */
-// The ways from one stop to the next, with the icon each is drawn with. Their
-// words are core's (travelModeLabel, travelModeHint), in the app's language.
 export const TRAVEL_MODES = [
   { key: 'foot', icon: '🚶' },
   { key: 'taxi', icon: '🚕' },
   { key: 'bus', icon: '🚌' },
   { key: 'train', icon: '🚆' },
   { key: 'car', icon: '🚗' },
+  { key: 'boat', icon: '🚤' },
 ];
 const MODE_KEYS = TRAVEL_MODES.map((m) => m.key);
 

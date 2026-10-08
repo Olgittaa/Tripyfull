@@ -516,11 +516,13 @@ export default {
   'travel.bus': 'на автобусе',
   'travel.train': 'на поезде',
   'travel.car': 'на машине',
+  'travel.boat': 'на лодке',
   'travel.hint.foot': 'Пешком до следующей остановки',
   'travel.hint.taxi': 'Такси / каршеринг — время в пути плюс ожидание',
   'travel.hint.bus': 'Автобус — время в пути плюс остановки и ожидание (оценка)',
   'travel.hint.train': 'Поезд — оценка по времени в пути и дороге до вокзала',
   'travel.hint.car': 'За рулём до следующей остановки',
+  'travel.hint.boat': 'Лодка — лонгтейл или паром по воде (оценка: переправа плюс ожидание лодки)',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': 'Добавить',

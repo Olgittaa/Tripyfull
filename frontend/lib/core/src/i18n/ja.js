@@ -436,11 +436,14 @@ export default {
   'travel.bus': 'バス',
   'travel.train': '電車',
   'travel.car': '車',
+  'travel.boat': 'ボート',
   'travel.hint.foot': '次の目的地まで歩く',
   'travel.hint.taxi': 'タクシー／配車 — 走行時間と待ち時間',
   'travel.hint.bus': 'バス — 走行時間に停車と待ち時間を加えた概算',
   'travel.hint.train': '電車 — 走行時間と駅までの移動からの概算',
   'travel.hint.car': '自分で運転して次の目的地へ',
+  'travel.hint.boat':
+    'ボート — ロングテールボートやフェリーで水上を移動（目安：航行時間と乗船待ち）',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': '追加',

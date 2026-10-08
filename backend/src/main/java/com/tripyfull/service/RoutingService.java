@@ -51,6 +51,14 @@ public class RoutingService {
             "bus", new Derived("car", 1.45, 600),      // stops on the way, plus the wait
             "train", new Derived("car", 0.85, 900));   // its own track, plus the station
 
+    /**
+     * A boat — a longtail to Railay, a ferry between islands — goes where no
+     * router has roads. The leg is the straight line stretched for headlands and
+     * piers, at a longtail's pace, plus the wait for the boat to fill or leave.
+     */
+    static final double BOAT_DETOUR = 1.3;
+    static final double BOAT_SPEED_MPS = 25_000 / 3600.0;   // 25 km/h
+    static final int BOAT_WAIT_SEC = 900;
 
     private final RestClient restClient = buildClient();
 
@@ -100,6 +108,7 @@ public class RoutingService {
     /** points are [lat, lon]; returns null when the route can't be computed. */
     public RouteResult route(List<double[]> points, String mode) {
         if (points == null || points.size() < 2) return null;
+        if ("boat".equals(mode)) return boat(points);
 
         Derived derived = DERIVED.get(mode);
         if (derived != null) {
@@ -146,10 +155,20 @@ public class RoutingService {
         return new RouteResult(mode, total, road.distanceM(), legs, road.geometry(), true);
     }
 
-    /** Straight-line flight estimate — no route service knows about air corridors. */
-
-    private static double haversineM(double[] a, double[] b) {
-        return GeoMath.distanceMetres(a, b);
+    /** Over the water, stop to stop in straight lines: an estimate, drawn as such. */
+    static RouteResult boat(List<double[]> points) {
+        List<RouteLeg> legs = new ArrayList<>();
+        List<List<Double>> geometry = new ArrayList<>();
+        geometry.add(List.of(points.get(0)[0], points.get(0)[1]));
+        for (int i = 1; i < points.size(); i++) {
+            double metres = GeoMath.distanceMetres(points.get(i - 1), points.get(i)) * BOAT_DETOUR;
+            legs.add(new RouteLeg(metres / BOAT_SPEED_MPS + BOAT_WAIT_SEC, metres));
+            geometry.add(List.of(points.get(i)[0], points.get(i)[1]));
+        }
+        double seconds = legs.stream().mapToDouble(RouteLeg::durationSec).sum();
+        double metres = legs.stream().mapToDouble(RouteLeg::distanceM).sum();
+        if (metres > MAX_DISTANCE_M) return NO_ROUTE;
+        return new RouteResult("boat", seconds, metres, legs, geometry, true);
     }
 
     @SuppressWarnings("unchecked")

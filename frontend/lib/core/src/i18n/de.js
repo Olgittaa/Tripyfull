@@ -460,11 +460,14 @@ export default {
   'travel.bus': 'mit dem Bus',
   'travel.train': 'mit dem Zug',
   'travel.car': 'mit dem Auto',
+  'travel.boat': 'mit dem Boot',
   'travel.hint.foot': 'Zu Fuß zum nächsten Stopp',
   'travel.hint.taxi': 'Taxi / Fahrdienst — Fahrzeit plus Warten',
   'travel.hint.bus': 'Bus — Fahrzeit plus Halte und Warten (Schätzung)',
   'travel.hint.train': 'Zug — Schätzung aus der Fahrzeit und dem Weg zum Bahnhof',
   'travel.hint.car': 'Selbst zum nächsten Stopp fahren',
+  'travel.hint.boat':
+    'Boot — Longtail oder Fähre übers Wasser (geschätzt: die Überfahrt plus Warten aufs Boot)',
 
   // The places library: its filters, cards, table, drawer and the finder
   'common.add': 'Hinzufügen',
