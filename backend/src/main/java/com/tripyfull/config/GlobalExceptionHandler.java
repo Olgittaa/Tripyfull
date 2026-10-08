@@ -2,6 +2,7 @@ package com.tripyfull.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
@@ -13,6 +14,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -34,6 +37,35 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleTooLarge(MaxUploadSizeExceededException ex) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                 .body(Map.of("error", "File is too large (10 MB max)"));
+    }
+
+    /** Postgres' own words for a text over its column: "value too long for type character varying(5000)". */
+    private static final Pattern TOO_LONG = Pattern.compile("value too long for type character varying\\((\\d+)\\)");
+
+    /**
+     * A text longer than its column is the writer's to shorten, not a server
+     * fault — and the limit is the one thing they need to know. Any other
+     * integrity failure is still ours.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleIntegrity(DataIntegrityViolationException ex) {
+        String limit = tooLongLimit(ex);
+        if (limit != null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "The text is too long — " + limit + " characters at most"));
+        }
+        log.error("Data integrity violation while serving a request", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Something went wrong on the server: " + ex.getClass().getSimpleName()));
+    }
+
+    static String tooLongLimit(Throwable ex) {
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            Matcher m = TOO_LONG.matcher(String.valueOf(t.getMessage()));
+            if (m.find()) return m.group(1);
+            if (t.getCause() == t) break;
+        }
+        return null;
     }
 
     /**

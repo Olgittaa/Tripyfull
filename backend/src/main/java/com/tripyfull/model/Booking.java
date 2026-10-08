@@ -45,7 +45,7 @@ public class Booking {
     @Column(precision = 12, scale = 6)
     private BigDecimal exchangeRate;
 
-    @Column(length = 2000)
+    @Column(length = 5000)
     private String notes;
 
     @Column(name = "linked_day_id")

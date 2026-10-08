@@ -37,7 +37,7 @@ public class Activity {
     @Column(length = 3)
     private String costCurrency;
 
-    @Column(length = 2000)
+    @Column(length = 5000)
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)

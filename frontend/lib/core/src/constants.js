@@ -71,6 +71,9 @@ export const activityTypeLabel = (type) =>
   ACTIVITY_TYPES.includes(type) ? t(`activityType.${type}`) : type || '';
 
 /** The ways from one stop to the next, as the leg row offers them; words come from t(). */
+// The longest note the server keeps on a stop, a booking or a to-do (varchar(5000)).
+export const NOTE_MAX = 5000;
+
 export const TRAVEL_MODE_KEYS = ['foot', 'taxi', 'bus', 'train', 'car'];
 export const travelModeLabel = (key) => (TRAVEL_MODE_KEYS.includes(key) ? t(`travel.${key}`) : '');
 export const travelModeHint = (key) =>

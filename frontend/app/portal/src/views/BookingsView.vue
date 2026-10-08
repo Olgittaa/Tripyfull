@@ -751,6 +751,7 @@
                     v-model="form.notes"
                     :label="t('bookings.notes')"
                     :placeholder="t('bookings.notesPlaceholder')"
+                    :maxlength="NOTE_MAX"
                   />
                 </TfDrawerSection>
               </fieldset>
@@ -957,6 +958,7 @@ import {
   toDateStr,
   parseDate,
   formatDateShort,
+  NOTE_MAX,
 } from '@tripyfull/core';
 import { api } from '@tripyfull/core';
 

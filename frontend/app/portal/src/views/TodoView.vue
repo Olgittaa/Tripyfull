@@ -134,6 +134,7 @@
             v-model="form.notes"
             :label="t('todo.notes')"
             :placeholder="t('todo.notesPlaceholder')"
+            :maxlength="NOTE_MAX"
           />
         </TfDrawerSection>
       </form>
@@ -209,7 +210,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { api, formatDateShort, formatDateRange, parseDate, toDateStr, t } from '@tripyfull/core';
+import {
+  api,
+  formatDateShort,
+  formatDateRange,
+  NOTE_MAX,
+  parseDate,
+  toDateStr,
+  t,
+} from '@tripyfull/core';
 import {
   TfButton,
   TfBadge,

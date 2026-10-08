@@ -191,6 +191,7 @@
           v-model="form.notes"
           :rows="4"
           :placeholder="t('stop.notesPlaceholder')"
+          :maxlength="NOTE_MAX"
           class="w-full"
         />
         <label class="save-place-toggle">
@@ -263,6 +264,7 @@ import {
   formatDayDate,
   ACTIVITY_TYPES,
   activityTypeLabel,
+  NOTE_MAX,
   t,
 } from '@tripyfull/core';
 import {

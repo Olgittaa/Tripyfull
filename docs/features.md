@@ -164,8 +164,9 @@ The core screen: the day's list on the left, its route on the right.
   on request), or coordinates typed by hand; a preview map of the pin; type.
 - **When**: start / end times — either can be emptied again, and the stop goes back to
   having no clock; on an existing stop, **move to another day**.
-- **Details**: cost estimate + currency with the live rate into the home currency, notes,
-  "needs advance booking".
+- **Details**: cost estimate + currency with the live rate into the home currency, notes
+  (a page of text — 5000 characters, like a day's, a booking's or a to-do's note; the server
+  names the limit when an import goes over it), "needs advance booking".
 - A linked place shows its rating, why, time to visit and description; *Edit place* jumps to
   the library.
 - A stop written from a booking is shown read-only with a link to the booking — the next

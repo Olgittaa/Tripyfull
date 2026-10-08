@@ -29,7 +29,7 @@ public class Day {
     @Column(name = "linked_booking_id")
     private UUID linkedBookingId;
 
-    @Column(length = 1000)
+    @Column(length = 5000)
     private String notes;
 
     /** Buffer day: intentionally left unplanned (weather, rest, spontaneous finds). */

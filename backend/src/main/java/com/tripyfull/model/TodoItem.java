@@ -24,7 +24,7 @@ public class TodoItem {
     @Column(nullable = false, length = 300)
     private String title;
 
-    @Column(length = 2000)
+    @Column(length = 5000)
     private String notes;
 
     /** Free text; the owner decides how the list is grouped. */

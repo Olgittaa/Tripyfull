@@ -122,6 +122,14 @@ occupying the head. Never a reason to delay anything.
 
 ## Fixed
 
+- [x] **A long note ended in a server error** — a memo of about a thousand characters on a day
+  was refused with "Something went wrong on the server" instead of anything a person could act
+  on, so the Railay memo had to be cut down. Reported from use. *Cause:* a day's note was a
+  1000-character column (stops, bookings and to-dos 2000), and the database's "too long" fell
+  through to the catch-all handler. *Fixed:* 2026-10-08 — every note holds 5000 characters, the
+  note fields stop at that length, and a text over its column anywhere is answered with a 400
+  that names the limit. Tests cover the message and that other integrity failures stay 500s.
+
 - [x] **A stop's time could not be taken away** — once a stop had a start or an end time,
   emptying the field and saving brought the time back; the only way to a stop "without a time"
   was to delete it and make it again. The cost estimate behaved the same. Reported from use.
