@@ -295,10 +295,10 @@ spending. See [`../AFTER_M1.md`](../AFTER_M1.md).
 
 | Need | Primary | Fallback / note |
 |---|---|---|
-| Place & address search | Google Places (New) | Photon (OSM), Nominatim |
+| Place & address search | Google Places (New) | Photon (OSM), leaning towards the trip's city or country; Nominatim |
 | City / country pick-lists | seeded database | — |
 | Import from a link | Google Places by name near the link's pin; page metadata | OSM reverse geocoding; OSM naming when Google's is not in Latin letters |
-| Description & photos | Google Place Details (editorial summary, 3 photos) | OpenTripMap (Wikipedia extract, photo) |
+| Description & photos | Google Place Details (editorial summary, 3 photos), while a key is set | Wikipedia + Wikimedia Commons, free and keyless: the subject is the Wikidata item OSM links the place to, else a Wikipedia article within 600 m whose title matches the name; its opening paragraph (marked "(Wikipedia)"), its lead image and photos from its Commons category, three in all. Then OpenTripMap, if keyed |
 | Routing between stops | Google Routes (drive, walk, transit) | OSRM (drive, walk); road-based estimates for taxi/bus/train |
 | Flight lookup | AeroDataBox | — |
 | Exchange rates | Frankfurter | — |

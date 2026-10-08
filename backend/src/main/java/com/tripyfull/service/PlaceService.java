@@ -42,6 +42,7 @@ public class PlaceService {
     private final MapLinkService mapLinkService;
     private final OpenTripMapService openTripMapService;
     private final GooglePlacesService googlePlacesService;
+    private final WikipediaService wikipediaService;
     private final TripRepository tripRepository;
     private final PlacePhotoService placePhotoService;
     private final com.tripyfull.repository.ActivityRepository activityRepository;
@@ -50,7 +51,7 @@ public class PlaceService {
     public PlaceService(PlaceRepository placeRepository, GeocodingService geocodingService,
                         PlaceFolderRepository folderRepository, MapLinkService mapLinkService,
                         OpenTripMapService openTripMapService, GooglePlacesService googlePlacesService,
-                        TripRepository tripRepository, PlacePhotoService placePhotoService,
+                        WikipediaService wikipediaService, TripRepository tripRepository, PlacePhotoService placePhotoService,
                         com.tripyfull.repository.ActivityRepository activityRepository,
                         OwnershipGuard guard) {
         this.placeRepository = placeRepository;
@@ -59,15 +60,21 @@ public class PlaceService {
         this.mapLinkService = mapLinkService;
         this.openTripMapService = openTripMapService;
         this.googlePlacesService = googlePlacesService;
+        this.wikipediaService = wikipediaService;
         this.tripRepository = tripRepository;
         this.placePhotoService = placePhotoService;
         this.activityRepository = activityRepository;
         this.guard = guard;
     }
 
-    /** Google (photos + editorial summary) first when configured; OpenTripMap fills remaining gaps. */
+    /**
+     * Description and photos for a new place: Google first while a key is set,
+     * then Wikipedia/Commons (free, no key) and OpenTripMap fill what is still
+     * empty. Each one leaves alone anything already there.
+     */
     private void enrichPlace(Place place) {
         if (googlePlacesService.isEnabled()) googlePlacesService.enrich(place);
+        wikipediaService.enrich(place);
         openTripMapService.enrich(place);
     }
 

@@ -66,6 +66,13 @@ is waiting, or when a consultant names it in an interview.
   interviews may say whether a date format matters to anyone, and the answer decides whether to
   build it or drop the controls. *Language* began to work on 2026-09-21. *Seen:* 2026-09-18.
 
+- [ ] **Photos and texts from Wikipedia carry no credit** — a place's description from
+  Wikipedia ends with "(Wikipedia)", but its photos from Wikimedia Commons show no author or
+  licence, and most Commons pictures are CC BY-SA, which asks for both wherever the picture
+  appears — the printed book for a client included. Google's photos had the same duty and the
+  same gap. *Fix:* keep the author and licence beside each found photo (a photo is a bare URL
+  today, so this is a small model change) and print them small under it. *Seen:* 2026-10-08.
+
 - [ ] **The suggested to-dos are English in every language** — the to-do page is translated,
   but the suggestions it offers ("Check passport validity", "Many countries want six months
   left on entry.", and the group names they land in) come from the server, which writes them
