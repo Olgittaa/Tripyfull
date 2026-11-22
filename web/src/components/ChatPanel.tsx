@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useChat } from "@ai-sdk/react";
+import { useEffect, useState } from "react";
+import MessageList from "@/components/MessageList";
 
 // The whole chat window as the portal shows it in its iframe panel.
-// Step 1: layout only. Messages and streaming arrive in step 2.
 
 const portalOrigin = process.env.NEXT_PUBLIC_PORTAL_ORIGIN ?? "http://localhost:5173";
 
@@ -15,6 +16,12 @@ function requestClose() {
 }
 
 export default function ChatPanel() {
+  const [input, setInput] = useState("");
+  // useChat keeps the conversation and POSTs it to /api/chat; the answer streams back
+  // into `messages` piece by piece. status: ready → submitted → streaming → ready (or error).
+  const { messages, sendMessage, status, stop, error, regenerate } = useChat();
+  const busy = status === "submitted" || status === "streaming";
+
   // While the user types here, key presses stay inside the iframe and never reach
   // the portal — so Escape is caught here and passed on as a close request.
   useEffect(() => {
@@ -24,6 +31,14 @@ export default function ChatPanel() {
     window.addEventListener("keydown", onKeydown);
     return () => window.removeEventListener("keydown", onKeydown);
   }, []);
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text || busy) return;
+    sendMessage({ text });
+    setInput("");
+  }
 
   return (
     <div className="flex h-full flex-col bg-card">
@@ -39,32 +54,54 @@ export default function ChatPanel() {
           type="button"
           onClick={requestClose}
           aria-label="Close assistant"
-          className="grid size-9 place-items-center rounded-full text-xl text-muted hover:bg-surface"
+          className="grid size-9 place-items-center rounded-full text-muted hover:bg-surface"
         >
-          ×
+          {/* An SVG, not the "×" character: a glyph sits on the font's baseline and is never
+              quite centred in the circle; drawn lines are. */}
+          <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
+            <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+          </svg>
         </button>
       </header>
 
-      <main className="flex-1 space-y-3 overflow-y-auto bg-bg px-4 py-4">
-        <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-card px-4 py-3 text-sm shadow-sm">
-          Hi! I&apos;m your trip assistant. Soon I&apos;ll see the page you&apos;re on and help you plan
-          days, places and flights.
-        </div>
+      <main className="flex-1 overflow-y-auto bg-bg px-4 py-4">
+        <MessageList messages={messages} status={status} />
+
+        {error && (
+          <div className="mt-3 rounded-xl border border-accent/40 bg-card px-3 py-2 text-sm">
+            Something went wrong.{" "}
+            <button type="button" onClick={() => regenerate()} className="font-semibold text-primary underline">
+              Try again
+            </button>
+          </div>
+        )}
       </main>
 
-      <form className="flex gap-2 border-t border-border p-3" onSubmit={(e) => e.preventDefault()}>
+      <form className="flex gap-2 border-t border-border p-3" onSubmit={onSubmit}>
         <input
-          disabled
-          placeholder="The chat is coming in the next step…"
-          className="min-w-0 flex-1 rounded-full border border-border bg-bg px-4 py-2 text-sm placeholder:text-muted disabled:opacity-70"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask about your trip…"
+          aria-label="Message"
+          className="min-w-0 flex-1 rounded-full border border-border bg-bg px-4 py-2 text-sm placeholder:text-muted focus:border-primary focus:outline-none"
         />
-        <button
-          type="submit"
-          disabled
-          className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-card hover:bg-primary-hover disabled:opacity-50"
-        >
-          Send
-        </button>
+        {busy ? (
+          <button
+            type="button"
+            onClick={() => stop()}
+            className="rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-surface"
+          >
+            Stop
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-card hover:bg-primary-hover disabled:opacity-50"
+          >
+            Send
+          </button>
+        )}
       </form>
     </div>
   );
