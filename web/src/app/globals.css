@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Colours copied from the portal's design tokens
+   (frontend/lib/ui/src/styles/abstracts/variables.css). */
+:root {
+  --primary: #0e5c55;
+  --primary-hover: #0c4e47;
+  --accent: #e35a38;
+  --bg: #fbf5ec;
+  --card: #fffdf8;
+  --surface: #efe9de;
+  --border: #e4ddd2;
+  --text: #322a24;
+  --text-muted: #6b5f56;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --font-sans: var(--font-hanken), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-hanken), system-ui, sans-serif;
+}
+
+body {
+  background: var(--card);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
