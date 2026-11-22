@@ -14,6 +14,9 @@ export default {
 
   // The shell: top bar and the trip's menu
   'nav.tripMenu': 'Trip menu',
+  'chat.title': 'Trip assistant',
+  'chat.open': 'Open trip assistant',
+  'chat.close': 'Close trip assistant',
   'nav.allTrips': 'All trips',
   'nav.allPlaces': 'All places',
   'nav.language': 'Language',

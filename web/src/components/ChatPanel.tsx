@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 // The whole chat window as the portal shows it in its iframe panel.
 // Step 1: layout only. Messages and streaming arrive in step 2.
 
@@ -13,6 +15,16 @@ function requestClose() {
 }
 
 export default function ChatPanel() {
+  // While the user types here, key presses stay inside the iframe and never reach
+  // the portal — so Escape is caught here and passed on as a close request.
+  useEffect(() => {
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") requestClose();
+    };
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  }, []);
+
   return (
     <div className="flex h-full flex-col bg-card">
       <header className="flex items-center gap-3 border-b border-border px-4 py-3">

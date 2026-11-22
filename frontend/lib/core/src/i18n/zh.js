@@ -12,6 +12,9 @@ export default {
   'common.reset': '重置',
 
   'nav.tripMenu': '行程菜单',
+  'chat.title': '行程助手',
+  'chat.open': '打开行程助手',
+  'chat.close': '关闭行程助手',
   'nav.allTrips': '所有行程',
   'nav.allPlaces': '所有地点',
   'nav.language': '语言',

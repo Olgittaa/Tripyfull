@@ -11,6 +11,9 @@ export default {
   'common.reset': 'Restablecer',
 
   'nav.tripMenu': 'Menú del viaje',
+  'chat.title': 'Asistente de viaje',
+  'chat.open': 'Abrir el asistente de viaje',
+  'chat.close': 'Cerrar el asistente de viaje',
   'nav.allTrips': 'Todos los viajes',
   'nav.allPlaces': 'Todos los lugares',
   'nav.language': 'Idioma',

@@ -171,6 +171,9 @@
         </div>
       </main>
     </div>
+
+    <!-- The AI assistant: a round button at the bottom right that opens the chat app. -->
+    <ChatLauncher />
   </div>
 </template>
 
@@ -193,6 +196,7 @@ import TripNav from '@/components/TripNav.vue';
 import LanguageMenu from '@/components/LanguageMenu.vue';
 import TourOverlay from '@/components/TourOverlay.vue';
 import SessionExpiredDialog from '@/components/SessionExpiredDialog.vue';
+import ChatLauncher from '@/components/ChatLauncher.vue';
 import { watchSessionExpiry } from '@/session.js';
 import logoMark from '@/assets/logo-mark.svg';
 

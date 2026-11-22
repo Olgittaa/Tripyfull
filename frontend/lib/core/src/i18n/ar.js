@@ -13,6 +13,9 @@ export default {
   'common.reset': 'إعادة تعيين',
 
   'nav.tripMenu': 'قائمة الرحلة',
+  'chat.title': 'مساعد الرحلة',
+  'chat.open': 'فتح مساعد الرحلة',
+  'chat.close': 'إغلاق مساعد الرحلة',
   'nav.allTrips': 'كل الرحلات',
   'nav.allPlaces': 'كل الأماكن',
   'nav.language': 'اللغة',

@@ -11,6 +11,9 @@ export default {
   'common.reset': 'Сбросить',
 
   'nav.tripMenu': 'Меню поездки',
+  'chat.title': 'Помощник в поездке',
+  'chat.open': 'Открыть помощника',
+  'chat.close': 'Закрыть помощника',
   'nav.allTrips': 'Все поездки',
   'nav.allPlaces': 'Все места',
   'nav.language': 'Язык',

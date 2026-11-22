@@ -11,6 +11,9 @@ export default {
   'common.reset': 'リセット',
 
   'nav.tripMenu': '旅行メニュー',
+  'chat.title': '旅行アシスタント',
+  'chat.open': '旅行アシスタントを開く',
+  'chat.close': '旅行アシスタントを閉じる',
   'nav.allTrips': 'すべての旅行',
   'nav.allPlaces': 'すべての場所',
   'nav.language': '言語',

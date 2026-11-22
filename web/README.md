@@ -16,4 +16,7 @@ Only the portal origin (`NEXT_PUBLIC_PORTAL_ORIGIN`) may embed the app
 
 | Direction | Message | Meaning |
 |---|---|---|
-| chat → portal | `{ type: "tripyfull-chat:close" }` | the user closed the chat from inside the panel |
+| chat → portal | `{ type: "tripyfull-chat:close" }` | the user closed the chat from inside the panel (× or Escape) |
+
+The portal side is `frontend/app/portal/src/components/ChatLauncher.vue`; it accepts a message
+only when `event.origin` is the chat's origin and `event.source` is its own iframe.

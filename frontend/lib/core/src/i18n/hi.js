@@ -12,6 +12,9 @@ export default {
   'common.reset': 'रीसेट',
 
   'nav.tripMenu': 'यात्रा मेनू',
+  'chat.title': 'यात्रा सहायक',
+  'chat.open': 'यात्रा सहायक खोलें',
+  'chat.close': 'यात्रा सहायक बंद करें',
   'nav.allTrips': 'सभी यात्राएँ',
   'nav.allPlaces': 'सभी स्थान',
   'nav.language': 'भाषा',
