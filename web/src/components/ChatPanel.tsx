@@ -1,26 +1,53 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { useEffect, useState } from "react";
 import MessageList from "@/components/MessageList";
+import { PORTAL_ORIGIN, parseContextMessage, type PortalContext } from "@/lib/portalContext";
 
 // The whole chat window as the portal shows it in its iframe panel.
 
-const portalOrigin = process.env.NEXT_PUBLIC_PORTAL_ORIGIN ?? "http://localhost:5173";
-
-/** Asks the portal to close the panel. Only the portal's origin may receive it. */
-function requestClose() {
-  if (window.parent !== window) {
-    window.parent.postMessage({ type: "tripyfull-chat:close" }, portalOrigin);
-  }
+/** Sends a message to the portal — and only to the portal's origin. */
+function tellPortal(type: string) {
+  if (window.parent !== window) window.parent.postMessage({ type }, PORTAL_ORIGIN);
 }
+
+const requestClose = () => tellPortal("tripyfull-chat:close");
+
+// The latest context from the portal. Module-level, not React state: it changes nothing
+// on screen, there is one chat per page, and the transport reads it at the moment each
+// request goes out — so a page change is picked up by the very next question.
+let portal: PortalContext | null = null;
+
+const transport = new DefaultChatTransport({
+  api: "/api/chat",
+  headers: (): Record<string, string> => (portal?.token ? { Authorization: `Bearer ${portal.token}` } : {}),
+  body: () => ({
+    page: { page: portal?.page ?? "other", tripId: portal?.tripId ?? null, dayId: portal?.dayId ?? null },
+  }),
+});
 
 export default function ChatPanel() {
   const [input, setInput] = useState("");
+
   // useChat keeps the conversation and POSTs it to /api/chat; the answer streams back
   // into `messages` piece by piece. status: ready → submitted → streaming → ready (or error).
-  const { messages, sendMessage, status, stop, error, regenerate } = useChat();
+  const { messages, sendMessage, status, stop, error, regenerate } = useChat({ transport });
   const busy = status === "submitted" || status === "streaming";
+
+  // Handshake: listen for the portal's context, then say "ready" so it sends it.
+  // Messages from any other window or origin are ignored.
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== PORTAL_ORIGIN || e.source !== window.parent) return;
+      const next = parseContextMessage(e.data);
+      if (next) portal = next;
+    };
+    window.addEventListener("message", onMessage);
+    tellPortal("tripyfull-chat:ready");
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   // While the user types here, key presses stay inside the iframe and never reach
   // the portal — so Escape is caught here and passed on as a close request.

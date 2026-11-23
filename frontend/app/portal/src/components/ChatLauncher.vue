@@ -26,7 +26,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
 import { t } from '@tripyfull/core';
 import { TfIcon } from '@tripyfull/ui';
 
@@ -34,19 +35,68 @@ import { TfIcon } from '@tripyfull/ui';
 const chatUrl = import.meta.env.VITE_CHAT_URL || '';
 const chatOrigin = chatUrl ? new URL(chatUrl).origin : '';
 
+const route = useRoute();
 const open = ref(false);
 const loaded = ref(false);
 const frame = ref(null);
+// The chat says "ready" once its page has loaded; context sent earlier would be lost.
+const chatReady = ref(false);
 
 function toggle() {
   loaded.value = true;
   open.value = !open.value;
+  // On every open, so a token renewed by signing in again reaches the chat too.
+  if (open.value) sendContext();
 }
+
+// Route pattern → the page the chat is told about. The agent gets IDs, never the DOM,
+// and looks the data up itself through its tools.
+const PAGES = {
+  '/trips': 'trip-list',
+  '/trips/:id': 'trip-overview',
+  '/trips/:tripId/days/:dayId': 'day',
+  '/trips/:tripId/places': 'trip-places',
+  '/trips/:tripId/map': 'trip-map',
+  '/trips/:tripId/bookings': 'bookings',
+  '/trips/:tripId/todos': 'todos',
+  '/trips/:tripId/budget': 'budget',
+  '/places': 'places-library',
+  '/settings': 'settings',
+};
+
+const pageContext = computed(() => {
+  const pattern = route.matched.at(-1)?.path ?? route.path;
+  return {
+    page: PAGES[pattern] ?? 'other',
+    tripId: route.params.tripId ?? route.params.id ?? null,
+    dayId: route.params.dayId ?? null,
+  };
+});
+
+/** Sends the session and the current page to the chat — to its origin only. */
+function sendContext() {
+  const target = frame.value?.contentWindow;
+  if (!chatReady.value || !target) return;
+  target.postMessage(
+    {
+      type: 'tripyfull-chat:context',
+      token: localStorage.getItem('token'),
+      ...pageContext.value,
+    },
+    chatOrigin,
+  );
+}
+
+watch(pageContext, sendContext);
 
 // Messages from the chat iframe. Anything that is not from our chat app — another
 // origin, or another window — is ignored: any page can postMessage to this one.
 function onMessage(event) {
   if (event.origin !== chatOrigin || event.source !== frame.value?.contentWindow) return;
+  if (event.data?.type === 'tripyfull-chat:ready') {
+    chatReady.value = true;
+    sendContext();
+  }
   if (event.data?.type === 'tripyfull-chat:close') open.value = false;
 }
 
