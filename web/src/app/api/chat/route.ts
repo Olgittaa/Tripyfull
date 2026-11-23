@@ -49,8 +49,10 @@ export async function POST(req: Request) {
     stopWhen: isStepCount(5),
     // A hard cap per answer: one runaway reply cannot burn the budget.
     maxOutputTokens: 1024,
-    // The user closed the panel or pressed stop → the request is aborted → so is the
-    // model call, and we stop paying for tokens nobody will read.
+    // The user pressed Stop, closed the tab or left the portal → the browser aborts the
+    // request → so is the model call, and we stop paying for tokens nobody will read.
+    // (Closing the panel does not abort: the iframe is only hidden, so the answer keeps
+    // streaming and is there when the panel opens again.)
     abortSignal: req.signal,
   });
 
